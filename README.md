@@ -78,7 +78,7 @@ if not report.is_clean:
 
 ## Related
 
-- Article: *Бинарные формы 1С в агентном пайплайне: пошаговая распаковка* (Инфостарт)
+- Article: *Обычные формы 1С в агентном пайплайне: пошаговая распаковка* (Инфостарт)
 - [saby-integration/v8unpack](https://github.com/saby-integration/v8unpack) — the underlying extractor
 
 ## License
