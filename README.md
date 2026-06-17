@@ -1,39 +1,78 @@
 # v8unpack-agent
 
-Оркестрационный слой-обёртка над [v8unpack](https://github.com/saby-integration/v8unpack)
-для использования внутри автоматизированного / LLM-агентного пайплайна.
+Надстройка над [v8unpack](https://github.com/saby-integration/v8unpack) для
+агентных / LLM-пайплайнов по конфигурациям 1С.
 
-**Этот пакет сам не разбирает бинарные формы 1С.** Реальную распаковку выполняет
-[v8unpack](https://github.com/saby-integration/v8unpack); данный пакет лишь решает,
-*куда* положить результат и *не устарела* ли предыдущая распаковка. Если вам нужен
-инструмент, который делает `Form.bin` читаемым, — вам нужен `v8unpack`, а не это.
+Реализует доработки из статьи **«Обычные формы 1С в агентном пайплайне:
+пошаговая распаковка»**: распаковщик `Form.bin` сообщество уже написало, а этот
+пакет добавляет то, чего не хватает агенту вокруг него — фабрику путей по
+конвенции, артефакт распаковки с явным флагом полноты, реестр актуальности и
+встраивание распаковки в индексацию как pre-step.
 
-| Модуль | Что делает |
-|---|---|
-| `extractor` | Протокол `BinaryExtractor` + `ExtractionResult` (явный флаг `extraction_ok`, без тихого провала). Это *контракт*, а не парсер. |
-| `shadow_tree` | OS-нейтральная фабрика путей: отображает `<source_root>/…/Form.bin` → `<shadow_root>/…/Form/`. Чистая арифметика путей — содержимое файлов не читается. |
-| `sync_index` | `ShadowIndex` — детект дрейфа по `mtime + size`; `DriftReport`. Читает только метаданные файла, не содержимое. |
+**Этот пакет сам не разбирает бинарные формы 1С.** Реальную распаковку
+выполняет [v8unpack](https://github.com/saby-integration/v8unpack) (Python, MIT;
+либо C++-порт [e8tools/v8unpack](https://github.com/e8tools/v8unpack)). Здесь —
+обвязка: *куда* класть результат, *насколько* он полон и *не устарел* ли он.
 
 ## Кто что решает
 
-Два слоя:
-
 1. **`v8unpack` (upstream)** — превращает контейнеры `cf/cfe/epf` в
-   человекочитаемое дерево файлов. Он уже выносит **код** форм в отдельные
-   файлы («видны изменения элементов форм»). Его собственное задокументированное
-   ограничение: **разметка** форм и **свойства** объектов остаются нечитаемыми.
-2. **Этот пакет (`v8unpack-agent`)** — **не** трогает бинарное содержимое
-   вообще. Он добавляет обвязку, нужную агенту вокруг `v8unpack`:
-   - стабильный протокол `BinaryExtractor`, чтобы конкретный экстрактор можно
-     было внедрить, не «протекая» режимами отказа (`V8UnpackExtractor` —
-     эталонная реализация);
-   - OS-нейтральную фабрику shadow-путей (`shadow_tree`);
-   - индекс дрейфа по `mtime + size` (`sync_index`), чтобы агент понимал, когда
-     ранее созданная «тень» устарела и её нужно перестроить.
+   человекочитаемое дерево файлов и уже выносит **код** обычных форм в
+   отдельные файлы. Его собственное ограничение: разметка форм и часть свойств
+   остаются нечитаемыми.
+2. **`v8unpack-agent` (этот пакет)** — не трогает бинарное содержимое. Поверх
+   распаковщика выстраивает трёхэтапный пайплайн под кейс агента.
 
+## Трёхэтапный пайплайн
 
-Итого: если ваша цель — «читать *код* обычных форм», `v8unpack` это уже умеет, а
-данный пакет просто оркестрирует его для агента. 
+```
+index_cf(<путь_к_выгрузке>)
+  └─► 1) unpack_all_forms()        # v8unpack по всем Form.bin → текстовый слой
+       └─► 2) update_forms_index() # JSON-карта актуальности (контроль рассинхрона)
+            └─► 3) rag.rebuild()   # code_context() видит код форм
+```
+
+- **Идемпотентность.** Повторный прогон не перекладывает формы, у которых
+  `bin_mtime == unpacked_mtime` — только новые/изменённые.
+- **Отказоустойчивость.** Если по одной форме `extraction_ok=False` — пайплайн
+  не падает, реестр честно помечает её как частичную.
+- **Прозрачность для агента.** Со стороны индексации это просто ещё один
+  источник текстов.
+
+## Публичная поверхность
+
+| Модуль | Что даёт |
+|---|---|
+| `form_paths` | Фабрика путей по конвенции: `form_paths()`, `item_modules()` (вложенные панели из `Items/`), `all_module_paths()`. Чистая арифметика путей — файлы не читаются. |
+| `form_artifact` | `FormArtifact` (`name`, `paths`, `extraction_ok`, `extraction_warnings`) — результат распаковки одной формы с явным флагом полноты, без тихого провала. |
+| `forms_index` | `FormsIndex` / `FormsIndexEntry` + `is_form_stale()` — реестр актуальности по `bin_mtime` vs `unpacked_mtime`. |
+| `pipeline` | `discover_form_bins()`, `unpack_all_forms()`, `update_forms_index()` — распаковка как pre-step индексации. |
+
+### Конвенция путей
+
+```
+<unpacked_root>/Form/<имя>/Form.obj.bsl          # код самой формы
+<unpacked_root>/Form/<имя>/Ext/ObjectModule.bsl  # модуль объекта
+<unpacked_root>/Form/<имя>/Form.json             # метаданные формы
+<unpacked_root>/Form/<имя>/Items/                # вложенные панели/группы
+```
+
+### Запись `forms_index`
+
+| Поле | Тип | Значение |
+|---|---|---|
+| `bin_path` | string | Путь к исходному `Form.bin` относительно корня выгрузки |
+| `unpacked_root` | string | Путь к директории с распакованными текстами |
+| `bin_mtime` | float | Unix-время изменения `Form.bin` в момент распаковки |
+| `unpacked_mtime` | float | Unix-время последней распаковки; если `bin_mtime > unpacked_mtime` — форма устарела |
+| `extraction_ok` | bool | `true` — полная распаковка; `false` — частичная |
+| `warnings` | array | Диагностические сообщения при частичной распаковке; пустой массив при `extraction_ok: true` |
+
+`forms_index` — **не** источник истины (источник — `Form.bin` в выгрузке), а
+**карта актуальности**. В неё кладётся только маршрутизация и метки времени:
+никакого содержимого `Form.bin`, строк подключения, имён баз/хостов — реестр
+остаётся обезличенным и коммитится в репозиторий вместе с выгрузкой.
+
 ## Установка
 
 Пока не опубликовано в PyPI. Установка из репозитория:
@@ -49,64 +88,56 @@ pip install git+https://github.com/MRDK80/v8unpack-agent.git
 pip install .
 ```
 
-## Эталонный экстрактор
-
-В пакет входит конкретный опциональный экстрактор поверх `v8unpack` —
-`V8UnpackExtractor`, который удовлетворяет протоколу `BinaryExtractor` и соблюдает
-контракт «без тихого провала» (при ошибке или пустом выводе возвращается
-`extraction_ok=False` с заметками, а не выбрасывается исключение):
-
-```python
-from pathlib import Path
-from v8unpack_agent import V8UnpackExtractor, ShadowTreeLayout, shadow_path_for
-
-extractor = V8UnpackExtractor()
-layout = ShadowTreeLayout(
-    binary_source_root=Path("unpacked_cf/"),
-    shadow_tree_root=Path(".shadow/"),
-)
-
-for binary in layout.binary_source_root.rglob("*.bin"):
-    target = shadow_path_for(binary, layout)
-    result = extractor.extract(binary, target)
-    if not result.extraction_ok:
-        print("degraded:", result.notes)
-```
-
 ## Быстрый старт
 
 ```python
 from pathlib import Path
 import v8unpack
-from v8unpack_agent import ShadowTreeLayout, shadow_path_for, ShadowIndex
-
-# 0. Сначала v8unpack превращает контейнер в дерево файлов
-#    (именно здесь лежат бинарники форм *.bin).
-source_cf = Path("demo.cf")
-unpacked_root = Path("unpacked_cf/")
-v8unpack.extract(str(source_cf), str(unpacked_root))
-
-# 1. Настраиваем layout: распакованное дерево — источник бинарников, тени — отдельно.
-layout = ShadowTreeLayout(
-    binary_source_root=unpacked_root,
-    shadow_tree_root=Path(".shadow/"),
+from v8unpack_agent import (
+    FormArtifact,
+    form_paths,
+    unpack_all_forms,
+    update_forms_index,
+    is_form_stale,
 )
 
-# 2. shadow_path_for сопоставляет каждому *.bin его целевой каталог-тень.
-binaries = list(layout.binary_source_root.rglob("*.bin"))
-for binary in binaries:
-    target = shadow_path_for(binary, layout)
-    # ... передайте `target` своему конкретному BinaryExtractor ...
+dump_root = Path("unpacked_cf/")     # дерево, полученное от v8unpack
+unpacked_root = Path("text_layer/")  # куда складываем текстовый слой форм
 
-# 3. Строим индекс дрейфа по тем же бинарникам, что только что нашли.
-index = ShadowIndex.build(layout.binary_source_root, binaries)
-index.save(Path(".shadow_index.json"))
 
-# 4. Позже: проверяем дрейф относительно записанного снимка.
-report = index.check_drift(layout.binary_source_root, binaries)
-if not report.is_clean:
-    print("Устаревшие тени:", report.changed)
+def unpack_one(bin_path: Path, root: Path, form_name: str) -> FormArtifact:
+    """Распаковать одну форму через v8unpack и вернуть артефакт.
+
+    Реальную распаковку делает v8unpack; здесь решается только полнота
+    результата и заполняется FormArtifact по конвенции путей.
+    """
+    target = root / "Form" / form_name
+    target.mkdir(parents=True, exist_ok=True)
+    v8unpack.extract(str(bin_path), str(target))
+
+    paths = form_paths(root, form_name)
+    if paths["object_module"].exists():
+        return FormArtifact.for_form(root, form_name)
+    return FormArtifact.for_form(
+        root, form_name,
+        extraction_ok=False,
+        extraction_warnings=["код формы не распакован"],
+    )
+
+
+# 1) распаковываем все формы выгрузки
+artifacts = unpack_all_forms(dump_root, unpacked_root, unpack_one)
+
+# 2) обновляем карту актуальности
+index = update_forms_index(dump_root, unpacked_root, artifacts)
+index.save(Path("forms_index.json"))
+
+# 3) позже — узнаём, какие формы устарели и требуют перераспаковки
+for name in index.stale_forms():
+    print("устарела:", name)
 ```
+
+Полный пример: [`examples/basic_usage.py`](examples/basic_usage.py).
 
 ## Тесты
 
@@ -115,14 +146,21 @@ pip install -e ".[test]"
 pytest
 ```
 
-Набор тестов полностью синтетический — `V8UnpackExtractor` проверяется на
-внедрённом фейковом `v8unpack`, так что реальный контейнер 1С не требуется.
+Набор тестов полностью синтетический: проверка идёт на временных файловых
+деревьях с внедрённым распаковщиком-заглушкой, так что реальный контейнер 1С
+не требуется.
 
 ## Связанное
 
-- [saby-integration/v8unpack](https://github.com/saby-integration/v8unpack) — нижележащий экстрактор, который собственно и распаковывает контейнеры
-- Статья (черновик): оркестрация v8unpack внутри агентного пайплайна — тени с детектом дрейфа. Примеры только синтетические/демонстрационные.
+- [saby-integration/v8unpack](https://github.com/saby-integration/v8unpack) — нижележащий распаковщик контейнеров (Python, MIT)
+- [e8tools/v8unpack](https://github.com/e8tools/v8unpack) — C++-порт (MPL-2.0), поддерживает `.erf`
+- Статья: «Обычные формы 1С в агентном пайплайне: пошаговая распаковка»
 
 ## Лицензия
 
 MIT
+
+---
+
+Материал независимый, примеры синтетические/обезличенные; рабочие данные и
+внутренняя инфраструктура не используются.

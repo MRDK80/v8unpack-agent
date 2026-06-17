@@ -1,29 +1,45 @@
-"""v8unpack-agent — agent-pipeline adapter for v8unpack.
+"""v8unpack-agent — надстройка над v8unpack для агентных пайплайнов.
 
-Public surface
---------------
-- :class:`~v8unpack_agent.extractor.ExtractionResult`
-- :class:`~v8unpack_agent.extractor.BinaryExtractor`
-- :class:`~v8unpack_agent.v8unpack_backend.V8UnpackExtractor`
-- :class:`~v8unpack_agent.shadow_tree.ShadowTreeLayout`
-- :func:`~v8unpack_agent.shadow_tree.shadow_path_for`
-- :class:`~v8unpack_agent.sync_index.ShadowIndex`
-- :class:`~v8unpack_agent.sync_index.DriftReport`
-- :class:`~v8unpack_agent.sync_index.DriftKind`
+Реализует доработки из статьи «Обычные формы 1С в агентном пайплайне:
+пошаговая распаковка»: фабрику путей по конвенции, FormArtifact с флагом
+полноты распаковки, forms_index с контролем рассинхрона и распаковку как
+pre-step индексации.
+
+Публичная поверхность
+---------------------
+- :func:`~v8unpack_agent.form_paths.form_paths`
+- :func:`~v8unpack_agent.form_paths.item_modules`
+- :func:`~v8unpack_agent.form_paths.all_module_paths`
+- :class:`~v8unpack_agent.form_artifact.FormArtifact`
+- :class:`~v8unpack_agent.forms_index.FormsIndex`
+- :class:`~v8unpack_agent.forms_index.FormsIndexEntry`
+- :func:`~v8unpack_agent.forms_index.is_form_stale`
+- :func:`~v8unpack_agent.pipeline.unpack_all_forms`
+- :func:`~v8unpack_agent.pipeline.update_forms_index`
+- :func:`~v8unpack_agent.pipeline.discover_form_bins`
 """
 
-from v8unpack_agent.extractor import BinaryExtractor, ExtractionResult
-from v8unpack_agent.shadow_tree import ShadowTreeLayout, shadow_path_for
-from v8unpack_agent.sync_index import DriftKind, DriftReport, ShadowIndex
-from v8unpack_agent.v8unpack_backend import V8UnpackExtractor
+from v8unpack_agent.form_artifact import FormArtifact
+from v8unpack_agent.form_paths import all_module_paths, form_paths, form_root, item_modules
+from v8unpack_agent.forms_index import FormsIndex, FormsIndexEntry, is_form_stale
+from v8unpack_agent.pipeline import (
+    FormUnpacker,
+    discover_form_bins,
+    unpack_all_forms,
+    update_forms_index,
+)
 
 __all__ = [
-    "BinaryExtractor",
-    "ExtractionResult",
-    "V8UnpackExtractor",
-    "ShadowTreeLayout",
-    "shadow_path_for",
-    "ShadowIndex",
-    "DriftReport",
-    "DriftKind",
+    "form_paths",
+    "form_root",
+    "item_modules",
+    "all_module_paths",
+    "FormArtifact",
+    "FormsIndex",
+    "FormsIndexEntry",
+    "is_form_stale",
+    "FormUnpacker",
+    "discover_form_bins",
+    "unpack_all_forms",
+    "update_forms_index",
 ]
