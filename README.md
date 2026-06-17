@@ -1,52 +1,64 @@
 # v8unpack-agent
 
-Agent-pipeline adapter for [v8unpack](https://github.com/saby-integration/v8unpack).
+Оркестрационный слой-обёртка над [v8unpack](https://github.com/saby-integration/v8unpack)
+для использования внутри автоматизированного / LLM-агентного пайплайна.
 
-Provides three building blocks for LLM-agent pipelines that wrap [v8unpack](https://github.com/saby-integration/v8unpack)
-when reading 1C form binaries (`Form.bin`) in an automated, drift-aware way:
+**Этот пакет сам не разбирает бинарные формы 1С.** Реальную распаковку выполняет
+[v8unpack](https://github.com/saby-integration/v8unpack); данный пакет лишь решает,
+*куда* положить результат и *не устарела* ли предыдущая распаковка. Если вам нужен
+инструмент, который делает `Form.bin` читаемым, — вам нужен `v8unpack`, а не это.
 
-| Module | What it does |
+| Модуль | Что делает |
 |---|---|
-| `extractor` | `BinaryExtractor` protocol + `ExtractionResult` (with explicit `extraction_ok` flag) |
-| `shadow_tree` | OS-neutral path factory: maps `<source_root>/…/Form.bin` → `<shadow_root>/…/Form/` |
-| `sync_index` | `ShadowIndex` — drift detection via `mtime + size`; `DriftReport` |
+| `extractor` | Протокол `BinaryExtractor` + `ExtractionResult` (явный флаг `extraction_ok`, без тихого провала). Это *контракт*, а не парсер. |
+| `shadow_tree` | OS-нейтральная фабрика путей: отображает `<source_root>/…/Form.bin` → `<shadow_root>/…/Form/`. Чистая арифметика путей — содержимое файлов не читается. |
+| `sync_index` | `ShadowIndex` — детект дрейфа по `mtime + size`; `DriftReport`. Читает только метаданные файла, не содержимое. |
 
-## Scope
+## Кто что решает
 
-`v8unpack` already unpacks `cf/cfe/epf` into human-readable JSON and extracts
-form element code into separate files. This package does **not** re-implement
-that. It adds a thin, agent-friendly layer on top:
+Есть три слоя, и их легко перепутать:
 
-- a stable `BinaryExtractor` protocol (so a concrete v8unpack-backed extractor
-  can be injected without leaking failure modes),
-- an OS-neutral shadow-path factory,
-- a `mtime + size` drift index so an agent can tell when a previously extracted
-  shadow is stale and must be rebuilt.
+1. **`v8unpack` (upstream)** — превращает контейнеры `cf/cfe/epf` в
+   человекочитаемое дерево файлов. Он уже выносит **код** форм в отдельные
+   файлы («видны изменения элементов форм»). Его собственное задокументированное
+   ограничение: **разметка** форм и **свойства** объектов остаются нечитаемыми.
+2. **Этот пакет (`v8unpack-agent`)** — **не** трогает бинарное содержимое
+   вообще. Он добавляет обвязку, нужную агенту вокруг `v8unpack`:
+   - стабильный протокол `BinaryExtractor`, чтобы конкретный экстрактор можно
+     было внедрить, не «протекая» режимами отказа (`V8UnpackExtractor` —
+     эталонная реализация);
+   - OS-нейтральную фабрику shadow-путей (`shadow_tree`);
+   - индекс дрейфа по `mtime + size` (`sync_index`), чтобы агент понимал, когда
+     ранее созданная «тень» устарела и её нужно перестроить.
+3. **Никто здесь** — сделать **разметку / свойства** форм читаемыми — это
+   открытая проблема бинарного формата. Её не решает ни `v8unpack`, ни этот пакет.
 
-It does not solve the readability of form layout / object properties — that is a
-known limitation of `v8unpack` itself.
+Итого: если ваша цель — «читать *код* обычных форм», `v8unpack` это уже умеет, а
+данный пакет просто оркестрирует его для агента. Если ваша цель — «сделать
+*разметку / свойства* обычных форм читаемыми», это вне области применения обоих —
+этот пакет не приближает вас к ней.
 
-## Install
+## Установка
 
-Not yet published to PyPI. Install from the repository:
+Пока не опубликовано в PyPI. Установка из репозитория:
 
 ```bash
 pip install "v8unpack>=1.2"
 pip install git+https://github.com/MRDK80/v8unpack-agent.git
 ```
 
-or, from a local checkout:
+или из локального checkout:
 
 ```bash
 pip install .
 ```
 
-## Reference extractor
+## Эталонный экстрактор
 
-The package ships a concrete, optional extractor backed by `v8unpack`,
-`V8UnpackExtractor`, that satisfies the `BinaryExtractor` protocol and honours
-the no-silent-failure contract (a failed or empty run returns
-`extraction_ok=False` with notes instead of raising):
+В пакет входит конкретный опциональный экстрактор поверх `v8unpack` —
+`V8UnpackExtractor`, который удовлетворяет протоколу `BinaryExtractor` и соблюдает
+контракт «без тихого провала» (при ошибке или пустом выводе возвращается
+`extraction_ok=False` с заметками, а не выбрасывается исключение):
 
 ```python
 from pathlib import Path
@@ -65,56 +77,56 @@ for binary in layout.binary_source_root.rglob("*.bin"):
         print("degraded:", result.notes)
 ```
 
-## Quick start
+## Быстрый старт
 
 ```python
 from pathlib import Path
 import v8unpack
 from v8unpack_agent import ShadowTreeLayout, shadow_path_for, ShadowIndex
 
-# 0. v8unpack first turns the container into a tree of files
-#    (this is where the *.bin form binaries live).
+# 0. Сначала v8unpack превращает контейнер в дерево файлов
+#    (именно здесь лежат бинарники форм *.bin).
 source_cf = Path("demo.cf")
 unpacked_root = Path("unpacked_cf/")
 v8unpack.extract(str(source_cf), str(unpacked_root))
 
-# 1. Set up layout: the unpacked tree is the binary source; shadows live apart.
+# 1. Настраиваем layout: распакованное дерево — источник бинарников, тени — отдельно.
 layout = ShadowTreeLayout(
     binary_source_root=unpacked_root,
     shadow_tree_root=Path(".shadow/"),
 )
 
-# 2. shadow_path_for maps each *.bin to its target shadow directory.
+# 2. shadow_path_for сопоставляет каждому *.bin его целевой каталог-тень.
 binaries = list(layout.binary_source_root.rglob("*.bin"))
 for binary in binaries:
     target = shadow_path_for(binary, layout)
-    # ... hand `target` to your concrete BinaryExtractor here ...
+    # ... передайте `target` своему конкретному BinaryExtractor ...
 
-# 3. Build a drift index over the *same* binaries we just located.
+# 3. Строим индекс дрейфа по тем же бинарникам, что только что нашли.
 index = ShadowIndex.build(layout.binary_source_root, binaries)
 index.save(Path(".shadow_index.json"))
 
-# 4. Later: check for drift against the recorded snapshot.
+# 4. Позже: проверяем дрейф относительно записанного снимка.
 report = index.check_drift(layout.binary_source_root, binaries)
 if not report.is_clean:
-    print("Stale shadows:", report.changed)
+    print("Устаревшие тени:", report.changed)
 ```
 
-## Tests
+## Тесты
 
 ```bash
 pip install -e ".[test]"
 pytest
 ```
 
-The suite is fully synthetic — `V8UnpackExtractor` is exercised against an
-injected fake `v8unpack`, so no real 1C container is needed.
+Набор тестов полностью синтетический — `V8UnpackExtractor` проверяется на
+внедрённом фейковом `v8unpack`, так что реальный контейнер 1С не требуется.
 
-## Related
+## Связанное
 
-- Article: *Обычные формы 1С в агентном пайплайне: пошаговая распаковка* (Инфостарт)
-- [saby-integration/v8unpack](https://github.com/saby-integration/v8unpack) — the underlying extractor
+- [saby-integration/v8unpack](https://github.com/saby-integration/v8unpack) — нижележащий экстрактор, который собственно и распаковывает контейнеры
+- Статья (черновик): оркестрация v8unpack внутри агентного пайплайна — тени с детектом дрейфа. Примеры только синтетические/демонстрационные.
 
-## License
+## Лицензия
 
 MIT
