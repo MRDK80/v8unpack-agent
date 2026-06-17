@@ -16,16 +16,23 @@ def main(cf_path: str, out_dir: str) -> None:
     shadow_root = Path(out_dir)
     shadow_root.mkdir(parents=True, exist_ok=True)
 
-    print(f"Unpacking {source} → {shadow_root}")
-    v8unpack.extract(str(source), str(shadow_root))
+    # v8unpack turns the container into a tree of files (the *.bin form
+    # binaries live inside this unpacked tree).
+    unpacked_root = Path(out_dir) / "unpacked"
+    unpacked_root.mkdir(parents=True, exist_ok=True)
+    print(f"Unpacking {source} → {unpacked_root}")
+    v8unpack.extract(str(source), str(unpacked_root))
 
     layout = ShadowTreeLayout(
-        binary_source_root=source.parent,
+        binary_source_root=unpacked_root,
         shadow_tree_root=shadow_root,
     )
 
-    binaries = list(source.parent.glob("*.cf")) + list(source.parent.glob("*.epf"))
+    # Index the form binaries produced by the unpack step.
+    binaries = list(layout.binary_source_root.rglob("*.bin"))
     if binaries:
+        for binary in binaries:
+            print(f"  {binary}  →  {shadow_path_for(binary, layout)}")
         index = ShadowIndex.build(layout.binary_source_root, binaries)
         index_path = shadow_root / "shadow_index.json"
         index.save(index_path)
@@ -34,7 +41,7 @@ def main(cf_path: str, out_dir: str) -> None:
         report = index.check_drift(layout.binary_source_root, binaries)
         print(f"Drift clean: {report.is_clean}")
     else:
-        print("No binaries found for indexing.")
+        print("No .bin binaries found under the unpacked tree.")
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
