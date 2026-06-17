@@ -41,6 +41,30 @@ or, from a local checkout:
 pip install .
 ```
 
+## Reference extractor
+
+The package ships a concrete, optional extractor backed by `v8unpack`,
+`V8UnpackExtractor`, that satisfies the `BinaryExtractor` protocol and honours
+the no-silent-failure contract (a failed or empty run returns
+`extraction_ok=False` with notes instead of raising):
+
+```python
+from pathlib import Path
+from v8unpack_agent import V8UnpackExtractor, ShadowTreeLayout, shadow_path_for
+
+extractor = V8UnpackExtractor()
+layout = ShadowTreeLayout(
+    binary_source_root=Path("unpacked_cf/"),
+    shadow_tree_root=Path(".shadow/"),
+)
+
+for binary in layout.binary_source_root.rglob("*.bin"):
+    target = shadow_path_for(binary, layout)
+    result = extractor.extract(binary, target)
+    if not result.extraction_ok:
+        print("degraded:", result.notes)
+```
+
 ## Quick start
 
 ```python
@@ -75,6 +99,16 @@ report = index.check_drift(layout.binary_source_root, binaries)
 if not report.is_clean:
     print("Stale shadows:", report.changed)
 ```
+
+## Tests
+
+```bash
+pip install -e ".[test]"
+pytest
+```
+
+The suite is fully synthetic — `V8UnpackExtractor` is exercised against an
+injected fake `v8unpack`, so no real 1C container is needed.
 
 ## Related
 

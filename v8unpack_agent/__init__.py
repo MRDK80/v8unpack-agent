@@ -4,6 +4,7 @@ Public surface
 --------------
 - :class:`~v8unpack_agent.extractor.ExtractionResult`
 - :class:`~v8unpack_agent.extractor.BinaryExtractor`
+- :class:`~v8unpack_agent.v8unpack_backend.V8UnpackExtractor`
 - :class:`~v8unpack_agent.shadow_tree.ShadowTreeLayout`
 - :func:`~v8unpack_agent.shadow_tree.shadow_path_for`
 - :class:`~v8unpack_agent.sync_index.ShadowIndex`
@@ -14,10 +15,12 @@ Public surface
 from v8unpack_agent.extractor import BinaryExtractor, ExtractionResult
 from v8unpack_agent.shadow_tree import ShadowTreeLayout, shadow_path_for
 from v8unpack_agent.sync_index import DriftKind, DriftReport, ShadowIndex
+from v8unpack_agent.v8unpack_backend import V8UnpackExtractor
 
 __all__ = [
     "BinaryExtractor",
     "ExtractionResult",
+    "V8UnpackExtractor",
     "ShadowTreeLayout",
     "shadow_path_for",
     "ShadowIndex",

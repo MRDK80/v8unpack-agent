@@ -13,6 +13,11 @@ dependencies = [
     "v8unpack>=1.2",
 ]
 
+[project.optional-dependencies]
+test = [
+    "pytest>=7",
+]
+
 [project.urls]
 Homepage = "https://github.com/MRDK80/v8unpack-agent"
 
