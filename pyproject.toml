@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "v8unpack-agent"
+version = "0.1.0"
+description = "Agent-pipeline adapter for v8unpack: path factory, FormArtifact, drift index"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = [
+    "v8unpack>=1.2",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7",
+]
+
+[project.urls]
+Homepage = "https://github.com/MRDK80/v8unpack-agent"
+
+[tool.setuptools]
+packages = ["v8unpack_agent"]
