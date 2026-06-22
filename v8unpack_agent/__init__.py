@@ -22,10 +22,13 @@ pre-step индексации.
 from v8unpack_agent.form_artifact import FormArtifact
 from v8unpack_agent.form_paths import all_module_paths, form_paths, form_root, item_modules
 from v8unpack_agent.forms_index import FormsIndex, FormsIndexEntry, is_form_stale
+from v8unpack_agent.skd_extractor import SkdResult, extract_skd_queries
 from v8unpack_agent.pipeline import (
+    ErfUnpacker,
     FormUnpacker,
     discover_form_bins,
     unpack_all_forms,
+    unpack_erf,         # новое
     update_forms_index,
 )
 

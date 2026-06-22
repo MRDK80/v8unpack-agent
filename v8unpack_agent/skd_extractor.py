@@ -29,7 +29,6 @@ from typing import Iterator
 _TEMPLATE_BIN = "Template.bin"
 
 # v8-контейнер: 8 байт заголовка, затем UTF-8 BOM (3 байта) + XML
-_V8_HEADER_SIZE = 8
 _UTF8_BOM = b"\xef\xbb\xbf"
 
 # Regex: ищем запросы ВЫБРАТЬ в атрибутах и текстовых узлах XML
@@ -165,20 +164,28 @@ def _read_xml_from_v8_container(
     path: Path,
     warnings: list[str],
 ) -> str | None:
-    """Прочитать XML из v8-контейнера (заголовок + BOM + UTF-8 XML)."""
+    """Прочитать XML из v8-контейнера.
+
+    Размер заголовка контейнера варьируется (8 или 24 байта) в зависимости
+    от версии платформы 1С. Поэтому начало XML определяется динамически:
+    ищем UTF-8 BOM (``ef bb bf``), а при его отсутствии — ``<?xml``.
+    """
     raw = path.read_bytes()
 
-    if len(raw) <= _V8_HEADER_SIZE:
-        warnings.append(
-            f"{path.name}: файл слишком мал для v8-контейнера ({len(raw)} байт)."
-        )
-        return None
-
-    payload = raw[_V8_HEADER_SIZE:]
-
-    # Снять UTF-8 BOM, если есть
-    if payload.startswith(_UTF8_BOM):
-        payload = payload[len(_UTF8_BOM):]
+    # Ищем BOM — он всегда предшествует XML в v8-контейнере.
+    bom_pos = raw.find(_UTF8_BOM)
+    if bom_pos != -1:
+        payload = raw[bom_pos + len(_UTF8_BOM):]
+    else:
+        # Fallback: BOM отсутствует, ищем начало XML-декларации напрямую.
+        xml_start = raw.find(b"<?xml")
+        if xml_start == -1:
+            warnings.append(
+                f"{path.name}: ни UTF-8 BOM, ни XML-заголовок не найдены "
+                f"(размер файла: {len(raw)} байт)."
+            )
+            return None
+        payload = raw[xml_start:]
 
     try:
         return payload.decode("utf-8")

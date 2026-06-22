@@ -42,4 +42,5 @@ def test_fields_match_article():
         "paths",
         "extraction_ok",
         "extraction_warnings",
+        "skd_extracted",
     }

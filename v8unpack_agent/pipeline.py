@@ -26,10 +26,15 @@ from v8unpack_agent.form_artifact import FormArtifact
 from v8unpack_agent.form_paths import form_root
 from v8unpack_agent.forms_index import FormsIndex, FormsIndexEntry
 
+from v8unpack_agent.skd_extractor import SkdResult, extract_skd_queries
+
 # Функция распаковки одной формы: (bin_path, unpacked_root, form_name) -> артефакт.
 # Конкретную реализацию (через v8unpack) инжектирует вызывающий код — модуль
 # остаётся domain-neutral и тестируемым без платформы 1С.
 FormUnpacker = Callable[[Path, Path, str], FormArtifact]
+
+# Функция распаковки .erf-файла: (erf_path, unpacked_root) -> FormArtifact.
+ErfUnpacker = Callable[[Path, Path], FormArtifact]
 
 
 def discover_form_bins(dump_root: Path) -> dict[str, Path]:
@@ -71,6 +76,35 @@ def unpack_all_forms(
     for name, bin_path in sorted(selected.items()):
         artifacts.append(unpacker(bin_path, unpacked_root, name))
     return artifacts
+
+
+def unpack_erf(
+    erf_path: Path,
+    unpacked_root: Path,
+    unpacker: ErfUnpacker,
+) -> FormArtifact:
+    """Распаковать внешний отчёт (.erf) и извлечь запросы СКД.
+
+    Выполняет двухэтапную схему:
+    1. Вызывает unpacker(erf_path, unpacked_root) — получает текстовый слой (BSL).
+    2. Вызывает extract_skd_queries(unpacked_root) — best-effort, не влияет на extraction_ok.
+
+    Если СКД не извлечена, FormArtifact.skd_extracted остаётся False.
+    """
+    artifact = unpacker(erf_path, unpacked_root)
+
+    skd_result: SkdResult = extract_skd_queries(unpacked_root)
+
+    if skd_result.skd_extracted:
+        artifact = FormArtifact(
+            name=artifact.name,
+            paths=artifact.paths,
+            extraction_ok=artifact.extraction_ok,
+            extraction_warnings=list(artifact.extraction_warnings),
+            skd_extracted=True,
+        )
+
+    return artifact
 
 
 def update_forms_index(

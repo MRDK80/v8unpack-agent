@@ -63,7 +63,8 @@ def test_update_forms_index_records_mtimes(tmp_path):
     idx = update_forms_index(dump, unpacked, arts)
     entry = idx.get("ФормаЭлемента")
     assert entry is not None
-    assert entry.bin_path.endswith("Forms/ФормаЭлемента/Ext/Form.bin")
+    import os
+    assert entry.bin_path.endswith(os.path.join("Forms", "ФормаЭлемента", "Ext", "Form.bin"))
     assert entry.extraction_ok is True
 
 
