@@ -21,21 +21,27 @@
    отдельные файлы. Его собственное ограничение: разметка форм и часть свойств
    остаются нечитаемыми.
 2. **`v8unpack-agent` (этот пакет)** — не трогает бинарное содержимое. Поверх
-   распаковщика выстраивает трёхэтапный пайплайн под кейс агента.
+   распаковщика выстраивает пайплайн под кейс агента.
 
-## Трёхэтапный пайплайн
+## Пайплайн
 
 ```
 index_cf(<путь_к_выгрузке>)
-  └─► 1) unpack_all_forms()        # v8unpack по всем Form.bin → текстовый слой
-       └─► 2) update_forms_index() # JSON-карта актуальности (контроль рассинхрона)
-            └─► 3) rag.rebuild()   # code_context() видит код форм
+  ├─► 1) unpack_all_forms()         # Form.bin → текстовый слой (BSL виден)
+  │       └─► parse_elem_json()      # elem.json → form_elements_index (best-effort)
+  ├─► 1') unpack_erf()              # внешний отчёт (.erf): текстовый слой
+  │       └─► extract_skd_queries()  # СКД → skd_queries.json (best-effort)
+  ├─► 2) update_forms_index()       # JSON-карта актуальности
+  └─► 3) rag.rebuild()              # code_context() видит формы + структуру + СКД
 ```
 
 - **Идемпотентность.** Повторный прогон не перекладывает формы, у которых
   `bin_mtime == unpacked_mtime` — только новые/изменённые.
 - **Отказоустойчивость.** Если по одной форме `extraction_ok=False` — пайплайн
   не падает, реестр честно помечает её как частичную.
+- **Best-effort обогащение.** Шаги `parse_elem_json` и `extract_skd_queries`
+  некритичные: их неудача не меняет `extraction_ok`, а лишь оставляет
+  `elem_index_ok=False` / `skd_extracted=False` и дополняет предупреждения.
 - **Прозрачность для агента.** Со стороны индексации это просто ещё один
   источник текстов.
 
@@ -65,6 +71,26 @@ for ds in skd.datasets:
 ошибка пайплайна, а сигнал о неполноте контекста (отчёт без СКД или
 нераспознанный формат `Template.bin`).
 
+### Пакетный режим СКД
+
+Если под корнем несколько отчётов — `extract_skd_queries()` берёт только
+первый `Template.bin`. Для обхода всех используй пакетный вариант:
+
+```python
+from pathlib import Path
+from v8unpack_agent import extract_all_skd_queries, SkdBatchResult
+
+batch: SkdBatchResult = extract_all_skd_queries(Path("text_layer/Report"))
+
+print(batch.skd_extracted)          # True если хотя бы один отчёт извлёкся
+for result in batch.results:
+    if result.skd_extracted:
+        print(result.datasets[0]["name"], "|", result.datasets[0]["query"][:60])
+print(batch.warnings)               # предупреждения по неудачным отчётам
+```
+
+Ошибка одного отчёта не прерывает обработку остальных.
+
 ## elem.json и form_elements_index
 
 После распаковки обычной формы агент видит не только `Form.obj.bsl`, но и `*.elem.json`.
@@ -91,11 +117,11 @@ else:
 | Модуль | Что даёт |
 |---|---|
 | `form_paths` | Фабрика путей по конвенции: `form_paths()`, `item_modules()` (вложенные панели из `Items/`), `all_module_paths()`. Чистая арифметика путей — файлы не читаются. |
-| `form_artifact` | `FormArtifact` (`name`, `paths`, `extraction_ok`, `extraction_warnings`) — результат распаковки одной формы с явным флагом полноты, без тихого провала. |
+| `form_artifact` | `FormArtifact` (`name`, `paths`, `extraction_ok`, `extraction_warnings`, `skd_extracted`, `elem_index_ok`) — результат распаковки одной формы с явным флагом полноты, без тихого провала. |
 | `forms_index` | `FormsIndex` / `FormsIndexEntry` + `is_form_stale()` — реестр актуальности по `bin_mtime` vs `unpacked_mtime`. |
 | `pipeline` | `discover_form_bins()`, `unpack_all_forms()`, `update_forms_index()`, `unpack_erf()`, `ErfUnpacker` — распаковка форм и `.erf` как pre-step индексации. |
-| `skd_extractor` | `extract_skd_queries()`, `SkdResult` — извлечение запросов СКД из `Template.bin` распакованного `.erf`; результат пишется в `skd_queries.json` рядом с корнем. |
-| `elem_parser` | `parse_elem_json()`, `ElemIndexResult` — структура формы из `elem.json` в `form_elements_index.json` (best-effort, не влияет на `extraction_ok`). |
+| `skd_extractor` | `extract_skd_queries()` + `SkdResult` — покейсовый режим: один отчёт → `skd_queries.json`. `extract_all_skd_queries()` + `SkdBatchResult` — пакетный: обходит все `Template.bin` под корнем, ошибка одного отчёта не прерывает остальные. |
+| `elem_parser` | `parse_elem_json()` + `ElemIndexResult` — структура формы из `elem.json` в `form_elements_index.json` (best-effort, не влияет на `extraction_ok`). |
 
 ### Конвенция путей (формы)
 
@@ -119,7 +145,7 @@ else:
 ```
 
 `Template.bin` — v8-контейнер с переменным заголовком (8 или 24 байта в
-зависимости от версии платформы) + UTF-8 BOM + XML схемы компоновки данных.
+зависимости от версии платформы) + UTF-8 BOM (метка порядка байт) + XML схемы компоновки данных.
 `extract_skd_queries()` определяет начало XML динамически — по BOM, а при его
 отсутствии по `<?xml`.
 
