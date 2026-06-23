@@ -198,13 +198,8 @@ pytest
 - [saby-integration/v8unpack](https://github.com/saby-integration/v8unpack) — нижележащий распаковщик контейнеров (Python, MIT)
 - [e8tools/v8unpack](https://github.com/e8tools/v8unpack) — C++-порт (MPL-2.0), поддерживает `.erf`
 - [PR#29 — fix: add ExternalReport (.erf) support](https://github.com/saby-integration/v8unpack/pull/29) — принят
-- Статья: [Обычные формы 1С в агентном пайплайне: пошаговая распаковка](https://infostart.ru/1c/articles/2721726/)
+- [Обычные формы 1С в агентном пайплайне: пошаговая распаковка](https://infostart.ru/1c/articles/2721726/)
 
 ## Лицензия
 
 MIT
-
----
-
-Материал независимый, примеры синтетические/обезличенные; рабочие данные и
-внутренняя инфраструктура не используются.
