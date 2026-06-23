@@ -39,6 +39,12 @@ class FormArtifact:
         данных успешно извлечены в ``skd_queries.json`` рядом с распакованной
         директорией. ``False`` — агент видит только BSL модуля, СКД недоступна.
         Для обычных форм и внешних обработок (.epf) поле не актуально (False).
+    elem_index_ok:
+        Для обычных форм. ``True`` — структура формы (дерево элементов) успешно
+        извлечена из ``elem.json`` в ``form_elements_index.json`` рядом с
+        распакованной директорией. ``False`` — агент видит BSL-модуль формы,
+        но не её структуру (типы элементов, вложенность, привязки). Best-effort:
+        не влияет на ``extraction_ok``.
     """
 
     name: str
@@ -46,6 +52,7 @@ class FormArtifact:
     extraction_ok: bool
     extraction_warnings: list[str] = field(default_factory=list)
     skd_extracted: bool = False
+    elem_index_ok: bool = False
 
     def __post_init__(self) -> None:
         if not self.extraction_ok and not self.extraction_warnings:
@@ -64,6 +71,7 @@ class FormArtifact:
         extraction_ok: bool = True,
         extraction_warnings: list[str] | None = None,
         skd_extracted: bool = False,
+        elem_index_ok: bool = False,
     ) -> "FormArtifact":
         """Собрать артефакт по конвенции путей для формы ``form_name``."""
         return cls(
@@ -72,4 +80,5 @@ class FormArtifact:
             extraction_ok=extraction_ok,
             extraction_warnings=list(extraction_warnings or []),
             skd_extracted=skd_extracted,
+            elem_index_ok=elem_index_ok,
         )

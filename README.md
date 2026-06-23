@@ -65,6 +65,27 @@ for ds in skd.datasets:
 ошибка пайплайна, а сигнал о неполноте контекста (отчёт без СКД или
 нераспознанный формат `Template.bin`).
 
+## elem.json и form_elements_index
+
+После распаковки обычной формы агент видит не только `Form.obj.bsl`, но и `*.elem.json`.
+`Form.obj.bsl` содержит обработчики, а `elem.json` — структуру формы: группы, панели,
+кнопки, поля, привязки и страницы.
+
+```python
+from pathlib import Path
+from v8unpack_agent import parse_elem_json
+
+result = parse_elem_json(Path("unpacked/Form/ФормаЭлемента"))
+
+if result.elem_index_ok:
+    print(result.elements)
+else:
+    print(result.warnings)
+```
+
+Если `elem_index_ok=False`, основной текстовый слой формы остаётся доступен.
+Это не ошибка распаковки, а сигнал, что структурный контекст формы неполный.
+
 ## Публичная поверхность
 
 | Модуль | Что даёт |
@@ -74,6 +95,7 @@ for ds in skd.datasets:
 | `forms_index` | `FormsIndex` / `FormsIndexEntry` + `is_form_stale()` — реестр актуальности по `bin_mtime` vs `unpacked_mtime`. |
 | `pipeline` | `discover_form_bins()`, `unpack_all_forms()`, `update_forms_index()`, `unpack_erf()`, `ErfUnpacker` — распаковка форм и `.erf` как pre-step индексации. |
 | `skd_extractor` | `extract_skd_queries()`, `SkdResult` — извлечение запросов СКД из `Template.bin` распакованного `.erf`; результат пишется в `skd_queries.json` рядом с корнем. |
+| `elem_parser` | `parse_elem_json()`, `ElemIndexResult` — структура формы из `elem.json` в `form_elements_index.json` (best-effort, не влияет на `extraction_ok`). |
 
 ### Конвенция путей (формы)
 
@@ -208,8 +230,3 @@ pytest
 ## Лицензия
 
 MIT
-
----
-
-Материал независимый, примеры синтетические/обезличенные; рабочие данные и
-внутренняя инфраструктура не используются.

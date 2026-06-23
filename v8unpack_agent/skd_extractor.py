@@ -71,6 +71,56 @@ class SkdResult:
     warnings: list[str] = field(default_factory=list)
 
 
+@dataclass
+class SkdBatchResult:
+    skd_extracted: bool
+    results: list[SkdResult]
+    warnings: list[str] = field(default_factory=list)
+
+
+def extract_all_skd_queries(unpacked_root: Path) -> SkdBatchResult:
+    warnings: list[str] = []
+    results: list[SkdResult] = []
+
+    template_paths = sorted(unpacked_root.rglob("Template.bin"))
+
+    if not template_paths:
+        return SkdBatchResult(
+            skd_extracted=False,
+            results=[],
+            warnings=[f"Template.bin не найден в {unpacked_root}"],
+        )
+
+    for template_path in template_paths:
+        report_root = _guess_report_root(template_path)
+        result = extract_skd_queries(report_root)
+
+        if not result.skd_extracted:
+            warnings.extend(f"{report_root}: {w}" for w in result.warnings)
+
+        results.append(result)
+
+    return SkdBatchResult(
+        skd_extracted=any(r.skd_extracted for r in results),
+        results=results,
+        warnings=warnings,
+    )
+
+
+def _guess_report_root(template_path: Path) -> Path:
+    # Конвенция: Report/<Имя>/Template/<ИмяСКД>/Template.bin
+    parts = template_path.parts
+    if "Report" in parts:
+        i = parts.index("Report")
+        if len(parts) > i + 1:
+            return Path(*parts[: i + 2])
+    # Fallback: <Имя>/Template/<СКД>/Template.bin → корень на 3 уровня выше
+    # parents[0] = <СКД>/, parents[1] = Template/, parents[2] = <Имя>/
+    if len(template_path.parents) >= 3:
+        return template_path.parents[2]
+    return template_path.parent
+
+
 def extract_skd_queries(unpacked_root: Path) -> SkdResult:
     """Извлечь запросы СКД из распакованного .erf.
 

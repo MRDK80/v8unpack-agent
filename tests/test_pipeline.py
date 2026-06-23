@@ -87,8 +87,7 @@ def test_pipeline_is_fault_tolerant_on_partial(tmp_path):
     idx = update_forms_index(dump, unpacked, arts)
     entry = idx.get("ФормаСписка")
     assert entry.extraction_ok is False
-    assert entry.warnings == ["вложенная панель не распакована"]
-
+    assert "вложенная панель не распакована" in entry.warnings
 
 def test_idempotent_rerun_keeps_fresh(tmp_path):
     """Повторный прогон без изменений Form.bin не делает форму устаревшей."""

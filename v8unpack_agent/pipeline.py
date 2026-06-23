@@ -4,9 +4,12 @@
 Это превращает ``Form.bin`` из «слепого пятна» в обычный артефакт::
 
     index_cf(<путь_к_выгрузке>)
-      └─► 1) unpack_all_forms()        # v8unpack по всем Form.bin → текстовый слой
-           └─► 2) update_forms_index() # JSON-карта актуальности
-                └─► 3) rag.rebuild()   # code_context() видит формы
+      └─► 1) unpack_all_forms()       # v8unpack по всем Form.bin → текстовый слой
+      │        └─► parse_elem_json()   # elem.json → form_elements_index (best-effort)
+      ├─► 1') unpack_erf()            # для внешних отчётов (.erf): текстовый слой
+      │        └─► extract_skd_queries()  # СКД → skd_queries.json (best-effort)
+      └─► 2) update_forms_index()     # JSON-карта актуальности
+           └─► 3) rag.rebuild()        # code_context() видит формы
 
 Свойства схемы:
 
@@ -14,11 +17,17 @@
   ``bin_mtime == unpacked_mtime`` — только новые/изменённые.
 - **Отказоустойчивость.** Если по одной форме ``extraction_ok=False`` —
   пайплайн не падает, индекс честно помечает её как частичную.
+- **Best-effort обогащение.** Разбор ``elem.json`` (структура формы) и
+  извлечение СКД (система компоновки данных) — необязательные шаги. Их неудача
+  не меняет ``extraction_ok``, а лишь оставляет ``elem_index_ok=False`` /
+  ``skd_extracted=False`` и дополняет предупреждения.
 - **Прозрачность для агента.** Со стороны индексации это просто ещё один
   источник текстов; агент не знает, что под капотом был бинарник.
 """
+
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 from typing import Callable, Iterable
 
@@ -27,6 +36,7 @@ from v8unpack_agent.form_paths import form_root
 from v8unpack_agent.forms_index import FormsIndex, FormsIndexEntry
 
 from v8unpack_agent.skd_extractor import SkdResult, extract_skd_queries
+from v8unpack_agent.elem_parser import ElemIndexResult, parse_elem_json
 
 # Функция распаковки одной формы: (bin_path, unpacked_root, form_name) -> артефакт.
 # Конкретную реализацию (через v8unpack) инжектирует вызывающий код — модуль
@@ -74,7 +84,19 @@ def unpack_all_forms(
     )
     artifacts: list[FormArtifact] = []
     for name, bin_path in sorted(selected.items()):
-        artifacts.append(unpacker(bin_path, unpacked_root, name))
+        artifact = unpacker(bin_path, unpacked_root, name)
+
+        elem_result: ElemIndexResult = parse_elem_json(form_root(unpacked_root, name))
+
+        if elem_result.elem_index_ok or elem_result.warnings:
+            artifact = replace(
+                artifact,
+                elem_index_ok=elem_result.elem_index_ok,
+                extraction_warnings=[*artifact.extraction_warnings, *elem_result.warnings],
+            )
+
+        artifacts.append(artifact)
+
     return artifacts
 
 
@@ -96,13 +118,7 @@ def unpack_erf(
     skd_result: SkdResult = extract_skd_queries(unpacked_root)
 
     if skd_result.skd_extracted:
-        artifact = FormArtifact(
-            name=artifact.name,
-            paths=artifact.paths,
-            extraction_ok=artifact.extraction_ok,
-            extraction_warnings=list(artifact.extraction_warnings),
-            skd_extracted=True,
-        )
+        artifact = replace(artifact, skd_extracted=True)
 
     return artifact
 
