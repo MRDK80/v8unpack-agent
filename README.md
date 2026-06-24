@@ -1,10 +1,13 @@
 # v8unpack-agent
 
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-%3E%3D3.10-blue.svg)](https://www.python.org/)
+[![v8unpack](https://img.shields.io/badge/upstream-v8unpack-orange.svg)](https://github.com/saby-integration/v8unpack)
+
 Надстройка над [v8unpack](https://github.com/saby-integration/v8unpack) для
 агентных / LLM-пайплайнов по конфигурациям 1С.
 
-Реализует доработки из статьи **«Обычные формы 1С в агентном пайплайне:
-пошаговая распаковка»**: распаковщик `Form.bin` сообщество уже написало, а этот
+Реализует доработки из статьи **[Обычные формы 1С в агентном пайплайне: пошаговая распаковка](https://infostart.ru/1c/articles/2721726/)**: распаковщик `Form.bin` сообщество уже написало, а этот
 пакет добавляет то, чего не хватает агенту вокруг него — фабрику путей по
 конвенции, артефакт распаковки с явным флагом полноты, реестр актуальности и
 встраивание распаковки в индексацию как pre-step.
@@ -21,27 +24,21 @@
    отдельные файлы. Его собственное ограничение: разметка форм и часть свойств
    остаются нечитаемыми.
 2. **`v8unpack-agent` (этот пакет)** — не трогает бинарное содержимое. Поверх
-   распаковщика выстраивает пайплайн под кейс агента.
+   распаковщика выстраивает трёхэтапный пайплайн под кейс агента.
 
-## Пайплайн
+## Трёхэтапный пайплайн
 
 ```
 index_cf(<путь_к_выгрузке>)
-  ├─► 1) unpack_all_forms()         # Form.bin → текстовый слой (BSL виден)
-  │       └─► parse_elem_json()      # elem.json → form_elements_index (best-effort)
-  ├─► 1') unpack_erf()              # внешний отчёт (.erf): текстовый слой
-  │       └─► extract_skd_queries()  # СКД → skd_queries.json (best-effort)
-  ├─► 2) update_forms_index()       # JSON-карта актуальности
-  └─► 3) rag.rebuild()              # code_context() видит формы + структуру + СКД
+  └─► 1) unpack_all_forms()        # v8unpack по всем Form.bin → текстовый слой
+       └─► 2) update_forms_index() # JSON-карта актуальности (контроль рассинхрона)
+            └─► 3) rag.rebuild()   # code_context() видит код форм
 ```
 
 - **Идемпотентность.** Повторный прогон не перекладывает формы, у которых
   `bin_mtime == unpacked_mtime` — только новые/изменённые.
 - **Отказоустойчивость.** Если по одной форме `extraction_ok=False` — пайплайн
   не падает, реестр честно помечает её как частичную.
-- **Best-effort обогащение.** Шаги `parse_elem_json` и `extract_skd_queries`
-  некритичные: их неудача не меняет `extraction_ok`, а лишь оставляет
-  `elem_index_ok=False` / `skd_extracted=False` и дополняет предупреждения.
 - **Прозрачность для агента.** Со стороны индексации это просто ещё один
   источник текстов.
 
@@ -71,57 +68,16 @@ for ds in skd.datasets:
 ошибка пайплайна, а сигнал о неполноте контекста (отчёт без СКД или
 нераспознанный формат `Template.bin`).
 
-### Пакетный режим СКД
-
-Если под корнем несколько отчётов — `extract_skd_queries()` берёт только
-первый `Template.bin`. Для обхода всех используй пакетный вариант:
-
-```python
-from pathlib import Path
-from v8unpack_agent import extract_all_skd_queries, SkdBatchResult
-
-batch: SkdBatchResult = extract_all_skd_queries(Path("text_layer/Report"))
-
-print(batch.skd_extracted)          # True если хотя бы один отчёт извлёкся
-for result in batch.results:
-    if result.skd_extracted:
-        print(result.datasets[0]["name"], "|", result.datasets[0]["query"][:60])
-print(batch.warnings)               # предупреждения по неудачным отчётам
-```
-
-Ошибка одного отчёта не прерывает обработку остальных.
-
-## elem.json и form_elements_index
-
-После распаковки обычной формы агент видит не только `Form.obj.bsl`, но и `*.elem.json`.
-`Form.obj.bsl` содержит обработчики, а `elem.json` — структуру формы: группы, панели,
-кнопки, поля, привязки и страницы.
-
-```python
-from pathlib import Path
-from v8unpack_agent import parse_elem_json
-
-result = parse_elem_json(Path("unpacked/Form/ФормаЭлемента"))
-
-if result.elem_index_ok:
-    print(result.elements)
-else:
-    print(result.warnings)
-```
-
-Если `elem_index_ok=False`, основной текстовый слой формы остаётся доступен.
-Это не ошибка распаковки, а сигнал, что структурный контекст формы неполный.
-
 ## Публичная поверхность
 
 | Модуль | Что даёт |
 |---|---|
 | `form_paths` | Фабрика путей по конвенции: `form_paths()`, `item_modules()` (вложенные панели из `Items/`), `all_module_paths()`. Чистая арифметика путей — файлы не читаются. |
-| `form_artifact` | `FormArtifact` (`name`, `paths`, `extraction_ok`, `extraction_warnings`, `skd_extracted`, `elem_index_ok`) — результат распаковки одной формы с явным флагом полноты, без тихого провала. |
+| `form_artifact` | `FormArtifact` (`name`, `paths`, `extraction_ok`, `extraction_warnings`) — результат распаковки одной формы с явным флагом полноты, без тихого провала. |
 | `forms_index` | `FormsIndex` / `FormsIndexEntry` + `is_form_stale()` — реестр актуальности по `bin_mtime` vs `unpacked_mtime`. |
 | `pipeline` | `discover_form_bins()`, `unpack_all_forms()`, `update_forms_index()`, `unpack_erf()`, `ErfUnpacker` — распаковка форм и `.erf` как pre-step индексации. |
-| `skd_extractor` | `extract_skd_queries()` + `SkdResult` — покейсовый режим: один отчёт → `skd_queries.json`. `extract_all_skd_queries()` + `SkdBatchResult` — пакетный: обходит все `Template.bin` под корнем, ошибка одного отчёта не прерывает остальные. |
-| `elem_parser` | `parse_elem_json()` + `ElemIndexResult` — структура формы из `elem.json` в `form_elements_index.json` (best-effort, не влияет на `extraction_ok`). |
+| `skd_extractor` | `extract_skd_queries()`, `SkdResult` — извлечение запросов СКД из `Template.bin` распакованного `.erf`; результат пишется в `skd_queries.json` рядом с корнем. |
+| `elem_parser` | `parse_elem_json()`, `ElemIndexResult` — структурный индекс элементов формы из `elem.json`; иерархия панелей/страниц из путей-ключей `data`, groups best-effort с warning. Пишет `form_elements_index.json` рядом с формой. |
 
 ### Конвенция путей (формы)
 
@@ -145,7 +101,7 @@ else:
 ```
 
 `Template.bin` — v8-контейнер с переменным заголовком (8 или 24 байта в
-зависимости от версии платформы) + UTF-8 BOM (метка порядка байт) + XML схемы компоновки данных.
+зависимости от версии платформы) + UTF-8 BOM + XML схемы компоновки данных.
 `extract_skd_queries()` определяет начало XML динамически — по BOM, а при его
 отсутствии по `<?xml`.
 
@@ -170,13 +126,9 @@ else:
 Пока не опубликовано в PyPI. Установка из репозитория:
 
 ```bash
-# v8unpack с поддержкой .erf (PR#29, до мержа в saby-integration/v8unpack):
-pip install git+https://github.com/MRDK80/v8unpack.git@fix/external-report-support
+pip install "v8unpack>=1.2.10"  # поддержка .erf включена начиная с этой версии
 pip install git+https://github.com/MRDK80/v8unpack-agent.git
 ```
-
-> После принятия [PR#29](https://github.com/saby-integration/v8unpack/pull/29)
-> замените первую строку на `pip install "v8unpack>=1.2.10"`.
 
 или из локального checkout:
 
@@ -250,8 +202,8 @@ pytest
 
 - [saby-integration/v8unpack](https://github.com/saby-integration/v8unpack) — нижележащий распаковщик контейнеров (Python, MIT)
 - [e8tools/v8unpack](https://github.com/e8tools/v8unpack) — C++-порт (MPL-2.0), поддерживает `.erf`
-- [PR#29 — fix: add ExternalReport (.erf) support](https://github.com/saby-integration/v8unpack/pull/29)
-- Статья: «Обычные формы 1С в агентном пайплайне: пошаговая распаковка»
+- [PR#29 — fix: add ExternalReport (.erf) support](https://github.com/saby-integration/v8unpack/pull/29) — принят
+- [Обычные формы 1С в агентном пайплайне: пошаговая распаковка](https://infostart.ru/1c/articles/2721726/)
 
 ## Лицензия
 
