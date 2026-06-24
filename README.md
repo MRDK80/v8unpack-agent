@@ -173,13 +173,9 @@ else:
 Пока не опубликовано в PyPI. Установка из репозитория:
 
 ```bash
-# v8unpack с поддержкой .erf (PR#29, до мержа в saby-integration/v8unpack):
-pip install git+https://github.com/MRDK80/v8unpack.git@fix/external-report-support
+pip install "v8unpack>=1.2.10"  # поддержка .erf включена начиная с этой версии
 pip install git+https://github.com/MRDK80/v8unpack-agent.git
 ```
-
-> После принятия [PR#29](https://github.com/saby-integration/v8unpack/pull/29)
-> замените первую строку на `pip install "v8unpack>=1.2.10"`.
 
 или из локального checkout:
 
@@ -253,7 +249,7 @@ pytest
 
 - [saby-integration/v8unpack](https://github.com/saby-integration/v8unpack) — нижележащий распаковщик контейнеров (Python, MIT)
 - [e8tools/v8unpack](https://github.com/e8tools/v8unpack) — C++-порт (MPL-2.0), поддерживает `.erf`
-- [PR#29 — fix: add ExternalReport (.erf) support](https://github.com/saby-integration/v8unpack/pull/29)
+- [PR#29 — fix: add ExternalReport (.erf) support](https://github.com/saby-integration/v8unpack/pull/29) — принят
 - [Обычные формы 1С в агентном пайплайне: пошаговая распаковка](https://infostart.ru/1c/articles/2721726/)
 
 ## Лицензия
