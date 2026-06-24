@@ -10,9 +10,7 @@ readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
 dependencies = [
-    # TODO: replace with v8unpack>=1.2.10 once PR#29 is merged into saby-integration/v8unpack
-    # was: v8unpack>=1.2
-    "v8unpack @ git+https://github.com/MRDK80/v8unpack.git@fix/external-report-support",
+    "v8unpack>=1.2.10",
 ]
 
 [project.optional-dependencies]
