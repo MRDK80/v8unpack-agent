@@ -164,7 +164,7 @@ def extract_skd_queries(unpacked_root: Path) -> SkdResult:
         )
         return SkdResult(skd_extracted=False, warnings=result_warnings)
 
-    output_path = unpacked_root.parent / _SKD_QUERIES_JSON
+    output_path = unpacked_root / _SKD_QUERIES_JSON
     try:
         output_path.write_text(
             json.dumps(datasets, ensure_ascii=False, indent=2),

@@ -5,3 +5,7 @@
 *.cfe
 *.epf
 *.erf
+verify_*.py
+src/
+*.egg-info/
+*.old
