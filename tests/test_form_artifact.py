@@ -43,4 +43,5 @@ def test_fields_match_article():
         "extraction_ok",
         "extraction_warnings",
         "skd_extracted",
+        "elem_index_ok",
     }

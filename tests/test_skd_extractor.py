@@ -81,14 +81,14 @@ class TestHappyPath:
         assert "ВЫБРАТЬ" in result.datasets[0]["query"]
         assert result.warnings == []
 
-    def test_json_written_to_parent(self, report_dir: Path) -> None:
-        """skd_queries.json пишется в report_dir.parent, не внутрь report_dir."""
+    def test_json_written_to_report_dir(self, report_dir: Path) -> None:
+        """skd_queries.json пишется непосредственно в report_dir."""
         xml = _xml_with_query("ВЫБРАТЬ 1 ИЗ Справочник.Валюты")
         _write_template(report_dir, _make_v8_container(xml))
 
         extract_skd_queries(report_dir)
 
-        json_path = report_dir.parent / "skd_queries.json"
+        json_path = report_dir / "skd_queries.json"
         assert json_path.exists()
         data = json.loads(json_path.read_text(encoding="utf-8"))
         assert isinstance(data, list) and len(data) == 1
