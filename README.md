@@ -13,9 +13,8 @@
 встраивание распаковки в индексацию как pre-step.
 
 **Этот пакет сам не разбирает бинарные формы 1С.** Реальную распаковку
-выполняет [v8unpack](https://github.com/saby-integration/v8unpack) (Python, MIT;
-либо C++-порт [e8tools/v8unpack](https://github.com/e8tools/v8unpack)). Здесь —
-обвязка: *куда* класть результат, *насколько* он полон и *не устарел* ли он.
+выполняет [v8unpack](https://github.com/saby-integration/v8unpack) (Python, MIT).
+Здесь — обвязка: *куда* класть результат, *насколько* он полон и *не устарел* ли он.
 
 ## Кто что решает
 
@@ -248,7 +247,6 @@ pytest
 ## Связанное
 
 - [saby-integration/v8unpack](https://github.com/saby-integration/v8unpack) — нижележащий распаковщик контейнеров (Python, MIT)
-- [e8tools/v8unpack](https://github.com/e8tools/v8unpack) — C++-порт (MPL-2.0), поддерживает `.erf`
 - [PR#29 — fix: add ExternalReport (.erf) support](https://github.com/saby-integration/v8unpack/pull/29) — принят
 - [Обычные формы 1С в агентном пайплайне: пошаговая распаковка](https://infostart.ru/1c/articles/2721726/)
 
