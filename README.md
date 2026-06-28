@@ -173,7 +173,7 @@ else:
 Пока не опубликовано в PyPI. Установка из репозитория:
 
 ```bash
-pip install "v8unpack>=1.2.10"  # поддержка .erf включена начиная с этой версии
+pip install "v8unpack>=1.2.9"   # поддержка .erf включена начиная с этой версии
 pip install git+https://github.com/MRDK80/v8unpack-agent.git
 ```
 
