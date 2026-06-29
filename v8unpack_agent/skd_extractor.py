@@ -19,7 +19,7 @@ import re
 import warnings as _warnings_module
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterator
+from typing import Iterator, Union
 
 
 # ---------------------------------------------------------------------------
@@ -78,7 +78,8 @@ class SkdBatchResult:
     warnings: list[str] = field(default_factory=list)
 
 
-def extract_all_skd_queries(unpacked_root: Path) -> SkdBatchResult:
+def extract_all_skd_queries(unpacked_root: Union[str, Path]) -> SkdBatchResult:
+    unpacked_root = Path(unpacked_root)
     warnings: list[str] = []
     results: list[SkdResult] = []
 
@@ -121,13 +122,14 @@ def _guess_report_root(template_path: Path) -> Path:
     return template_path.parent
 
 
-def extract_skd_queries(unpacked_root: Path) -> SkdResult:
+def extract_skd_queries(unpacked_root: Union[str, Path]) -> SkdResult:
     """Извлечь запросы СКД из распакованного .erf.
 
     Parameters
     ----------
     unpacked_root:
         Корень директории, в которую был распакован .erf-файл.
+        Принимает как ``str``, так и ``pathlib.Path``.
 
     Returns
     -------
@@ -135,6 +137,7 @@ def extract_skd_queries(unpacked_root: Path) -> SkdResult:
         Всегда возвращает результат (не бросает исключений).
         При любой ошибке ``skd_extracted=False``, детали — в ``warnings``.
     """
+    unpacked_root = Path(unpacked_root)
     result_warnings: list[str] = []
 
     try:

@@ -5,6 +5,8 @@
 """
 from pathlib import Path
 
+import pytest
+
 from v8unpack_agent.skd_extractor import (
     _guess_report_root,
     extract_all_skd_queries,
@@ -17,7 +19,7 @@ from v8unpack_agent.skd_extractor import (
 # ---------------------------------------------------------------------------
 
 def _make_template_bin(dataset_name: str = "Dataset1") -> bytes:
-    # XML строится как str (кириллика допустима), затем кодируется в UTF-8
+    # XML строится как str (кириллица допустима), затем кодируется в UTF-8
     xml = (
         '<?xml version="1.0" encoding="UTF-8"?>'
         "<DataCompositionSchema>"
@@ -141,3 +143,30 @@ def test_batch_no_template_bin_returns_not_extracted(tmp_path):
     assert batch.skd_extracted is False
     assert batch.results == []
     assert batch.warnings
+
+
+# ---------------------------------------------------------------------------
+# Регрессия: str-пути не вызывают AttributeError
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("path_type", [str, Path], ids=["str", "Path"])
+def test_extract_all_skd_queries_accepts_str_and_path(tmp_path, path_type):
+    """Регрессия: extract_all_skd_queries не должна бросать
+    AttributeError при передаче строки вместо pathlib.Path."""
+    _make_report(tmp_path, "TestReport")
+    root = path_type(tmp_path)
+
+    # Главное: не должно бросать исключение
+    batch = extract_all_skd_queries(root)
+    assert batch.skd_extracted is True
+
+
+@pytest.mark.parametrize("path_type", [str, Path], ids=["str", "Path"])
+def test_extract_skd_queries_accepts_str_and_path(tmp_path, path_type):
+    """Регрессия: extract_skd_queries не должна бросать
+    AttributeError при передаче строки вместо pathlib.Path."""
+    _make_report(tmp_path, "TestReport")
+    report_root = path_type(tmp_path / "Report" / "TestReport")
+
+    result = extract_skd_queries(report_root)
+    assert result.skd_extracted is True
