@@ -5,7 +5,7 @@
 - Form (DataProcessor / ExternalDataProcessor — различаем по object_type)
 - CatalogForm
 - DocumentForm
-- CommonForm
+- CommonForm (3-уровневый layout, без object_name)
 - ReportForm (Report / ExternalReport — различаем по object_type)
 - неполная форма (нет .obj.bsl) не попадает в индекс
 - ключи (object_type, object_name, container_name, form_name) не коллидируют
@@ -33,7 +33,10 @@ def _make_form(
     with_bsl: bool = True,
     with_json: bool = True,
 ) -> Path:
-    """Создать синтетическую директорию формы в tmp-дереве."""
+    """Создать синтетическую директорию формы в 4-уровневом tmp-дереве.
+
+    Layout: root/<object_type>/<object_name>/<container_name>/<form_name>/
+    """
     form_dir = root / object_type / object_name / container_name / form_name
     form_dir.mkdir(parents=True, exist_ok=True)
     if with_bsl:
@@ -42,6 +45,30 @@ def _make_form(
         )
     if with_json:
         (form_dir / f"{container_name}.json").write_text(
+            '{"synthetic": true}', encoding="utf-8"
+        )
+    return form_dir
+
+
+def _make_common_form(
+    root: Path,
+    form_name: str,
+    *,
+    with_bsl: bool = True,
+    with_json: bool = True,
+) -> Path:
+    """Создать синтетическую общую форму в 3-уровневом tmp-дереве.
+
+    Layout: root/CommonForm/<form_name>/
+    """
+    form_dir = root / "CommonForm" / form_name
+    form_dir.mkdir(parents=True, exist_ok=True)
+    if with_bsl:
+        (form_dir / "CommonForm.obj.bsl").write_text(
+            "// synthetic", encoding="utf-8"
+        )
+    if with_json:
+        (form_dir / "CommonForm.json").write_text(
             '{"synthetic": true}', encoding="utf-8"
         )
     return form_dir
@@ -112,15 +139,21 @@ def test_scan_document_form(tmp_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# CommonForm
+# CommonForm — 3-уровневый layout (нет object_name)
 # ---------------------------------------------------------------------------
 
 def test_scan_common_form(tmp_path: Path) -> None:
+    """Общая форма: root/CommonForm/<form_name>/CommonForm.obj.bsl."""
     root = tmp_path / "cf_export"
-    _make_form(root, "CommonForm", "ОбщаяФорма", "CommonForm", "Основная")
+    _make_common_form(root, "Основная")
     index = scan_forms(root)
     assert index.total == 1
-    assert index.forms[0].container_name == "CommonForm"
+    e = index.forms[0]
+    assert e.object_type == "CommonForm"
+    assert e.object_name == ""
+    assert e.container_name == "CommonForm"
+    assert e.form_name == "Основная"
+    assert e.bsl_path.name == "CommonForm.obj.bsl"
 
 
 # ---------------------------------------------------------------------------
@@ -176,8 +209,9 @@ def test_no_key_collision(tmp_path: Path) -> None:
     _make_form(root, "Document", "Реализация", "DocumentForm", "ФормаДокумента")
     _make_form(root, "DataProcessor", "Обработка", "Form", "Форма")
     _make_form(root, "Report", "Отчёт", "ReportForm", "ФормаОтчёта")
+    _make_common_form(root, "Общая")
     index = scan_forms(root)
-    assert index.total == 5
+    assert index.total == 6
     keys = [
         (e.object_type, e.object_name, e.container_name, e.form_name)
         for e in index.forms
