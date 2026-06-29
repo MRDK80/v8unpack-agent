@@ -18,6 +18,7 @@ from pathlib import Path
 
 import pytest
 
+import v8unpack_agent.scan_forms as sf_module
 from v8unpack_agent.scan_forms import FormEntry, FormScanIndex, scan_forms
 
 
@@ -225,8 +226,6 @@ def test_json_serialization(tmp_path: Path) -> None:
 
 def test_best_effort_continues(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Исключение в _scan_form_dir не останавливает сканирование."""
-    from v8unpack_agent import scan_forms as sf_module
-
     root = tmp_path / "cf_export"
     _make_form(root, "Catalog", "Склады", "CatalogForm", "ФормаЭлемента")
     _make_form(root, "Catalog", "Склады", "CatalogForm", "ФормаСписка")
