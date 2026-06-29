@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-%3E%3D3.10-blue.svg)](https://www.python.org/)
-[![v8unpack](https://img.shields.io/badge/upstream-v8unpack-orange.svg)](https://github.com/saby-integration/v8unpack)
+[![v8unpack](https://img.shields.io/badge/upstream-v8unpack-orange.svg)](https://github.com/saby-integration/v8unpack))
 
 Надстройка над [v8unpack](https://github.com/saby-integration/v8unpack) для
 агентных / LLM-пайплайнов по конфигурациям 1С.
@@ -29,6 +29,7 @@
 
 ```
 index_cf(<путь_к_выгрузке>)
+  ├─► 0) scan_forms()               # опись всех форм по layout-у выгрузки
   ├─► 1) unpack_all_forms()         # Form.bin → текстовый слой (BSL виден)
   │       └─► parse_elem_json()      # elem.json → form_elements_index (best-effort)
   ├─► 1') unpack_erf()              # внешний отчёт (.erf): текстовый слой
@@ -46,6 +47,100 @@ index_cf(<путь_к_выгрузке>)
   `elem_index_ok=False` / `skd_extracted=False` и дополняет предупреждения.
 - **Прозрачность для агента.** Со стороны индексации это просто ещё один
   источник текстов.
+
+## Сканер форм (scan_forms)
+
+`scan_forms(cf_export_root)` обходит дерево выгрузки и строит `FormScanIndex` —
+опись всех форм с их артефактами (`.obj.bsl` + `.json`) без какого-либо парсинга
+содержимого. Это нулевой шаг пайплайна: сначала узнаём что есть, потом
+распаковываем.
+
+```python
+from pathlib import Path
+from v8unpack_agent.scan_forms import scan_forms
+
+root = Path("/path/to/cf_export")
+index = scan_forms(root, save_to=Path("forms_scan_index.json"))
+
+print(f"Найдено форм: {index.total}")
+for entry in index.forms:
+    print(entry.container_name, entry.object_name, entry.form_name)
+```
+
+### Layout выгрузки v8unpack
+
+Сканер поддерживает два layout-а:
+
+**4-уровневый** (все типы кроме CommonForm):
+
+```
+<root>/
+  <ObjectType>/           # Catalog, Document, DataProcessor, …
+    <ObjectName>/         # Склады, Контрагенты, …
+      <ContainerName>/    # CatalogForm, DocumentForm, Form, ReportForm, …
+        <FormName>/       # ФормаЭлемента, ФормаСписка, …
+          <ContainerName>.obj.bsl
+          <ContainerName>.json
+```
+
+**3-уровневый** (CommonForm — общие формы конфигурации):
+
+```
+<root>/
+  CommonForm/
+    <FormName>/           # НастройкаПрограммы, ВыборСертификата, …
+      CommonForm.obj.bsl
+      CommonForm.json
+```
+
+### Семантика контейнеров
+
+| Контейнер | Типы объектов |
+|---|---|
+| `Form` | `DataProcessor` (внутри `.cf`) и `ExternalDataProcessor` (`.epf`) — различать по `object_type` |
+| `ReportForm` | `Report` (`.cf`) и `ExternalReport` (`.erf`) — различать по `object_type` |
+| `CatalogForm`, `DocumentForm`, `InformationRegisterForm`, … | однозначно определяются именем контейнера |
+| `CommonForm` | общие формы, без уровня `ObjectName` |
+
+Паттерн обхода: `endswith("Form")` — нет хардкода конкретных имён контейнеров.
+
+### FormEntry и FormScanIndex
+
+`FormEntry` — dataclass, результат обхода одной формы:
+
+| Поле | Тип | Значение |
+|---|---|---|
+| `object_type` | string | Тип объекта метаданных: `Catalog`, `Document`, `DataProcessor`, … |
+| `object_name` | string | Имя объекта: `Склады`, `Контрагенты`, … (для `CommonForm` совпадает с `container_name`) |
+| `container_name` | string | Имя контейнера форм: `CatalogForm`, `Form`, `CommonForm`, … |
+| `form_name` | string | Имя формы: `ФормаЭлемента`, `ФормаСписка`, … |
+| `form_path` | string | Путь к директории формы относительно корня выгрузки |
+| `bsl_path` | string | Путь к `.obj.bsl` относительно корня выгрузки |
+| `json_path` | string | Путь к `.json` относительно корня выгрузки |
+| `warnings` | array | Предупреждения (обычно пусто) |
+
+`FormScanIndex` содержит список `forms`, счётчик `total`, метку `scanned_at` и
+список `scan_warnings` (пропущенные формы без `.obj.bsl`).
+
+### Поведение при ошибках
+
+- Форма без `.obj.bsl` → `skipped (no .obj.bsl): <path>` в `scan_warnings`, в индекс не попадает.
+- Ошибка в одной форме не останавливает обход (best-effort).
+
+### Реальные данные (живая конфигурация, 2164 формы)
+
+| Контейнер | Кол-во |
+|---|---|
+| DocumentForm | 693 |
+| CatalogForm | 474 |
+| Form | 417 |
+| ReportForm | 166 |
+| CommonForm | 162 |
+| InformationRegisterForm | 148 |
+| ExchangePlanForm | 34 |
+| ChartOfCharacteristicTypeForm | 19 |
+| AccumulationRegisterForm | 17 |
+| … | … |
 
 ## Внешние отчёты (.erf)
 
@@ -118,6 +213,7 @@ else:
 
 | Модуль | Что даёт |
 |---|---|
+| `scan_forms` | `scan_forms()` + `FormEntry` + `FormScanIndex` — опись всех форм по layout-у выгрузки (все `*Form`-контейнеры + `CommonForm`), best-effort, JSON-экспорт. Нулевой шаг пайплайна: файловая система, без парсинга BSL. |
 | `form_paths` | Фабрика путей по конвенции: `form_paths()`, `item_modules()` (вложенные панели из `Items/`), `all_module_paths()`. Чистая арифметика путей — файлы не читаются. |
 | `form_artifact` | `FormArtifact` (`name`, `paths`, `extraction_ok`, `extraction_warnings`, `skd_extracted`, `elem_index_ok`) — результат распаковки одной формы с явным флагом полноты, без тихого провала. |
 | `forms_index` | `FormsIndex` / `FormsIndexEntry` + `is_form_stale()` — реестр актуальности по `bin_mtime` vs `unpacked_mtime`. |
@@ -218,6 +314,11 @@ def unpack_one(bin_path: Path, root: Path, form_name: str) -> FormArtifact:
         extraction_warnings=["код формы не распакован"],
     )
 
+
+# 0) опись всех форм по layout-у выгрузки
+from v8unpack_agent.scan_forms import scan_forms
+scan_index = scan_forms(dump_root, save_to=Path("forms_scan_index.json"))
+print(f"Всего форм в конфигурации: {scan_index.total}")
 
 # 1) распаковываем все формы выгрузки
 artifacts = unpack_all_forms(dump_root, unpacked_root, unpack_one)
