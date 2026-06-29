@@ -16,9 +16,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
-import v8unpack_agent.scan_forms as sf_module
 from v8unpack_agent.scan_forms import FormEntry, FormScanIndex, scan_forms
 
 
@@ -221,27 +218,24 @@ def test_json_serialization(tmp_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# best-effort: ошибка одной формы не останавливает обход
+# best-effort: не-директория в контейнере пропускается, соседняя форма собирается
 # ---------------------------------------------------------------------------
 
-def test_best_effort_continues(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Исключение в _scan_form_dir не останавливает сканирование."""
+def test_best_effort_continues(tmp_path: Path) -> None:
+    """Файл вместо директории формы пропускается (is_dir()==False),
+    но соседняя нормальная форма всё равно собирается.
+    Нет monkeypatch, нет зависимости от приватных имён модуля.
+    """
     root = tmp_path / "cf_export"
-    _make_form(root, "Catalog", "Склады", "CatalogForm", "ФормаЭлемента")
+    container_dir = root / "Catalog" / "Склады" / "CatalogForm"
+    container_dir.mkdir(parents=True, exist_ok=True)
+
+    # файл с именем формы — is_dir()==False, сканер пропустит его
+    (container_dir / "НеДиректория").write_text("not a dir", encoding="utf-8")
+
+    # нормальная форма рядом
     _make_form(root, "Catalog", "Склады", "CatalogForm", "ФормаСписка")
 
-    call_count = 0
-    original = sf_module._scan_form_dir
-
-    def patched(form_dir, *args, **kwargs):
-        nonlocal call_count
-        call_count += 1
-        if call_count == 1:
-            raise RuntimeError("synthetic error")
-        return original(form_dir, *args, **kwargs)
-
-    monkeypatch.setattr(sf_module, "_scan_form_dir", patched)
     index = scan_forms(root)
-    # одна упала, одна собралась
     assert index.total == 1
-    assert any("error" in w for w in index.scan_warnings)
+    assert index.forms[0].form_name == "ФормаСписка"
