@@ -2,11 +2,18 @@
 
 Реализует issues #9 и #13.
 
-Паттерн обхода (реальный layout v8unpack)::
+v8unpack формирует два layout-а:
+
+**4-уровневый** (большинство объектов)::
 
     cf_export/<Тип>/<Объект>/<ContainerName>/<ИмяФормы>/
 
-где ``ContainerName`` оканчивается на ``Form``.
+**3-уровневый** (общие формы — нет объекта-владельца)::
+
+    cf_export/CommonForm/<ИмяФормы>/
+
+POO различения без фиксов v8unpack: если верхний каталог сам
+заканчивается на ``Form`` — это 3-уровневый layout (``object_name=""``).
 
 Артефакты каждой формы::
 
@@ -27,7 +34,7 @@ from __future__ import annotations
 
 import json
 import logging
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -40,16 +47,16 @@ class FormEntry:
     """Одна форма, найденная при сканировании cf_export."""
 
     object_type: str
-    """Тип метаобъекта: ``Catalog``, ``Document``, ``DataProcessor`` и т.д."""
+    """Тип метаобъекта: ``Catalog``, ``Document``, ``CommonForm`` и т.д."""
 
     object_name: str
-    """Имя метаобъекта: ``Склады``, ``АктСписания`` и т.д."""
+    """Имя метаобъекта. Пустая строка для общих форм (CommonForm-layout)."""
 
     container_name: str
-    """Имя контейнера форм: ``CatalogForm``, ``Form``, ``ReportForm`` и т.д."""
+    """Имя контейнера: ``CatalogForm``, ``Form``, ``CommonForm`` и т.д."""
 
     form_name: str
-    """Имя директории формы: ``ФормаЭлемента``, ``ФормаСписка`` и т.д."""
+    """Имя директории формы."""
 
     form_path: Path
     """Абсолютный путь к директории формы."""
@@ -139,6 +146,33 @@ def _scan_form_dir(
     )
 
 
+def _collect_forms_from_container(
+    container_dir: Path,
+    object_type: str,
+    object_name: str,
+    container_name: str,
+    root: Path,
+    forms: list[FormEntry],
+    scan_warnings: list[str],
+) -> None:
+    """Обход всех форм внутри контейнера, best-effort."""
+    for form_dir in sorted(container_dir.iterdir()):
+        if not form_dir.is_dir():
+            continue
+        try:
+            entry = _scan_form_dir(form_dir, object_type, object_name, container_name)
+            if entry is not None:
+                forms.append(entry)
+            else:
+                msg = f"skipped (no .obj.bsl): {form_dir.relative_to(root).as_posix()}"
+                scan_warnings.append(msg)
+                logger.debug(msg)
+        except Exception as exc:  # noqa: BLE001
+            msg = f"error scanning {form_dir}: {exc}"
+            scan_warnings.append(msg)
+            logger.warning(msg)
+
+
 def scan_forms(
     cf_export_root: Path,
     save_to: Optional[Path] = None,
@@ -148,7 +182,7 @@ def scan_forms(
     Параметры
     ---------
     cf_export_root:
-        Корень выгрузки (каталог, содержащий ``Catalog/``, ``Document/`` и др.).
+        Корень выгрузки (``Catalog/``, ``Document/``, ``CommonForm/`` и др.).
     save_to:
         Если задан, сохранить JSON-индекс в этот файл.
 
@@ -158,15 +192,23 @@ def scan_forms(
 
     Логика обхода
     -------------
-    ::
+    4-уровневый layout (большинство объектов)::
 
         cf_export_root/
-          <object_type>/          # Catalog, Document, DataProcessor …
+          <object_type>/          # Catalog, Document …
             <object_name>/        # Склады, АктСписания …
-              <ContainerName>/    # *Form — суффикс «Form»
-                <form_name>/      # ФормаЭлемента, ФормаСписка …
-                  <ContainerName>.obj.bsl   # обязательно
-                  <ContainerName>.json      # желательно
+              <ContainerName>/    # *Form
+                <form_name>/
+                  <ContainerName>.obj.bsl
+                  <ContainerName>.json
+
+    3-уровневый layout (общие формы, нет object_name)::
+
+        cf_export_root/
+          CommonForm/             # сам каталог заканчивается на Form
+            <form_name>/
+              CommonForm.obj.bsl
+              CommonForm.json
 
     Ошибка отдельной формы не останавливает обход (best-effort).
     """
@@ -188,6 +230,22 @@ def scan_forms(
             continue
         object_type = type_dir.name
 
+        # --- 3-уровневый layout: CommonForm и аналоги ---
+        # type_dir сам является контейнером форм;
+        # вложенные каталоги — непосредственно form_nameе.
+        if _is_form_container(type_dir):
+            _collect_forms_from_container(
+                container_dir=type_dir,
+                object_type=object_type,
+                object_name="",
+                container_name=object_type,
+                root=root,
+                forms=forms,
+                scan_warnings=scan_warnings,
+            )
+            continue
+
+        # --- 4-уровневый layout: Catalog, Document, DataProcessor и др. ---
         for obj_dir in sorted(type_dir.iterdir()):
             if not obj_dir.is_dir():
                 continue
@@ -196,28 +254,15 @@ def scan_forms(
             for container_dir in sorted(obj_dir.iterdir()):
                 if not _is_form_container(container_dir):
                     continue
-                container_name = container_dir.name
-
-                for form_dir in sorted(container_dir.iterdir()):
-                    if not form_dir.is_dir():
-                        continue
-                    try:
-                        entry = _scan_form_dir(
-                            form_dir, object_type, object_name, container_name
-                        )
-                        if entry is not None:
-                            forms.append(entry)
-                        else:
-                            msg = (
-                                f"skipped (no .obj.bsl): "
-                                f"{form_dir.relative_to(root).as_posix()}"
-                            )
-                            scan_warnings.append(msg)
-                            logger.debug(msg)
-                    except Exception as exc:  # noqa: BLE001
-                        msg = f"error scanning {form_dir}: {exc}"
-                        scan_warnings.append(msg)
-                        logger.warning(msg)
+                _collect_forms_from_container(
+                    container_dir=container_dir,
+                    object_type=object_type,
+                    object_name=object_name,
+                    container_name=container_dir.name,
+                    root=root,
+                    forms=forms,
+                    scan_warnings=scan_warnings,
+                )
 
     index = FormScanIndex(
         forms=forms,
