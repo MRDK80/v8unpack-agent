@@ -20,6 +20,8 @@ pre-step индексации.
 - :func:`~v8unpack_agent.scan_forms.scan_forms`
 - :class:`~v8unpack_agent.scan_forms.FormEntry`
 - :class:`~v8unpack_agent.scan_forms.FormScanIndex`
+- :func:`~v8unpack_agent.drift_checker.check_drift`
+- :class:`~v8unpack_agent.drift_checker.DriftReport`
 """
 
 from v8unpack_agent.form_artifact import FormArtifact
@@ -41,6 +43,7 @@ from v8unpack_agent.pipeline import (
     update_forms_index,
 )
 from v8unpack_agent.scan_forms import FormEntry, FormScanIndex, scan_forms
+from v8unpack_agent.drift_checker import DriftReport, check_drift
 
 __all__ = [
     "form_paths",
@@ -66,4 +69,6 @@ __all__ = [
     "scan_forms",
     "FormEntry",
     "FormScanIndex",
+    "check_drift",
+    "DriftReport",
 ]
