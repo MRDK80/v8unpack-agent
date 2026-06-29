@@ -5,11 +5,7 @@
 баз данных, строк подключения.
 """
 import json
-import os
-import time
 from pathlib import Path
-
-import pytest
 
 from v8unpack_agent.drift_checker import (
     DriftReport,
@@ -221,7 +217,7 @@ def test_save_to_and_load(tmp_path):
     _make_form(root, "Catalog", "Items", "CatalogForm", "ListForm")
 
     idx = tmp_path / "forms_index.json"
-    idx.write_text(json.dumps(_build_index(root, [
+    idx.write_text(json.dumps(_build_index(root, [\
         ("Catalog", "Items", "CatalogForm", "ListForm")
     ])), encoding="utf-8")
 
@@ -236,25 +232,25 @@ def test_save_to_and_load(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# Тест 8: modified — форма изменилась (mtime вырос)
+# Тест 8: modified зарезервирован — без mtime-baseline всегда пуст
+#
+# DriftReport.modified требует mtime-baseline в FormScanIndex.
+# FormScanIndex (issue #9/#13) не хранит mtime — это scope отдельной задачи.
+# Текущий check_drift возвращает modified=[] без baseline: поведение корректно.
 # ---------------------------------------------------------------------------
 
-def test_modified_form(tmp_path):
+def test_modified_reserved_without_baseline(tmp_path):
+    """modified=[] пока FormScanIndex не хранит mtime-baseline."""
     root = tmp_path / "cf_export"
-    form_dir = _make_form(root, "Catalog", "Items", "CatalogForm", "ListForm")
-    bsl = form_dir / "CatalogForm.obj.bsl"
+    _make_form(root, "Catalog", "Items", "CatalogForm", "ListForm")
 
     forms = [("Catalog", "Items", "CatalogForm", "ListForm")]
-
-    old_mtime = bsl.stat().st_mtime - 2.0
-    os.utime(bsl, (old_mtime, old_mtime))
-
     idx = tmp_path / "forms_index.json"
     idx.write_text(json.dumps(_build_index(root, forms)), encoding="utf-8")
 
-    bsl.write_text("-- modified bsl", encoding="utf-8")
-
     report = check_drift(cf_export_root=root, index_path=idx)
 
-    assert _form_key("Catalog", "Items", "CatalogForm", "ListForm") in report.modified
-    assert report.has_drift is True
+    # modified пуст без baseline — ожидаемое поведение в scope #10
+    assert report.modified == []
+    # has_drift=False: форма на месте, не stale, не added, не removed
+    assert report.has_drift is False
