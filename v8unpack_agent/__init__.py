@@ -17,6 +17,9 @@ pre-step индексации.
 - :func:`~v8unpack_agent.pipeline.unpack_all_forms`
 - :func:`~v8unpack_agent.pipeline.update_forms_index`
 - :func:`~v8unpack_agent.pipeline.discover_form_bins`
+- :func:`~v8unpack_agent.scan_forms.scan_forms`
+- :class:`~v8unpack_agent.scan_forms.FormEntry`
+- :class:`~v8unpack_agent.scan_forms.FormScanIndex`
 """
 
 from v8unpack_agent.form_artifact import FormArtifact
@@ -34,9 +37,10 @@ from v8unpack_agent.pipeline import (
     FormUnpacker,
     discover_form_bins,
     unpack_all_forms,
-    unpack_erf,         # новое
+    unpack_erf,
     update_forms_index,
 )
+from v8unpack_agent.scan_forms import FormEntry, FormScanIndex, scan_forms
 
 __all__ = [
     "form_paths",
@@ -59,4 +63,7 @@ __all__ = [
     "parse_elem_json",
     "SkdBatchResult",
     "extract_all_skd_queries",
+    "scan_forms",
+    "FormEntry",
+    "FormScanIndex",
 ]
