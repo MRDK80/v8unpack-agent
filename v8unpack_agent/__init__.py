@@ -44,6 +44,7 @@ from v8unpack_agent.pipeline import (
 )
 from v8unpack_agent.scan_forms import FormEntry, FormScanIndex, scan_forms
 from v8unpack_agent.drift_checker import DriftReport, check_drift
+from v8unpack_agent.form_router import FormRouter, RouteResult
 
 __all__ = [
     "form_paths",
@@ -71,4 +72,6 @@ __all__ = [
     "FormScanIndex",
     "check_drift",
     "DriftReport",
+    "FormRouter",
+    "RouteResult",
 ]
