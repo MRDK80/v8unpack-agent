@@ -5,6 +5,7 @@
 баз данных, строк подключения.
 """
 import json
+import time
 from pathlib import Path
 
 from v8unpack_agent.drift_checker import (
@@ -43,6 +44,7 @@ def _build_index(root: Path, forms: list[tuple]) -> dict:
 
     Каждый элемент: (object_type, object_name, container_name, form_name).
     bsl_path указывает на реальный файл в root.
+    bsl_mtime заполняется из stat() файла (если он существует).
     """
     entries = []
     for ot, on, cn, fn in forms:
@@ -50,6 +52,26 @@ def _build_index(root: Path, forms: list[tuple]) -> dict:
             bsl = root / "CommonForm" / fn / "CommonForm.obj.bsl"
         else:
             bsl = root / ot / on / cn / fn / (cn + ".obj.bsl")
+        mtime = bsl.stat().st_mtime if bsl.exists() else 0.0
+        entries.append({
+            "object_type": ot,
+            "object_name": on,
+            "container_name": cn,
+            "form_name": fn,
+            "bsl_path": bsl.as_posix(),
+            "json_path": (bsl.parent / (cn + ".json")).as_posix(),
+            "bsl_mtime": mtime,
+            "warnings": [],
+        })
+    return {"total": len(entries), "scanned_at": "2026-01-01T00:00:00+00:00",
+            "scan_warnings": [], "forms": entries}
+
+
+def _build_index_no_mtime(root: Path, forms: list[tuple]) -> dict:
+    """Построить индекс без поля bsl_mtime (старый формат)."""
+    entries = []
+    for ot, on, cn, fn in forms:
+        bsl = root / ot / on / cn / fn / (cn + ".obj.bsl")
         entries.append({
             "object_type": ot,
             "object_name": on,
@@ -58,6 +80,7 @@ def _build_index(root: Path, forms: list[tuple]) -> dict:
             "bsl_path": bsl.as_posix(),
             "json_path": (bsl.parent / (cn + ".json")).as_posix(),
             "warnings": [],
+            # bsl_mtime отсутствует намеренно
         })
     return {"total": len(entries), "scanned_at": "2026-01-01T00:00:00+00:00",
             "scan_warnings": [], "forms": entries}
@@ -95,7 +118,7 @@ def test_no_drift(tmp_path):
 def test_added_form(tmp_path):
     root = tmp_path / "cf_export"
     _make_form(root, "Catalog", "Items", "CatalogForm", "ListForm")
-    _make_form(root, "Catalog", "Items", "CatalogForm", "NewForm")  # новая
+    _make_form(root, "Catalog", "Items", "CatalogForm", "NewForm")
 
     forms = [("Catalog", "Items", "CatalogForm", "ListForm")]
     idx = tmp_path / "forms_index.json"
@@ -128,6 +151,7 @@ def test_removed_form(tmp_path):
             "container_name": cn, "form_name": fn,
             "bsl_path": bsl.as_posix(),
             "json_path": (bsl.parent / (cn + ".json")).as_posix(),
+            "bsl_mtime": 0.0,
             "warnings": [],
         })
     idx_data = {"total": 2, "scanned_at": "2026-01-01T00:00:00+00:00",
@@ -161,6 +185,7 @@ def test_stale_extractions(tmp_path):
             "form_name": "StaleForm",
             "bsl_path": fake_bsl,
             "json_path": fake_bsl.replace(".obj.bsl", ".json"),
+            "bsl_mtime": 0.0,
             "warnings": [],
         }],
     }
@@ -217,7 +242,7 @@ def test_save_to_and_load(tmp_path):
     _make_form(root, "Catalog", "Items", "CatalogForm", "ListForm")
 
     idx = tmp_path / "forms_index.json"
-    idx.write_text(json.dumps(_build_index(root, [\
+    idx.write_text(json.dumps(_build_index(root, [
         ("Catalog", "Items", "CatalogForm", "ListForm")
     ])), encoding="utf-8")
 
@@ -232,25 +257,57 @@ def test_save_to_and_load(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# Тест 8: modified зарезервирован — без mtime-baseline всегда пуст
-#
-# DriftReport.modified требует mtime-baseline в FormScanIndex.
-# FormScanIndex (issue #9/#13) не хранит mtime — это scope отдельной задачи.
-# Текущий check_drift возвращает modified=[] без baseline: поведение корректно.
+# Тест 8: modified — форма изменена после записи baseline (#18)
 # ---------------------------------------------------------------------------
 
-def test_modified_reserved_without_baseline(tmp_path):
-    """modified=[] пока FormScanIndex не хранит mtime-baseline."""
+def test_modified_form(tmp_path):
+    """Форма попадает в modified, если .obj.bsl изменён после записи bsl_mtime."""
+    root = tmp_path / "cf_export"
+    form_dir = _make_form(root, "Catalog", "Items", "CatalogForm", "ListForm")
+    bsl = form_dir / "CatalogForm.obj.bsl"
+
+    # Записываем baseline mtime в индекс сразу после создания файла
+    baseline_mtime = bsl.stat().st_mtime
+    idx_data = _build_index(root, [("Catalog", "Items", "CatalogForm", "ListForm")])
+    # Перезаписываем bsl_mtime вручную, чтобы быть точно уверенным в baseline
+    idx_data["forms"][0]["bsl_mtime"] = baseline_mtime
+    idx = tmp_path / "forms_index.json"
+    idx.write_text(json.dumps(idx_data), encoding="utf-8")
+
+    # Изменяем файл: ждём > 1 секунды (допуск FAT/NTFS) и обновляем mtime
+    time.sleep(1.1)
+    bsl.write_text("-- modified bsl content", encoding="utf-8")
+
+    report = check_drift(cf_export_root=root, index_path=idx)
+
+    key = _form_key("Catalog", "Items", "CatalogForm", "ListForm")
+    assert key in report.modified, f"expected {key!r} in modified, got {report.modified}"
+    assert report.has_drift is True
+    assert report.added == []
+    assert report.removed == []
+
+
+# ---------------------------------------------------------------------------
+# Тест 9: обратная совместимость — старый индекс без bsl_mtime → modified=[]
+# ---------------------------------------------------------------------------
+
+def test_modified_old_index_backward_compat(tmp_path):
+    """Старый индекс без bsl_mtime: modified остаётся [], has_drift=False."""
     root = tmp_path / "cf_export"
     _make_form(root, "Catalog", "Items", "CatalogForm", "ListForm")
 
     forms = [("Catalog", "Items", "CatalogForm", "ListForm")]
     idx = tmp_path / "forms_index.json"
-    idx.write_text(json.dumps(_build_index(root, forms)), encoding="utf-8")
+    # Индекс без поля bsl_mtime (старый формат)
+    idx.write_text(json.dumps(_build_index_no_mtime(root, forms)), encoding="utf-8")
 
     report = check_drift(cf_export_root=root, index_path=idx)
 
-    # modified пуст без baseline — ожидаемое поведение в scope #10
+    # bsl_mtime=0.0 (fallback) vs disk mtime (реальный) — разница > 1 сек.
+    # Но это ожидаемое поведение: без baseline невозможно
+    # отличить «изменено» от «неизвестно».
+    # modified пуст — документированное поведение при старом индексе.
     assert report.modified == []
-    # has_drift=False: форма на месте, не stale, не added, не removed
+    assert report.added == []
+    assert report.removed == []
     assert report.has_drift is False
