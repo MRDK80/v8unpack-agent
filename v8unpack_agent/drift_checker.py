@@ -9,7 +9,7 @@ FormScanIndex (forms_index.json) и определяет рассинхрон:
 
 Детекция ``modified`` работает при наличии поля ``bsl_mtime``
 в индексе (issue #18). Старые индексы без этого поля
-возвращают ``modified=[]`` (обратная совместимость).
+(или с значением 0.0) возвращают ``modified=[]`` (обратная совместимость).
 
 OS-нейтральность:
 - Пути строятся через pathlib / os.path.join.
@@ -94,12 +94,9 @@ def _index_snapshot(index_path: Path) -> dict[str, float]:
     """Построить dict[form_key -> bsl_mtime] из index_path.
 
     mtime читается из поля ``bsl_mtime`` JSON-записи (issue #18).
-    Если поле отсутствует (старый индекс) — fallback 0.0:
-    форма не попадёт в ``modified``, так как disk_snap[k] > 0.0 всегда
-    (разница abs(disk - 0.0) > 1.0 будет истинной для реальных mtime).
-
-    Обратная совместимость: старые индексы без ``bsl_mtime``
-    работают без ошибок, modified остаётся [].
+    Если поле отсутствует (старый индекс) — fallback 0.0.
+    Значение 0.0 трактуется как «базелайн отсутствует»: в
+    ``check_drift`` такие формы пропускаются в ``modified``.
     """
     snapshot: dict[str, float] = {}
     entries = _load_index_dict(index_path)
@@ -252,7 +249,8 @@ def check_drift(
     removed = sorted(index_keys - disk_keys)
     modified = sorted(
         k for k in index_keys & disk_keys
-        if abs(disk_snap[k] - index_snap[k]) > 1.0  # 1 сек — допуск на FAT/NTFS
+        if index_snap[k] != 0.0  # 0.0 == baseline отсутствует (старый индекс)
+        and abs(disk_snap[k] - index_snap[k]) > 1.0  # 1 сек — допуск на FAT/NTFS
     )
 
     try:
