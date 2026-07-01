@@ -138,21 +138,6 @@ index = FormScanIndex.load(Path("forms_scan_index.json"))
 - Форма без `.obj.bsl` → `skipped (no .obj.bsl): <path>` в `scan_warnings`, в индекс не попадает.
 - Ошибка в одной форме не останавливает обход (best-effort).
 
-### Реальные данные (живая конфигурация, 2164 формы)
-
-| Контейнер | Кол-во |
-|---|---|
-| DocumentForm | 693 |
-| CatalogForm | 474 |
-| Form | 417 |
-| ReportForm | 166 |
-| CommonForm | 162 |
-| InformationRegisterForm | 148 |
-| ExchangePlanForm | 34 |
-| ChartOfCharacteristicTypeForm | 19 |
-| AccumulationRegisterForm | 17 |
-| … | … |
-
 ## Контроль дрейфа (drift_checker)
 
 `check_drift(cf_export_root, index_path)` сравнивает текущее состояние
