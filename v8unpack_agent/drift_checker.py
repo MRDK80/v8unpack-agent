@@ -7,6 +7,10 @@
 FormScanIndex (forms_index.json) и определяет рассинхрон:
 какие формы добавились, удалились или изменились.
 
+Детекция ``modified`` работает при наличии поля ``bsl_mtime``
+в индексе (issue #18). Старые индексы без этого поля
+(или с значением 0.0) возвращают ``modified=[]`` (обратная совместимость).
+
 OS-нейтральность:
 - Пути строятся через pathlib / os.path.join.
 - Текст читается/пишется как UTF-8 явно.
@@ -87,10 +91,12 @@ def _load_index_dict(index_path: Path) -> list[dict]:
 
 
 def _index_snapshot(index_path: Path) -> dict[str, float]:
-    """Построить dict[form_key -> mtime_from_bsl] из index_path.
+    """Построить dict[form_key -> bsl_mtime] из index_path.
 
-    mtime берётся с диска по bsl_path из индекса. Если bsl_path
-    отсутствует на диске — mtime = -1.0 (форма устаревшая).
+    mtime читается из поля ``bsl_mtime`` JSON-записи (issue #18).
+    Если поле отсутствует (старый индекс) — fallback 0.0.
+    Значение 0.0 трактуется как «базелайн отсутствует»: в
+    ``check_drift`` такие формы пропускаются в ``modified``.
     """
     snapshot: dict[str, float] = {}
     entries = _load_index_dict(index_path)
@@ -101,12 +107,7 @@ def _index_snapshot(index_path: Path) -> dict[str, float]:
             e.get("container_name", ""),
             e.get("form_name", ""),
         )
-        bsl = e.get("bsl_path", "")
-        try:
-            mtime = Path(bsl).stat().st_mtime if bsl else -1.0
-        except OSError:
-            mtime = -1.0
-        snapshot[key] = mtime
+        snapshot[key] = float(e.get("bsl_mtime", 0.0))
     return snapshot
 
 
@@ -248,7 +249,8 @@ def check_drift(
     removed = sorted(index_keys - disk_keys)
     modified = sorted(
         k for k in index_keys & disk_keys
-        if abs(disk_snap[k] - index_snap[k]) > 1.0  # 1 сек — допуск на FAT/NTFS
+        if index_snap[k] != 0.0  # 0.0 == baseline отсутствует (старый индекс)
+        and abs(disk_snap[k] - index_snap[k]) > 1.0  # 1 сек — допуск на FAT/NTFS
     )
 
     try:

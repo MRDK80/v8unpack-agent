@@ -67,6 +67,14 @@ class FormEntry:
     json_path: Path
     """Путь к ``<ContainerName>.json``."""
 
+    bsl_mtime: float = 0.0
+    """st_mtime файла ``.obj.bsl`` на момент сканирования.
+
+    Используется как baseline для детекции изменённых форм
+    в :mod:`drift_checker`. Значение ``0.0`` означает «неизвестно»
+    (старый индекс без поля или файл не найден).
+    """
+
     warnings: list[str] = field(default_factory=list)
 
 
@@ -93,11 +101,42 @@ class FormScanIndex:
                     "form_path": e.form_path.as_posix(),
                     "bsl_path": e.bsl_path.as_posix(),
                     "json_path": e.json_path.as_posix(),
+                    "bsl_mtime": e.bsl_mtime,
                     "warnings": e.warnings,
                 }
                 for e in self.forms
             ],
         }
+
+    @classmethod
+    def load(cls, src_path: Path) -> "FormScanIndex":
+        """Загрузить индекс из UTF-8 JSON-файла.
+
+        Обратная совместимость: записи без поля ``bsl_mtime``
+        получают значение ``0.0`` (форма не попадает в ``modified``).
+        """
+        data = json.loads(src_path.read_text(encoding="utf-8"))
+        forms: list[FormEntry] = []
+        for rec in data.get("forms", []):
+            forms.append(
+                FormEntry(
+                    object_type=rec["object_type"],
+                    object_name=rec["object_name"],
+                    container_name=rec["container_name"],
+                    form_name=rec["form_name"],
+                    form_path=Path(rec["form_path"]),
+                    bsl_path=Path(rec["bsl_path"]),
+                    json_path=Path(rec["json_path"]),
+                    bsl_mtime=float(rec.get("bsl_mtime", 0.0)),
+                    warnings=rec.get("warnings", []),
+                )
+            )
+        return cls(
+            forms=forms,
+            total=data.get("total", len(forms)),
+            scanned_at=data.get("scanned_at", ""),
+            scan_warnings=data.get("scan_warnings", []),
+        )
 
     def save(self, out_path: Path) -> Path:
         """Сохранить индекс как UTF-8 JSON."""
@@ -130,6 +169,11 @@ def _scan_form_dir(
     if not bsl_path.exists():
         return None
 
+    try:
+        bsl_mtime = bsl_path.stat().st_mtime
+    except OSError:
+        bsl_mtime = 0.0
+
     warnings: list[str] = []
     if not json_path.exists():
         warnings.append(f"missing {json_path.name}")
@@ -142,6 +186,7 @@ def _scan_form_dir(
         form_path=form_dir.resolve(),
         bsl_path=bsl_path.resolve(),
         json_path=json_path.resolve(),
+        bsl_mtime=bsl_mtime,
         warnings=warnings,
     )
 

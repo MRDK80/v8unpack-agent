@@ -2,15 +2,13 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-%3E%3D3.10-blue.svg)](https://www.python.org/)
-[![v8unpack](https://img.shields.io/badge/upstream-v8unpack-orange.svg)](https://github.com/saby-integration/v8unpack))
+[![v8unpack](https://img.shields.io/badge/upstream-v8unpack-orange.svg)](https://github.com/saby-integration/v8unpack)
 
 Надстройка над [v8unpack](https://github.com/saby-integration/v8unpack) для
 агентных / LLM-пайплайнов по конфигурациям 1С.
 
-Реализует доработки из статьи **[Обычные формы 1С в агентном пайплайне: пошаговая распаковка](https://infostart.ru/1c/articles/2721726/)**: распаковщик `Form.bin` сообщество уже написало, а этот
-пакет добавляет то, чего не хватает агенту вокруг него — фабрику путей по
-конвенции, артефакт распаковки с явным флагом полноты, реестр актуальности и
-встраивание распаковки в индексацию как pre-step.
+Реализует доработки из статей **[Обычные формы 1С в агентном пайплайне: пошаговая распаковка](https://infostart.ru/1c/articles/2721726/)**
+и **[СКД и дерево элементов обычной формы 1С: два некритичных шага в агентном пайплайне](https://infostart.ru/1c/articles/2726561/)**
 
 **Этот пакет сам не разбирает бинарные формы 1С.** Реальную распаковку
 выполняет [v8unpack](https://github.com/saby-integration/v8unpack) (Python, MIT).
@@ -118,30 +116,25 @@ for entry in index.forms:
 | `form_path` | string | Путь к директории формы относительно корня выгрузки |
 | `bsl_path` | string | Путь к `.obj.bsl` относительно корня выгрузки |
 | `json_path` | string | Путь к `.json` относительно корня выгрузки |
+| `bsl_mtime` | float | `st_mtime` файла `.obj.bsl` на момент сканирования; baseline для детекции изменений в `drift_checker`. `0.0` — неизвестно (старый индекс или ошибка `stat`). |
 | `warnings` | array | Предупреждения (обычно пусто) |
 
 `FormScanIndex` содержит список `forms`, счётчик `total`, метку `scanned_at` и
 список `scan_warnings` (пропущенные формы без `.obj.bsl`).
 
+Для загрузки сохранённого индекса используй `FormScanIndex.load(path)`:
+
+```python
+from v8unpack_agent.scan_forms import FormScanIndex
+
+index = FormScanIndex.load(Path("forms_scan_index.json"))
+# Старые индексы без bsl_mtime: поле получает 0.0 (backward-compat).
+```
+
 ### Поведение при ошибках
 
 - Форма без `.obj.bsl` → `skipped (no .obj.bsl): <path>` в `scan_warnings`, в индекс не попадает.
 - Ошибка в одной форме не останавливает обход (best-effort).
-
-### Реальные данные (живая конфигурация, 2164 формы)
-
-| Контейнер | Кол-во |
-|---|---|
-| DocumentForm | 693 |
-| CatalogForm | 474 |
-| Form | 417 |
-| ReportForm | 166 |
-| CommonForm | 162 |
-| InformationRegisterForm | 148 |
-| ExchangePlanForm | 34 |
-| ChartOfCharacteristicTypeForm | 19 |
-| AccumulationRegisterForm | 17 |
-| … | … |
 
 ## Контроль дрейфа (drift_checker)
 
@@ -160,9 +153,10 @@ report = check_drift(
 )
 
 if report.has_drift:
-    print("Добавлены:",  report.added)
-    print("Удалены:  ",  report.removed)
-    print("Stale BSL:",  report.stale_extractions)
+    print("Добавлены:",   report.added)
+    print("Удалены:  ",   report.removed)
+    print("Изменены: ",   report.modified)
+    print("Stale BSL:",   report.stale_extractions)
 else:
     print("Дрейфа нет, индекс актуален")
 ```
@@ -173,7 +167,7 @@ else:
 |---|---|---|
 | `added` | list[str] | Ключи форм, появившихся на диске после последнего сканирования |
 | `removed` | list[str] | Ключи форм, исчезнувших с диска (были в индексе) |
-| `modified` | list[str] | Зарезервировано — всегда `[]` (требует mtime-baseline, см. issue #18) |
+| `modified` | list[str] | Ключи форм, у которых `bsl_mtime` на диске отличается от baseline в индексе более чем на 1 сек. Требует индекса, собранного с `bsl_mtime` (issue #18). Для старых индексов без этого поля — всегда `[]`. |
 | `stale_extractions` | list[str] | Формы из индекса, чей `bsl_path` не существует на диске |
 | `has_drift` | bool | `True` если хотя бы одно из полей непусто |
 | `checked_at` | str | ISO 8601 метка времени проверки |
@@ -268,7 +262,7 @@ else:
 | Модуль | Что даёт |
 |---|---|
 | `scan_forms` | `scan_forms()` + `FormEntry` + `FormScanIndex` — опись всех форм по layout-у выгрузки (все `*Form`-контейнеры + `CommonForm`), best-effort, JSON-экспорт. Нулевой шаг пайплайна: файловая система, без парсинга BSL. |
-| `drift_checker` | `check_drift()` + `DriftReport` — сравнение текущей выгрузки с сохранённым `FormScanIndex`: added / removed / stale_extractions, JSON-сохранение отчёта. |
+| `drift_checker` | `check_drift()` + `DriftReport` — сравнение текущей выгрузки с сохранённым `FormScanIndex`: added / removed / **modified** / stale_extractions, JSON-сохранение отчёта. |
 | `form_paths` | Фабрика путей по конвенции: `form_paths()`, `item_modules()` (вложенные панели из `Items/`), `all_module_paths()`. Чистая арифметика путей — файлы не читаются. |
 | `form_artifact` | `FormArtifact` (`name`, `paths`, `extraction_ok`, `extraction_warnings`, `skd_extracted`, `elem_index_ok`) — результат распаковки одной формы с явным флагом полноты, без тихого провала. |
 | `forms_index` | `FormsIndex` / `FormsIndexEntry` + `is_form_stale()` — реестр актуальности по `bin_mtime` vs `unpacked_mtime`. |
@@ -418,8 +412,9 @@ report = check_drift(
     index_path=Path("forms_scan_index.json"),
 )
 if report.has_drift:
-    print("Добавлены:", report.added)
-    print("Удалены:  ", report.removed)
+    print("Добавлены:",  report.added)
+    print("Удалены:  ",  report.removed)
+    print("Изменены: ",  report.modified)
 
 # 1) распаковываем все формы выгрузки
 artifacts = unpack_all_forms(dump_root, unpacked_root, unpack_one)
