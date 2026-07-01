@@ -318,6 +318,46 @@ else:
 никакого содержимого `Form.bin`, строк подключения, имён баз/хостов — реестр
 остаётся обезличенным и коммитится в репозиторий вместе с выгрузкой.
 
+## Маршрутизация агента через FormScanIndex
+
+`FormRouter` — инструмент для LLM-агента: LLM извлекает имя объекта
+или формы из запроса пользователя и передаёт его в `route()`.
+Роутер не делает LLM-вызовов — только строковое сопоставление.
+
+```python
+from pathlib import Path
+from v8unpack_agent.form_router import FormRouter
+
+router = FormRouter(index_path=Path("forms_scan_index.json"))
+
+# LLM передаёт извлечённую сущность:
+result = router.route("Банки")
+# result.matched  — список FormEntry с путями к .bsl и .json
+# result.confidence — 0.0–1.0
+# result.warnings   — при нулевом результате
+
+for entry in result.matched:
+    print(entry.object_type, entry.object_name, entry.form_name)
+    print(entry.bsl_path)   # путь к исходнику формы
+```
+
+### Приоритет совпадений
+
+| Уровень | Поле | Тип | conf |
+|---|---|---|---|
+| 1 | `form_name` | точное | 1.0 |
+| 2 | `object_name` | точное, case-insensitive | 0.9 |
+| 3 | `object_type` | частичное, case-insensitive | 0.4 |
+
+Сравнение на уровнях 2–3 регистронезависимо: LLM может вернуть
+`"банки"`, `"Банки"` или `"БАНКИ"` — все три найдут `Catalog/Банки`.
+
+### Инкрементальное обновление индекса
+
+```python
+router.reindex([updated_entry])   # обновляет без полного пересканирования
+```
+
 ## Установка
 
 Пока не опубликовано в PyPI. Установка из репозитория:
