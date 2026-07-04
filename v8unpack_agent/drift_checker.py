@@ -87,10 +87,17 @@ def _load_index_dict(index_path: Path) -> list[dict]:
 
 
 def _index_snapshot(index_path: Path) -> dict[str, float]:
-    """Построить dict[form_key -> mtime_from_bsl] из index_path.
+    """Построить dict[form_key -> baseline_mtime] из index_path.
 
-    mtime берётся с диска по bsl_path из индекса. Если bsl_path
-    отсутствует на диске — mtime = -1.0 (форма устаревшая).
+    Baseline mtime берётся из поля ``bsl_mtime`` в записи индекса
+    (сохранённое на момент сканирования/reindex). Это позволяет
+    корректно детектировать изменения даже после ``FormRouter.reindex()``
+    без повторного stat() с диска.
+
+    Fallback-поведение (обратная совместимость со старым форматом):
+    - Если ``bsl_mtime`` отсутствует или равно 0.0 — берём mtime с диска
+      по ``bsl_path`` (старое поведение до fix #22).
+    - Если ``bsl_path`` отсутствует на диске — mtime = -1.0.
     """
     snapshot: dict[str, float] = {}
     entries = _load_index_dict(index_path)
@@ -101,12 +108,18 @@ def _index_snapshot(index_path: Path) -> dict[str, float]:
             e.get("container_name", ""),
             e.get("form_name", ""),
         )
-        bsl = e.get("bsl_path", "")
-        try:
-            mtime = Path(bsl).stat().st_mtime if bsl else -1.0
-        except OSError:
-            mtime = -1.0
-        snapshot[key] = mtime
+        stored_mtime = float(e.get("bsl_mtime", 0.0))
+        if stored_mtime != 0.0:
+            # Новый формат: используем сохранённый baseline
+            snapshot[key] = stored_mtime
+        else:
+            # Старый формат или запись без bsl_mtime: stat с диска
+            bsl = e.get("bsl_path", "")
+            try:
+                mtime = Path(bsl).stat().st_mtime if bsl else -1.0
+            except OSError:
+                mtime = -1.0
+            snapshot[key] = mtime
     return snapshot
 
 

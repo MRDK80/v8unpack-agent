@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import List
 
 from v8unpack_agent.scan_forms import FormEntry, FormScanIndex
-
+from v8unpack_agent.drift_checker import _form_key
 
 @dataclass
 class RouteResult:
@@ -24,7 +24,8 @@ class FormRouter:
 
     def __init__(self, index_path: Path) -> None:
         self._index_path = index_path
-        self._entries: List[FormEntry] = self._load(index_path)
+        self._index: FormScanIndex = self._load_index(index_path)
+        self._entries: List[FormEntry] = self._index.forms
 
     # ------------------------------------------------------------------
     # Public API
@@ -76,26 +77,41 @@ class FormRouter:
     def reindex(self, changed_forms: List[FormEntry]) -> None:
         """Обновить записи без полного пересканирования.
 
-        Составной ключ: (object_type, object_name, form_name).
+        Составной ключ: (object_type, object_name, container_name, form_name).
         Новые добавляются, существующие заменяются, остальные не трогаются.
+        Метаданные верхнего уровня (scanned_at, scan_warnings) сохраняются
+        из исходного индекса без изменений.
         """
         lookup = {
-            (e.object_type, e.object_name, e.form_name): e
+            _form_key(e.object_type, e.object_name, e.container_name, e.form_name): e
             for e in self._entries
         }
         for form in changed_forms:
-            lookup[(form.object_type, form.object_name, form.form_name)] = form
+            lookup[_form_key(
+                form.object_type,
+                form.object_name,
+                form.container_name,
+                form.form_name,
+            )] = form
         self._entries = list(lookup.values())
-        self._save(self._index_path, self._entries)
+        # Обновляем _index, сохраняя метаданные верхнего уровня
+        self._index = FormScanIndex(
+            forms=self._entries,
+            total=len(self._entries),
+            scanned_at=self._index.scanned_at,
+            scan_warnings=self._index.scan_warnings,
+        )
+        self._index.save(self._index_path)
 
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _load(index_path: Path) -> List[FormEntry]:
+    def _load_index(index_path: Path) -> FormScanIndex:
+        """Загрузить FormScanIndex из JSON, сохраняя все поля схемы."""
         if not index_path.exists():
-            return []
+            return FormScanIndex()
         raw = json.loads(index_path.read_text(encoding="utf-8"))
         entries = []
         for row in raw.get("forms", []):
@@ -108,29 +124,28 @@ class FormRouter:
                 bsl_path=Path(row["bsl_path"]),
                 json_path=Path(row["json_path"]),
                 warnings=list(row.get("warnings", [])),
+                bsl_mtime=float(row.get("bsl_mtime", 0.0)),
             ))
-        return entries
+        return FormScanIndex(
+            forms=entries,
+            total=raw.get("total", len(entries)),
+            scanned_at=raw.get("scanned_at", ""),
+            scan_warnings=list(raw.get("scan_warnings", [])),
+        )
+
+    # Оставляем для обратной совместимости (используется в старых тестах
+    # через monkeypatch или прямым вызовом _load/_save не ожидается,
+    # но на всякий случай оставляем делегирующие обёртки).
+    @staticmethod
+    def _load(index_path: Path) -> List[FormEntry]:
+        return FormRouter._load_index(index_path).forms
 
     @staticmethod
     def _save(index_path: Path, entries: List[FormEntry]) -> None:
-        index_path.parent.mkdir(parents=True, exist_ok=True)
-        data = {
-            "total": len(entries),
-            "forms": [
-                {
-                    "object_type": e.object_type,
-                    "object_name": e.object_name,
-                    "container_name": e.container_name,
-                    "form_name": e.form_name,
-                    "form_path": e.form_path.as_posix(),
-                    "bsl_path": e.bsl_path.as_posix(),
-                    "json_path": e.json_path.as_posix(),
-                    "warnings": e.warnings,
-                }
-                for e in entries
-            ],
-        }
-        index_path.write_text(
-            json.dumps(data, indent=2, ensure_ascii=False),
-            encoding="utf-8",
-        )
+        """Сохранить список записей как FormScanIndex без метаданных.
+
+        Устаревший метод — используется только если кто-то вызывает напрямую.
+        Для внутренней работы FormRouter теперь использует _load_index / reindex.
+        """
+        idx = FormScanIndex(forms=entries, total=len(entries))
+        idx.save(index_path)
