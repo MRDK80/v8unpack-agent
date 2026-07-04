@@ -290,3 +290,45 @@ def scan_forms(
         index.save(Path(save_to))
 
     return index
+
+
+def _configure_cli_output() -> None:
+    """Настроить UTF-8 stdout для CLI-вывода на Windows/CI."""
+    import sys
+
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+
+
+def main() -> None:
+    """CLI-entrypoint для scan_forms."""
+    import argparse
+
+    _configure_cli_output()
+
+    parser = argparse.ArgumentParser(
+        description="Сканировать cf_export и собрать индекс форм."
+    )
+    parser.add_argument(
+        "root",
+        type=Path,
+        help="Корень cf_export",
+    )
+    parser.add_argument(
+        "--save",
+        action="store_true",
+        help="Сохранить forms_index.json в root",
+    )
+
+    args = parser.parse_args()
+
+    save_to = args.root / "forms_index.json" if args.save else None
+    index = scan_forms(args.root, save_to=save_to)
+
+    print(f"Найдено форм: {len(index.forms)}")
+    if save_to is not None:
+        print(f"Индекс сохранён: {save_to}")
+
+
+if __name__ == "__main__":
+    main()
