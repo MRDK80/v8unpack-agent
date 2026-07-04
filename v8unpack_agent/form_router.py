@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import List
 
 from v8unpack_agent.scan_forms import FormEntry, FormScanIndex
-
+from v8unpack_agent.drift_checker import _form_key
 
 @dataclass
 class RouteResult:
@@ -77,17 +77,22 @@ class FormRouter:
     def reindex(self, changed_forms: List[FormEntry]) -> None:
         """Обновить записи без полного пересканирования.
 
-        Составной ключ: (object_type, object_name, form_name).
+        Составной ключ: (object_type, object_name, container_name, form_name).
         Новые добавляются, существующие заменяются, остальные не трогаются.
         Метаданные верхнего уровня (scanned_at, scan_warnings) сохраняются
         из исходного индекса без изменений.
         """
         lookup = {
-            (e.object_type, e.object_name, e.form_name): e
+            _form_key(e.object_type, e.object_name, e.container_name, e.form_name): e
             for e in self._entries
         }
         for form in changed_forms:
-            lookup[(form.object_type, form.object_name, form.form_name)] = form
+            lookup[_form_key(
+                form.object_type,
+                form.object_name,
+                form.container_name,
+                form.form_name,
+            )] = form
         self._entries = list(lookup.values())
         # Обновляем _index, сохраняя метаданные верхнего уровня
         self._index = FormScanIndex(
