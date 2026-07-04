@@ -1,14 +1,16 @@
 """Тесты FormRouter на синтетических фикстурах (без реальных данных)."""
 import json
+import time
 from pathlib import Path
 
 import pytest
 
 from v8unpack_agent.scan_forms import FormEntry, FormScanIndex
 from v8unpack_agent.form_router import FormRouter, RouteResult
+from v8unpack_agent.drift_checker import check_drift
 
 
-def _entry(object_type: str, object_name: str, form_name: str) -> FormEntry:
+def _entry(object_type: str, object_name: str, form_name: str, bsl_mtime: float = 0.0) -> FormEntry:
     return FormEntry(
         object_type=object_type,
         object_name=object_name,
@@ -17,6 +19,7 @@ def _entry(object_type: str, object_name: str, form_name: str) -> FormEntry:
         form_path=Path(f"cf_export/{object_type}/{object_name}/{object_type}Form/{form_name}"),
         bsl_path=Path(f"cf_export/{object_type}/{object_name}/{object_type}Form/{form_name}/{object_type}Form.obj.bsl"),
         json_path=Path(f"cf_export/{object_type}/{object_name}/{object_type}Form/{form_name}/{object_type}Form.json"),
+        bsl_mtime=bsl_mtime,
     )
 
 
@@ -82,3 +85,163 @@ def test_reindex_preserves_others(router: FormRouter, tmp_path: Path) -> None:
 
     router2 = FormRouter(index_path=tmp_path / "forms_scan_index.json")
     assert len(router2._entries) == 6  # 5 исходных + 1 новая
+
+
+# ---------------------------------------------------------------------------
+# Regression tests — issue #22
+# ---------------------------------------------------------------------------
+
+def test_reindex_preserves_bsl_mtime(tmp_path: Path) -> None:
+    """reindex() не должен удалять bsl_mtime из сохранённого JSON."""
+    index_path = tmp_path / "forms_scan_index.json"
+
+    baseline_mtime = 1_700_000_000.0
+    entry = _entry("Catalog", "Товары", "ListForm", bsl_mtime=baseline_mtime)
+    idx = FormScanIndex(
+        forms=[entry],
+        total=1,
+        scanned_at="2026-01-01T00:00:00+00:00",
+        scan_warnings=[],
+    )
+    idx.save(index_path)
+
+    router = FormRouter(index_path=index_path)
+    # reindex с той же записью (ничего не меняем содержательно)
+    router.reindex([entry])
+
+    # Перечитываем JSON напрямую
+    raw = json.loads(index_path.read_text(encoding="utf-8"))
+    saved_form = raw["forms"][0]
+    assert saved_form["bsl_mtime"] == baseline_mtime, (
+        f"bsl_mtime was dropped: expected {baseline_mtime}, got {saved_form.get('bsl_mtime')}"
+    )
+
+
+def test_reindex_preserves_scanned_at(tmp_path: Path) -> None:
+    """reindex() сохраняет scanned_at из исходного индекса."""
+    index_path = tmp_path / "forms_scan_index.json"
+    original_ts = "2026-03-15T10:00:00+00:00"
+
+    entry = _entry("Document", "АктСписания", "ObjectForm", bsl_mtime=1_700_000_001.0)
+    idx = FormScanIndex(forms=[entry], total=1, scanned_at=original_ts)
+    idx.save(index_path)
+
+    router = FormRouter(index_path=index_path)
+    router.reindex([entry])
+
+    raw = json.loads(index_path.read_text(encoding="utf-8"))
+    assert raw["scanned_at"] == original_ts, (
+        f"scanned_at was overwritten: expected {original_ts!r}, got {raw.get('scanned_at')!r}"
+    )
+    assert "scan_warnings" in raw
+
+
+def test_check_drift_detects_modified_after_reindex(tmp_path: Path) -> None:
+    """check_drift() видит modified после изменения .obj.bsl + router.reindex().
+
+    Сценарий:
+    1. Создать реальный .obj.bsl, записать индекс с bsl_mtime = t0.
+    2. Вызвать router.reindex() — индекс должен сохранить bsl_mtime = t0.
+    3. Изменить .obj.bsl (новый mtime = t1 > t0).
+    4. check_drift() должен вернуть modified != [].
+    """
+    # --- Фиктивная структура cf_export ---
+    cf_root = tmp_path / "cf_export"
+    form_dir = cf_root / "Catalog" / "Товары" / "CatalogForm" / "ListForm"
+    form_dir.mkdir(parents=True)
+    bsl_file = form_dir / "CatalogForm.obj.bsl"
+    bsl_file.write_text("// initial", encoding="utf-8")
+
+    t0 = bsl_file.stat().st_mtime
+
+    # --- Индекс с baseline mtime ---
+    index_path = tmp_path / "forms_scan_index.json"
+    entry = FormEntry(
+        object_type="Catalog",
+        object_name="Товары",
+        container_name="CatalogForm",
+        form_name="ListForm",
+        form_path=form_dir,
+        bsl_path=bsl_file,
+        json_path=form_dir / "CatalogForm.json",
+        bsl_mtime=t0,
+    )
+    idx = FormScanIndex(forms=[entry], total=1, scanned_at="2026-01-01T00:00:00+00:00")
+    idx.save(index_path)
+
+    # --- router.reindex() ---
+    router = FormRouter(index_path=index_path)
+    router.reindex([entry])
+
+    # Убеждаемся, что bsl_mtime не потерялся после reindex
+    raw = json.loads(index_path.read_text(encoding="utf-8"))
+    assert raw["forms"][0]["bsl_mtime"] == t0
+
+    # --- Изменяем .obj.bsl (симулируем правку разработчика) ---
+    time.sleep(0.01)  # гарантируем t1 > t0 даже на быстрых FS
+    bsl_file.write_text("// modified", encoding="utf-8")
+    # Принудительно выставляем mtime t0 + 10 сек для надёжности
+    t1 = t0 + 10.0
+    import os
+    os.utime(bsl_file, (t1, t1))
+
+    # --- check_drift должен увидеть modified ---
+    report = check_drift(cf_root, index_path)
+    assert report.modified, (
+        f"Expected modified forms after bsl change, got: {report}"
+    )
+    assert any("Товары" in key for key in report.modified)
+
+def test_reindex_distinguishes_same_form_name_in_different_containers(tmp_path: Path) -> None:
+    """reindex() не схлопывает одноимённые формы из разных *Form-контейнеров."""
+    index_path = tmp_path / "forms_scan_index.json"
+
+    form_entry = FormEntry(
+        object_type="Document",
+        object_name="SalesOrder",
+        container_name="Form",
+        form_name="ListForm",
+        form_path=tmp_path / "cf_export/Document/SalesOrder/Form/ListForm",
+        bsl_path=tmp_path / "cf_export/Document/SalesOrder/Form/ListForm/Form.obj.bsl",
+        json_path=tmp_path / "cf_export/Document/SalesOrder/Form/ListForm/Form.json",
+        bsl_mtime=1_700_000_010.0,
+    )
+    document_form_entry = FormEntry(
+        object_type="Document",
+        object_name="SalesOrder",
+        container_name="DocumentForm",
+        form_name="ListForm",
+        form_path=tmp_path / "cf_export/Document/SalesOrder/DocumentForm/ListForm",
+        bsl_path=tmp_path / "cf_export/Document/SalesOrder/DocumentForm/ListForm/DocumentForm.obj.bsl",
+        json_path=tmp_path / "cf_export/Document/SalesOrder/DocumentForm/ListForm/DocumentForm.json",
+        bsl_mtime=1_700_000_020.0,
+    )
+    FormScanIndex(
+        forms=[form_entry, document_form_entry],
+        total=2,
+        scanned_at="2026-01-01T00:00:00+00:00",
+    ).save(index_path)
+
+    updated_document_form = FormEntry(
+        object_type="Document",
+        object_name="SalesOrder",
+        container_name="DocumentForm",
+        form_name="ListForm",
+        form_path=document_form_entry.form_path,
+        bsl_path=document_form_entry.bsl_path,
+        json_path=document_form_entry.json_path,
+        warnings=["updated"],
+        bsl_mtime=1_700_000_030.0,
+    )
+
+    router = FormRouter(index_path=index_path)
+    router.reindex([updated_document_form])
+
+    raw = json.loads(index_path.read_text(encoding="utf-8"))
+    assert raw["total"] == 2
+    forms = {row["container_name"]: row for row in raw["forms"]}
+    assert set(forms) == {"Form", "DocumentForm"}
+    assert forms["Form"]["bsl_mtime"] == form_entry.bsl_mtime
+    assert forms["DocumentForm"]["warnings"] == ["updated"]
+    assert forms["DocumentForm"]["bsl_mtime"] == updated_document_form.bsl_mtime
+    

@@ -77,6 +77,14 @@ class FormEntry:
 
     warnings: list[str] = field(default_factory=list)
 
+    bsl_mtime: float = 0.0
+    """mtime файла ``<ContainerName>.obj.bsl`` на момент сканирования.
+
+    Используется ``drift_checker.check_drift()`` как baseline для
+    детекции изменённых форм. Значение 0.0 означает «не известно» (старый
+    формат индекса или запись создана вручную без stat()).
+    """
+
 
 @dataclass
 class FormScanIndex:
@@ -103,6 +111,7 @@ class FormScanIndex:
                     "json_path": e.json_path.as_posix(),
                     "bsl_mtime": e.bsl_mtime,
                     "warnings": e.warnings,
+                    "bsl_mtime": e.bsl_mtime,
                 }
                 for e in self.forms
             ],
@@ -178,6 +187,11 @@ def _scan_form_dir(
     if not json_path.exists():
         warnings.append(f"missing {json_path.name}")
 
+    try:
+        bsl_mtime = bsl_path.stat().st_mtime
+    except OSError:
+        bsl_mtime = 0.0
+
     return FormEntry(
         object_type=object_type,
         object_name=object_name,
@@ -188,6 +202,7 @@ def _scan_form_dir(
         json_path=json_path.resolve(),
         bsl_mtime=bsl_mtime,
         warnings=warnings,
+        bsl_mtime=bsl_mtime,
     )
 
 
