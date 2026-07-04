@@ -290,3 +290,36 @@ def scan_forms(
         index.save(Path(save_to))
 
     return index
+
+
+def main() -> None:
+    """CLI-entrypoint для scan_forms."""
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Сканировать cf_export и собрать индекс форм."
+    )
+    parser.add_argument(
+        "root",
+        type=Path,
+        help="Корень cf_export",
+    )
+    parser.add_argument(
+        "--save",
+        action="store_true",
+        help="Сохранить forms_index.json в root",
+    )
+
+    args = parser.parse_args()
+
+    save_to = args.root / "forms_index.json" if args.save else None
+    index = scan_forms(args.root, save_to=save_to)
+
+    print(f"Найдено форм: {len(index.forms)}")
+    if save_to is not None:
+        print(f"Индекс сохранён: {save_to}")
+
+
+if __name__ == "__main__":
+    main()
+    
