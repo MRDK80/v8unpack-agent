@@ -66,6 +66,14 @@ for entry in index.forms:
     print(entry.container_name, entry.object_name, entry.form_name)
 ```
 
+### CLI
+
+    python -m v8unpack_agent.scan_forms <root> [--mode {config,external}] [--save]
+
+- `--mode config` (по умолчанию) — структура конфигурации;
+- `--mode external` — распакованные внешние обработки (issue #25);
+- `--save` — сохранить `forms_scan_index.json` в `<root>`.
+
 ### Layout выгрузки v8unpack
 
 Сканер поддерживает два layout-а:
@@ -91,6 +99,39 @@ for entry in index.forms:
       CommonForm.obj.bsl
       CommonForm.json
 ```
+
+### Layout внешних обработок (mode="external")
+
+Распакованные внешние обработки (`.epf`) имеют структуру, отличную от
+конфигурации (issue #25, подтверждено на реальных данных):
+```
+External/<имя обработки>/
+    ExternalDataProcessor.json
+    ExternalDataProcessor.obj # модуль объекта (не форма)
+    Form/
+        <ИмяФормы>/
+            Form.obj # bsl формы, БЕЗ суффикса .bsl
+            Form.json
+            Form.elem # структура формы (элементы)
+            Form.id
+```
+
+Ключевые отличия от конфигурации: bsl-файл называется `Form.obj` (без
+`.bsl`), верхний уровень — имя обработки (а не `object_type`), контейнер
+форм всегда `Form/`. Для этой структуры используется отдельный режим:
+
+```python
+from pathlib import Path
+from v8unpack_agent.scan_forms import scan_forms
+
+index = scan_forms(Path("/path/to/External"), mode="external",
+                   save_to=Path("forms_scan_index.json"))
+```
+
+В индексе такие формы получают `object_type="ExternalDataProcessor"`
+(не пересекается с типами конфигурации), `object_name` = имя обработки,
+`container_name="Form"`. Подробнее — [Структура распакованных внешних
+обработок](docs/external_forms_structure.md).
 
 ### Семантика контейнеров
 
@@ -118,6 +159,7 @@ for entry in index.forms:
 | `json_path` | string | Путь к `.json` относительно корня выгрузки |
 | `bsl_mtime` | float | `st_mtime` файла `.obj.bsl` на момент сканирования; baseline для детекции изменений в `drift_checker`. `0.0` — неизвестно (старый индекс или ошибка `stat`). |
 | `warnings` | array | Предупреждения (обычно пусто) |
+| `form_elem_path` | string \| null | Путь к `Form.elem` (структура формы внешней обработки, mode="external"). `null` для форм конфигурации или если файла нет. |
 
 `FormScanIndex` содержит список `forms`, счётчик `total`, метку `scanned_at` и
 список `scan_warnings` (пропущенные формы без `.obj.bsl`).

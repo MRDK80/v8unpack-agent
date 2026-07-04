@@ -12,6 +12,7 @@ from typing import List
 from v8unpack_agent.scan_forms import FormEntry, FormScanIndex
 from v8unpack_agent.drift_checker import _form_key
 
+
 @dataclass
 class RouteResult:
     matched: List[FormEntry]
@@ -34,18 +35,15 @@ class FormRouter:
     def route(self, query: str) -> RouteResult:
         """Вернуть FormEntry, соответствующие запросу.
 
-        Предназначен для вызова из LLM-инструментального слоя: LLM извлекает
-        сущность из пользовательского запроса и передаёт её сюда. Регистр
-        не нормируется намеренно — LLM может вернуть разный регистр для одного
-        объекта, поэтому сравнение case-insensitive на уровнях 2 и 3.
-
         Приоритет совпадений
         --------------------
         1. ``form_name`` — точное совпадение (conf=1.0)
         2. ``object_name`` — точное, case-insensitive (conf=0.9)
         3. ``object_type`` — частичное, case-insensitive (conf=0.4)
-        """
 
+        Для форм внешних обработок (issue #25) ``object_name`` — имя обработки,
+        поэтому маршрутизация работает без изменений логики.
+        """
         q = query.strip()
         if not q:
             return RouteResult(matched=[], confidence=0.0,
@@ -79,8 +77,7 @@ class FormRouter:
 
         Составной ключ: (object_type, object_name, container_name, form_name).
         Новые добавляются, существующие заменяются, остальные не трогаются.
-        Метаданные верхнего уровня (scanned_at, scan_warnings) сохраняются
-        из исходного индекса без изменений.
+        Метаданные верхнего уровня (scanned_at, scan_warnings) сохраняются.
         """
         lookup = {
             _form_key(e.object_type, e.object_name, e.container_name, e.form_name): e
@@ -94,7 +91,6 @@ class FormRouter:
                 form.form_name,
             )] = form
         self._entries = list(lookup.values())
-        # Обновляем _index, сохраняя метаданные верхнего уровня
         self._index = FormScanIndex(
             forms=self._entries,
             total=len(self._entries),
@@ -115,6 +111,7 @@ class FormRouter:
         raw = json.loads(index_path.read_text(encoding="utf-8"))
         entries = []
         for row in raw.get("forms", []):
+            elem = row.get("form_elem_path")
             entries.append(FormEntry(
                 object_type=row["object_type"],
                 object_name=row["object_name"],
@@ -125,6 +122,7 @@ class FormRouter:
                 json_path=Path(row["json_path"]),
                 warnings=list(row.get("warnings", [])),
                 bsl_mtime=float(row.get("bsl_mtime", 0.0)),
+                form_elem_path=Path(elem) if elem else None,
             ))
         return FormScanIndex(
             forms=entries,
@@ -133,19 +131,12 @@ class FormRouter:
             scan_warnings=list(raw.get("scan_warnings", [])),
         )
 
-    # Оставляем для обратной совместимости (используется в старых тестах
-    # через monkeypatch или прямым вызовом _load/_save не ожидается,
-    # но на всякий случай оставляем делегирующие обёртки).
     @staticmethod
     def _load(index_path: Path) -> List[FormEntry]:
         return FormRouter._load_index(index_path).forms
 
     @staticmethod
     def _save(index_path: Path, entries: List[FormEntry]) -> None:
-        """Сохранить список записей как FormScanIndex без метаданных.
-
-        Устаревший метод — используется только если кто-то вызывает напрямую.
-        Для внутренней работы FormRouter теперь использует _load_index / reindex.
-        """
+        """Сохранить список записей как FormScanIndex без метаданных (устар.)."""
         idx = FormScanIndex(forms=entries, total=len(entries))
         idx.save(index_path)

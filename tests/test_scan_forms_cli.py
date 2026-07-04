@@ -63,14 +63,14 @@ def _run_cli(*args: str) -> tuple[int, str, str]:
 
 
 def test_cli_with_save_creates_index(cf_export_root: Path) -> None:
-    """--save создаёт forms_index.json в root."""
-    index_path = cf_export_root / "forms_index.json"
+    """--save создаёт forms_scan_index.json в root."""
+    index_path = cf_export_root / "forms_scan_index.json"
     assert not index_path.exists(), "файл не должен существовать до запуска"
 
     rc, stdout, stderr = _run_cli(str(cf_export_root), "--save")
 
     assert rc == 0, f"ожидали returncode=0, получили {rc}\nstderr: {stderr}"
-    assert index_path.exists(), "forms_index.json должен быть создан"
+    assert index_path.exists(), "forms_scan_index.json должен быть создан"
 
     data = json.loads(index_path.read_text(encoding="utf-8"))
     assert "total" in data, "индекс должен содержать ключ 'total'"
@@ -80,13 +80,13 @@ def test_cli_with_save_creates_index(cf_export_root: Path) -> None:
 
 
 def test_cli_without_save_no_file(cf_export_root: Path) -> None:
-    """Без --save файл forms_index.json не создаётся, returncode == 0."""
-    index_path = cf_export_root / "forms_index.json"
+    """Без --save файл forms_scan_index.json не создаётся, returncode == 0."""
+    index_path = cf_export_root / "forms_scan_index.json"
 
     rc, stdout, stderr = _run_cli(str(cf_export_root))
 
     assert rc == 0, f"ожидали returncode=0, получили {rc}\nstderr: {stderr}"
-    assert not index_path.exists(), "forms_index.json не должен создаваться без --save"
+    assert not index_path.exists(), "forms_scan_index.json не должен создаваться без --save"
 
 
 def test_cli_prints_form_count(cf_export_root: Path) -> None:

@@ -1,9 +1,11 @@
 # Метаданные задачи для gate check_gate_meta.py
-task_id: "18"
+task_id: "25"
 task_class: INFRA
-rca_status: done
-review_status: ready
+rca_status: n/a
+review_status: pending
+branch: feat/25-scan-external-forms
 description: >-
-  feat: drift_checker — modified detection via mtime baseline.
-  Добавлено поле bsl_mtime в FormEntry, обновлён _index_snapshot,
-  восстановлен тест test_modified_form.
+  feat: scan_forms — режим external для распакованных внешних обработок.
+  Добавлен параметр mode={config,external}, функция _scan_external(),
+  поле form_elem_path в FormEntry, чтение поля в FormRouter._load_index().
+  Issue #25.

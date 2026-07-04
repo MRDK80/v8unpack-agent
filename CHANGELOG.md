@@ -12,6 +12,8 @@
   старые записи без `bsl_mtime` получают `0.0`, форма не попадает в `modified`.
 - `DriftReport.modified` теперь **работает**: возвращает ключи форм, чей `.obj.bsl`
   изменился после записи baseline в `FormScanIndex` (issue #18).
+- scan_forms: режим `--mode external` для распакованных внешних обработок
+  (`External/<имя>/Form/<форма>/Form.obj`); поле `form_elem_path` в FormEntry (#25)
 
 ### Changed
 - `FormScanIndex.to_dict()` сериализует `bsl_mtime` в JSON.
