@@ -1,0 +1,9 @@
+# Метаданные задачи для gate check_gate_meta.py
+task_id: "18"
+task_class: INFRA
+rca_status: done
+review_status: ready
+description: >-
+  feat: drift_checker — modified detection via mtime baseline.
+  Добавлено поле bsl_mtime в FormEntry, обновлён _index_snapshot,
+  восстановлен тест test_modified_form.
