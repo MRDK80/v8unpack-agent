@@ -388,6 +388,27 @@ for entry in result.matched:
 Сравнение на уровнях 2–3 регистронезависимо: LLM может вернуть
 `"банки"`, `"Банки"` или `"БАНКИ"` — все три найдут `Catalog/Банки`.
 
+### Внешние обработки в маршрутизации
+
+`FormRouter` работает поверх единого `FormScanIndex`, поэтому формы внешних
+обработок (`mode="external"`) маршрутизируются тем же `route()` без отдельного
+API. Такие формы имеют `object_type="ExternalDataProcessor"`, `object_name` =
+имя обработки, `container_name="Form"` (см. раздел про `mode="external"`), и
+находятся по тем же трём уровням совпадения:
+
+```python
+# индекс собран из внешних обработок: scan_forms(..., mode="external")
+router = FormRouter(index_path=Path("forms_scan_index.json"))
+
+result = router.route("ExternalDataProcessor")   # по object_type → conf 0.4
+result = router.route("ЗагрузкаЦен")             # по object_name  → conf 0.9
+```
+
+`object_type="ExternalDataProcessor"` не пересекается с типами конфигурации,
+поэтому формы обработок и одноимённые формы конфигурации не коллидируют в
+одном индексе. Смешанный индекс (конфигурация + External) поддерживается: при
+неоднозначности приоритет отдаётся `form_name` (1.0) над `object_name` (0.9).
+
 ### Инкрементальное обновление индекса
 
 ```python
