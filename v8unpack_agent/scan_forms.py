@@ -292,9 +292,19 @@ def scan_forms(
     return index
 
 
+def _configure_cli_output() -> None:
+    """Настроить UTF-8 stdout для CLI-вывода на Windows/CI."""
+    import sys
+
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+
+
 def main() -> None:
     """CLI-entrypoint для scan_forms."""
     import argparse
+
+    _configure_cli_output()
 
     parser = argparse.ArgumentParser(
         description="Сканировать cf_export и собрать индекс форм."
@@ -322,4 +332,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-    
