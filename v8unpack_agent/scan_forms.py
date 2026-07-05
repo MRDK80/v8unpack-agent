@@ -168,6 +168,49 @@ class FormScanIndex:
         )
         return out_path
 
+    @classmethod
+    def load(cls, index_path: Path) -> "FormScanIndex":
+        """Загрузить :class:`FormScanIndex` из JSON-файла, сохранённого :meth:`save`.
+
+        Если файл отсутствует — возвращает пустой индекс (аналогично
+        :meth:`FormsIndex.load <v8unpack_agent.forms_index.FormsIndex.load>`).
+        Пути (``form_path``, ``bsl_path``, ``json_path``, ``form_elem_path``)
+        восстанавливаются через :class:`pathlib.Path` — OS-нейтрально.
+
+        Parameters
+        ----------
+        index_path:
+            Путь к JSON-файлу (например ``forms_scan_index.json``).
+        """
+        if not Path(index_path).exists():
+            return cls()
+        raw = json.loads(Path(index_path).read_text(encoding="utf-8"))
+        forms: list[FormEntry] = [
+            FormEntry(
+                object_type=row["object_type"],
+                object_name=row["object_name"],
+                container_name=row["container_name"],
+                form_name=row["form_name"],
+                form_path=Path(row["form_path"]),
+                bsl_path=Path(row["bsl_path"]),
+                json_path=Path(row["json_path"]),
+                warnings=list(row.get("warnings", [])),
+                bsl_mtime=float(row.get("bsl_mtime", 0.0)),
+                form_elem_path=(
+                    Path(row["form_elem_path"])
+                    if row.get("form_elem_path") is not None
+                    else None
+                ),
+            )
+            for row in raw.get("forms", [])
+        ]
+        return cls(
+            forms=forms,
+            total=int(raw.get("total", len(forms))),
+            scanned_at=str(raw.get("scanned_at", "")),
+            scan_warnings=list(raw.get("scan_warnings", [])),
+        )
+
 
 def _first_existing(directory: Path, candidates: tuple[str, ...]) -> Optional[Path]:
     """Вернуть первый существующий файл из candidates (по приоритету) или None."""
