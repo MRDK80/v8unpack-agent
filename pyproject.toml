@@ -10,6 +10,7 @@ readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
 dependencies = [
+    "pytest>=9.1.1",
     # PR#29 (.erf support) merged into saby-integration/v8unpack main, release >1.2.9 pending.
     # Switch to v8unpack>=<next-release> once published on PyPI.
     "v8unpack @ git+https://github.com/saby-integration/v8unpack.git@main",
