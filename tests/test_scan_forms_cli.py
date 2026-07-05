@@ -1,4 +1,4 @@
-"""Тесты CLI-entrypoint для scan_forms (issue #24).
+"""Тесты CLI-entrypoint для scan_forms (issues #24, #31).
 
 Проверяют поведение `python -m v8unpack_agent.scan_forms` до и после
 реализации CLI-обвязки. На момент создания все тесты должны быть RED.
@@ -128,3 +128,28 @@ def test_cli_nonexistent_root(tmp_path: Path) -> None:
     assert "Найдено форм: 0" in stdout, (
         f"должно быть 'Найдено форм: 0', получили: {stdout!r}"
     )
+
+
+def test_cli_no_runtime_warning(cf_export_root: Path) -> None:
+    """Запуск через `python -m v8unpack_agent.scan_forms` не даёт RuntimeWarning.
+
+    issue #31: двойной импорт через __init__ устранён через __main__.py.
+    """
+    rc, stdout, stderr = _run_cli(str(cf_export_root))
+
+    assert rc == 0, f"returncode={rc}\nstderr: {stderr}"
+    assert "RuntimeWarning" not in stderr, (
+        f"stderr не должен содержать RuntimeWarning, получили:\n{stderr}"
+    )
+
+
+def test_cli_artifact_name_is_forms_scan_index(cf_export_root: Path) -> None:
+    """CLI создаёт именно forms_scan_index.json, а не forms_index.json (issue #31)."""
+    correct_name = cf_export_root / "forms_scan_index.json"
+    wrong_name = cf_export_root / "forms_index.json"
+
+    rc, stdout, stderr = _run_cli(str(cf_export_root), "--save")
+
+    assert rc == 0, f"returncode={rc}\nstderr: {stderr}"
+    assert correct_name.exists(), "forms_scan_index.json должен существовать"
+    assert not wrong_name.exists(), "forms_index.json не должен создаваться"

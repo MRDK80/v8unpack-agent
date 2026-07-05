@@ -42,9 +42,26 @@ from v8unpack_agent.pipeline import (
     unpack_erf,
     update_forms_index,
 )
-from v8unpack_agent.scan_forms import FormEntry, FormScanIndex, scan_forms
+
 from v8unpack_agent.drift_checker import DriftReport, check_drift
 from v8unpack_agent.form_router import FormRouter, RouteResult
+
+
+def __getattr__(name: str):
+    """Lazy-load selected exports to keep `python -m v8unpack_agent.scan_forms` clean."""
+    if name in {"scan_forms", "FormEntry", "FormScanIndex"}:
+        from v8unpack_agent.scan_forms import FormEntry, FormScanIndex, scan_forms
+
+        values = {
+            "scan_forms": scan_forms,
+            "FormEntry": FormEntry,
+            "FormScanIndex": FormScanIndex,
+        }
+        globals().update(values)
+        return values[name]
+
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__ = [
     "form_paths",

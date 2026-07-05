@@ -7,9 +7,11 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List
+from typing import TYPE_CHECKING, List
 
-from v8unpack_agent.scan_forms import FormEntry, FormScanIndex
+if TYPE_CHECKING:
+    from v8unpack_agent.scan_forms import FormEntry, FormScanIndex
+
 from v8unpack_agent.drift_checker import _form_key
 
 
@@ -79,6 +81,9 @@ class FormRouter:
         Новые добавляются, существующие заменяются, остальные не трогаются.
         Метаданные верхнего уровня (scanned_at, scan_warnings) сохраняются.
         """
+
+        from v8unpack_agent.scan_forms import FormEntry, FormScanIndex
+
         lookup = {
             _form_key(e.object_type, e.object_name, e.container_name, e.form_name): e
             for e in self._entries
@@ -106,6 +111,9 @@ class FormRouter:
     @staticmethod
     def _load_index(index_path: Path) -> FormScanIndex:
         """Загрузить FormScanIndex из JSON, сохраняя все поля схемы."""
+
+        from v8unpack_agent.scan_forms import FormEntry, FormScanIndex
+
         if not index_path.exists():
             return FormScanIndex()
         raw = json.loads(index_path.read_text(encoding="utf-8"))
@@ -138,5 +146,8 @@ class FormRouter:
     @staticmethod
     def _save(index_path: Path, entries: List[FormEntry]) -> None:
         """Сохранить список записей как FormScanIndex без метаданных (устар.)."""
+
+        from v8unpack_agent.scan_forms import FormEntry, FormScanIndex
+
         idx = FormScanIndex(forms=entries, total=len(entries))
         idx.save(index_path)

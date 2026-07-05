@@ -10,6 +10,7 @@
 - неполная форма (нет .obj.bsl) не попадает в индекс
 - ключи (object_type, object_name, container_name, form_name) не коллидируют
 - JSON-сериализация (save / round-trip)
+- формы без .obj.bsl учтены в scan_warnings (issue #31)
 """
 from __future__ import annotations
 
@@ -195,6 +196,38 @@ def test_incomplete_form_excluded(tmp_path: Path) -> None:
     index = scan_forms(root)
     assert index.total == 0
     assert any("skipped" in w for w in index.scan_warnings)
+
+
+def test_missing_bsl_recorded_in_scan_warnings(tmp_path: Path) -> None:
+    """Формы без .obj.bsl явно попадают в scan_warnings (issue #31).
+
+    Подтверждает наблюдаемость: 48 «пропущенных» форм не теряются молча.
+    Три формы без bsl + одна полная → total==1, три предупреждения.
+    """
+    root = tmp_path / "cf_export"
+    # полная форма
+    _make_form(root, "Catalog", "Склады", "CatalogForm", "ФормаСписка")
+    # три формы без bsl
+    for name in ("ФормаБезБСЛ1", "ФормаБезБСЛ2", "ФормаБезБСЛ3"):
+        _make_form(
+            root, "Catalog", "Склады", "CatalogForm", name,
+            with_bsl=False, with_json=True,
+        )
+
+    index = scan_forms(root)
+
+    assert index.total == 1, "только полная форма должна попасть в индекс"
+    skipped_warnings = [w for w in index.scan_warnings if "skipped" in w]
+    assert len(skipped_warnings) == 3, (
+        f"ожидали 3 предупреждения о пропущенных формах, "
+        f"получили {len(skipped_warnings)}: {skipped_warnings}"
+    )
+    # имена форм без bsl должны быть упомянуты в предупреждениях
+    warnings_text = " ".join(skipped_warnings)
+    for name in ("ФормаБезБСЛ1", "ФормаБезБСЛ2", "ФормаБезБСЛ3"):
+        assert name in warnings_text, (
+            f"имя формы '{name}' должно быть упомянуто в scan_warnings"
+        )
 
 
 # ---------------------------------------------------------------------------
