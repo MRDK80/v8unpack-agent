@@ -1,36 +1,42 @@
 """scan_forms — обобщённый обход *Form-контейнеров и сборка FormScanIndex.
 
-Реализует issues #9, #13 и #25.
+Реализует issues #9, #13, #25 и #32.
 
 v8unpack формирует несколько layout-ов.
 
 **4-уровневый** (большинство объектов конфигурации)::
 
-    cf_export/<Тип>/<Объект>/<ContainerName>/<ИмяФормы>/
+    cf_export/<Тип>/<Объект>/<Container>Form/<ИмяФормы>/
 
 **3-уровневый** (общие формы — нет объекта-владельца)::
 
     cf_export/CommonForm/<ИмяФормы>/
 
-**External** (распакованные внешние обработки, mode="external", issue #25)::
+**External** (распакованные внешние обработки/отчёты, mode="external", issues #25/#32)::
 
-    External/<имя обработки>/Form/<ИмяФормы>/Form.obj
+    External/<имя обработки>/Form/<ИмяФормы>/Form.obj.bsl
+    External/<имя отчёта>/ReportForm/<ИмяФормы>/ReportForm.obj.bsl
 
 Отличия External от конфигурации:
-- bsl-файл называется ``Form.obj`` (БЕЗ суффикса ``.bsl``);
-- верхний уровень — имя конкретной обработки, а не ``object_type``;
-- формы вложены через фиксированный контейнер ``Form/<ИмяФормы>/``.
+- контейнер формы — ``Form`` (обработка) либо ``ReportForm`` (отчёт);
+- bsl-файл формы называется ``<Container>.obj.bsl`` (v8unpack 1.2.11) либо
+  ``<Container>.obj`` (старый вариант без суффикса, issue #32) — берётся первый
+  существующий;
+- верхний уровень — имя конкретной обработки/отчёта, а не ``object_type``;
+- тип объекта определяется так: контейнер ``ReportForm`` ⇒ ``ExternalReport``;
+  контейнер ``Form`` ⇒ по имени модуля объекта обработки
+  (``<Тип>.obj.bsl`` / ``<Тип>.obj``), fallback ``ExternalDataProcessor``.
 
 Артефакты формы конфигурации::
 
-    <ContainerName>.obj.bsl
-    <ContainerName>.json
+    <Container>.obj.bsl
+    <Container>.json
 
-Артефакты формы внешней обработки::
+Артефакты формы внешнего объекта::
 
-    Form.obj      # bsl формы
-    Form.json     # метаданные
-    Form.elem     # структура формы (элементы)
+    <Container>.obj.bsl   # bsl формы (v8unpack 1.2.11); либо <Container>.obj (legacy)
+    Form.json             # метаданные
+    Form.elem             # структура формы (элементы)
     Form.id
 
 OS-нейтральность:
@@ -48,13 +54,34 @@ from typing import Literal, Optional
 
 logger = logging.getLogger(__name__)
 
-# --- константы структуры External (issue #25) ------------------------------
+# --- константы структуры External (issues #25, #32) ------------------------
 EXTERNAL_ROOT = "External"
-EXTERNAL_OBJECT_TYPE = "ExternalDataProcessor"
-EXTERNAL_FORM_CONTAINER = "Form"
-EXTERNAL_BSL_NAME = "Form.obj"
+
+# Контейнеры форм внешних объектов. Порядок важен только для детерминизма обхода.
+EXTERNAL_FORM_CONTAINERS = ("Form", "ReportForm")
+
 EXTERNAL_JSON_NAME = "Form.json"
 EXTERNAL_ELEM_NAME = "Form.elem"
+
+# Тип объекта по модулю объекта обработки (для контейнера Form).
+# Кортеж кандидатов на каждый тип: сначала .bsl (v8unpack 1.2.11), затем legacy.
+EXTERNAL_OBJECT_MODULE_CANDIDATES: dict[str, tuple[str, ...]] = {
+    "ExternalDataProcessor": (
+        "ExternalDataProcessor.obj.bsl",
+        "ExternalDataProcessor.obj",
+    ),
+    "ExternalReport": (
+        "ExternalReport.obj.bsl",
+        "ExternalReport.obj",
+    ),
+}
+
+# Контейнер, который однозначно определяет тип «отчёт» (подтверждено на живых данных).
+EXTERNAL_REPORT_CONTAINER = "ReportForm"
+EXTERNAL_REPORT_OBJECT_TYPE = "ExternalReport"
+
+# Fallback-тип, если тип не удалось определить (обратная совместимость).
+EXTERNAL_DEFAULT_OBJECT_TYPE = "ExternalDataProcessor"
 
 
 @dataclass
@@ -63,15 +90,15 @@ class FormEntry:
 
     object_type: str
     """Тип метаобъекта: ``Catalog``, ``Document``, ``CommonForm`` и т.д.
-    Для внешних обработок — ``ExternalDataProcessor`` (не пересекается с
-    типами конфигурации)."""
+    Для внешних объектов — ``ExternalDataProcessor`` либо ``ExternalReport``
+    (не пересекается с типами конфигурации)."""
 
     object_name: str
     """Имя метаобъекта. Пустая строка для общих форм (CommonForm-layout).
-    Для внешних обработок — имя конкретной обработки."""
+    Для внешних объектов — имя конкретной обработки/отчёта."""
 
     container_name: str
-    """Имя контейнера: ``CatalogForm``, ``Form``, ``CommonForm`` и т.д."""
+    """Имя контейнера: ``CatalogForm``, ``Form``, ``ReportForm``, ``CommonForm``."""
 
     form_name: str
     """Имя директории формы."""
@@ -80,8 +107,8 @@ class FormEntry:
     """Абсолютный путь к директории формы."""
 
     bsl_path: Path
-    """Путь к bsl-файлу формы: ``<ContainerName>.obj.bsl`` (config) либо
-    ``Form.obj`` (external)."""
+    """Путь к bsl-файлу формы: ``<Container>.obj.bsl`` (config) либо
+    ``<Container>.obj.bsl`` / ``<Container>.obj`` (external)."""
 
     json_path: Path
     """Путь к json-файлу формы."""
@@ -93,7 +120,7 @@ class FormEntry:
     ``drift_checker.check_drift()``. 0.0 означает «не известно»."""
 
     form_elem_path: Optional[Path] = None
-    """Путь к ``Form.elem`` (структура формы внешней обработки). ``None`` —
+    """Путь к ``Form.elem`` (структура формы внешнего объекта). ``None`` —
     файла нет либо это форма конфигурации (issue #25). Additive-поле:
     дефолт сохраняет обратную совместимость индекса."""
 
@@ -140,6 +167,36 @@ class FormScanIndex:
             encoding="utf-8",
         )
         return out_path
+
+
+def _first_existing(directory: Path, candidates: tuple[str, ...]) -> Optional[Path]:
+    """Вернуть первый существующий файл из candidates (по приоритету) или None."""
+    for name in candidates:
+        candidate = directory / name
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def _external_bsl_candidates(container_name: str) -> tuple[str, ...]:
+    """Кандидаты bsl-файла формы для контейнера: .bsl (v8unpack 1.2.11), затем legacy."""
+    return (f"{container_name}.obj.bsl", f"{container_name}.obj")
+
+
+def _resolve_external_object_type(proc_dir: Path, container_name: str) -> str:
+    """Определить тип внешнего объекта.
+
+    Правило (подтверждено на живых данных, issue #32):
+    - контейнер ``ReportForm`` ⇒ ``ExternalReport``;
+    - контейнер ``Form`` ⇒ по имени модуля объекта (``<Тип>.obj.bsl`` / ``<Тип>.obj``),
+      fallback ``ExternalDataProcessor``.
+    """
+    if container_name == EXTERNAL_REPORT_CONTAINER:
+        return EXTERNAL_REPORT_OBJECT_TYPE
+    for object_type, candidates in EXTERNAL_OBJECT_MODULE_CANDIDATES.items():
+        if _first_existing(proc_dir, candidates) is not None:
+            return object_type
+    return EXTERNAL_DEFAULT_OBJECT_TYPE
 
 
 def _is_form_container(directory: Path) -> bool:
@@ -214,19 +271,24 @@ def _collect_forms_from_container(
 
 def _scan_external_form_dir(
     form_dir: Path,
+    object_type: str,
     object_name: str,
+    container_name: str,
     root: Path,
     forms: list[FormEntry],
     scan_warnings: list[str],
 ) -> None:
-    """Собрать FormEntry из директории формы внешней обработки (issue #25).
+    """Собрать FormEntry из директории формы внешнего объекта (issues #25, #32).
 
-    Обязательный артефакт — ``Form.obj`` (БЕЗ ``.bsl``). Его отсутствие →
-    best-effort skip с предупреждением. ``Form.elem`` опционален.
+    Обязательный артефакт — bsl формы: ``<Container>.obj.bsl`` (v8unpack 1.2.11)
+    либо ``<Container>.obj`` (legacy) — берётся первый существующий. Отсутствие
+    обоих → best-effort skip с предупреждением. ``Form.elem`` опционален.
     """
-    bsl_path = form_dir / EXTERNAL_BSL_NAME
-    if not bsl_path.exists():
-        msg = f"skipped (no {EXTERNAL_BSL_NAME}): {form_dir.relative_to(root).as_posix()}"
+    candidates = _external_bsl_candidates(container_name)
+    bsl_path = _first_existing(form_dir, candidates)
+    if bsl_path is None:
+        names = " / ".join(candidates)
+        msg = f"skipped (no {names}): {form_dir.relative_to(root).as_posix()}"
         scan_warnings.append(msg)
         logger.debug(msg)
         return
@@ -244,9 +306,9 @@ def _scan_external_form_dir(
         bsl_mtime = 0.0
 
     forms.append(FormEntry(
-        object_type=EXTERNAL_OBJECT_TYPE,
+        object_type=object_type,
         object_name=object_name,
-        container_name=EXTERNAL_FORM_CONTAINER,
+        container_name=container_name,
         form_name=form_dir.name,
         form_path=form_dir.resolve(),
         bsl_path=bsl_path.resolve(),
@@ -262,11 +324,15 @@ def _scan_external(
     forms: list[FormEntry],
     scan_warnings: list[str],
 ) -> None:
-    """Обход структуры External/<имя обработки>/Form/<форма>/ (issue #25).
+    """Обход структуры External/<объект>/<Container>/<форма>/ (issues #25, #32).
 
     Устойчив к обоим вариантам корня: если внутри ``root`` есть каталог
     ``External/`` — идём от него; иначе ``root`` уже указывает на уровень
-    обработок. Тихого fallback между режимами нет — режим задаётся явно.
+    объектов. Тихого fallback между режимами нет — режим задаётся явно.
+
+    Для каждого объекта перебираются известные контейнеры форм
+    (``Form``, ``ReportForm``). Тип объекта определяется по контейнеру и
+    (для ``Form``) по модулю объекта — см. :func:`_resolve_external_object_type`.
     """
     external_root = root / EXTERNAL_ROOT
     if not external_root.is_dir():
@@ -277,21 +343,30 @@ def _scan_external(
             continue
         object_name = proc_dir.name
 
-        container = proc_dir / EXTERNAL_FORM_CONTAINER
-        if not container.is_dir():
-            continue
-
-        for form_dir in sorted(container.iterdir()):
-            if not form_dir.is_dir():
+        for container_name in EXTERNAL_FORM_CONTAINERS:
+            container = proc_dir / container_name
+            if not container.is_dir():
                 continue
-            try:
-                _scan_external_form_dir(
-                    form_dir, object_name, root, forms, scan_warnings
-                )
-            except Exception as exc:  # noqa: BLE001
-                msg = f"error scanning {form_dir}: {exc}"
-                scan_warnings.append(msg)
-                logger.warning(msg)
+
+            object_type = _resolve_external_object_type(proc_dir, container_name)
+
+            for form_dir in sorted(container.iterdir()):
+                if not form_dir.is_dir():
+                    continue
+                try:
+                    _scan_external_form_dir(
+                        form_dir,
+                        object_type,
+                        object_name,
+                        container_name,
+                        root,
+                        forms,
+                        scan_warnings,
+                    )
+                except Exception as exc:  # noqa: BLE001
+                    msg = f"error scanning {form_dir}: {exc}"
+                    scan_warnings.append(msg)
+                    logger.warning(msg)
 
 
 def _scan_config(
@@ -350,14 +425,15 @@ def scan_forms(
     cf_export_root:
         Корень выгрузки. Для ``mode="config"`` — ``Catalog/``, ``Document/``,
         ``CommonForm/`` и др. Для ``mode="external"`` — каталог с ``External/``
-        либо непосредственно уровень обработок.
+        либо непосредственно уровень объектов.
     save_to:
         Если задан, сохранить JSON-индекс в этот файл.
     mode:
         ``"config"`` (по умолчанию) — структура конфигурации; ``"external"`` —
-        структура распакованных внешних обработок (issue #25). Режимы не
-        смешиваются: ``object_type`` внешних форм (``ExternalDataProcessor``)
-        не пересекается с типами конфигурации.
+        структура распакованных внешних обработок/отчётов (issues #25, #32).
+        Режимы не смешиваются: ``object_type`` внешних форм
+        (``ExternalDataProcessor`` / ``ExternalReport``) не пересекается с
+        типами конфигурации.
 
     Возвращает
     ----------
@@ -428,7 +504,6 @@ def main() -> None:
         action="store_true",
         help="Сохранить forms_index.json в root",
     )
-
     args = parser.parse_args()
 
     save_to = args.root / "forms_scan_index.json" if args.save else None
