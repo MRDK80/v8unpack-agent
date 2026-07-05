@@ -1,4 +1,9 @@
-"""Tests for issue #32: external mode scan_forms with Form.obj.bsl suffix (v8unpack 1.2.11).
+"""Tests for issue #32: external mode scan_forms with .obj.bsl suffix (v8unpack 1.2.11).
+
+Покрывает реальную схему живых данных:
+- обработки: контейнер Form/, форма Form.obj.bsl, модуль ExternalDataProcessor.obj.bsl;
+- отчёты:    контейнер ReportForm/, форма ReportForm.obj.bsl, тип ExternalReport
+             определяется по контейнеру (модуля ExternalReport.obj.bsl может не быть).
 
 All fixtures are synthetic — no domain names, hosts, or connection strings.
 Paths are built via pathlib (OS-neutral).
@@ -12,9 +17,18 @@ import pytest
 from v8unpack_agent.scan_forms import scan_forms
 
 
-def _make_form_dir(base: Path, form_name: str, bsl_filename: str) -> Path:
-    """Create a synthetic form directory under base/Form/<form_name>/."""
-    form_dir = base / "Form" / form_name
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _make_form_dir(
+    proc_dir: Path,
+    container_name: str,
+    form_name: str,
+    bsl_filename: str,
+) -> Path:
+    """Создать синтетическую форму proc_dir/<container>/<form_name>/<bsl_filename>."""
+    form_dir = proc_dir / container_name / form_name
     form_dir.mkdir(parents=True, exist_ok=True)
     (form_dir / bsl_filename).write_text("// synthetic bsl", encoding="utf-8")
     (form_dir / "Form.json").write_text("{}", encoding="utf-8")
@@ -23,93 +37,179 @@ def _make_form_dir(base: Path, form_name: str, bsl_filename: str) -> Path:
     return form_dir
 
 
-def _make_external_root(
+def _make_processor(
     tmp_path: Path,
-    processor_name: str = "ExternalDataProcessor",
+    processor_name: str = "SomeProcessor",
     form_bsl: str = "Form.obj.bsl",
     object_bsl: str = "ExternalDataProcessor.obj.bsl",
 ) -> Path:
-    """Build a synthetic external tree and return the scan root (processors level).
+    """Обработка: контейнер Form/, модуль объекта в каталоге обработки.
 
     Layout::
         <tmp_path>/<processor_name>/Form/MainForm/<form_bsl>
         <tmp_path>/<processor_name>/<object_bsl>
-    scan_forms is called on <tmp_path>.
+    Возвращает scan-root (<tmp_path>).
     """
     proc_dir = tmp_path / processor_name
     proc_dir.mkdir(parents=True, exist_ok=True)
-    _make_form_dir(proc_dir, "MainForm", form_bsl)
-    (proc_dir / object_bsl).write_text("// synthetic object module", encoding="utf-8")
+    _make_form_dir(proc_dir, "Form", "MainForm", form_bsl)
+    if object_bsl:
+        (proc_dir / object_bsl).write_text("// synthetic object module", encoding="utf-8")
     return tmp_path
 
 
-class TestExternalModeFormsBslSuffix:
-    """Issue #32: scan_forms external mode must support Form.obj.bsl (v8unpack 1.2.11)."""
+def _make_report(
+    tmp_path: Path,
+    report_name: str = "SomeReport",
+    form_bsl: str = "ReportForm.obj.bsl",
+    object_bsl: str = "",
+) -> Path:
+    """Отчёт: контейнер ReportForm/. Модуль объекта опционален (в живых данных часто нет).
 
-    def test_external_finds_forms_with_bsl_suffix(self, tmp_path):
-        """Schema A (v8unpack 1.2.11): forms with Form.obj.bsl must be found."""
-        root = _make_external_root(tmp_path, form_bsl="Form.obj.bsl")
+    Layout::
+        <tmp_path>/<report_name>/ReportForm/MainReportForm/<form_bsl>
+        [<tmp_path>/<report_name>/<object_bsl>]  # опционально
+    Возвращает scan-root (<tmp_path>).
+    """
+    proc_dir = tmp_path / report_name
+    proc_dir.mkdir(parents=True, exist_ok=True)
+    _make_form_dir(proc_dir, "ReportForm", "MainReportForm", form_bsl)
+    if object_bsl:
+        (proc_dir / object_bsl).write_text("// synthetic object module", encoding="utf-8")
+    return tmp_path
+
+
+# ---------------------------------------------------------------------------
+# Обработки: контейнер Form/
+# ---------------------------------------------------------------------------
+
+class TestExternalProcessorForms:
+    """Issue #32: external mode должен находить формы обработок с Form.obj.bsl."""
+
+    def test_finds_forms_with_bsl_suffix(self, tmp_path):
+        """Schema A (v8unpack 1.2.11): формы с Form.obj.bsl находятся."""
+        root = _make_processor(tmp_path, form_bsl="Form.obj.bsl")
         result = scan_forms(root, mode="external")
-        assert result.total > 0, (
-            "external mode must find forms with Form.obj.bsl suffix; got 0"
-        )
+        assert result.total > 0, "external mode должен находить формы с Form.obj.bsl; got 0"
 
-    def test_external_finds_forms_without_bsl_suffix(self, tmp_path):
-        """Schema B (legacy): backward compatibility — Form.obj without .bsl."""
-        root = _make_external_root(
+    def test_finds_forms_without_bsl_suffix(self, tmp_path):
+        """Schema B (legacy): обратная совместимость — Form.obj без .bsl."""
+        root = _make_processor(
             tmp_path,
             form_bsl="Form.obj",
             object_bsl="ExternalDataProcessor.obj",
         )
         result = scan_forms(root, mode="external")
-        assert result.total > 0, (
-            "external mode must remain backward-compatible with Form.obj (no .bsl suffix)"
-        )
+        assert result.total > 0, "external mode должен оставаться совместим с Form.obj"
 
-    def test_external_object_type_is_set(self, tmp_path):
-        """object_type must be ExternalDataProcessor or ExternalReport after scan."""
-        root = _make_external_root(tmp_path, form_bsl="Form.obj.bsl")
+    def test_object_type_is_data_processor(self, tmp_path):
+        """Контейнер Form + модуль ExternalDataProcessor.obj.bsl ⇒ ExternalDataProcessor."""
+        root = _make_processor(tmp_path, form_bsl="Form.obj.bsl")
         result = scan_forms(root, mode="external")
         assert result.total > 0
-        for form in result.forms:
-            assert form.object_type in (
-                "ExternalDataProcessor",
-                "ExternalReport",
-            ), f"Unexpected object_type: {form.object_type}"
+        assert all(f.object_type == "ExternalDataProcessor" for f in result.forms), (
+            "тип обработки должен определяться как ExternalDataProcessor по модулю объекта"
+        )
 
-    def test_external_prefers_existing_file(self, tmp_path):
-        """When both Form.obj.bsl and Form.obj exist, the .bsl variant is preferred."""
-        scan_root = _make_external_root(tmp_path, form_bsl="Form.obj.bsl")
-        legacy = scan_root / "ExternalDataProcessor" / "Form" / "MainForm" / "Form.obj"
+    def test_container_name_is_form(self, tmp_path):
+        """container_name формы обработки — Form."""
+        root = _make_processor(tmp_path, form_bsl="Form.obj.bsl")
+        result = scan_forms(root, mode="external")
+        assert all(f.container_name == "Form" for f in result.forms)
+
+    def test_prefers_bsl_over_legacy(self, tmp_path):
+        """При наличии обоих Form.obj.bsl и Form.obj приоритет у .bsl."""
+        scan_root = _make_processor(tmp_path, form_bsl="Form.obj.bsl")
+        legacy = scan_root / "SomeProcessor" / "Form" / "MainForm" / "Form.obj"
         legacy.write_text("// legacy bsl", encoding="utf-8")
 
         result = scan_forms(scan_root, mode="external")
-        assert result.total > 0, "Must find forms when both Form.obj.bsl and Form.obj exist"
+        assert result.total > 0
         assert result.forms[0].bsl_path.name == "Form.obj.bsl", (
-            "Form.obj.bsl must take priority over legacy Form.obj"
+            "Form.obj.bsl должен иметь приоритет над legacy Form.obj"
         )
 
-    def test_external_returns_zero_for_empty_root(self, tmp_path):
-        """Regression guard: empty root directory must return 0 forms, not raise."""
+    def test_returns_zero_for_empty_root(self, tmp_path):
+        """Regression guard: пустой каталог ⇒ 0 форм, без исключения."""
         empty_root = tmp_path / "empty"
         empty_root.mkdir()
         result = scan_forms(empty_root, mode="external")
-        assert result.total == 0, "Empty root must return zero forms, not raise"
+        assert result.total == 0
 
 
-class TestExternalModeExternalReport:
-    """Issue #32: same behaviour for ExternalReport type."""
+# ---------------------------------------------------------------------------
+# Отчёты: контейнер ReportForm/
+# ---------------------------------------------------------------------------
 
-    def test_external_report_finds_forms_with_bsl_suffix(self, tmp_path):
-        """ExternalReport must also be found with Form.obj.bsl and typed correctly."""
-        root = _make_external_root(
+class TestExternalReportForms:
+    """Issue #32: external mode должен находить формы отчётов в ReportForm/."""
+
+    def test_finds_report_forms_with_bsl_suffix(self, tmp_path):
+        """ReportForm/ + ReportForm.obj.bsl — формы отчёта находятся."""
+        root = _make_report(tmp_path, form_bsl="ReportForm.obj.bsl")
+        result = scan_forms(root, mode="external")
+        assert result.total > 0, "external mode должен находить формы отчёта с ReportForm.obj.bsl"
+
+    def test_report_object_type_is_external_report(self, tmp_path):
+        """Контейнер ReportForm ⇒ object_type=ExternalReport (по контейнеру, без модуля)."""
+        root = _make_report(tmp_path, form_bsl="ReportForm.obj.bsl", object_bsl="")
+        result = scan_forms(root, mode="external")
+        assert result.total > 0
+        assert all(f.object_type == "ExternalReport" for f in result.forms), (
+            "тип отчёта должен определяться как ExternalReport по контейнеру ReportForm"
+        )
+
+    def test_report_type_ignores_data_processor_module(self, tmp_path):
+        """Даже если рядом лежит ExternalDataProcessor.obj.bsl, ReportForm ⇒ ExternalReport."""
+        root = _make_report(
             tmp_path,
-            processor_name="ExternalReport",
-            form_bsl="Form.obj.bsl",
-            object_bsl="ExternalReport.obj.bsl",
+            form_bsl="ReportForm.obj.bsl",
+            object_bsl="ExternalDataProcessor.obj.bsl",
         )
         result = scan_forms(root, mode="external")
-        assert result.total > 0, "ExternalReport: must find forms with Form.obj.bsl suffix"
+        assert result.total > 0
         assert all(f.object_type == "ExternalReport" for f in result.forms), (
-            "object_type must be resolved to ExternalReport by object module name"
+            "контейнер ReportForm имеет приоритет над модулем объекта при типизации"
         )
+
+    def test_report_container_name_is_report_form(self, tmp_path):
+        """container_name формы отчёта — ReportForm."""
+        root = _make_report(tmp_path, form_bsl="ReportForm.obj.bsl")
+        result = scan_forms(root, mode="external")
+        assert all(f.container_name == "ReportForm" for f in result.forms)
+
+    def test_report_forms_without_bsl_suffix(self, tmp_path):
+        """Обратная совместимость: ReportForm.obj без .bsl тоже находится."""
+        root = _make_report(tmp_path, form_bsl="ReportForm.obj")
+        result = scan_forms(root, mode="external")
+        assert result.total > 0, "external mode должен быть совместим с ReportForm.obj (legacy)"
+
+
+# ---------------------------------------------------------------------------
+# Смешанный корень: обработки и отчёты вместе (как в живой выгрузке)
+# ---------------------------------------------------------------------------
+
+class TestExternalMixedRoot:
+    """Issue #32: один корень с обработками и отчётами — оба типа находятся и типизируются."""
+
+    def test_mixed_root_finds_both_types(self, tmp_path):
+        """В общем корне обработка (Form) и отчёт (ReportForm) видны обе."""
+        _make_processor(tmp_path, processor_name="Proc1", form_bsl="Form.obj.bsl")
+        _make_report(tmp_path, report_name="Report1", form_bsl="ReportForm.obj.bsl")
+
+        result = scan_forms(tmp_path, mode="external")
+        types = {f.object_type for f in result.forms}
+        assert result.total >= 2, "должны найтись формы и обработки, и отчёта"
+        assert types == {"ExternalDataProcessor", "ExternalReport"}, (
+            f"ожидались оба типа, получено: {types}"
+        )
+
+    def test_mixed_root_no_skips(self, tmp_path):
+        """В смешанном корне не должно быть skip-предупреждений по формам."""
+        _make_processor(tmp_path, processor_name="Proc1", form_bsl="Form.obj.bsl")
+        _make_report(tmp_path, report_name="Report1", form_bsl="ReportForm.obj.bsl")
+
+        result = scan_forms(tmp_path, mode="external")
+        skipped = [w for w in result.scan_warnings if w.startswith("skipped")]
+        assert not skipped, f"неожиданные skip-предупреждения: {skipped}"
+        
