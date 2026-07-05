@@ -212,4 +212,3 @@ class TestExternalMixedRoot:
         result = scan_forms(tmp_path, mode="external")
         skipped = [w for w in result.scan_warnings if w.startswith("skipped")]
         assert not skipped, f"неожиданные skip-предупреждения: {skipped}"
-        

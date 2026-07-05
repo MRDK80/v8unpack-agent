@@ -71,7 +71,7 @@ for entry in index.forms:
     python -m v8unpack_agent.scan_forms <root> [--mode {config,external}] [--save]
 
 - `--mode config` (по умолчанию) — структура конфигурации;
-- `--mode external` — распакованные внешние обработки (issue #25);
+- `--mode external` — распакованные внешние обработки и отчёты (issues #25, #32);
 - `--save` — сохранить `forms_scan_index.json` в `<root>`.
 
 ### Layout выгрузки v8unpack
@@ -100,25 +100,45 @@ for entry in index.forms:
       CommonForm.json
 ```
 
-### Layout внешних обработок (mode="external")
+### Layout внешних обработок и отчётов (mode="external")
 
-Распакованные внешние обработки (`.epf`) имеют структуру, отличную от
-конфигурации (issue #25, подтверждено на реальных данных):
+Распакованные внешние обработки (`.epf`) и отчёты (`.erf`) имеют структуру,
+отличную от конфигурации (issues #25, #32, подтверждено на реальных данных).
+
+**Внешняя обработка** — контейнер форм `Form/`:
 ```
 External/<имя обработки>/
-    ExternalDataProcessor.json
-    ExternalDataProcessor.obj # модуль объекта (не форма)
+    ExternalDataProcessor.obj.bsl   # модуль объекта (не форма)
     Form/
         <ИмяФормы>/
-            Form.obj # bsl формы, БЕЗ суффикса .bsl
+            Form.obj.bsl            # bsl формы (v8unpack 1.2.11)
             Form.json
-            Form.elem # структура формы (элементы)
+            Form.elem               # структура формы (элементы)
             Form.id
 ```
 
-Ключевые отличия от конфигурации: bsl-файл называется `Form.obj` (без
-`.bsl`), верхний уровень — имя обработки (а не `object_type`), контейнер
-форм всегда `Form/`. Для этой структуры используется отдельный режим:
+**Внешний отчёт** — контейнер форм `ReportForm/`:
+```
+External/<имя отчёта>/
+    ReportForm/
+        <ИмяФормы>/
+            ReportForm.obj.bsl      # bsl формы (v8unpack 1.2.11)
+            Form.json
+            Form.elem
+            Form.id
+```
+
+Ключевые особенности external-режима:
+
+- **bsl-файл формы называется `<Container>.obj.bsl`** (`Form.obj.bsl` для
+  обработки, `ReportForm.obj.bsl` для отчёта) на v8unpack 1.2.11. Для обратной
+  совместимости со старыми выгрузками поддержан вариант без суффикса —
+  `<Container>.obj` (`Form.obj` / `ReportForm.obj`); берётся первый существующий,
+  приоритет у `.bsl` (issue #32).
+- **Верхний уровень** — имя конкретной обработки/отчёта, а не `object_type`.
+- **Контейнер форм** — `Form/` (обработка) либо `ReportForm/` (отчёт).
+
+Для этой структуры используется отдельный режим:
 
 ```python
 from pathlib import Path
@@ -128,9 +148,17 @@ index = scan_forms(Path("/path/to/External"), mode="external",
                    save_to=Path("forms_scan_index.json"))
 ```
 
-В индексе такие формы получают `object_type="ExternalDataProcessor"`
-(не пересекается с типами конфигурации), `object_name` = имя обработки,
-`container_name="Form"`. Подробнее — [Структура распакованных внешних
+Определение `object_type` в external-режиме (issue #32):
+
+- контейнер `ReportForm/` ⇒ `object_type="ExternalReport"` (по контейнеру,
+  приоритет над модулем объекта);
+- контейнер `Form/` ⇒ по имени модуля объекта
+  (`ExternalDataProcessor.obj.bsl` / `ExternalReport.obj.bsl`), при отсутствии —
+  fallback `ExternalDataProcessor`.
+
+У формы `object_name` = имя обработки/отчёта, `container_name` = `"Form"` либо
+`"ReportForm"`. Оба типа (`ExternalDataProcessor`, `ExternalReport`) не
+пересекаются с типами конфигурации. Подробнее — [Структура распакованных внешних
 обработок](docs/external_forms_structure.md).
 
 ### Семантика контейнеров
@@ -150,19 +178,19 @@ index = scan_forms(Path("/path/to/External"), mode="external",
 
 | Поле | Тип | Значение |
 |---|---|---|
-| `object_type` | string | Тип объекта метаданных: `Catalog`, `Document`, `DataProcessor`, … |
-| `object_name` | string | Имя объекта: `Склады`, `Контрагенты`, … (для `CommonForm` совпадает с `container_name`) |
-| `container_name` | string | Имя контейнера форм: `CatalogForm`, `Form`, `CommonForm`, … |
+| `object_type` | string | Тип объекта метаданных: `Catalog`, `Document`, `DataProcessor`, … Для external — `ExternalDataProcessor` / `ExternalReport`. |
+| `object_name` | string | Имя объекта: `Склады`, `Контрагенты`, … (для `CommonForm` совпадает с `container_name`; для external — имя обработки/отчёта) |
+| `container_name` | string | Имя контейнера форм: `CatalogForm`, `Form`, `ReportForm`, `CommonForm`, … |
 | `form_name` | string | Имя формы: `ФормаЭлемента`, `ФормаСписка`, … |
 | `form_path` | string | Путь к директории формы относительно корня выгрузки |
-| `bsl_path` | string | Путь к `.obj.bsl` относительно корня выгрузки |
+| `bsl_path` | string | Путь к bsl-файлу формы (`<Container>.obj.bsl` или legacy `<Container>.obj`) относительно корня выгрузки |
 | `json_path` | string | Путь к `.json` относительно корня выгрузки |
-| `bsl_mtime` | float | `st_mtime` файла `.obj.bsl` на момент сканирования; baseline для детекции изменений в `drift_checker`. `0.0` — неизвестно (старый индекс или ошибка `stat`). |
+| `bsl_mtime` | float | `st_mtime` bsl-файла на момент сканирования; baseline для детекции изменений в `drift_checker`. `0.0` — неизвестно (старый индекс или ошибка `stat`). |
 | `warnings` | array | Предупреждения (обычно пусто) |
-| `form_elem_path` | string \| null | Путь к `Form.elem` (структура формы внешней обработки, mode="external"). `null` для форм конфигурации или если файла нет. |
+| `form_elem_path` | string \| null | Путь к `Form.elem` (структура формы внешнего объекта, mode="external"). `null` для форм конфигурации или если файла нет. |
 
 `FormScanIndex` содержит список `forms`, счётчик `total`, метку `scanned_at` и
-список `scan_warnings` (пропущенные формы без `.obj.bsl`).
+список `scan_warnings` (пропущенные формы без bsl-файла).
 
 Для загрузки сохранённого индекса используй `FormScanIndex.load(path)`:
 
@@ -175,7 +203,7 @@ index = FormScanIndex.load(Path("forms_scan_index.json"))
 
 ### Поведение при ошибках
 
-- Форма без `.obj.bsl` → `skipped (no .obj.bsl): <path>` в `scan_warnings`, в индекс не попадает.
+- Форма без bsl-файла → `skipped (no <Container>.obj.bsl / <Container>.obj): <path>` в `scan_warnings`, в индекс не попадает.
 - Ошибка в одной форме не останавливает обход (best-effort).
 
 ## Контроль дрейфа (drift_checker)
@@ -303,7 +331,7 @@ else:
 
 | Модуль | Что даёт |
 |---|---|
-| `scan_forms` | `scan_forms()` + `FormEntry` + `FormScanIndex` — опись всех форм по layout-у выгрузки (все `*Form`-контейнеры + `CommonForm`), best-effort, JSON-экспорт. Нулевой шаг пайплайна: файловая система, без парсинга BSL. |
+| `scan_forms` | `scan_forms()` + `FormEntry` + `FormScanIndex` — опись всех форм по layout-у выгрузки (все `*Form`-контейнеры + `CommonForm`; external — `Form`/`ReportForm`), best-effort, JSON-экспорт. Нулевой шаг пайплайна: файловая система, без парсинга BSL. |
 | `drift_checker` | `check_drift()` + `DriftReport` — сравнение текущей выгрузки с сохранённым `FormScanIndex`: added / removed / **modified** / stale_extractions, JSON-сохранение отчёта. |
 | `form_paths` | Фабрика путей по конвенции: `form_paths()`, `item_modules()` (вложенные панели из `Items/`), `all_module_paths()`. Чистая арифметика путей — файлы не читаются. |
 | `form_artifact` | `FormArtifact` (`name`, `paths`, `extraction_ok`, `extraction_warnings`, `skd_extracted`, `elem_index_ok`) — результат распаковки одной формы с явным флагом полноты, без тихого провала. |
@@ -349,7 +377,7 @@ else:
 | `extraction_ok` | bool | `true` — полная распаковка; `false` — частичная |
 | `warnings` | array | Диагностические сообщения при частичной распаковке; пустой массив при `extraction_ok: true` |
 
-`forms_index` — **не** источник истины (источник — `Form.bin` в выгрузке), а
+`forms_index` — **не** источник истины (источник — `Form.bin` в вы��рузке), а
 **карта актуальности**. В неё кладётся только маршрутизация и метки времени:
 никакого содержимого `Form.bin`, строк подключения, имён баз/хостов — реестр
 остаётся обезличенным и коммитится в репозиторий вместе с выгрузкой.
@@ -388,26 +416,28 @@ for entry in result.matched:
 Сравнение на уровнях 2–3 регистронезависимо: LLM может вернуть
 `"банки"`, `"Банки"` или `"БАНКИ"` — все три найдут `Catalog/Банки`.
 
-### Внешние обработки в маршрутизации
+### Внешние обработки и отчёты в маршрутизации
 
 `FormRouter` работает поверх единого `FormScanIndex`, поэтому формы внешних
-обработок (`mode="external"`) маршрутизируются тем же `route()` без отдельного
-API. Такие формы имеют `object_type="ExternalDataProcessor"`, `object_name` =
-имя обработки, `container_name="Form"` (см. раздел про `mode="external"`), и
-находятся по тем же трём уровням совпадения:
+обработок и отчётов (`mode="external"`) маршрутизируются тем же `route()` без
+отдельного API. Такие формы имеют `object_type="ExternalDataProcessor"` либо
+`"ExternalReport"`, `object_name` = имя обработки/отчёта, `container_name` =
+`"Form"` либо `"ReportForm"` (см. раздел про `mode="external"`), и находятся по
+тем же трём уровням совпадения:
 
 ```python
-# индекс собран из внешних обработок: scan_forms(..., mode="external")
+# индекс собран из внешних обработок/отчётов: scan_forms(..., mode="external")
 router = FormRouter(index_path=Path("forms_scan_index.json"))
 
-result = router.route("ExternalDataProcessor")   # по object_type → conf 0.4
-result = router.route("ЗагрузкаЦен")             # по object_name  → conf 0.9
+result = router.route("ExternalReport")   # по object_type → conf 0.4
+result = router.route("ЗагрузкаЦен")      # по object_name  → conf 0.9
 ```
 
-`object_type="ExternalDataProcessor"` не пересекается с типами конфигурации,
-поэтому формы обработок и одноимённые формы конфигурации не коллидируют в
-одном индексе. Смешанный индекс (конфигурация + External) поддерживается: при
-неоднозначности приоритет отдаётся `form_name` (1.0) над `object_name` (0.9).
+`object_type` external-объектов (`ExternalDataProcessor` / `ExternalReport`) не
+пересекается с типами конфигурации, поэтому формы обработок/отчётов и одноимённые
+формы конфигурации не коллидируют в одном индексе. Смешанный индекс
+(конфигурация + External) поддерживается: при неоднозначности приоритет отдаётся
+`form_name` (1.0) над `object_name` (0.9).
 
 ### Инкрементальное обновление индекса
 
@@ -504,12 +534,12 @@ pytest
 деревьях с внедрённым распаковщиком-заглушкой, так что реальный контейнер 1С
 не требуется.
 
- ## Связанное
- 
- - [saby-integration/v8unpack](https://github.com/saby-integration/v8unpack) — нижележащий распаковщик контейнеров (Python, MIT)
- - [PR#29 — fix: add ExternalReport (.erf) support](https://github.com/saby-integration/v8unpack/pull/29) — принят
- - [Обычные формы 1С в агентном пайплайне: пошаговая распаковка](https://infostart.ru/1c/articles/2721726/)
- - [СКД и дерево элементов обычной формы 1С: два некритичных шага в агентном пайплайне](https://infostart.ru/1c/articles/2726561/)
+## Связанное
+
+- [saby-integration/v8unpack](https://github.com/saby-integration/v8unpack) — нижележащий распаковщик контейнеров (Python, MIT)
+- [PR#29 — fix: add ExternalReport (.erf) support](https://github.com/saby-integration/v8unpack/pull/29) — принят
+- [Обычные формы 1С в агентном пайплайне: пошаговая распаковка](https://infostart.ru/1c/articles/2721726/)
+- [СКД и дерево элементов обычной формы 1С: два некритичных шага в агентном пайплайне](https://infostart.ru/1c/articles/2726561/)
 
 ## Лицензия
 

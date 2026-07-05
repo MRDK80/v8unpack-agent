@@ -20,6 +20,7 @@ from v8unpack_agent import (
     unpack_all_forms,
     update_forms_index,
 )
+from v8unpack_agent.scan_forms import scan_forms
 
 
 def make_demo_dump(dump_root: Path, *form_names: str) -> None:
@@ -48,6 +49,37 @@ def demo_unpacker(bin_path: Path, unpacked_root: Path, form_name: str) -> FormAr
             extraction_warnings=["вложенная панель не распакована"],
         )
     return FormArtifact.for_form(unpacked_root, form_name)
+
+
+def make_demo_external(external_root: Path) -> None:
+    """Создать синтетическую выгрузку внешних объектов (mode=\"external\").
+
+    Демонстрирует обе схемы v8unpack 1.2.11 (issue #32):
+    - обработка: контейнер Form/, форма Form.obj.bsl, модуль
+      ExternalDataProcessor.obj.bsl → object_type=ExternalDataProcessor;
+    - отчёт: контейнер ReportForm/, форма ReportForm.obj.bsl →
+      object_type=ExternalReport (определяется по контейнеру).
+    """
+    # Обработка.
+    proc = external_root / "ЗагрузкаЦен"
+    (proc / "Form" / "Форма").mkdir(parents=True, exist_ok=True)
+    (proc / "ExternalDataProcessor.obj.bsl").write_text(
+        "// демо-модуль объекта обработки", encoding="utf-8"
+    )
+    (proc / "Form" / "Форма" / "Form.obj.bsl").write_text(
+        "// демо-код формы обработки", encoding="utf-8"
+    )
+    (proc / "Form" / "Форма" / "Form.json").write_text("{}", encoding="utf-8")
+
+    # Отчёт.
+    report = external_root / "СводныйОтчёт"
+    (report / "ReportForm" / "ФормаОтчёта").mkdir(parents=True, exist_ok=True)
+    (report / "ReportForm" / "ФормаОтчёта" / "ReportForm.obj.bsl").write_text(
+        "// демо-код формы отчёта", encoding="utf-8"
+    )
+    (report / "ReportForm" / "ФормаОтчёта" / "Form.json").write_text(
+        "{}", encoding="utf-8"
+    )
 
 
 def main() -> None:
@@ -82,6 +114,15 @@ def main() -> None:
         print("\nКонвенция путей для ФормаЭлемента:")
         for key, value in paths.items():
             print(f"  {key}: {value}")
+
+        # 4) external-режим: опись форм внешних обработок и отчётов (issue #32)
+        external_root = base / "External"
+        make_demo_external(external_root)
+        ext_index = scan_forms(external_root, mode="external")
+        print("\nВнешние формы (mode=external):", ext_index.total)
+        for e in ext_index.forms:
+            print(f"  - {e.object_type} / {e.object_name} / {e.form_name}"
+                  f" [{e.container_name}] → {e.bsl_path.name}")
 
 
 if __name__ == "__main__":
