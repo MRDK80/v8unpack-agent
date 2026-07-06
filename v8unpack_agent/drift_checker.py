@@ -1,7 +1,7 @@
 # v8unpack_agent/drift_checker.py
 """drift_checker — детект дрейфа форм через FormScanIndex.
 
-Реализует issues #10, #38.
+Реализует issues #10, #38, #40.
 
 Сравнивает текущее состояние cf_export_root с ранее сохранённым
 FormScanIndex (forms_index.json) и определяет рассинхрон:
@@ -13,6 +13,16 @@ FormScanIndex (forms_index.json) и определяет рассинхрон:
   тем же содержимым **не** даёт ``modified``.
 - Если ``bsl_sha256`` в индексе отсутствует (старый формат без hash-поля) —
   используется legacy-fallback через ``bsl_mtime`` (поведение до fix #38).
+
+Алгоритм детекции ``structure_modified`` (issue #40):
+- Независимый от ``modified`` сигнал: сравнивается ``elem_sha256`` из
+  baseline-индекса с хэшем текущего нормализованного дерева элементов.
+- Если ``elem_sha256`` в baseline отсутствует (старый индекс) — сигнал
+  ``structure_modified`` не порождается (обратная совместимость).
+- Правка кода формы без изменения разметки: ``modified`` есть,
+  ``structure_modified`` нет.
+- Добавление/удаление элемента без правки кода: ``structure_modified`` есть,
+  ``modified`` нет.
 
 OS-нейтральность:
 - Пути строятся через pathlib / os.path.join.
@@ -73,6 +83,7 @@ class DriftReport:
     removed: list[str] = field(default_factory=list)
     modified: list[str] = field(default_factory=list)
     stale_extractions: list[str] = field(default_factory=list)
+    structure_modified: list[str] = field(default_factory=list)
     checked_at: str = ""
 
     def save_to(self, path: Path) -> Path:
@@ -89,6 +100,8 @@ class DriftReport:
     def load_from(cls, path: Path) -> "DriftReport":
         """Загрузить отчёт из JSON."""
         data = json.loads(Path(path).read_text(encoding="utf-8"))
+        # Обратная совместимость: старые отчёты без structure_modified
+        data.setdefault("structure_modified", [])
         return cls(**data)
 
 
@@ -106,14 +119,21 @@ def _load_index_dict(index_path: Path) -> list[dict]:
     return data.get("forms", [])
 
 
-def _index_snapshot(index_path: Path) -> tuple[dict[str, float], dict[str, Optional[str]]]:
-    """Построить два словаря из index_path:
+def _index_snapshot(
+    index_path: Path,
+) -> tuple[
+    dict[str, float],
+    dict[str, Optional[str]],
+    dict[str, Optional[str]],
+]:
+    """Построить три словаря из index_path:
 
-    - ``mtime_map``: dict[form_key -> baseline_mtime]  (legacy fallback)
-    - ``hash_map``:  dict[form_key -> bsl_sha256 | None]
+    - ``mtime_map``:  dict[form_key -> baseline_mtime]  (legacy fallback)
+    - ``hash_map``:   dict[form_key -> bsl_sha256 | None]
+    - ``elem_map``:   dict[form_key -> elem_sha256 | None]
 
-    ``hash_map[key]`` равно ``None``, если запись не содержит ``bsl_sha256``
-    (старый индекс без hash-поля).
+    ``hash_map[key]`` / ``elem_map[key]`` равны ``None``, если запись
+    не содержит соответствующего поля (старый индекс).
 
     Fallback-поведение mtime (обратная совместимость со старым форматом):
     - Если ``bsl_mtime`` отсутствует или равно 0.0 — берём mtime с диска
@@ -122,6 +142,7 @@ def _index_snapshot(index_path: Path) -> tuple[dict[str, float], dict[str, Optio
     """
     mtime_map: dict[str, float] = {}
     hash_map: dict[str, Optional[str]] = {}
+    elem_map: dict[str, Optional[str]] = {}
     entries = _load_index_dict(index_path)
     for e in entries:
         key = _form_key(
@@ -131,7 +152,8 @@ def _index_snapshot(index_path: Path) -> tuple[dict[str, float], dict[str, Optio
             e.get("form_name", ""),
         )
         # --- hash ---
-        hash_map[key] = e.get("bsl_sha256")  # None when absent
+        hash_map[key] = e.get("bsl_sha256")    # None when absent
+        elem_map[key] = e.get("elem_sha256")   # None when absent
 
         # --- mtime (legacy) ---
         stored_mtime = float(e.get("bsl_mtime", 0.0))
@@ -144,7 +166,7 @@ def _index_snapshot(index_path: Path) -> tuple[dict[str, float], dict[str, Optio
             except OSError:
                 mtime = -1.0
             mtime_map[key] = mtime
-    return mtime_map, hash_map
+    return mtime_map, hash_map, elem_map
 
 
 def _disk_snapshot(cf_export_root: Path) -> dict[str, tuple[float, Optional[str]]]:
@@ -248,7 +270,7 @@ def check_drift(
     Возвращает
     ----------
     :class:`DriftReport` с полями added / removed / modified /
-    stale_extractions / has_drift.
+    stale_extractions / structure_modified / has_drift.
 
     Детекция ``modified`` (issue #38):
     - При наличии ``bsl_sha256`` в baseline сравнивается hash текущего
@@ -256,6 +278,14 @@ def check_drift(
       ``modified``.
     - Без ``bsl_sha256`` (старый индекс) используется legacy-fallback
       через ``bsl_mtime``.
+
+    Детекция ``structure_modified`` (issue #40):
+    - При наличии ``elem_sha256`` в baseline пересчитывается хэш
+      нормализованного дерева элементов текущей формы через scan_forms
+      (``elem_sha256`` из нового сканирования) и сравнивается с baseline.
+    - Если ``elem_sha256`` в baseline отсутствует (старый индекс) —
+      сигнал ``structure_modified`` не порождается (обратная совместимость).
+    - Сигнал независим от ``modified``.
     """
     root = Path(cf_export_root)
     ipath = Path(index_path)
@@ -270,6 +300,7 @@ def check_drift(
             removed=[],
             modified=[],
             stale_extractions=[],
+            structure_modified=[],
             checked_at=now,
         )
         if save_to:
@@ -278,10 +309,10 @@ def check_drift(
 
     # --- Штатный путь ---
     try:
-        index_mtime, index_hash = _index_snapshot(ipath)
+        index_mtime, index_hash, index_elem = _index_snapshot(ipath)
     except Exception as exc:  # noqa: BLE001
         logger.error("failed to load index %s: %s", ipath, exc)
-        index_mtime, index_hash = {}, {}
+        index_mtime, index_hash, index_elem = {}, {}, {}
 
     disk_snap = _disk_snapshot(root)
 
@@ -304,13 +335,37 @@ def check_drift(
             if abs(disk_mtime - index_mtime[k]) > 1.0:
                 modified.append(k)
 
+    # --- structure_modified (issue #40) ---
+    # Пересканируем только формы, присутствующие в обоих множествах,
+    # у которых в baseline есть elem_sha256. Используем scan_forms для
+    # получения актуального elem_sha256 по текущей файловой системе.
+    structure_modified: list[str] = []
+    keys_with_baseline_elem = {
+        k for k in sorted(index_keys & disk_keys)
+        if index_elem.get(k) is not None
+    }
+    if keys_with_baseline_elem:
+        from v8unpack_agent.scan_forms import scan_forms as _scan_forms
+        current_index = _scan_forms(root)
+        current_elem_map = {
+            _form_key(
+                e.object_type, e.object_name, e.container_name, e.form_name
+            ): e.elem_sha256
+            for e in current_index.forms
+        }
+        for k in sorted(keys_with_baseline_elem):
+            baseline_elem = index_elem[k]
+            current_elem = current_elem_map.get(k)  # None if no elem.json
+            if current_elem is not None and current_elem != baseline_elem:
+                structure_modified.append(k)
+
     try:
         stale = sorted(_stale_keys(ipath))
     except Exception as exc:  # noqa: BLE001
         logger.warning("stale check failed: %s", exc)
         stale = []
 
-    has_drift = bool(added or removed or modified or stale)
+    has_drift = bool(added or removed or modified or stale or structure_modified)
 
     report = DriftReport(
         has_drift=has_drift,
@@ -318,6 +373,7 @@ def check_drift(
         removed=removed,
         modified=modified,
         stale_extractions=stale,
+        structure_modified=structure_modified,
         checked_at=now,
     )
     if save_to:

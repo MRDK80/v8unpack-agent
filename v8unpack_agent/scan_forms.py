@@ -1,6 +1,6 @@
 """scan_forms — обобщённый обход *Form-контейнеров и сборка FormScanIndex.
 
-Реализует issues #9, #13, #25, #32, #38.
+Реализует issues #9, #13, #25, #32, #38, #40.
 
 v8unpack формирует несколько layout-ов.
 
@@ -84,6 +84,15 @@ EXTERNAL_REPORT_OBJECT_TYPE = "ExternalReport"
 # Fallback-тип, если тип не удалось определить (обратная совместимость).
 EXTERNAL_DEFAULT_OBJECT_TYPE = "ExternalDataProcessor"
 
+# Структурно значимые поля нормализованного элемента (issue #40).
+# Косметические поля (left, top, width, height, color, font, guid, …)
+# намеренно исключены, чтобы правка разметки без смысловых изменений
+# не порождала ложный structure drift.
+_ELEM_STRUCTURAL_KEYS = frozenset({
+    "name", "type", "path", "parent", "parent_path",
+    "page", "source", "data_path", "handler",
+})
+
 
 def _compute_sha256(path: Path) -> Optional[str]:
     """Вернуть hex-дайджест SHA-256 содержимого файла или None при ошибке."""
@@ -94,6 +103,40 @@ def _compute_sha256(path: Path) -> Optional[str]:
                 h.update(chunk)
         return h.hexdigest()
     except OSError:
+        return None
+
+
+def _compute_elem_sha256(form_dir: Path) -> Optional[str]:
+    """Вычислить SHA-256 нормализованного дерева элементов формы (issue #40).
+
+    Алгоритм:
+    1. Найти ``*.elem.json`` в ``form_dir`` (через elem_parser).
+    2. Распарсить нормализованное дерево (``ElemIndexResult.elements``).
+       Если ``elem_index_ok=False`` (файл не найден или не разобран) — вернуть ``None``.
+    3. Из каждого элемента оставить только структурно значимые поля
+       (``_ELEM_STRUCTURAL_KEYS``): name, type, path, parent, parent_path,
+       page, source, data_path, handler. Косметические поля (координаты,
+       цвета, шрифты, GUID) не хэшируются.
+    4. Сериализовать список отфильтрованных элементов в UTF-8 JSON
+       с ``sort_keys=True, ensure_ascii=False`` для детерминизма.
+    5. Вернуть SHA-256 hex-дайджест байтов этой строки.
+
+    Граница достоверности: вложенность групп не реконструируется
+    (``elem_parser`` помечает это предупреждением); хэш строится
+    по достоверной части дерева.
+    """
+    try:
+        from v8unpack_agent.elem_parser import parse_elem_json  # local import — избегаем цикл
+        result = parse_elem_json(form_dir)
+        if not result.elem_index_ok or not result.elements:
+            return None
+        structural = [
+            {k: v for k, v in elem.items() if k in _ELEM_STRUCTURAL_KEYS}
+            for elem in result.elements
+        ]
+        payload = json.dumps(structural, sort_keys=True, ensure_ascii=False)
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+    except Exception:  # noqa: BLE001
         return None
 
 
@@ -144,6 +187,15 @@ class FormEntry:
     ``None`` означает «не вычислен» — используется legacy-fallback через
     ``bsl_mtime``."""
 
+    elem_sha256: Optional[str] = None
+    """SHA-256 hex-дайджест нормализованного дерева элементов формы (issue #40).
+    Хэшируется только структурно значимая часть ``form_elements_index``
+    (name, type, path, parent, parent_path, page, source, data_path, handler).
+    Косметические поля (координаты, цвета, шрифты, GUID) исключены.
+    ``None`` — ``*.elem.json`` не найден, не разобран или элементов нет.
+    Используется ``drift_checker.check_drift()`` как независимый сигнал
+    ``structure_modified`` (отдельно от ``modified``)."""
+
 
 @dataclass
 class FormScanIndex:
@@ -175,6 +227,7 @@ class FormScanIndex:
                         if e.form_elem_path is not None else None
                     ),
                     "bsl_sha256": e.bsl_sha256,
+                    "elem_sha256": e.elem_sha256,
                 }
                 for e in self.forms
             ],
@@ -198,8 +251,9 @@ class FormScanIndex:
         Пути (``form_path``, ``bsl_path``, ``json_path``, ``form_elem_path``)
         восстанавливаются через :class:`pathlib.Path` — OS-нейтрально.
 
-        Обратная совместимость: поле ``bsl_sha256`` отсутствующее в старом
-        индексе десериализуется как ``None``.
+        Обратная совместимость:
+        - поле ``bsl_sha256`` отсутствующее в старом индексе → ``None``;
+        - поле ``elem_sha256`` отсутствующее в старом индексе → ``None``.
 
         Parameters
         ----------
@@ -225,7 +279,8 @@ class FormScanIndex:
                     if row.get("form_elem_path") is not None
                     else None
                 ),
-                bsl_sha256=row.get("bsl_sha256"),  # None for old indexes
+                bsl_sha256=row.get("bsl_sha256"),   # None for old indexes
+                elem_sha256=row.get("elem_sha256"),  # None for old indexes
             )
             for row in raw.get("forms", [])
         ]
@@ -298,6 +353,7 @@ def _scan_form_dir(
         bsl_mtime = 0.0
 
     bsl_sha256 = _compute_sha256(bsl_path)
+    elem_sha256 = _compute_elem_sha256(form_dir)
 
     return FormEntry(
         object_type=object_type,
@@ -310,6 +366,7 @@ def _scan_form_dir(
         warnings=warnings,
         bsl_mtime=bsl_mtime,
         bsl_sha256=bsl_sha256,
+        elem_sha256=elem_sha256,
     )
 
 
@@ -377,6 +434,7 @@ def _scan_external_form_dir(
         bsl_mtime = 0.0
 
     bsl_sha256 = _compute_sha256(bsl_path)
+    elem_sha256 = _compute_elem_sha256(form_dir)
 
     forms.append(FormEntry(
         object_type=object_type,
@@ -390,6 +448,7 @@ def _scan_external_form_dir(
         bsl_mtime=bsl_mtime,
         form_elem_path=elem_path.resolve() if elem_path.exists() else None,
         bsl_sha256=bsl_sha256,
+        elem_sha256=elem_sha256,
     ))
 
 

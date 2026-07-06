@@ -186,7 +186,8 @@ index = scan_forms(Path("/path/to/External"), mode="external",
 | `bsl_path` | string | Путь к bsl-файлу формы (`<Container>.obj.bsl` или legacy `<Container>.obj`) относительно корня выгрузки |
 | `json_path` | string | Путь к `.json` относительно корня выгрузки |
 | `bsl_mtime` | float | `st_mtime` bsl-файла на момент сканирования. Legacy-поле; используется как fallback в `drift_checker` для старых индексов без `bsl_sha256`. `0.0` — неизвестно. |
-| `bsl_sha256` | string \| null | SHA-256 hex-дайджест содержимого bsl-файла на момент сканирования. Основной критерий изменения в `check_drift()` (issue #38). `null` в старых индексах без hash-поля — используется legacy fallback через `bsl_mtime`. |
+| `bsl_sha256` | string \| null | SHA-256 hex-дайджест содержимого bsl-файла на момент сканирования. Основной критерий изменения кода формы в `check_drift()` (issue #38). `null` в старых индексах без hash-поля — используется legacy fallback через `bsl_mtime`. |
+| `elem_sha256` | string \| null | SHA-256 hex-дайджест нормализованного дерева элементов формы (issue #40). Хэшируются только структурно значимые поля: `name`, `type`, `path`, `parent`, `parent_path`, `page`, `source`, `data_path`, `handler`. Косметика (координаты, цвета, шрифты, GUID) исключена. `null` — `*.elem.json` не найден, не разобран или список элементов пуст. Независимый сигнал `structure_modified` в `check_drift()`. |
 | `warnings` | array | Предупреждения (обычно пусто) |
 | `form_elem_path` | string \| null | Путь к `Form.elem` (структура формы внешнего объекта, mode="external"). `null` для форм конфигурации или если файла нет. |
 
@@ -201,6 +202,7 @@ from v8unpack_agent.scan_forms import FormScanIndex
 index = FormScanIndex.load(Path("forms_scan_index.json"))
 # Старые индексы без bsl_sha256: поле получает None (backward-compat).
 # Старые индексы без bsl_mtime: поле получает 0.0 (backward-compat).
+# Старые индексы без elem_sha256: поле получает None (backward-compat).
 ```
 
 ### Поведение при ошибках
@@ -225,10 +227,11 @@ report = check_drift(
 )
 
 if report.has_drift:
-    print("Добавлены:",   report.added)
-    print("Удалены:  ",   report.removed)
-    print("Изменены: ",   report.modified)
-    print("Stale BSL:",   report.stale_extractions)
+    print("Добавлены:",         report.added)
+    print("Удалены:  ",         report.removed)
+    print("Изменены (код): ",   report.modified)
+    print("Изменены (разм.):",  report.structure_modified)
+    print("Stale BSL:",         report.stale_extractions)
 else:
     print("Дрейфа нет, индекс актуален")
 ```
@@ -239,13 +242,23 @@ else:
 |---|---|---|
 | `added` | list[str] | Ключи форм, появившихся на диске после последнего сканирования |
 | `removed` | list[str] | Ключи форм, исчезнувших с диска (были в индексе) |
-| `modified` | list[str] | Ключи форм с изменившимся содержимым BSL-файла. **Алгоритм:** если в baseline-индексе есть `bsl_sha256` — сравнивается hash текущего файла с сохранённым (issue #38); изменение только `mtime` при неизменном содержимом **не** помечает форму как modified. Если `bsl_sha256` отсутствует (старый индекс) — legacy fallback: сравнивается `bsl_mtime` с допуском 1 сек. |
+| `modified` | list[str] | Ключи форм с изменившимся содержимым BSL-файла (код формы). **Алгоритм:** если в baseline-индексе есть `bsl_sha256` — сравнивается hash текущего файла с сохранённым (issue #38); изменение только `mtime` при неизменном содержимом **не** помечает форму как modified. Если `bsl_sha256` отсутствует (старый индекс) — legacy fallback: сравнивается `bsl_mtime` с допуском 1 сек. |
+| `structure_modified` | list[str] | Ключи форм с изменившимся деревом элементов (разметка формы), при неизменном BSL (issue #40). **Алгоритм:** если в baseline-индексе есть `elem_sha256` — пересчитывается хэш нормализованного дерева элементов текущей формы и сравнивается с сохранённым. Если `elem_sha256` отсутствует (старый индекс) — сигнал не порождается. Независимый сигнал от `modified`. |
 | `stale_extractions` | list[str] | Формы из индекса, чей `bsl_path` не существует на диске |
 | `has_drift` | bool | `True` если хотя бы одно из полей непусто |
 | `checked_at` | str | ISO 8601 метка времени проверки |
 
 **Ключ формы** имеет вид `"ObjectType/ObjectName/ContainerName/FormName"`.
 Для CommonForm: `"CommonForm//CommonForm/ФормаИмя"`.
+
+### Типичные сценарии детекции
+
+| Действие | `modified` | `structure_modified` |
+|---|---|---|
+| Правка кода формы (BSL), разметка не тронута | ✓ | — |
+| Добавление/удаление элемента на форме, BSL не тронут | — | ✓ |
+| Одновременная правка кода и разметки | ✓ | ✓ |
+| Косметика формы (координаты, цвета) без смысловых изменений | — | — |
 
 ### Поведение при отсутствии индекса
 
@@ -334,7 +347,7 @@ else:
 | Модуль | Что даёт |
 |---|---|
 | `scan_forms` | `scan_forms()` + `FormEntry` + `FormScanIndex` — опись всех форм по layout-у выгрузки (все `*Form`-контейнеры + `CommonForm`; external — `Form`/`ReportForm`), best-effort, JSON-экспорт. Нулевой шаг пайплайна: файловая система, без парсинга BSL. |
-| `drift_checker` | `check_drift()` + `DriftReport` — сравнение текущей выгрузки с сохранённым `FormScanIndex`: added / removed / **modified** (hash-based, issue #38) / stale_extractions, JSON-сохранение отчёта. |
+| `drift_checker` | `check_drift()` + `DriftReport` — сравнение текущей выгрузки с сохранённым `FormScanIndex`: added / removed / **modified** (hash-based, issue #38) / stale_extractions / **structure_modified** (elem hash, issue #40), JSON-сохранение отчёта. |
 | `form_paths` | Фабрика путей по конвенции: `form_paths()`, `item_modules()` (вложенные панели из `Items/`), `all_module_paths()`. Чистая арифметика путей — файлы не читаются. |
 | `form_artifact` | `FormArtifact` (`name`, `paths`, `extraction_ok`, `extraction_warnings`, `skd_extracted`, `elem_index_ok`) — результат распаковки одной формы с явным флагом полноты, без тихого провала. |
 | `forms_index` | `FormsIndex` / `FormsIndexEntry` + `is_form_stale()` — реестр актуальности по `bin_mtime` vs `unpacked_mtime`. |
@@ -507,9 +520,10 @@ report = check_drift(
     index_path=Path("forms_scan_index.json"),
 )
 if report.has_drift:
-    print("Добавлены:",  report.added)
-    print("Удалены:  ",  report.removed)
-    print("Изменены: ",  report.modified)  # hash-based (issue #38)
+    print("Добавлены:",        report.added)
+    print("Удалены:  ",        report.removed)
+    print("Изменены (код):",   report.modified)            # hash-based (issue #38)
+    print("Изменены (разм.):", report.structure_modified)  # elem hash  (issue #40)
 
 # 1) распаковываем все формы выгрузки
 artifacts = unpack_all_forms(dump_root, unpacked_root, unpack_one)
