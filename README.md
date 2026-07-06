@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-%3E%3D3.10-blue.svg)](https://www.python.org/)
-[![v8unpack](https://img.shields.io/badge/upstream-v8unpack-orange.svg)](https://github.com/saby-integration/v8unpack)
+[![v8unpack](https://img.shields.io/badge/upstream-v8unpack-orange.svg)](https://github.com/saby-integration/v8unpack)]
 
 Надстройка над [v8unpack](https://github.com/saby-integration/v8unpack) для
 агентных / LLM-пайплайнов по конфигурациям 1С.
@@ -185,7 +185,8 @@ index = scan_forms(Path("/path/to/External"), mode="external",
 | `form_path` | string | Путь к директории формы относительно корня выгрузки |
 | `bsl_path` | string | Путь к bsl-файлу формы (`<Container>.obj.bsl` или legacy `<Container>.obj`) относительно корня выгрузки |
 | `json_path` | string | Путь к `.json` относительно корня выгрузки |
-| `bsl_mtime` | float | `st_mtime` bsl-файла на момент сканирования; baseline для детекции изменений в `drift_checker`. `0.0` — неизвестно (старый индекс или ошибка `stat`). |
+| `bsl_mtime` | float | `st_mtime` bsl-файла на момент сканирования. Legacy-поле; используется как fallback в `drift_checker` для старых индексов без `bsl_sha256`. `0.0` — неизвестно. |
+| `bsl_sha256` | string \| null | SHA-256 hex-дайджест содержимого bsl-файла на момент сканирования. Основной критерий изменения в `check_drift()` (issue #38). `null` в старых индексах без hash-поля — используется legacy fallback через `bsl_mtime`. |
 | `warnings` | array | Предупреждения (обычно пусто) |
 | `form_elem_path` | string \| null | Путь к `Form.elem` (структура формы внешнего объекта, mode="external"). `null` для форм конфигурации или если файла нет. |
 
@@ -198,6 +199,7 @@ index = scan_forms(Path("/path/to/External"), mode="external",
 from v8unpack_agent.scan_forms import FormScanIndex
 
 index = FormScanIndex.load(Path("forms_scan_index.json"))
+# Старые индексы без bsl_sha256: поле получает None (backward-compat).
 # Старые индексы без bsl_mtime: поле получает 0.0 (backward-compat).
 ```
 
@@ -237,7 +239,7 @@ else:
 |---|---|---|
 | `added` | list[str] | Ключи форм, появившихся на диске после последнего сканирования |
 | `removed` | list[str] | Ключи форм, исчезнувших с диска (были в индексе) |
-| `modified` | list[str] | Ключи форм, у которых `bsl_mtime` на диске отличается от baseline в индексе более чем на 1 сек. Требует индекса, собранного с `bsl_mtime` (issue #18). Для старых индексов без этого поля — всегда `[]`. |
+| `modified` | list[str] | Ключи форм с изменившимся содержимым BSL-файла. **Алгоритм:** если в baseline-индексе есть `bsl_sha256` — сравнивается hash текущего файла с сохранённым (issue #38); изменение только `mtime` при неизменном содержимом **не** помечает форму как modified. Если `bsl_sha256` отсутствует (старый индекс) — legacy fallback: сравнивается `bsl_mtime` с допуском 1 сек. |
 | `stale_extractions` | list[str] | Формы из индекса, чей `bsl_path` не существует на диске |
 | `has_drift` | bool | `True` если хотя бы одно из полей непусто |
 | `checked_at` | str | ISO 8601 метка времени проверки |
@@ -332,7 +334,7 @@ else:
 | Модуль | Что даёт |
 |---|---|
 | `scan_forms` | `scan_forms()` + `FormEntry` + `FormScanIndex` — опись всех форм по layout-у выгрузки (все `*Form`-контейнеры + `CommonForm`; external — `Form`/`ReportForm`), best-effort, JSON-экспорт. Нулевой шаг пайплайна: файловая система, без парсинга BSL. |
-| `drift_checker` | `check_drift()` + `DriftReport` — сравнение текущей выгрузки с сохранённым `FormScanIndex`: added / removed / **modified** / stale_extractions, JSON-сохранение отчёта. |
+| `drift_checker` | `check_drift()` + `DriftReport` — сравнение текущей выгрузки с сохранённым `FormScanIndex`: added / removed / **modified** (hash-based, issue #38) / stale_extractions, JSON-сохранение отчёта. |
 | `form_paths` | Фабрика путей по конвенции: `form_paths()`, `item_modules()` (вложенные панели из `Items/`), `all_module_paths()`. Чистая арифметика путей — файлы не читаются. |
 | `form_artifact` | `FormArtifact` (`name`, `paths`, `extraction_ok`, `extraction_warnings`, `skd_extracted`, `elem_index_ok`) — результат распаковки одной формы с явным флагом полноты, без тихого провала. |
 | `forms_index` | `FormsIndex` / `FormsIndexEntry` + `is_form_stale()` — реестр актуальности по `bin_mtime` vs `unpacked_mtime`. |
@@ -377,7 +379,7 @@ else:
 | `extraction_ok` | bool | `true` — полная распаковка; `false` — частичная |
 | `warnings` | array | Диагностические сообщения при частичной распаковке; пустой массив при `extraction_ok: true` |
 
-`forms_index` — **не** источник истины (источник — `Form.bin` в вы��рузке), а
+`forms_index` — **не** источник истины (источник — `Form.bin` в выгрузке), а
 **карта актуальности**. В неё кладётся только маршрутизация и метки времени:
 никакого содержимого `Form.bin`, строк подключения, имён баз/хостов — реестр
 остаётся обезличенным и коммитится в репозиторий вместе с выгрузкой.
@@ -507,7 +509,7 @@ report = check_drift(
 if report.has_drift:
     print("Добавлены:",  report.added)
     print("Удалены:  ",  report.removed)
-    print("Изменены: ",  report.modified)
+    print("Изменены: ",  report.modified)  # hash-based (issue #38)
 
 # 1) распаковываем все формы выгрузки
 artifacts = unpack_all_forms(dump_root, unpacked_root, unpack_one)

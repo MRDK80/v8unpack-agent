@@ -1,11 +1,18 @@
 # v8unpack_agent/drift_checker.py
 """drift_checker — детект дрейфа форм через FormScanIndex.
 
-Реализует issue #10.
+Реализует issues #10, #38.
 
 Сравнивает текущее состояние cf_export_root с ранее сохранённым
 FormScanIndex (forms_index.json) и определяет рассинхрон:
 какие формы добавились, удалились или изменились.
+
+Алгоритм детекции ``modified`` (issue #38):
+- Если в baseline-индексе есть поле ``bsl_sha256`` — сравниваем хэш текущего
+  BSL-файла с сохранённым. Изменение только ``mtime`` / пересоздание файла с
+  тем же содержимым **не** даёт ``modified``.
+- Если ``bsl_sha256`` в индексе отсутствует (старый формат без hash-поля) —
+  используется legacy-fallback через ``bsl_mtime`` (поведение до fix #38).
 
 OS-нейтральность:
 - Пути строятся через pathlib / os.path.join.
@@ -15,6 +22,7 @@ OS-нейтральность:
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 from dataclasses import dataclass, field, asdict
@@ -38,6 +46,18 @@ def _form_key(
     form_name: str,
 ) -> str:
     return _KEY_SEP.join([object_type, object_name, container_name, form_name])
+
+
+def _sha256_file(path: Path) -> Optional[str]:
+    """Вернуть hex-дайджест SHA-256 содержимого файла или None при ошибке."""
+    try:
+        h = hashlib.sha256()
+        with path.open("rb") as fh:
+            for chunk in iter(lambda: fh.read(65536), b""):
+                h.update(chunk)
+        return h.hexdigest()
+    except OSError:
+        return None
 
 
 # ---------------------------------------------------------------------------
@@ -86,20 +106,22 @@ def _load_index_dict(index_path: Path) -> list[dict]:
     return data.get("forms", [])
 
 
-def _index_snapshot(index_path: Path) -> dict[str, float]:
-    """Построить dict[form_key -> baseline_mtime] из index_path.
+def _index_snapshot(index_path: Path) -> tuple[dict[str, float], dict[str, Optional[str]]]:
+    """Построить два словаря из index_path:
 
-    Baseline mtime берётся из поля ``bsl_mtime`` в записи индекса
-    (сохранённое на момент сканирования/reindex). Это позволяет
-    корректно детектировать изменения даже после ``FormRouter.reindex()``
-    без повторного stat() с диска.
+    - ``mtime_map``: dict[form_key -> baseline_mtime]  (legacy fallback)
+    - ``hash_map``:  dict[form_key -> bsl_sha256 | None]
 
-    Fallback-поведение (обратная совместимость со старым форматом):
+    ``hash_map[key]`` равно ``None``, если запись не содержит ``bsl_sha256``
+    (старый индекс без hash-поля).
+
+    Fallback-поведение mtime (обратная совместимость со старым форматом):
     - Если ``bsl_mtime`` отсутствует или равно 0.0 — берём mtime с диска
       по ``bsl_path`` (старое поведение до fix #22).
     - Если ``bsl_path`` отсутствует на диске — mtime = -1.0.
     """
-    snapshot: dict[str, float] = {}
+    mtime_map: dict[str, float] = {}
+    hash_map: dict[str, Optional[str]] = {}
     entries = _load_index_dict(index_path)
     for e in entries:
         key = _form_key(
@@ -108,30 +130,32 @@ def _index_snapshot(index_path: Path) -> dict[str, float]:
             e.get("container_name", ""),
             e.get("form_name", ""),
         )
+        # --- hash ---
+        hash_map[key] = e.get("bsl_sha256")  # None when absent
+
+        # --- mtime (legacy) ---
         stored_mtime = float(e.get("bsl_mtime", 0.0))
         if stored_mtime != 0.0:
-            # Новый формат: используем сохранённый baseline
-            snapshot[key] = stored_mtime
+            mtime_map[key] = stored_mtime
         else:
-            # Старый формат или запись без bsl_mtime: stat с диска
             bsl = e.get("bsl_path", "")
             try:
                 mtime = Path(bsl).stat().st_mtime if bsl else -1.0
             except OSError:
                 mtime = -1.0
-            snapshot[key] = mtime
-    return snapshot
+            mtime_map[key] = mtime
+    return mtime_map, hash_map
 
 
-def _disk_snapshot(cf_export_root: Path) -> dict[str, float]:
-    """Обойти cf_export_root и вернуть dict[form_key -> bsl_mtime].
+def _disk_snapshot(cf_export_root: Path) -> dict[str, tuple[float, Optional[str]]]:
+    """Обойти cf_export_root и вернуть dict[form_key -> (bsl_mtime, bsl_sha256)].
 
     Повторяет логику scan_forms: 4-уровневый layout и 3-уровневый
     (CommonForm). Форма без .obj.bsl не включается.
     Best-effort: ошибки одной формы не останавливают обход.
     """
     root = Path(cf_export_root)
-    snapshot: dict[str, float] = {}
+    snapshot: dict[str, tuple[float, Optional[str]]] = {}
 
     if not root.is_dir():
         return snapshot
@@ -151,7 +175,7 @@ def _disk_snapshot(cf_export_root: Path) -> dict[str, float]:
                 try:
                     if bsl.exists():
                         key = _form_key(object_type, "", container_name, form_dir.name)
-                        snapshot[key] = bsl.stat().st_mtime
+                        snapshot[key] = (bsl.stat().st_mtime, _sha256_file(bsl))
                 except OSError as exc:
                     logger.warning("drift scan error %s: %s", form_dir, exc)
             continue
@@ -176,7 +200,7 @@ def _disk_snapshot(cf_export_root: Path) -> dict[str, float]:
                             key = _form_key(
                                 object_type, object_name, container_name, form_dir.name
                             )
-                            snapshot[key] = bsl.stat().st_mtime
+                            snapshot[key] = (bsl.stat().st_mtime, _sha256_file(bsl))
                     except OSError as exc:
                         logger.warning("drift scan error %s: %s", form_dir, exc)
 
@@ -225,6 +249,13 @@ def check_drift(
     ----------
     :class:`DriftReport` с полями added / removed / modified /
     stale_extractions / has_drift.
+
+    Детекция ``modified`` (issue #38):
+    - При наличии ``bsl_sha256`` в baseline сравнивается hash текущего
+      BSL-файла с сохранённым. Изменение только ``mtime`` не даёт
+      ``modified``.
+    - Без ``bsl_sha256`` (старый индекс) используется legacy-fallback
+      через ``bsl_mtime``.
     """
     root = Path(cf_export_root)
     ipath = Path(index_path)
@@ -247,22 +278,31 @@ def check_drift(
 
     # --- Штатный путь ---
     try:
-        index_snap = _index_snapshot(ipath)
+        index_mtime, index_hash = _index_snapshot(ipath)
     except Exception as exc:  # noqa: BLE001
         logger.error("failed to load index %s: %s", ipath, exc)
-        index_snap = {}
+        index_mtime, index_hash = {}, {}
 
     disk_snap = _disk_snapshot(root)
 
-    index_keys = set(index_snap)
+    index_keys = set(index_mtime)
     disk_keys = set(disk_snap)
 
     added = sorted(disk_keys - index_keys)
     removed = sorted(index_keys - disk_keys)
-    modified = sorted(
-        k for k in index_keys & disk_keys
-        if abs(disk_snap[k] - index_snap[k]) > 1.0  # 1 сек — допуск на FAT/NTFS
-    )
+
+    modified: list[str] = []
+    for k in sorted(index_keys & disk_keys):
+        disk_mtime, disk_hash = disk_snap[k]
+        baseline_hash = index_hash.get(k)  # None → old index
+        if baseline_hash is not None:
+            # Hash-based detection (issue #38)
+            if disk_hash != baseline_hash:
+                modified.append(k)
+        else:
+            # Legacy mtime fallback for old indexes without bsl_sha256
+            if abs(disk_mtime - index_mtime[k]) > 1.0:
+                modified.append(k)
 
     try:
         stale = sorted(_stale_keys(ipath))
