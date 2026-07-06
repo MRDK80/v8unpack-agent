@@ -1,6 +1,6 @@
 """scan_forms — обобщённый обход *Form-контейнеров и сборка FormScanIndex.
 
-Реализует issues #9, #13, #25 и #32.
+Реализует issues #9, #13, #25, #32, #38.
 
 v8unpack формирует несколько layout-ов.
 
@@ -45,6 +45,7 @@ OS-нейтральность:
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 from dataclasses import dataclass, field
@@ -84,6 +85,18 @@ EXTERNAL_REPORT_OBJECT_TYPE = "ExternalReport"
 EXTERNAL_DEFAULT_OBJECT_TYPE = "ExternalDataProcessor"
 
 
+def _compute_sha256(path: Path) -> Optional[str]:
+    """Вернуть hex-дайджест SHA-256 содержимого файла или None при ошибке."""
+    try:
+        h = hashlib.sha256()
+        with path.open("rb") as fh:
+            for chunk in iter(lambda: fh.read(65536), b""):
+                h.update(chunk)
+        return h.hexdigest()
+    except OSError:
+        return None
+
+
 @dataclass
 class FormEntry:
     """Одна форма, найденная при сканировании cf_export."""
@@ -116,13 +129,20 @@ class FormEntry:
     warnings: list[str] = field(default_factory=list)
 
     bsl_mtime: float = 0.0
-    """mtime bsl-файла на момент сканирования. Baseline для
-    ``drift_checker.check_drift()``. 0.0 означает «не известно»."""
+    """mtime bsl-файла на момент сканирования. Legacy-поле; используется как
+    fallback в ``drift_checker.check_drift()`` для старых индексов без hash.
+    0.0 означает «не известно»."""
 
     form_elem_path: Optional[Path] = None
     """Путь к ``Form.elem`` (структура формы внешнего объекта). ``None`` —
     файла нет либо это форма конфигурации (issue #25). Additive-поле:
     дефолт сохраняет обратную совместимость индекса."""
+
+    bsl_sha256: Optional[str] = None
+    """SHA-256 hex-дайджест содержимого bsl-файла на момент сканирования.
+    Основной критерий изменения в ``drift_checker.check_drift()`` (issue #38).
+    ``None`` означает «не вычислен» — используется legacy-fallback через
+    ``bsl_mtime``."""
 
 
 @dataclass
@@ -154,6 +174,7 @@ class FormScanIndex:
                         e.form_elem_path.as_posix()
                         if e.form_elem_path is not None else None
                     ),
+                    "bsl_sha256": e.bsl_sha256,
                 }
                 for e in self.forms
             ],
@@ -176,6 +197,9 @@ class FormScanIndex:
         :meth:`FormsIndex.load <v8unpack_agent.forms_index.FormsIndex.load>`).
         Пути (``form_path``, ``bsl_path``, ``json_path``, ``form_elem_path``)
         восстанавливаются через :class:`pathlib.Path` — OS-нейтрально.
+
+        Обратная совместимость: поле ``bsl_sha256`` отсутствующее в старом
+        индексе десериализуется как ``None``.
 
         Parameters
         ----------
@@ -201,6 +225,7 @@ class FormScanIndex:
                     if row.get("form_elem_path") is not None
                     else None
                 ),
+                bsl_sha256=row.get("bsl_sha256"),  # None for old indexes
             )
             for row in raw.get("forms", [])
         ]
@@ -272,6 +297,8 @@ def _scan_form_dir(
     except OSError:
         bsl_mtime = 0.0
 
+    bsl_sha256 = _compute_sha256(bsl_path)
+
     return FormEntry(
         object_type=object_type,
         object_name=object_name,
@@ -282,6 +309,7 @@ def _scan_form_dir(
         json_path=json_path.resolve(),
         warnings=warnings,
         bsl_mtime=bsl_mtime,
+        bsl_sha256=bsl_sha256,
     )
 
 
@@ -348,6 +376,8 @@ def _scan_external_form_dir(
     except OSError:
         bsl_mtime = 0.0
 
+    bsl_sha256 = _compute_sha256(bsl_path)
+
     forms.append(FormEntry(
         object_type=object_type,
         object_name=object_name,
@@ -359,6 +389,7 @@ def _scan_external_form_dir(
         warnings=warnings,
         bsl_mtime=bsl_mtime,
         form_elem_path=elem_path.resolve() if elem_path.exists() else None,
+        bsl_sha256=bsl_sha256,
     ))
 
 
