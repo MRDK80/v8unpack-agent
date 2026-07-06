@@ -46,6 +46,7 @@
 | bsl формы | `<Container>.obj.bsl` | `<Container>.obj.bsl` / legacy `<Container>.obj` |
 | верхний уровень | `object_type` | имя обработки/отчёта |
 | контейнер форм | `<...>Form` | `Form/` (обработка) либо `ReportForm/` (отчёт) |
+| `*.elem.json` | есть (конфиг, mode=config) | `Form.elem` / `ReportForm.elem` (best-effort) |
 
 ## Определение типа объекта
 
@@ -62,7 +63,18 @@
 - `object_name` = `<имя обработки/отчёта>`
 - `container_name` = `"Form"` либо `"ReportForm"`, `form_name` = `<имя папки формы>`
 - `bsl_path` → `<Container>.obj.bsl` (или legacy `<Container>.obj`)
-- `form_elem_path` → `Form.elem` (или `None`)
+- `bsl_sha256` → SHA-256 содержимого `bsl_path`; `None` если файл отсутствует
+- `form_elem_path` → `Form.elem` / `ReportForm.elem` (или `None`)
+- `elem_sha256` → SHA-256 нормализованного `form_elements_index`; `None` если
+  `.elem.json` отсутствует или недоступен (best-effort)
+
+## Поля drift-детекции (FormEntry)
+
+| Поле | Тип | Назначение |
+|------|-----|------------|
+| `bsl_sha256` | `Optional[str]` | Основной критерий `modified` (код формы, issue #38) |
+| `bsl_mtime` | `float` | Legacy fallback для старых индексов без `bsl_sha256` |
+| `elem_sha256` | `Optional[str]` | Критерий `structure_modified` (разметка формы, issue #40) |
 
 ## Использование
 

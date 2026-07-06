@@ -10,6 +10,7 @@
 """
 from __future__ import annotations
 
+import json
 import tempfile
 from pathlib import Path
 
@@ -21,6 +22,7 @@ from v8unpack_agent import (
     update_forms_index,
 )
 from v8unpack_agent.scan_forms import scan_forms
+from v8unpack_agent.drift_checker import check_drift
 
 
 def make_demo_dump(dump_root: Path, *form_names: str) -> None:
@@ -82,6 +84,72 @@ def make_demo_external(external_root: Path) -> None:
     )
 
 
+def make_demo_config_forms(config_root: Path) -> None:
+    """Создать синтетическую выгрузку форм конфигурации (mode=\"config\").
+
+    Демонстрирует drift-детекцию по bsl_sha256 (issue #38) и elem_sha256
+    (issue #40): baseline → изменение кода → изменение разметки.
+    """
+    form_dir = config_root / "Catalog" / "Товары" / "Forms" / "ФормаЭлемента"
+    form_dir.mkdir(parents=True, exist_ok=True)
+    (form_dir / "Form.obj.bsl").write_text("// исходный код", encoding="utf-8")
+    # Минимальный elem.json: нормализованный индекс будет содержать один элемент
+    elem_data = [
+        {"name": "Наименование", "type": "InputField", "path": "Наименование",
+         "parent": None, "parent_path": None, "page": None,
+         "source": "Наименование", "data_path": "Наименование", "handler": None,
+         # косметические поля, которые elem_sha256 игнорирует:
+         "left": 10, "top": 20, "color": "#000000"}
+    ]
+    (form_dir / "Form.elem.json").write_text(
+        json.dumps(elem_data, ensure_ascii=False), encoding="utf-8"
+    )
+
+
+def demo_drift(config_root: Path) -> None:
+    """Демонстрация drift-детекции: bsl_sha256 (#38) и elem_sha256 (#40)."""
+    # Baseline-сканирование.
+    baseline = scan_forms(config_root, mode="config")
+    baseline_path = config_root / "forms_scan_index_baseline.json"
+    baseline.save(baseline_path)
+    print("\n[drift] baseline сохранён:", baseline_path)
+    for e in baseline.forms:
+        print(f"  {e.form_name}: bsl_sha256={e.bsl_sha256!r}, "
+              f"elem_sha256={e.elem_sha256!r}")
+
+    # Эмулируем изменение кода формы (bsl_sha256 изменится).
+    form_bsl = (
+        config_root / "Catalog" / "Товары" / "Forms" / "ФормаЭлемента" / "Form.obj.bsl"
+    )
+    form_bsl.write_text("// ИЗМЕНЁННЫЙ код формы", encoding="utf-8")
+    current_after_bsl = scan_forms(config_root, mode="config")
+    report_bsl = check_drift(baseline_path, current_after_bsl)
+    print("\n[drift] после изменения кода:")
+    print(f"  modified         = {report_bsl.modified}")
+    print(f"  structure_modified = {report_bsl.structure_modified}")
+    print(f"  has_drift        = {report_bsl.has_drift}")
+
+    # Восстанавливаем код и эмулируем изменение разметки (elem_sha256 изменится).
+    form_bsl.write_text("// исходный код", encoding="utf-8")
+    form_elem = (
+        config_root / "Catalog" / "Товары" / "Forms" / "ФормаЭлемента" / "Form.elem.json"
+    )
+    elem_changed = [
+        {"name": "НоваяКнопка", "type": "Button", "path": "НоваяКнопка",
+         "parent": None, "parent_path": None, "page": None,
+         "source": None, "data_path": None, "handler": "НоваяКнопкаНажатие"}
+    ]
+    form_elem.write_text(
+        json.dumps(elem_changed, ensure_ascii=False), encoding="utf-8"
+    )
+    current_after_elem = scan_forms(config_root, mode="config")
+    report_elem = check_drift(baseline_path, current_after_elem)
+    print("\n[drift] после изменения разметки (код не тронут):")
+    print(f"  modified           = {report_elem.modified}")
+    print(f"  structure_modified = {report_elem.structure_modified}")
+    print(f"  has_drift          = {report_elem.has_drift}")
+
+
 def main() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         base = Path(tmp)
@@ -123,6 +191,11 @@ def main() -> None:
         for e in ext_index.forms:
             print(f"  - {e.object_type} / {e.object_name} / {e.form_name}"
                   f" [{e.container_name}] → {e.bsl_path.name}")
+
+        # 5) drift-детекция: bsl_sha256 (issue #38) + elem_sha256 (issue #40)
+        config_root = base / "config_forms"
+        make_demo_config_forms(config_root)
+        demo_drift(config_root)
 
 
 if __name__ == "__main__":
