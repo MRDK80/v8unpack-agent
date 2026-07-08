@@ -31,9 +31,9 @@ def _make_form_dir(
     form_dir = proc_dir / container_name / form_name
     form_dir.mkdir(parents=True, exist_ok=True)
     (form_dir / bsl_filename).write_text("// synthetic bsl", encoding="utf-8")
-    (form_dir / "Form.json").write_text("{}", encoding="utf-8")
-    (form_dir / "Form.elem").write_text("{}", encoding="utf-8")
-    (form_dir / "Form.id.json").write_text("{}", encoding="utf-8")
+    (form_dir / f"{container_name}.json").write_text("{}", encoding="utf-8")
+    (form_dir / f"{container_name}.elem").write_text("{}", encoding="utf-8")
+    (form_dir / f"{container_name}.id.json").write_text("{}", encoding="utf-8")
     return form_dir
 
 
@@ -183,6 +183,18 @@ class TestExternalReportForms:
         root = _make_report(tmp_path, form_bsl="ReportForm.obj")
         result = scan_forms(root, mode="external")
         assert result.total > 0, "external mode должен быть совместим с ReportForm.obj (legacy)"
+
+
+    def test_report_form_uses_reportform_json(self, tmp_path):
+        """ReportForm должен искать ReportForm.json, а не Form.json."""
+        root = _make_report(tmp_path, form_bsl="ReportForm.obj.bsl")
+
+        result = scan_forms(root, mode="external")
+
+        assert result.total > 0
+        assert all(f.container_name == "ReportForm" for f in result.forms)
+        assert all(f.json_path.name == "ReportForm.json" for f in result.forms)
+        assert not any("missing Form.json" in w for f in result.forms for w in f.warnings)
 
 
 # ---------------------------------------------------------------------------

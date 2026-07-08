@@ -34,10 +34,10 @@ v8unpack формирует несколько layout-ов.
 
 Артефакты формы внешнего объекта::
 
-    <Container>.obj.bsl   # bsl формы (v8unpack 1.2.11); либо <Container>.obj (legacy)
-    Form.json             # метаданные
-    Form.elem             # структура формы (элементы)
-    Form.id
+    <Container>.obj.bsl   # bsl формы; либо <Container>.obj (legacy)
+    <Container>.json      # метаданные формы; Form.json остаётся fallback для совместимости
+    <Container>.elem      # структура формы; Form.elem остаётся fallback для совместимости
+    <Container>.id
 
 OS-нейтральность:
 - Пути строятся через :mod:`pathlib` / :func:`os.path.join`.
@@ -61,7 +61,7 @@ EXTERNAL_ROOT = "External"
 # Контейнеры форм внешних объектов. Порядок важен только для детерминизма обхода.
 EXTERNAL_FORM_CONTAINERS = ("Form", "ReportForm")
 
-EXTERNAL_JSON_NAME = "Form.json"
+EXTERNAL_JSON_NAME = "Form.json"  # legacy fallback for external Form metadata
 EXTERNAL_ELEM_NAME = "Form.elem"
 
 # Тип объекта по модулю объекта обработки (для контейнера Form).
@@ -421,12 +421,25 @@ def _scan_external_form_dir(
         logger.debug(msg)
         return
 
-    json_path = form_dir / EXTERNAL_JSON_NAME
-    elem_path = form_dir / EXTERNAL_ELEM_NAME
+    json_candidates = [form_dir / f"{container_name}.json"]
+    if container_name != "Form":
+        json_candidates.append(form_dir / EXTERNAL_JSON_NAME)
+    json_path = next(
+        (candidate for candidate in json_candidates if candidate.exists()),
+        json_candidates[0],
+    )
+
+    elem_candidates = [form_dir / f"{container_name}.elem"]
+    if container_name != "Form":
+        elem_candidates.append(form_dir / EXTERNAL_ELEM_NAME)
+    elem_path = next(
+        (candidate for candidate in elem_candidates if candidate.exists()),
+        elem_candidates[0],
+    )
 
     warnings: list[str] = []
     if not json_path.exists():
-        warnings.append(f"missing {EXTERNAL_JSON_NAME}")
+        warnings.append(f"missing {json_path.name}")
 
     try:
         bsl_mtime = bsl_path.stat().st_mtime
