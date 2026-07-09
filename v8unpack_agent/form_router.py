@@ -44,7 +44,7 @@ class FormRouter:
         3. ``object_type`` — частичное, case-insensitive (conf=0.4)
 
         Для форм внешних обработок (issue #25) ``object_name`` — имя обработки,
-        поэтому маршрутизация работает без изменений логики.
+        поэтому маршрутизация работает без изменения логики.
         """
         q = query.strip()
         if not q:
@@ -110,7 +110,12 @@ class FormRouter:
 
     @staticmethod
     def _load_index(index_path: Path) -> FormScanIndex:
-        """Загрузить FormScanIndex из JSON, сохраняя все поля схемы."""
+        """Загрузить FormScanIndex из JSON, сохраняя все поля схемы.
+
+        Обратная совместимость:
+        - ``bsl_sha256`` отсутствует в старом индексе → ``None``;
+        - ``elem_sha256`` отсутствует в старом индексе → ``None``.
+        """
 
         from v8unpack_agent.scan_forms import FormEntry, FormScanIndex
 
@@ -131,6 +136,8 @@ class FormRouter:
                 warnings=list(row.get("warnings", [])),
                 bsl_mtime=float(row.get("bsl_mtime", 0.0)),
                 form_elem_path=Path(elem) if elem else None,
+                bsl_sha256=row.get("bsl_sha256"),   # None для старых индексов
+                elem_sha256=row.get("elem_sha256"),  # None для старых индексов
             ))
         return FormScanIndex(
             forms=entries,
