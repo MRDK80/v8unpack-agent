@@ -187,8 +187,21 @@ class TestReindexPreservesHashBaselineForUntouchedForms:
         form_a_reloaded = next(
             e for e in reloaded_index.forms if e.form_name == "FormA"
         )
-        result = check_drift(form_a_reloaded)
-        assert result.status == "ok", (
-            f"Ложный drift после reindex: ожидалось 'ok', получено {result.status!r} "
+        assert form_a_reloaded.bsl_sha256 == real_hash
+
+        # Симулируем повторную распаковку: содержимое BSL не изменилось,
+        # но mtime стал другим. При сохранённом hash это не modified;
+        # при потере hash произойдёт legacy-mtime fallback и ложный modified.
+        baseline_mtime = bsl_file.stat().st_mtime
+        shifted_mtime = baseline_mtime + 10.0
+        import os
+        os.utime(bsl_file, (shifted_mtime, shifted_mtime))
+
+        report = check_drift(tmp_path, idx_file)
+        form_a_key = "Catalog/TestObj/CatalogForm/FormA"
+
+        assert form_a_key not in report.modified, (
+            f"Ложный modified после reindex: {form_a_key!r} попал в "
+            f"report.modified={report.modified!r} "
             f"(bsl_sha256 в индексе: {form_a_reloaded.bsl_sha256!r})"
         )
