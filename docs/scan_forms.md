@@ -38,17 +38,36 @@ for entry in index.forms:
           <ContainerName>.json
 ```
 
-**3-уровневый** (CommonForm — общие формы конфигурации):
+**3-уровневый** (CommonForm — общие формы конфигурации, нет уровня `ObjectName`):
 
 ```
 <root>/
-  CommonForm/
-    <FormName>/           # НастройкаПрограммы, ВыборСертификата, …
+  CommonForm/               # одновременно ObjectType и ContainerName
+    <FormName>/             # НастройкаПрограммы, ВыборСертификата, …
       CommonForm.obj.bsl
       CommonForm.json
 ```
 
-Паттерн обхода: `endswith("Form")` — нет хардкода конкретных имён контейнеров.
+### Как различаются layout
+
+Оба layout обходятся одним структурным правилом: контейнер форм — каталог,
+чьё имя `endswith("Form")`. **Нет хардкода конкретных имён контейнеров.**
+Различие — только в глубине вложенности: в 4-уровневом есть промежуточный
+уровень `ObjectName` между типом и контейнером, в 3-уровневом он
+отсутствует (контейнер совпадает с корневым типом).
+
+Сводный маппинг полей `FormEntry` для обоих layout:
+
+| Layout | Пример | `object_type` | `object_name` | `container_name` |
+|--------|--------|---------------|---------------|------------------|
+| 4-уровневый | `Catalog/Склады/CatalogForm/ФормаЭлемента` | `Catalog` | `Склады` | `CatalogForm` |
+| 4-уровневый | `Document/Акт/DocumentForm/ФормаВыбора` | `Document` | `Акт` | `DocumentForm` |
+| 3-уровневый | `CommonForm/НастройкаПрограммы` | `CommonForm` | `""` (пустая) | `CommonForm` |
+
+> **Связь с движком.** Это доменная (1С-специфичная) реализация generic-паттерна,
+> описанного в приватном движке [`llm-dev-engine#70`](https://github.com/MRDK80/llm-dev-engine/issues/70):
+> ядро детектит отсутствие промежуточного уровня структурно (без литералов имён),
+> а конкретика `CommonForm` живёт здесь, в доменном репо (см. #49).
 
 ## Layout внешних обработок и отчётов (mode="external")
 
@@ -70,7 +89,7 @@ index = scan_forms(Path("/path/to/External"), mode="external",
 | `Form` | `DataProcessor` (внутри `.cf`) и `ExternalDataProcessor` (`.epf`) — различать по `object_type` |
 | `ReportForm` | `Report` (`.cf`) и `ExternalReport` (`.erf`) — различать по `object_type` |
 | `CatalogForm`, `DocumentForm`, `InformationRegisterForm`, … | однозначно определяются именем контейнера |
-| `CommonForm` | общие формы, без уровня `ObjectName` |
+| `CommonForm` | общие формы, 3-уровневый layout без уровня `ObjectName` (`object_name = ""`) |
 
 ## FormEntry
 
@@ -79,7 +98,7 @@ index = scan_forms(Path("/path/to/External"), mode="external",
 | Поле | Тип | Значение |
 |---|---|---|
 | `object_type` | string | Тип объекта: `Catalog`, `Document`, `DataProcessor`, … Для external — `ExternalDataProcessor` / `ExternalReport`. |
-| `object_name` | string | Имя объекта (для `CommonForm` совпадает с `container_name`; для external — имя обработки/отчёта) |
+| `object_name` | string | Имя объекта. **Пустая строка `""` для `CommonForm`** (3-уровневый layout — нет уровня-владельца); для external — имя обработки/отчёта |
 | `container_name` | string | Имя контейнера форм: `CatalogForm`, `Form`, `ReportForm`, `CommonForm`, … |
 | `form_name` | string | Имя формы: `ФормаЭлемента`, `ФормаСписка`, … |
 | `form_path` | string | Путь к директории формы относительно корня выгрузки |
