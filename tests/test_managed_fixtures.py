@@ -336,21 +336,24 @@ def test_gold_event_handler() -> None:
 
 def test_no_production_import() -> None:
     """_managed_fixtures не импортирует ничего из v8unpack_agent/."""
+    import ast
     import importlib
-    import sys
+    from pathlib import Path
 
-    # Перезагружаем модуль в изолированной проверке.
     mod = importlib.import_module("tests._managed_fixtures")
-    source_file = getattr(mod, "__file__", "") or ""
-    # Проверяем, что в sys.modules нет нежелательных production-модулей
-    # в результате импорта _managed_fixtures (только stdlib + tests).
-    production_imported = [
-        k for k in sys.modules
-        if k.startswith("v8unpack_agent") and k in sys.modules
-    ]
-    # Если production-модули уже были импортированы другими тестами — допустимо,
-    # но _managed_fixtures сам их не должен требовать:
-    # проверяем через отсутствие прямого импорта в исходнике.
-    assert "v8unpack_agent" not in (getattr(mod, "__doc__", "") or "")
-    # Главное — модуль загружается без ошибок и не содержит from v8unpack_agent.
-    assert source_file.endswith("_managed_fixtures.py")
+    source_file = Path(getattr(mod, "__file__", ""))
+    source = source_file.read_text(encoding="utf-8")
+    tree = ast.parse(source)
+
+    forbidden_imports: list[str] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name == "v8unpack_agent" or alias.name.startswith("v8unpack_agent."):
+                    forbidden_imports.append(alias.name)
+        elif isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            if module == "v8unpack_agent" or module.startswith("v8unpack_agent."):
+                forbidden_imports.append(module)
+
+    assert forbidden_imports == []
