@@ -1,10 +1,22 @@
-"""managed_forms — discovery управляемых форм по *.elem.json.
+"""managed_forms — discovery форм по *.elem.json.
 
 Реализует issue #55.
 
-Управляемая форма v8unpack 1.2.11 не имеет ``Form.xml``. Реальный носитель
-структуры — ``*.elem.json``, расположенный в каталоге формы. Рядом могут
-находиться сопутствующие артефакты ``*.10.json`` и ``*.obj.10.bsl``.
+v8unpack 1.2.11 материализует каждую форму (обычную и управляемую) как
+``*.elem.json`` в каталоге формы. Реальный носитель структуры —
+``*.elem.json``; ``Form.xml`` в pipeline v8unpack-agent не используется.
+
+По итогам проверки на 2216 формах реальной конфигурации установлено: все
+формы (обычные и управляемые) получают ``*.elem.json`` независимо от типа.
+Классификация ordinary/managed не входит в scope этого модуля — см. issue #56.
+
+Гипотеза для issue #56 (зафиксирована как наблюдение, не как гарантированный
+контракт):
+  ``props[0].raw[0] == "9"``  →  управляемая форма
+  ``props[0].raw[0]`` — список (напр. ``["0"]``) →  обычная форма
+Эмпирически проверено на выборке из 2216 форм v8unpack 1.2.11: 857 управляемых,
+1076 обычных, 283 — неопределено. Признак хрупкий (реверс-инжиниринг формата
+без официальной спецификации). Надёжная реализация — отдельный issue #56.
 
 Layout-варианты каталогов форм, поддержанные discovery (устойчиво к глубине):
 
@@ -40,11 +52,15 @@ from typing import Optional
 
 
 @dataclass
-class ManagedFormEntry:
-    """Одна управляемая форма, найденная при discovery."""
+class ElemFormEntry:
+    """Одна форма с элементным представлением, найденная при discovery.
+
+    Тип формы (ordinary/managed) не определяется этим dataclass;
+    классификация — отдельный issue #56.
+    """
 
     elem_json_path: Path
-    """Путь к ``*.elem.json`` — основной артефакт управляемой формы.
+    """Путь к ``*.elem.json`` — основной артефакт формы.
     Относительный от корня распаковки."""
 
     aux_json_path: Optional[Path] = None
@@ -58,22 +74,33 @@ class ManagedFormEntry:
 
 
 # ---------------------------------------------------------------------------
+# Обратная совместимость (deprecated alias)
+# ---------------------------------------------------------------------------
+
+#: Устаревший псевдоним; используйте :class:`ElemFormEntry`.
+ManagedFormEntry = ElemFormEntry
+
+
+# ---------------------------------------------------------------------------
 # Публичный API
 # ---------------------------------------------------------------------------
 
 
-def discover_managed_forms(root: Path) -> list[ManagedFormEntry]:
-    """Обойти дерево ``root`` и вернуть список управляемых форм.
+def discover_elem_forms(root: Path) -> list[ElemFormEntry]:
+    """Обойти дерево ``root`` и вернуть список форм с ``*.elem.json``.
 
-    Управляемая форма определяется по наличию хотя бы одного ``*.elem.json``
-    в каталоге формы. Контейнер формы — родительский каталог с суффиксом
+    Находит все формы, у которых есть элементное JSON-представление
+    ``*.elem.json`` (обычные и управляемые). Тип формы не определяется —
+    см. issue #56.
+
+    Контейнер формы — родительский каталог с суффиксом
     ``Form`` (``CatalogForm``, ``Form``, ``ReportForm``, ``CommonForm`` и т.д.).
 
     Обход устойчив к глубине: поддерживает 3-уровневый layout ``CommonForm``
     и внешних объектов, а также стандартный 4-уровневый ``Catalog``/
     ``Document``/… layout.
 
-    Все пути в возвращаемых :class:`ManagedFormEntry` — **относительные**
+    Все пути в возвращаемых :class:`ElemFormEntry` — **относительные**
     от ``root``.
 
     Parameters
@@ -85,15 +112,15 @@ def discover_managed_forms(root: Path) -> list[ManagedFormEntry]:
 
     Returns
     -------
-    list[ManagedFormEntry]
+    list[ElemFormEntry]
         Отсортированный по ``elem_json_path`` список найденных форм.
-        Пустой список, если управляемые формы не найдены.
+        Пустой список, если формы не найдены.
     """
     root = Path(root)
     if not root.is_dir():
         return []
 
-    entries: list[ManagedFormEntry] = []
+    entries: list[ElemFormEntry] = []
     seen_form_dirs: set[Path] = set()
 
     for elem in sorted(root.rglob("*.elem.json")):
@@ -111,7 +138,7 @@ def discover_managed_forms(root: Path) -> list[ManagedFormEntry]:
             continue
 
         seen_form_dirs.add(form_dir)
-        entry = _scan_managed_form_dir(form_dir, root)
+        entry = _scan_elem_form_dir(form_dir, root)
         if entry is not None:
             entries.append(entry)
 
@@ -120,15 +147,23 @@ def discover_managed_forms(root: Path) -> list[ManagedFormEntry]:
 
 
 # ---------------------------------------------------------------------------
+# Обратная совместимость (deprecated alias)
+# ---------------------------------------------------------------------------
+
+#: Устаревший псевдоним; используйте :func:`discover_elem_forms`.
+discover_managed_forms = discover_elem_forms
+
+
+# ---------------------------------------------------------------------------
 # Внутренние вспомогательные функции
 # ---------------------------------------------------------------------------
 
 
-def _scan_managed_form_dir(
+def _scan_elem_form_dir(
     form_dir: Path,
     root: Path,
-) -> Optional[ManagedFormEntry]:
-    """Попытаться собрать ManagedFormEntry из одного каталога формы.
+) -> Optional[ElemFormEntry]:
+    """Попытаться собрать ElemFormEntry из одного каталога формы.
 
     Возвращает ``None``, если в каталоге нет ``*.elem.json``.
     Сопутствующие артефакты ``*.10.json`` и ``*.obj.10.bsl`` — опциональны.
@@ -155,7 +190,7 @@ def _scan_managed_form_dir(
             f"using {elem_path.name!r}"
         )
 
-    return ManagedFormEntry(
+    return ElemFormEntry(
         elem_json_path=elem_path.relative_to(root),
         aux_json_path=aux_json_path.relative_to(root) if aux_json_path is not None else None,
         bsl_path=bsl_path.relative_to(root) if bsl_path is not None else None,

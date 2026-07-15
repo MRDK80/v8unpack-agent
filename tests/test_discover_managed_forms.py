@@ -1,4 +1,4 @@
-"""Тесты discovery управляемых форм (issue #55).
+"""Тесты discovery форм по *.elem.json (issue #55).
 
 Все тесты синтетические: файлы генерируются в tmp_path через фикстуры из
 tests/_managed_fixtures.py. Нет ссылок на реальные базы, серверы, хосты
@@ -14,7 +14,10 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent))
 from _managed_fixtures import make_managed_form_elem_json, write_managed_form_elem
 
-from v8unpack_agent.managed_forms import ManagedFormEntry, discover_managed_forms
+from v8unpack_agent.managed_forms import ElemFormEntry, discover_elem_forms
+
+# Обратная совместимость: старые имена остаются рабочими (deprecated aliases)
+from v8unpack_agent.managed_forms import ManagedFormEntry, discover_managed_forms  # noqa: F401
 
 
 # ---------------------------------------------------------------------------
@@ -22,7 +25,7 @@ from v8unpack_agent.managed_forms import ManagedFormEntry, discover_managed_form
 # ---------------------------------------------------------------------------
 
 
-def _rel_posix(entry: ManagedFormEntry) -> str:
+def _rel_posix(entry: ElemFormEntry) -> str:
     """Нормализованный относительный путь *.elem.json через косую черту."""
     return PurePosixPath(entry.elem_json_path).as_posix()
 
@@ -33,7 +36,7 @@ def _rel_posix(entry: ManagedFormEntry) -> str:
 
 
 class TestDiscoverSingleForm:
-    """Тест 1 — discovery одной управляемой формы (CatalogForm layout)."""
+    """Тест 1 — discovery одной формы (CatalogForm layout)."""
 
     def test_single_form_found(self, tmp_path: Path) -> None:
         payload = make_managed_form_elem_json(pages=["Страница1"])
@@ -45,7 +48,7 @@ class TestDiscoverSingleForm:
             payload=payload,
         )
 
-        results = discover_managed_forms(tmp_path)
+        results = discover_elem_forms(tmp_path)
 
         assert len(results) == 1
         entry = results[0]
@@ -63,10 +66,10 @@ class TestDiscoverMultipleLayouts:
 
     def test_multiple_layouts(self, tmp_path: Path) -> None:
         cases = [
-            # (object_type, object_name, form_name) — суффикс определяется _detect_form_suffix
-            ("Catalog", "Банки", "ФормаЭлементаУправляемая"),      # → CatalogForm
-            ("external_managed", "ВнешнийОтчетУправляемый", "ФормаОтчетаУправляемая"),  # → ReportForm
-            ("external_managed", "ВнешняяОбработкаУпр", "ФормаВнешняяУправляемая"),    # → Form
+            # (object_type, object_name, form_name)
+            ("Catalog", "Банки", "ФормаЭлементаУправляемая"),
+            ("external_managed", "ВнешнийОтчетУправляемый", "ФормаОтчетаУправляемая"),
+            ("external_managed", "ВнешняяОбработкаУпр", "ФормаВнешняяУправляемая"),
         ]
         expected_names = set()
         for obj_type, obj_name, form_name in cases:
@@ -80,7 +83,7 @@ class TestDiscoverMultipleLayouts:
             )
             expected_names.add(f"{form_name}.elem.json")
 
-        results = discover_managed_forms(tmp_path)
+        results = discover_elem_forms(tmp_path)
 
         assert len(results) == 3
         found_names = {r.elem_json_path.name for r in results}
@@ -88,21 +91,21 @@ class TestDiscoverMultipleLayouts:
 
 
 class TestDiscoverNoForms:
-    """Тест 3 — discovery в дереве без управляемых форм."""
+    """Тест 3 — discovery в дереве без форм с *.elem.json."""
 
     def test_empty_tree_returns_empty_list(self, tmp_path: Path) -> None:
-        # Создаём дерево с *.bsl, но без *.elem.json — не управляемые формы
+        # Создаём дерево с *.bsl, но без *.elem.json
         form_dir = tmp_path / "Catalog" / "Контрагенты" / "CatalogForm" / "ФормаСписка"
         form_dir.mkdir(parents=True)
         (form_dir / "CatalogForm.obj.bsl").write_text("// обычная форма", encoding="utf-8")
 
-        results = discover_managed_forms(tmp_path)
+        results = discover_elem_forms(tmp_path)
 
         assert results == []
 
     def test_nonexistent_root_returns_empty_list(self, tmp_path: Path) -> None:
         missing = tmp_path / "does_not_exist"
-        results = discover_managed_forms(missing)
+        results = discover_elem_forms(missing)
         assert results == []
 
 
@@ -119,7 +122,7 @@ class TestRelativePaths:
             payload=payload,
         )
 
-        results = discover_managed_forms(tmp_path)
+        results = discover_elem_forms(tmp_path)
         assert len(results) == 1
 
         # elem_json_path должен быть relative (не absolute)
@@ -138,8 +141,8 @@ class TestRelativePaths:
             payload=payload,
         )
 
-        first = [_rel_posix(e) for e in discover_managed_forms(tmp_path)]
-        second = [_rel_posix(e) for e in discover_managed_forms(tmp_path)]
+        first = [_rel_posix(e) for e in discover_elem_forms(tmp_path)]
+        second = [_rel_posix(e) for e in discover_elem_forms(tmp_path)]
         assert first == second
 
 
@@ -156,11 +159,10 @@ class TestUnicodePaths:
             payload=payload,
         )
 
-        results = discover_managed_forms(tmp_path)
+        results = discover_elem_forms(tmp_path)
 
         assert len(results) == 1
         posix_path = _rel_posix(results[0])
-        # Кириллица в пути не ломается
         assert "ОбщаяФорма" in posix_path
         assert "ВводПароля" in posix_path
         assert "ФормаВводаПароляУправляемая" in posix_path
@@ -177,13 +179,12 @@ class TestCommonFormLayout:
 
     def test_commonform_3level_layout(self, tmp_path: Path) -> None:
         """CommonForm без object_type/object_name — 3 уровня от корня."""
-        # Создаём вручную: tmp_path/CommonForm/ФормаВыбора/CommonForm.elem.json
         form_dir = tmp_path / "CommonForm" / "ФормаВыбора"
         form_dir.mkdir(parents=True)
         elem_file = form_dir / "CommonForm.elem.json"
         elem_file.write_text('{"items": []}', encoding="utf-8")
 
-        results = discover_managed_forms(tmp_path)
+        results = discover_elem_forms(tmp_path)
 
         assert len(results) == 1
         assert results[0].elem_json_path == Path("CommonForm") / "ФормаВыбора" / "CommonForm.elem.json"
@@ -206,7 +207,7 @@ class TestCommonFormLayout:
             payload=payload,
         )
 
-        results = discover_managed_forms(tmp_path)
+        results = discover_elem_forms(tmp_path)
 
         assert len(results) == 2
         paths = {_rel_posix(e) for e in results}
@@ -231,7 +232,7 @@ class TestExternalObjectLayout:
         elem_file = form_dir / "Form.elem.json"
         elem_file.write_text('{"items": []}', encoding="utf-8")
 
-        results = discover_managed_forms(tmp_path)
+        results = discover_elem_forms(tmp_path)
 
         assert len(results) == 1
         posix = _rel_posix(results[0])
@@ -243,7 +244,7 @@ class TestExternalObjectLayout:
         form_dir.mkdir(parents=True)
         (form_dir / "ReportForm.elem.json").write_text('{"items": []}', encoding="utf-8")
 
-        results = discover_managed_forms(tmp_path)
+        results = discover_elem_forms(tmp_path)
 
         assert len(results) == 1
         assert "ReportForm" in _rel_posix(results[0])
@@ -258,6 +259,6 @@ class TestExternalObjectLayout:
             d.mkdir(parents=True)
             (d / f"{container}.elem.json").write_text('{"items": []}', encoding="utf-8")
 
-        results = discover_managed_forms(tmp_path)
+        results = discover_elem_forms(tmp_path)
 
         assert len(results) == 2

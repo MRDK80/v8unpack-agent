@@ -22,6 +22,8 @@ pre-step индексации.
 - :class:`~v8unpack_agent.scan_forms.FormScanIndex`
 - :func:`~v8unpack_agent.drift_checker.check_drift`
 - :class:`~v8unpack_agent.drift_checker.DriftReport`
+- :func:`~v8unpack_agent.managed_forms.discover_elem_forms` (issue #55)
+- :class:`~v8unpack_agent.managed_forms.ElemFormEntry` (issue #55)
 """
 
 from v8unpack_agent.form_artifact import FormArtifact
@@ -60,6 +62,24 @@ def __getattr__(name: str):
         globals().update(values)
         return values[name]
 
+    if name in {"discover_elem_forms", "ElemFormEntry",
+                "discover_managed_forms", "ManagedFormEntry"}:
+        from v8unpack_agent.managed_forms import (
+            ElemFormEntry,
+            discover_elem_forms,
+            ManagedFormEntry,
+            discover_managed_forms,
+        )
+
+        values = {
+            "discover_elem_forms": discover_elem_forms,
+            "ElemFormEntry": ElemFormEntry,
+            "discover_managed_forms": discover_managed_forms,
+            "ManagedFormEntry": ManagedFormEntry,
+        }
+        globals().update(values)
+        return values[name]
+
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
@@ -91,4 +111,10 @@ __all__ = [
     "DriftReport",
     "FormRouter",
     "RouteResult",
+    # issue #55
+    "discover_elem_forms",
+    "ElemFormEntry",
+    # deprecated aliases (обратная совместимость)
+    "discover_managed_forms",
+    "ManagedFormEntry",
 ]
