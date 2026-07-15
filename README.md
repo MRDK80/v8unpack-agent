@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-%3E%3D3.10-blue.svg)](https://www.python.org/)
-[![v8unpack](https://img.shields.io/badge/upstream-v8unpack-orange.svg)](https://github.com/saby-integration/v8unpack)
+[![v8unpack](https://img.shields.io/badge/upstream-v8unpack-orange.svg)](https://github.com/saby-integration/v8unpack)]
 
 Надстройка над [v8unpack](https://github.com/saby-integration/v8unpack) для
 агентных / LLM-пайплайнов по конфигурациям 1С.
@@ -49,6 +49,7 @@ index_cf(<путь_к_выгрузке>)
 |---|---|
 | `scan_forms` | `scan_forms()` + `FormEntry` + `FormScanIndex` — опись всех форм по layout-у выгрузки. Нулевой шаг пайплайна. → [подробнее](docs/scan_forms.md) |
 | `drift_checker` | `check_drift()` + `DriftReport` — added / removed / modified (hash-based) / structure_modified (elem hash) / stale_extractions. → [подробнее](docs/drift_checker.md) |
+| `managed_form_parser` | `parse_managed_form(source)` + `ParsedManagedForm` — чистый парсер Form.xml управляемой формы. Принимает `str \| bytes \| IO`, не обращается к ФС. Namespace-агностик. |
 | `form_router` | `FormRouter` — маршрутизация LLM-запроса к форме по имени объекта/формы. → [подробнее](docs/form_router.md) |
 | `form_paths` | Фабрика путей по конвенции: `form_paths()`, `item_modules()`, `all_module_paths()`. Чистая арифметика путей. |
 | `form_artifact` | `FormArtifact` — результат распаковки одной формы с явным флагом полноты. |
@@ -68,6 +69,7 @@ from v8unpack_agent import (
     is_form_stale, check_drift,
 )
 from v8unpack_agent.scan_forms import scan_forms
+from v8unpack_agent.managed_form_parser import parse_managed_form
 
 dump_root     = Path("unpacked_cf/")
 unpacked_root = Path("text_layer/")
@@ -90,6 +92,12 @@ def unpack_one(bin_path: Path, root: Path, form_name: str) -> FormArtifact:
 # 0) опись форм
 scan_index = scan_forms(dump_root, save_to=Path("forms_scan_index.json"))
 print(f"Всего форм: {scan_index.total}")
+
+# 2c) разбор Form.xml управляемой формы из потока
+with open("path/to/Form.xml", "rb") as fh:
+    mf = parse_managed_form(fh)
+if mf.ok:
+    print(f"Реквизитов: {len(mf.attributes)}, команд: {len(mf.commands)}")
 
 # 3) контроль дрейфа
 report = check_drift(dump_root, index_path=Path("forms_scan_index.json"))
