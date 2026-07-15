@@ -6,11 +6,21 @@
 структуры — ``*.elem.json``, расположенный в каталоге формы. Рядом могут
 находиться сопутствующие артефакты ``*.10.json`` и ``*.obj.10.bsl``.
 
-Layout-варианты каталогов форм, поддержанные discovery:
+Layout-варианты каталогов форм, поддержанные discovery (устойчиво к глубине):
 
-- ``<root>/<object_type>/<object_name>/CatalogForm/<form_name>/``
-- ``<root>/<object_type>/<object_name>/Form/<form_name>/``
-- ``<root>/<object_type>/<object_name>/ReportForm/<form_name>/``
+- ``<root>/…/<ContainerForm>/<form_name>/*.elem.json``  (любая глубина)
+
+Типичные примеры:
+
+- ``<root>/<object_type>/<object_name>/CatalogForm/<form_name>/``  — 4 уровня
+- ``<root>/<object_type>/<object_name>/Form/<form_name>/``         — 4 уровня
+- ``<root>/<object_type>/<object_name>/ReportForm/<form_name>/``   — 4 уровня
+- ``<root>/CommonForm/<form_name>/``                               — 3 уровня
+- ``<root>/<object_name>/Form/<form_name>/``   (внешние объекты)  — 3 уровня
+
+Контейнер определяется по имени родителя каталога формы: суффикс ``Form``
+(``CatalogForm``, ``Form``, ``ReportForm``, ``CommonForm``, ``DocumentForm``
+и т.д.) — без привязки к конкретной глубине.
 
 OS-нейтральность:
 - Пути строятся через :mod:`pathlib`.
@@ -22,12 +32,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
-
-# ---------------------------------------------------------------------------
-# Поддерживаемые суффиксы каталогов форм
-# ---------------------------------------------------------------------------
-
-MANAGED_FORM_CONTAINERS = ("CatalogForm", "Form", "ReportForm")
 
 
 # ---------------------------------------------------------------------------
@@ -62,8 +66,12 @@ def discover_managed_forms(root: Path) -> list[ManagedFormEntry]:
     """Обойти дерево ``root`` и вернуть список управляемых форм.
 
     Управляемая форма определяется по наличию хотя бы одного ``*.elem.json``
-    в каталоге формы. Поддерживаются layout-варианты контейнеров форм:
-    ``CatalogForm``, ``Form``, ``ReportForm``.
+    в каталоге формы. Контейнер формы — родительский каталог с суффиксом
+    ``Form`` (``CatalogForm``, ``Form``, ``ReportForm``, ``CommonForm`` и т.д.).
+
+    Обход устойчив к глубине: поддерживает 3-уровневый layout ``CommonForm``
+    и внешних объектов, а также стандартный 4-уровневый ``Catalog``/
+    ``Document``/… layout.
 
     Все пути в возвращаемых :class:`ManagedFormEntry` — **относительные**
     от ``root``.
@@ -86,26 +94,26 @@ def discover_managed_forms(root: Path) -> list[ManagedFormEntry]:
         return []
 
     entries: list[ManagedFormEntry] = []
+    seen_form_dirs: set[Path] = set()
 
-    # 4-уровневый layout:
-    # <root>/<object_type>/<object_name>/<ContainerForm>/<form_name>/
-    for type_dir in sorted(root.iterdir()):
-        if not type_dir.is_dir():
+    for elem in sorted(root.rglob("*.elem.json")):
+        form_dir = elem.parent
+        if form_dir in seen_form_dirs:
             continue
-        for obj_dir in sorted(type_dir.iterdir()):
-            if not obj_dir.is_dir():
-                continue
-            for container_dir in sorted(obj_dir.iterdir()):
-                if not container_dir.is_dir():
-                    continue
-                if container_dir.name not in MANAGED_FORM_CONTAINERS:
-                    continue
-                for form_dir in sorted(container_dir.iterdir()):
-                    if not form_dir.is_dir():
-                        continue
-                    entry = _scan_managed_form_dir(form_dir, root)
-                    if entry is not None:
-                        entries.append(entry)
+
+        # Контейнер — родитель каталога формы; должен оканчиваться на 'Form'.
+        # Пример: …/CatalogForm/ФормаЭлемента/ → container.name = 'CatalogForm'
+        container = form_dir.parent
+        if container == root:
+            # *.elem.json прямо в корне — не форма
+            continue
+        if not container.name.endswith("Form"):
+            continue
+
+        seen_form_dirs.add(form_dir)
+        entry = _scan_managed_form_dir(form_dir, root)
+        if entry is not None:
+            entries.append(entry)
 
     entries.sort(key=lambda e: e.elem_json_path)
     return entries
@@ -142,7 +150,10 @@ def _scan_managed_form_dir(
     warnings: list[str] = []
     if len(elem_files) > 1:
         extras = [f.name for f in elem_files[1:]]
-        warnings.append(f"multiple *.elem.json in {form_dir.name}: {extras!r}; using {elem_path.name!r}")
+        warnings.append(
+            f"multiple *.elem.json in {form_dir.name}: {extras!r}; "
+            f"using {elem_path.name!r}"
+        )
 
     return ManagedFormEntry(
         elem_json_path=elem_path.relative_to(root),

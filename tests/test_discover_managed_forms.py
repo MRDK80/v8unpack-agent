@@ -164,3 +164,100 @@ class TestUnicodePaths:
         assert "ОбщаяФорма" in posix_path
         assert "ВводПароля" in posix_path
         assert "ФормаВводаПароляУправляемая" in posix_path
+
+
+class TestCommonFormLayout:
+    """Тест 6 — 3-уровневый layout CommonForm.
+
+    Реальный паттерн из конфы v8unpack 1.2.11:
+      <root>/CommonForm/<form_name>/<form_name>.elem.json
+
+    Ранее жёсткий 4-уровневый обход пропускал весь CommonForm.
+    """
+
+    def test_commonform_3level_layout(self, tmp_path: Path) -> None:
+        """CommonForm без object_type/object_name — 3 уровня от корня."""
+        # Создаём вручную: tmp_path/CommonForm/ФормаВыбора/CommonForm.elem.json
+        form_dir = tmp_path / "CommonForm" / "ФормаВыбора"
+        form_dir.mkdir(parents=True)
+        elem_file = form_dir / "CommonForm.elem.json"
+        elem_file.write_text('{"items": []}', encoding="utf-8")
+
+        results = discover_managed_forms(tmp_path)
+
+        assert len(results) == 1
+        assert results[0].elem_json_path == Path("CommonForm") / "ФормаВыбора" / "CommonForm.elem.json"
+        assert not results[0].elem_json_path.is_absolute()
+
+    def test_commonform_mixed_with_4level(self, tmp_path: Path) -> None:
+        """3-уровневый CommonForm + стандартный 4-уровневый CatalogForm обнаруживаются вместе."""
+        # 3-уровневый CommonForm
+        cf_dir = tmp_path / "CommonForm" / "ВводПароля"
+        cf_dir.mkdir(parents=True)
+        (cf_dir / "CommonForm.elem.json").write_text('{"items": []}', encoding="utf-8")
+
+        # Стандартный 4-уровневый CatalogForm
+        payload = make_managed_form_elem_json(pages=["Страница1"])
+        write_managed_form_elem(
+            root=tmp_path,
+            object_type="Catalog",
+            object_name="Банки",
+            form_name="ФормаЭлементаУправляемая",
+            payload=payload,
+        )
+
+        results = discover_managed_forms(tmp_path)
+
+        assert len(results) == 2
+        paths = {_rel_posix(e) for e in results}
+        assert "CommonForm/ВводПароля/CommonForm.elem.json" in paths
+        assert any("Банки" in p for p in paths)
+
+
+class TestExternalObjectLayout:
+    """Тест 7 — 3-уровневый layout внешнего объекта (Form / ReportForm).
+
+    Реальный паттерн из external_managed v8unpack 1.2.11:
+      <root>/<object_name>/Form/<form_name>/Form.elem.json
+      <root>/<object_name>/ReportForm/<form_name>/ReportForm.elem.json
+
+    Ранее 4-уровневый обход пропускал эти формы (discover → 0).
+    """
+
+    def test_external_form_layout(self, tmp_path: Path) -> None:
+        """Внешняя обработка: <object_name>/Form/<form_name>/Form.elem.json."""
+        form_dir = tmp_path / "ВнешняяОбработкаУпр" / "Form" / "ФормаВнешняяУправляемая"
+        form_dir.mkdir(parents=True)
+        elem_file = form_dir / "Form.elem.json"
+        elem_file.write_text('{"items": []}', encoding="utf-8")
+
+        results = discover_managed_forms(tmp_path)
+
+        assert len(results) == 1
+        posix = _rel_posix(results[0])
+        assert posix == "ВнешняяОбработкаУпр/Form/ФормаВнешняяУправляемая/Form.elem.json"
+
+    def test_external_report_layout(self, tmp_path: Path) -> None:
+        """Внешний отчёт: <object_name>/ReportForm/<form_name>/ReportForm.elem.json."""
+        form_dir = tmp_path / "ВнешнийОтчетУправляемый" / "ReportForm" / "ФормаОтчетаУправляемая"
+        form_dir.mkdir(parents=True)
+        (form_dir / "ReportForm.elem.json").write_text('{"items": []}', encoding="utf-8")
+
+        results = discover_managed_forms(tmp_path)
+
+        assert len(results) == 1
+        assert "ReportForm" in _rel_posix(results[0])
+
+    def test_external_two_objects(self, tmp_path: Path) -> None:
+        """Два внешних объекта в одном корне — оба найдены."""
+        for obj, container, form in [
+            ("ВнешняяОбработкаУпр", "Form", "ФормаВнешняяУправляемая"),
+            ("ВнешнийОтчетУправляемый", "ReportForm", "ФормаОтчетаУправляемая"),
+        ]:
+            d = tmp_path / obj / container / form
+            d.mkdir(parents=True)
+            (d / f"{container}.elem.json").write_text('{"items": []}', encoding="utf-8")
+
+        results = discover_managed_forms(tmp_path)
+
+        assert len(results) == 2
