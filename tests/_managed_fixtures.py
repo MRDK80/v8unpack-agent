@@ -135,21 +135,31 @@ def write_managed_form_elem(
     )
 
     if write_aux:
-        aux_json_path = form_dir / f"{form_name}.10.json"
-        aux_json_path.write_text(
-            json.dumps({"form": form_name, "version": 10}, ensure_ascii=False, sort_keys=True),
+        # Реальная схема v8unpack 1.2.11 (без --descent):
+        #   <form>.json     — метаданные формы
+        #   <form>.id.json  — UUID формы
+        #   <form>.obj.bsl  — BSL-модуль формы
+        meta_path = form_dir / f"{form_name}.json"
+        meta_path.write_text(
+            json.dumps({"form": form_name, "version": 10},
+                       ensure_ascii=False, sort_keys=True),
             encoding="utf-8",
         )
-        bsl_path = form_dir / f"{form_name}.obj.10.bsl"
+        id_path = form_dir / f"{form_name}.id.json"
+        id_path.write_text(
+            json.dumps({"uuid": _guid(0)}, ensure_ascii=False, sort_keys=True),
+            encoding="utf-8",
+        )
+        bsl_path = form_dir / f"{form_name}.obj.bsl"
         lines = []
         pages = payload.get("data", {}).get("-pages-", [])
-        for page in pages:
+        for _page in pages:
             for i in range(1, len(pages) + 1):
                 lines.append(f"Процедура Кнопка{i}Нажатие(Элемент)")
                 lines.append("    // синтетический обработчик")
                 lines.append("КонецПроцедуры")
                 lines.append("")
-            break  # по одному набору процедур
+            break
         bsl_path.write_text("\n".join(lines), encoding="utf-8")
 
     return elem_path
@@ -229,3 +239,23 @@ def _detect_form_suffix(form_name: str) -> str:
     if "report" in lower or "отчет" in lower or "отчёт" in lower:
         return "ReportForm"
     return "Form"
+
+def write_aux_artifacts(
+    form_dir: Path,
+    form_name: str,
+    descent: str,
+    *,
+    with_json: bool = True,
+    with_bsl: bool = True,
+) -> None:
+    """Записать сопутствующие артефакты с произвольным descent-суффиксом."""
+    if with_json:
+        (form_dir / f"{form_name}.{descent}.json").write_text(
+            json.dumps({"form": form_name, "descent": descent},
+                       ensure_ascii=False, sort_keys=True),
+            encoding="utf-8",
+        )
+    if with_bsl:
+        (form_dir / f"{form_name}.obj.{descent}.bsl").write_text(
+            "// синтетический BSL\n", encoding="utf-8",
+        )
