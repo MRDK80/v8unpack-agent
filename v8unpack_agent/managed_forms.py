@@ -8,28 +8,33 @@ v8unpack 1.2.11 материализует каждую форму (обычну
 
 Классификация ordinary/managed не входит в scope этого модуля — см. issue #56.
 
-Layout-варианты каталогов форм (устойчиво к глубине):
+РЕАЛЬНАЯ СХЕМА ИМЕНОВАНИЯ (подтверждена на 2212 формах, июль 2026).
+В типовой распаковке (без ``--descent``) артефакты каталога формы таковы:
 
-- ``<root>/…/<ContainerForm>/<form_name>/*.elem.json``  (любая глубина)
+- ``<stem>.elem.json`` — структура формы (обязательный);
+- ``<stem>.json``      — метаданные формы  → meta_json_path;
+- ``<stem>.id.json``   — UUID формы (``{"uuid": ...}``) → id_json_path;
+- ``<stem>.obj.bsl``   — BSL-модуль формы → bsl_path.
 
-Контейнер определяется по имени родителя каталога формы: суффикс ``Form``
-(``CatalogForm``, ``Form``, ``ReportForm``, ``CommonForm``, ``DocumentForm``
-и т.д.) — без привязки к конкретной глубине.
+ВНИМАНИЕ (не «чинить» обратно под descent!): суффикс ``id`` в ``<stem>.id.json``
+— это НЕ значение ``--descent``, а отдельный UUID-файл. Он всегда попадает в
+``id_json_path`` и НИКОГДА не трактуется как descent-набор.
 
-Сопутствующие артефакты зависят от параметра распаковщика ``--descent``:
+Модули НЕ форм игнорируются: ``.mgr.bsl`` (менеджер объекта),
+``.seance.bsl`` / ``.con.bsl`` / ``.app.bsl`` / ``.802.bsl`` (модули
+конфигурации). Модуль формы — строго ``<stem>.obj.bsl`` либо
+``<stem>.obj.<descent>.bsl``.
 
-- ``<stem>.<descent>.json``      — вспомогательный JSON;
-- ``<stem>.obj.<descent>.bsl``   — BSL-модуль.
+DESCENT (опциональный слой для чужих распаковок с ``--descent``).
+Если распаковка выполнена с ``--descent``, сопутствующие файлы получают суффикс:
 
-Значение ``<descent>`` может быть:
+- ``<stem>.<descent>.json`` — вспомогательный JSON;
+- ``<stem>.obj.<descent>.bsl`` — BSL-модуль.
 
-- литералом ``id`` (если ``--descent`` не указан);
-- простым числом, например ``10``;
-- составным значением до четырёх компонентов, например ``3.0.75.100``
-  (не более трёх цифр в каждом компоненте).
-
-Discovery не привязан к конкретному значению ``--descent``. Основной артефакт
-``*.elem.json`` от descent не зависит и обязателен; всё остальное опционально.
+Значение ``<descent>``: простое число ``10`` или составное до четырёх
+компонентов ``3.0.75.100`` (не более трёх цифр в компоненте). Литерал ``id``
+descent-ом НЕ является (см. выше). Такие наборы складываются в
+``descent_artifacts``; на типовой распаковке этот список пуст.
 
 OS-нейтральность:
 - Пути строятся через :mod:`pathlib`.
@@ -47,20 +52,22 @@ from typing import Optional
 # Распознавание descent-суффикса
 # ---------------------------------------------------------------------------
 
-#: Литерал ``id`` ИЛИ до четырёх числовых компонентов по 1..3 цифры.
-#: Примеры допустимых значений: ``id``, ``10``, ``3.0.75.100``.
-_DESCENT_RE = re.compile(r"^(?:id|\d{1,3}(?:\.\d{1,3}){0,3})$")
+#: Только числовой descent: до четырёх компонентов по 1..3 цифры.
+#: Примеры: ``10``, ``3.0.75.100``. Литерал ``id`` СЮДА НЕ ВХОДИТ — это
+#: отдельный UUID-файл, а не descent (см. docstring модуля).
+_DESCENT_RE = re.compile(r"^\d{1,3}(?:\.\d{1,3}){0,3}$")
+
+#: Средние сегменты BSL, обозначающие модуль формы.
+_FORM_BSL_MARKER = ".obj."
 
 
-def _extract_descent(stem_after_base: str) -> Optional[str]:
-    """Вернуть descent-суффикс, если строка ему соответствует, иначе ``None``.
+def _extract_descent(candidate: str) -> Optional[str]:
+    """Вернуть числовой descent-суффикс либо ``None``.
 
-    ``stem_after_base`` — часть имени файла между базовым именем формы и
-    расширением. Для ``CatalogForm.3.0.75.100.json`` при базе ``CatalogForm``
-    это ``3.0.75.100``.
+    Литерал ``id`` намеренно НЕ распознаётся как descent.
     """
-    if _DESCENT_RE.match(stem_after_base):
-        return stem_after_base
+    if _DESCENT_RE.match(candidate):
+        return candidate
     return None
 
 
@@ -71,10 +78,12 @@ def _extract_descent(stem_after_base: str) -> Optional[str]:
 
 @dataclass
 class DescentArtifacts:
-    """Набор сопутствующих артефактов для одного значения ``--descent``.
+    """Набор сопутствующих артефактов для одного числового ``--descent``.
 
-    JSON и BSL сгруппированы по одинаковому descent-суффиксу.
-    Все пути относительны от корня распаковки.
+    Заполняется только для распаковок с ``--descent``. На типовой распаковке
+    (без параметра) список :attr:`ElemFormEntry.descent_artifacts` пуст, а
+    файлы попадают в явные поля ``meta_json_path`` / ``id_json_path`` /
+    ``bsl_path``. Все пути относительны от корня распаковки.
     """
 
     descent: str
@@ -92,37 +101,40 @@ class ElemFormEntry:
     elem_json_path: Path
     """Путь к ``*.elem.json`` — основной артефакт формы. Относительный."""
 
+    meta_json_path: Optional[Path] = None
+    """``<stem>.json`` — метаданные формы (или ``None``). Относительный."""
+
+    id_json_path: Optional[Path] = None
+    """``<stem>.id.json`` — UUID формы (или ``None``). Относительный."""
+
+    bsl_path: Optional[Path] = None
+    """``<stem>.obj.bsl`` — BSL-модуль формы (или ``None``). Относительный.
+
+    На распаковках с ``--descent`` тут первый непустой BSL из
+    :attr:`descent_artifacts` (см. логику сборки)."""
+
     descent_artifacts: list[DescentArtifacts] = field(default_factory=list)
-    """Наборы сопутствующих артефактов, сгруппированные по descent-суффиксу.
-    Пустой список, если ни JSON, ни BSL не найдены. Отсортирован по ``descent``."""
+    """Наборы сопутствующих артефактов для числовых значений ``--descent``.
+    Пустой на типовой распаковке. Отсортирован по ``descent``."""
 
     extra_warnings: list[str] = field(default_factory=list)
-    """Нефатальные предупреждения (напр. несколько descent-наборов)."""
+    """Нефатальные предупреждения (несколько descent-наборов, несколько
+    ``*.elem.json`` в каталоге и т.п.)."""
 
-    # ---- deprecated-совместимость с прежним API (одиночные поля) ----
+    # ---- deprecated-совместимость с прежним API ----
 
     @property
     def aux_json_path(self) -> Optional[Path]:
-        """DEPRECATED: первый ``aux_json_path`` из :attr:`descent_artifacts`.
+        """DEPRECATED: используйте :attr:`meta_json_path`.
 
-        Сохранено для обратной совместимости. Используйте
-        :attr:`descent_artifacts`.
+        Возвращает метаданные формы (``<stem>.json``), а при их отсутствии —
+        первый вспомогательный JSON из :attr:`descent_artifacts`.
         """
+        if self.meta_json_path is not None:
+            return self.meta_json_path
         for da in self.descent_artifacts:
             if da.aux_json_path is not None:
                 return da.aux_json_path
-        return None
-
-    @property
-    def bsl_path(self) -> Optional[Path]:
-        """DEPRECATED: первый ``bsl_path`` из :attr:`descent_artifacts`.
-
-        Сохранено для обратной совместимости. Используйте
-        :attr:`descent_artifacts`.
-        """
-        for da in self.descent_artifacts:
-            if da.bsl_path is not None:
-                return da.bsl_path
         return None
 
 
@@ -186,16 +198,24 @@ discover_managed_forms = discover_elem_forms
 # ---------------------------------------------------------------------------
 
 
-def _descent_from_json(name: str) -> Optional[str]:
-    """Вернуть descent из ``<stem>.<descent>.json`` или ``None``.
+def _bsl_descent(name: str) -> Optional[str]:
+    """descent из ``<stem>.obj.<descent>.bsl`` (числовой) либо ``None``."""
+    core = name[: -len(".bsl")]
+    idx = core.rfind(_FORM_BSL_MARKER)
+    if idx == -1:
+        return None
+    candidate = core[idx + len(_FORM_BSL_MARKER):]
+    return _extract_descent(candidate)
 
-    Descent может быть составным (``3.0.75.100``), поэтому берётся
-    максимально длинный суффикс перед ``.json``, проходящий валидацию.
-    Проход слева направо: первый кандидат, прошедший ``_extract_descent``,
-    и есть полный descent (базовое имя формы содержит буквы и валидацию
-    не проходит).
+
+def _json_descent(name: str) -> Optional[str]:
+    """descent из ``<stem>.<descent>.json`` (числовой) либо ``None``.
+
+    Составной descent (``3.0.75.100``) содержит точки, поэтому берётся
+    максимально длинный суффикс слева, проходящий числовую валидацию.
+    Литерал ``id`` числовую проверку не проходит и сюда не попадёт.
     """
-    core = name[: -len(".json")]  # напр. "CatalogForm.3.0.75.100"
+    core = name[: -len(".json")]
     idx = core.find(".")
     while idx != -1:
         candidate = core[idx + 1:]
@@ -205,26 +225,21 @@ def _descent_from_json(name: str) -> Optional[str]:
     return None
 
 
-def _descent_from_bsl(name: str) -> Optional[str]:
-    """Вернуть descent из ``<stem>.obj.<descent>.bsl`` или ``None``."""
-    core = name[: -len(".bsl")]  # напр. "CatalogForm.obj.3.0.75.100"
-    marker = ".obj."
-    idx = core.rfind(marker)
-    if idx == -1:
-        return None
-    candidate = core[idx + len(marker):]
-    return _extract_descent(candidate)
-
-
 def _scan_elem_form_dir(
     form_dir: Path,
     root: Path,
 ) -> Optional[ElemFormEntry]:
     """Собрать :class:`ElemFormEntry` из одного каталога формы.
 
-    Возвращает ``None``, если нет ``*.elem.json``. Сопутствующие
-    ``<stem>.<descent>.json`` и ``<stem>.obj.<descent>.bsl`` — опциональны и
-    группируются по descent-суффиксу без привязки к конкретному значению.
+    Возвращает ``None``, если нет ``*.elem.json``. Классификация файлов
+    по приоритету реальной схемы v8unpack 1.2.11 (см. docstring модуля):
+
+    - ``<stem>.obj.bsl``   → bsl_path (бессуффиксный BSL формы);
+    - ``<stem>.obj.<num>.bsl`` → descent_artifacts;
+    - ``.mgr/.seance/.con/.app/.802 .bsl`` → игнор (не модуль формы);
+    - ``<stem>.id.json``   → id_json_path (UUID, приоритет над descent);
+    - ``<stem>.<num>.json`` → descent_artifacts;
+    - ``<stem>.json``      → meta_json_path.
     """
     elem_files = sorted(form_dir.glob("*.elem.json"))
     if not elem_files:
@@ -240,6 +255,9 @@ def _scan_elem_form_dir(
             f"using {elem_path.name!r}"
         )
 
+    meta_json: Optional[Path] = None
+    id_json: Optional[Path] = None
+    plain_bsl: Optional[Path] = None
     # descent -> {"json": Path|None, "bsl": Path|None}
     by_descent: dict[str, dict[str, Optional[Path]]] = {}
 
@@ -251,19 +269,35 @@ def _scan_elem_form_dir(
             continue
 
         if name.endswith(".bsl"):
-            descent = _descent_from_bsl(name)
+            # Модуль формы — строго <stem>.obj[.<descent>].bsl.
+            core = name[: -len(".bsl")]
+            if _FORM_BSL_MARKER not in core and not core.endswith(".obj"):
+                continue  # .mgr / .seance / .con / .app / .802 — не форма
+            descent = _bsl_descent(name)
             if descent is None:
-                continue
-            by_descent.setdefault(descent, {"json": None, "bsl": None})
-            if by_descent[descent]["bsl"] is None:
-                by_descent[descent]["bsl"] = path
+                # <stem>.obj.bsl — бессуффиксный BSL формы
+                if plain_bsl is None:
+                    plain_bsl = path
+            else:
+                slot = by_descent.setdefault(descent, {"json": None, "bsl": None})
+                if slot["bsl"] is None:
+                    slot["bsl"] = path
+
+        elif name.endswith(".id.json"):
+            # UUID формы — приоритет над descent-трактовкой.
+            if id_json is None:
+                id_json = path
+
         elif name.endswith(".json"):
-            descent = _descent_from_json(name)
+            descent = _json_descent(name)
             if descent is None:
-                continue
-            by_descent.setdefault(descent, {"json": None, "bsl": None})
-            if by_descent[descent]["json"] is None:
-                by_descent[descent]["json"] = path
+                # <stem>.json — метаданные формы
+                if meta_json is None:
+                    meta_json = path
+            else:
+                slot = by_descent.setdefault(descent, {"json": None, "bsl": None})
+                if slot["json"] is None:
+                    slot["json"] = path
 
     descent_artifacts: list[DescentArtifacts] = []
     for descent in sorted(by_descent):
@@ -285,8 +319,19 @@ def _scan_elem_form_dir(
             f"all sets preserved"
         )
 
+    # bsl_path: бессуффиксный приоритетнее; иначе первый descent-BSL.
+    bsl_path = plain_bsl
+    if bsl_path is None:
+        for da in descent_artifacts:
+            if da.bsl_path is not None:
+                bsl_path = root / da.bsl_path
+                break
+
     return ElemFormEntry(
         elem_json_path=elem_path.relative_to(root),
+        meta_json_path=meta_json.relative_to(root) if meta_json is not None else None,
+        id_json_path=id_json.relative_to(root) if id_json is not None else None,
+        bsl_path=bsl_path.relative_to(root) if bsl_path is not None else None,
         descent_artifacts=descent_artifacts,
         extra_warnings=warnings,
     )

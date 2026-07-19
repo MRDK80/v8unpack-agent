@@ -3,6 +3,14 @@
 Все тесты синтетические: файлы генерируются в tmp_path через фикстуры из
 tests/_managed_fixtures.py. Нет ссылок на реальные базы, серверы, хосты
 или абсолютные пути.
+
+Реальная схема v8unpack 1.2.11 (без --descent):
+    <stem>.elem.json  — структура (обязательный)
+    <stem>.json       — метаданные  → meta_json_path
+    <stem>.id.json    — UUID         → id_json_path
+    <stem>.obj.bsl    — BSL-модуль   → bsl_path
+Числовой descent (<stem>.obj.<num>.bsl и т.п.) — опциональный слой для
+распаковок с --descent; складывается в descent_artifacts.
 """
 from __future__ import annotations
 
@@ -28,7 +36,7 @@ from v8unpack_agent.managed_forms import (
 from v8unpack_agent.managed_forms import ManagedFormEntry, discover_managed_forms  # noqa: F401
 
 # ---------------------------------------------------------------------------
-# Вспомогательная утилита
+# Вспомогательные утилиты
 # ---------------------------------------------------------------------------
 
 
@@ -53,7 +61,7 @@ def _make_form_dir(tmp_path: Path, container: str, form_name: str) -> Path:
 
 
 class TestDiscoverSingleForm:
-    """Тест 1 — discovery одной формы (CatalogForm layout)."""
+    """Тест 1 — discovery одной формы (реальная схема артефактов)."""
 
     def test_single_form_found(self, tmp_path: Path) -> None:
         payload = make_managed_form_elem_json(pages=["Страница1"])
@@ -68,13 +76,26 @@ class TestDiscoverSingleForm:
 
         assert len(results) == 1
         entry = results[0]
-        # *.elem.json найден
         assert entry.elem_json_path.name == "ФормаЭлементаУправляемая.elem.json"
-        # путь относительный (нет tmp_path)
         assert tmp_path not in entry.elem_json_path.parents
-        # сопутствующие артефакты присутствуют (write_aux=True по умолчанию)
-        assert entry.aux_json_path is not None
+        # реальная схема: meta / id / bsl заполнены, descent нет
+        assert entry.meta_json_path is not None
+        assert entry.id_json_path is not None
         assert entry.bsl_path is not None
+        assert entry.descent_artifacts == []
+
+    def test_deprecated_aux_json_points_to_meta(self, tmp_path: Path) -> None:
+        """DEPRECATED aux_json_path → meta_json_path."""
+        payload = make_managed_form_elem_json(pages=["Страница1"])
+        write_managed_form_elem(
+            root=tmp_path,
+            object_type="Catalog",
+            object_name="Банки",
+            form_name="ФормаЭлементаУправляемая",
+            payload=payload,
+        )
+        entry = discover_elem_forms(tmp_path)[0]
+        assert entry.aux_json_path == entry.meta_json_path
 
 
 class TestDiscoverMultipleLayouts:
@@ -82,7 +103,6 @@ class TestDiscoverMultipleLayouts:
 
     def test_multiple_layouts(self, tmp_path: Path) -> None:
         cases = [
-            # (object_type, object_name, form_name)
             ("Catalog", "Банки", "ФормаЭлементаУправляемая"),
             ("external_managed", "ВнешнийОтчетУправляемый", "ФормаОтчетаУправляемая"),
             ("external_managed", "ВнешняяОбработкаУпр", "ФормаВнешняяУправляемая"),
@@ -110,19 +130,16 @@ class TestDiscoverNoForms:
     """Тест 3 — discovery в дереве без форм с *.elem.json."""
 
     def test_empty_tree_returns_empty_list(self, tmp_path: Path) -> None:
-        # Создаём дерево с *.bsl, но без *.elem.json
         form_dir = tmp_path / "Catalog" / "Контрагенты" / "CatalogForm" / "ФормаСписка"
         form_dir.mkdir(parents=True)
         (form_dir / "CatalogForm.obj.bsl").write_text("// обычная форма", encoding="utf-8")
 
         results = discover_elem_forms(tmp_path)
-
         assert results == []
 
     def test_nonexistent_root_returns_empty_list(self, tmp_path: Path) -> None:
         missing = tmp_path / "does_not_exist"
-        results = discover_elem_forms(missing)
-        assert results == []
+        assert discover_elem_forms(missing) == []
 
 
 class TestRelativePaths:
@@ -139,14 +156,10 @@ class TestRelativePaths:
         )
         results = discover_elem_forms(tmp_path)
         assert len(results) == 1
-
-        # elem_json_path должен быть relative (не absolute)
         assert not results[0].elem_json_path.is_absolute()
-        # восстановленный абсолютный путь совпадает с тем, что вернул write_managed_form_elem
         assert (tmp_path / results[0].elem_json_path).resolve() == elem_path.resolve()
 
     def test_path_stability_two_calls(self, tmp_path: Path) -> None:
-        """Один и тот же корень → одинаковый список путей при двух вызовах."""
         payload = make_managed_form_elem_json(pages=["Страница1", "Страница2"])
         write_managed_form_elem(
             root=tmp_path,
@@ -173,7 +186,6 @@ class TestUnicodePaths:
             payload=payload,
         )
         results = discover_elem_forms(tmp_path)
-
         assert len(results) == 1
         posix_path = _rel_posix(results[0])
         assert "ОбщаяФорма" in posix_path
@@ -182,35 +194,23 @@ class TestUnicodePaths:
 
 
 class TestCommonFormLayout:
-    """Тест 6 — 3-уровневый layout CommonForm.
-
-    Реальный паттерн из конфы v8unpack 1.2.11:
-    <root>/CommonForm/<form_name>/<form_name>.elem.json
-
-    Ранее жёсткий 4-уровневый обход пропускал весь CommonForm.
-    """
+    """Тест 6 — 3-уровневый layout CommonForm."""
 
     def test_commonform_3level_layout(self, tmp_path: Path) -> None:
-        """CommonForm без object_type/object_name — 3 уровня от корня."""
         form_dir = tmp_path / "CommonForm" / "ФормаВыбора"
         form_dir.mkdir(parents=True)
-        elem_file = form_dir / "CommonForm.elem.json"
-        elem_file.write_text('{"items": []}', encoding="utf-8")
+        (form_dir / "CommonForm.elem.json").write_text('{"items": []}', encoding="utf-8")
 
         results = discover_elem_forms(tmp_path)
-
         assert len(results) == 1
         assert results[0].elem_json_path == Path("CommonForm") / "ФормаВыбора" / "CommonForm.elem.json"
         assert not results[0].elem_json_path.is_absolute()
 
     def test_commonform_mixed_with_4level(self, tmp_path: Path) -> None:
-        """3-уровневый CommonForm + стандартный 4-уровневый CatalogForm обнаруживаются вместе."""
-        # 3-уровневый CommonForm
         cf_dir = tmp_path / "CommonForm" / "ВводПароля"
         cf_dir.mkdir(parents=True)
         (cf_dir / "CommonForm.elem.json").write_text('{"items": []}', encoding="utf-8")
 
-        # Стандартный 4-уровневый CatalogForm
         payload = make_managed_form_elem_json(pages=["Страница1"])
         write_managed_form_elem(
             root=tmp_path,
@@ -220,7 +220,6 @@ class TestCommonFormLayout:
             payload=payload,
         )
         results = discover_elem_forms(tmp_path)
-
         assert len(results) == 2
         paths = {_rel_posix(e) for e in results}
         assert "CommonForm/ВводПароля/CommonForm.elem.json" in paths
@@ -228,41 +227,27 @@ class TestCommonFormLayout:
 
 
 class TestExternalObjectLayout:
-    """Тест 7 — 3-уровневый layout внешнего объекта (Form / ReportForm).
-
-    Реальный паттерн из external_managed v8unpack 1.2.11:
-    <root>/<obj>/Form/<form_name>/Form.elem.json
-    <root>/<obj>/ReportForm/<form_name>/ReportForm.elem.json
-
-    Ранее 4-уровневый обход пропускал эти формы (discover → 0).
-    """
+    """Тест 7 — 3-уровневый layout внешнего объекта (Form / ReportForm)."""
 
     def test_external_form_layout(self, tmp_path: Path) -> None:
-        """Внешняя обработка: <obj>/Form/<form_name>/Form.elem.json."""
         form_dir = tmp_path / "ВнешняяОбработкаУпр" / "Form" / "ФормаВнешняяУправляемая"
         form_dir.mkdir(parents=True)
-        elem_file = form_dir / "Form.elem.json"
-        elem_file.write_text('{"items": []}', encoding="utf-8")
+        (form_dir / "Form.elem.json").write_text('{"items": []}', encoding="utf-8")
 
         results = discover_elem_forms(tmp_path)
-
         assert len(results) == 1
-        posix = _rel_posix(results[0])
-        assert posix == "ВнешняяОбработкаУпр/Form/ФормаВнешняяУправляемая/Form.elem.json"
+        assert _rel_posix(results[0]) == "ВнешняяОбработкаУпр/Form/ФормаВнешняяУправляемая/Form.elem.json"
 
     def test_external_report_layout(self, tmp_path: Path) -> None:
-        """Внешний отчёт: <obj>/ReportForm/<form_name>/ReportForm.elem.json."""
         form_dir = tmp_path / "ВнешнийОтчетУправляемый" / "ReportForm" / "ФормаОтчетаУправляемая"
         form_dir.mkdir(parents=True)
         (form_dir / "ReportForm.elem.json").write_text('{"items": []}', encoding="utf-8")
 
         results = discover_elem_forms(tmp_path)
-
         assert len(results) == 1
         assert "ReportForm" in _rel_posix(results[0])
 
     def test_external_two_objects(self, tmp_path: Path) -> None:
-        """Два внешних объекта в одном корне — оба найдены."""
         for obj, container, form in [
             ("ВнешняяОбработкаУпр", "Form", "ФормаВнешняяУправляемая"),
             ("ВнешнийОтчетУправляемый", "ReportForm", "ФормаОтчетаУправляемая"),
@@ -272,56 +257,109 @@ class TestExternalObjectLayout:
             (d / f"{container}.elem.json").write_text('{"items": []}', encoding="utf-8")
 
         results = discover_elem_forms(tmp_path)
-
         assert len(results) == 2
 
 
 # ---------------------------------------------------------------------------
-# Тест 8 — descent-суффиксы (issue #55: незавершённое требование PR #64)
+# Тест 8 — реальная схема артефактов (v8unpack 1.2.11, без --descent)
+# ---------------------------------------------------------------------------
+
+
+class TestRealArtifactScheme:
+    """Бессуффиксные <stem>.json / <stem>.id.json / <stem>.obj.bsl."""
+
+    def _write_real(self, form_dir: Path, stem: str, *, with_bsl: bool = True) -> None:
+        (form_dir / f"{stem}.json").write_text('{"meta": 1}', encoding="utf-8")
+        (form_dir / f"{stem}.id.json").write_text(
+            '{"uuid": "00000000-0000-0000-0000-000000000000"}', encoding="utf-8"
+        )
+        if with_bsl:
+            (form_dir / f"{stem}.obj.bsl").write_text("// bsl\n", encoding="utf-8")
+
+    def test_meta_id_bsl_populated(self, tmp_path: Path) -> None:
+        form_dir = _make_form_dir(tmp_path, "CatalogForm", "CatalogForm")
+        self._write_real(form_dir, "CatalogForm")
+
+        entry = discover_elem_forms(tmp_path)[0]
+        assert entry.meta_json_path is not None
+        assert entry.id_json_path is not None
+        assert entry.bsl_path is not None
+        assert entry.bsl_path.name == "CatalogForm.obj.bsl"
+        assert entry.descent_artifacts == []
+        assert entry.extra_warnings == []
+
+    def test_form_without_bsl(self, tmp_path: Path) -> None:
+        """Форма без *.obj.bsl — bsl_path None, остальное на месте."""
+        form_dir = _make_form_dir(tmp_path, "CatalogForm", "CatalogForm")
+        self._write_real(form_dir, "CatalogForm", with_bsl=False)
+
+        entry = discover_elem_forms(tmp_path)[0]
+        assert entry.bsl_path is None
+        assert entry.meta_json_path is not None
+        assert entry.id_json_path is not None
+
+    def test_manager_module_ignored(self, tmp_path: Path) -> None:
+        """<stem>.mgr.bsl (модуль менеджера) не считается модулем формы."""
+        form_dir = _make_form_dir(tmp_path, "DocumentForm", "DocumentForm")
+        (form_dir / "DocumentForm.mgr.bsl").write_text("// manager\n", encoding="utf-8")
+
+        entry = discover_elem_forms(tmp_path)[0]
+        assert entry.bsl_path is None
+        assert entry.descent_artifacts == []
+
+    def test_id_json_not_treated_as_descent(self, tmp_path: Path) -> None:
+        """<stem>.id.json → id_json_path, а не descent-набор."""
+        form_dir = _make_form_dir(tmp_path, "CatalogForm", "CatalogForm")
+        (form_dir / "CatalogForm.id.json").write_text('{"uuid": "x"}', encoding="utf-8")
+
+        entry = discover_elem_forms(tmp_path)[0]
+        assert entry.id_json_path is not None
+        assert entry.descent_artifacts == []
+
+    def test_elem_only_no_artifacts(self, tmp_path: Path) -> None:
+        """Только *.elem.json — все опциональные поля None/пустые."""
+        _make_form_dir(tmp_path, "CatalogForm", "CatalogForm")
+
+        entry = discover_elem_forms(tmp_path)[0]
+        assert entry.meta_json_path is None
+        assert entry.id_json_path is None
+        assert entry.bsl_path is None
+        assert entry.descent_artifacts == []
+        assert entry.extra_warnings == []
+
+
+# ---------------------------------------------------------------------------
+# Тест 9 — числовой descent (чужой сценарий с --descent)
 # ---------------------------------------------------------------------------
 
 
 class TestDescentArtifacts:
-    """Сопутствующие артефакты с произвольным descent-суффиксом."""
-
-    def test_descent_id(self, tmp_path: Path) -> None:
-        """Литеральный суффикс id (--descent не указан)."""
-        form_dir = _make_form_dir(tmp_path, "CatalogForm", "CatalogForm")
-        write_aux_artifacts(form_dir, "CatalogForm", "id")
-
-        results = discover_elem_forms(tmp_path)
-        assert len(results) == 1
-        da = results[0].descent_artifacts
-        assert len(da) == 1
-        assert da[0].descent == "id"
-        assert da[0].aux_json_path is not None
-        assert da[0].bsl_path is not None
-        # deprecated-property возвращают первый набор
-        assert results[0].aux_json_path is not None
-        assert results[0].bsl_path is not None
+    """Опциональный слой для распаковок с числовым --descent."""
 
     def test_descent_simple_10(self, tmp_path: Path) -> None:
-        """Простой числовой суффикс 10 (регрессия против хардкода)."""
         form_dir = _make_form_dir(tmp_path, "CatalogForm", "CatalogForm")
         write_aux_artifacts(form_dir, "CatalogForm", "10")
 
-        results = discover_elem_forms(tmp_path)
-        assert results[0].descent_artifacts[0].descent == "10"
+        entry = discover_elem_forms(tmp_path)[0]
+        assert len(entry.descent_artifacts) == 1
+        da = entry.descent_artifacts[0]
+        assert da.descent == "10"
+        assert da.aux_json_path is not None
+        assert da.bsl_path is not None
+        # bsl_path подхватывает descent-BSL при отсутствии бессуффиксного
+        assert entry.bsl_path is not None
 
     def test_descent_four_component(self, tmp_path: Path) -> None:
-        """Четырёхкомпонентный суффикс 3.0.75.100."""
         form_dir = _make_form_dir(tmp_path, "CatalogForm", "CatalogForm")
         write_aux_artifacts(form_dir, "CatalogForm", "3.0.75.100")
 
-        results = discover_elem_forms(tmp_path)
-        da = results[0].descent_artifacts
+        da = discover_elem_forms(tmp_path)[0].descent_artifacts
         assert len(da) == 1
         assert da[0].descent == "3.0.75.100"
         assert da[0].aux_json_path is not None
         assert da[0].bsl_path is not None
 
     def test_json_bsl_matched_same_descent(self, tmp_path: Path) -> None:
-        """JSON и BSL с одинаковым descent группируются в один набор."""
         form_dir = _make_form_dir(tmp_path, "CatalogForm", "CatalogForm")
         write_aux_artifacts(form_dir, "CatalogForm", "10")
 
@@ -330,33 +368,30 @@ class TestDescentArtifacts:
         assert da[0].aux_json_path is not None
         assert da[0].bsl_path is not None
 
-    def test_json_bsl_different_descent_not_merged(self, tmp_path: Path) -> None:
-        """JSON с суффиксом 10 и BSL с суффиксом id — два отдельных набора."""
+    def test_different_descent_not_merged(self, tmp_path: Path) -> None:
+        """Два разных числовых descent (10 и 4) — два набора."""
         form_dir = _make_form_dir(tmp_path, "CatalogForm", "CatalogForm")
         write_aux_artifacts(form_dir, "CatalogForm", "10", with_bsl=False)
-        write_aux_artifacts(form_dir, "CatalogForm", "id", with_json=False)
+        write_aux_artifacts(form_dir, "CatalogForm", "4", with_json=False)
 
         da = discover_elem_forms(tmp_path)[0].descent_artifacts
-        descents = {d.descent for d in da}
-        assert descents == {"10", "id"}
+        assert {d.descent for d in da} == {"10", "4"}
 
-    def test_multiple_descents_no_silent_loss(self, tmp_path: Path) -> None:
-        """Несколько descent-наборов сохраняются все + предупреждение."""
+    def test_multiple_descents_warns(self, tmp_path: Path) -> None:
         form_dir = _make_form_dir(tmp_path, "CatalogForm", "CatalogForm")
         write_aux_artifacts(form_dir, "CatalogForm", "10")
         write_aux_artifacts(form_dir, "CatalogForm", "3.0.75.100")
 
         entry = discover_elem_forms(tmp_path)[0]
-        descents = {d.descent for d in entry.descent_artifacts}
-        assert descents == {"10", "3.0.75.100"}
+        assert {d.descent for d in entry.descent_artifacts} == {"10", "3.0.75.100"}
         assert any("descent" in w for w in entry.extra_warnings)
 
-    def test_elem_only_no_artifacts(self, tmp_path: Path) -> None:
-        """Только *.elem.json — пустой descent_artifacts, без предупреждений."""
-        _make_form_dir(tmp_path, "CatalogForm", "CatalogForm")
+    def test_plain_bsl_wins_over_descent(self, tmp_path: Path) -> None:
+        """Бессуффиксный obj.bsl приоритетнее descent-BSL в bsl_path."""
+        form_dir = _make_form_dir(tmp_path, "CatalogForm", "CatalogForm")
+        (form_dir / "CatalogForm.obj.bsl").write_text("// plain\n", encoding="utf-8")
+        write_aux_artifacts(form_dir, "CatalogForm", "10", with_json=False)
 
         entry = discover_elem_forms(tmp_path)[0]
-        assert entry.descent_artifacts == []
-        assert entry.extra_warnings == []
-        assert entry.aux_json_path is None
-        assert entry.bsl_path is None
+        assert entry.bsl_path.name == "CatalogForm.obj.bsl"
+        assert entry.descent_artifacts[0].descent == "10"

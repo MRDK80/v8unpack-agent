@@ -220,10 +220,12 @@ class TestWriteManagedFormElem:
             tmp_path, "Catalog", "Банки", "ФормаЭлементаУправляемая", payload
         )
         form_dir = result_path.parent
-        aux_json = form_dir / "ФормаЭлементаУправляемая.10.json"
-        aux_bsl = form_dir / "ФормаЭлементаУправляемая.obj.10.bsl"
-        assert aux_json.exists(), "*.10.json не создан"
-        assert aux_bsl.exists(), "*.obj.10.bsl не создан"
+        meta_json = form_dir / "ФормаЭлементаУправляемая.json"
+        id_json = form_dir / "ФормаЭлементаУправляемая.id.json"
+        obj_bsl = form_dir / "ФормаЭлементаУправляемая.obj.bsl"
+        assert meta_json.exists(), "<form>.json (метаданные) не создан"
+        assert id_json.exists(), "<form>.id.json (UUID) не создан"
+        assert obj_bsl.exists(), "<form>.obj.bsl (модуль) не создан"
 
     def test_aux_files_skipped_when_write_aux_false(self, tmp_path):
         payload = make_managed_form_elem_json()
