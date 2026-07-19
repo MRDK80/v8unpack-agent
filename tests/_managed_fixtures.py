@@ -229,3 +229,23 @@ def _detect_form_suffix(form_name: str) -> str:
     if "report" in lower or "отчет" in lower or "отчёт" in lower:
         return "ReportForm"
     return "Form"
+
+def write_aux_artifacts(
+    form_dir: Path,
+    form_name: str,
+    descent: str,
+    *,
+    with_json: bool = True,
+    with_bsl: bool = True,
+) -> None:
+    """Записать сопутствующие артефакты с произвольным descent-суффиксом."""
+    if with_json:
+        (form_dir / f"{form_name}.{descent}.json").write_text(
+            json.dumps({"form": form_name, "descent": descent},
+                       ensure_ascii=False, sort_keys=True),
+            encoding="utf-8",
+        )
+    if with_bsl:
+        (form_dir / f"{form_name}.obj.{descent}.bsl").write_text(
+            "// синтетический BSL\n", encoding="utf-8",
+        )
