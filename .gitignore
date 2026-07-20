@@ -9,3 +9,12 @@ verify_*.py
 src/
 *.egg-info/
 *.old
+.venv/
+uv.lock
+inspect_forms.py
+inspect_empty.py
+classify_empty.py
+proto_adapter.py
+proto_fallback.py
+verify_issue54.py
+/json
