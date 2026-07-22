@@ -28,7 +28,7 @@
 
 ```
 index_cf(<путь_к_выгрузке>)
-  ├─► 0) scan_forms()               # опись всех форм по layout-у выгрузки
+  ├─► 0) scan_forms()               # опись всех форм по layout-у (вкл. формы без кода, #57)
   ├─► 1) unpack_all_forms()         # Form.bin → текстовый слой (BSL виден)
   │       └─► parse_elem_json()      # elem.json → form_elements_index (best-effort)
   ├─► 1') unpack_erf()              # внешний отчёт (.erf): текстовый слой
@@ -41,18 +41,21 @@ index_cf(<путь_к_выгрузке>)
 - **Идемпотентность.** Повторный прогон не перекладывает формы без изменений.
 - **Отказоустойчивость.** `extraction_ok=False` по одной форме не роняет пайплайн.
 - **Best-effort обогащение.** `parse_elem_json` и `extract_skd_queries` некритичны.
+- **Полнота описи.** `scan_forms` учитывает и управляемые формы без кода модуля
+  (без `.obj.bsl`) — они попадают в индекс через `*.elem.json` (issue #57).
 - **Прозрачность для агента.** Со стороны индексации это просто ещё один источник текстов.
 
 ## Публичная поверхность
 
 | Модуль | Что даёт |
 |---|---|
-| `scan_forms` | `scan_forms()` + `FormEntry` + `FormScanIndex` — опись всех форм по layout-у выгрузки. Нулевой шаг пайплайна. → [подробнее](docs/scan_forms.md) |
+| `scan_forms` | `scan_forms()` + `FormEntry` + `FormScanIndex` — опись всех форм по layout-у выгрузки, включая формы без кода (`elem_json_path`, #57). Нулевой шаг пайплайна. → [подробнее](docs/scan_forms.md) |
 | `drift_checker` | `check_drift()` + `DriftReport` — added / removed / modified (hash-based) / structure_modified (elem hash) / stale_extractions. → [подробнее](docs/drift_checker.md) |
 | `form_router` | `FormRouter` — маршрутизация LLM-запроса к форме по имени объекта/формы. → [подробнее](docs/form_router.md) |
 | `form_paths` | Фабрика путей по конвенции: `form_paths()`, `item_modules()`, `all_module_paths()`. Чистая арифметика путей. |
 | `form_artifact` | `FormArtifact` — результат распаковки одной формы с явным флагом полноты. |
 | `forms_index` | `FormsIndex` / `FormsIndexEntry` + `is_form_stale()` — реестр актуальности. |
+| `managed_forms` | `discover_elem_forms()` + `ElemFormEntry` — обнаружение форм по `*.elem.json`. → [подробнее](docs/managed_forms_structure.md) |
 | `pipeline` | `discover_form_bins()`, `unpack_all_forms()`, `update_forms_index()`, `unpack_erf()`, `ErfUnpacker`. |
 | `skd_extractor` | `extract_skd_queries()` + `extract_all_skd_queries()` — СКД из `.erf`. → [подробнее](docs/skd_extractor.md) |
 | `elem_parser` | `parse_elem_json()` + `ElemIndexResult` — структура формы из `elem.json`. → [подробнее](docs/elem_parser.md) |
@@ -87,7 +90,7 @@ def unpack_one(bin_path: Path, root: Path, form_name: str) -> FormArtifact:
     )
 
 
-# 0) опись форм
+# 0) опись форм (включает формы без кода: elem_json_path заполнен, #57)
 scan_index = scan_forms(dump_root, save_to=Path("forms_scan_index.json"))
 print(f"Всего форм: {scan_index.total}")
 
@@ -109,11 +112,12 @@ index.save(Path("forms_index.json"))
 
 | Тема | Файл |
 |---|---|
-| Сканер форм: layout, FormEntry, CLI, external-режим | [docs/scan_forms.md](docs/scan_forms.md) |
+| Сканер форм: layout, FormEntry, elem-only, CLI, external-режим | [docs/scan_forms.md](docs/scan_forms.md) |
 | Контроль дрейфа: DriftReport, алгоритм, сценарии | [docs/drift_checker.md](docs/drift_checker.md) |
 | Маршрутизация агента: FormRouter, приоритеты | [docs/form_router.md](docs/form_router.md) |
 | Внешние отчёты (.erf), СКД, Template.bin | [docs/skd_extractor.md](docs/skd_extractor.md) |
 | elem.json и form_elements_index | [docs/elem_parser.md](docs/elem_parser.md) |
+| Discovery форм по `*.elem.json` | [docs/managed_forms_structure.md](docs/managed_forms_structure.md) |
 | Структура распакованных внешних обработок | [docs/external_forms_structure.md](docs/external_forms_structure.md) |
 
 ## Установка
