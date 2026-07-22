@@ -171,6 +171,35 @@ class TestElemOnlyForm:
         # без флага форма без .obj.bsl пропускается
         assert idx.total == 0
 
+    def test_external_elem_only_report_without_bsl_has_external_metadata(self, tmp_path):
+        """AC (fix #57): внешний управляемый отчёт без кода формы
+        (нет ReportForm.obj.bsl) попадает в индекс через elem-only ветку
+        с КОРРЕКТНЫМИ метаданными external-layout, а не искажёнными."""
+        form_dir = (
+            tmp_path
+            / "managed__ВнешнийОтчетУправляемый.erf"
+            / "ReportForm"
+            / "ФормаОтчетаУправляемая"
+        )
+        form_dir.mkdir(parents=True, exist_ok=True)
+        (form_dir / "ReportForm.elem.json").write_text("{}", encoding="utf-8")
+
+        idx = scan_forms(tmp_path, mode="external", include_elem_only=True)
+
+        entry = next(
+            e for e in idx.forms
+            if e.object_name == "managed__ВнешнийОтчетУправляемый.erf"
+        )
+        assert entry.object_type == "ExternalReport"
+        assert entry.container_name == "ReportForm"
+        assert entry.form_name == "ФормаОтчетаУправляемая"
+        assert entry.elem_json_path == (
+            Path("managed__ВнешнийОтчетУправляемый.erf")
+            / "ReportForm"
+            / "ФормаОтчетаУправляемая"
+            / "ReportForm.elem.json"
+        )
+
 
 # ---------------------------------------------------------------------------
 # AC8: смешанный индекс
