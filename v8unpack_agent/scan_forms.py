@@ -1,12 +1,12 @@
 """scan_forms — обобщённый обход *Form-контейнеров и сборка FormScanIndex.
 
-Реализует issues #9, #13, #25, #32, #38, #40.
+Реализует issues #9, #13, #25, #32, #38, #40, #57.
 
 v8unpack формирует несколько layout-ов.
 
 **4-уровневый** (большинство объектов конфигурации)::
 
-    cf_export/<Тип>/<Объект>/<Container>Form/<ИмяФормы>/
+    cf_export/<Тип>/<Объект>/Form/<ИмяФормы>/
 
 **3-уровневый** (общие формы — нет объекта-владельца)::
 
@@ -19,8 +19,8 @@ v8unpack формирует несколько layout-ов.
 
 Отличия External от конфигурации:
 - контейнер формы — ``Form`` (обработка) либо ``ReportForm`` (отчёт);
-- bsl-файл формы называется ``<Container>.obj.bsl`` (v8unpack 1.2.11) либо
-  ``<Container>.obj`` (старый вариант без суффикса, issue #32) — берётся первый
+- bsl-файл формы называется ``.obj.bsl`` (v8unpack 1.2.11) либо
+  ``.obj`` (старый вариант без суффикса, issue #32) — берётся первый
   существующий;
 - верхний уровень — имя конкретной обработки/отчёта, а не ``object_type``;
 - тип объекта определяется так: контейнер ``ReportForm`` ⇒ ``ExternalReport``;
@@ -29,15 +29,29 @@ v8unpack формирует несколько layout-ов.
 
 Артефакты формы конфигурации::
 
-    <Container>.obj.bsl
-    <Container>.json
+    .obj.bsl
+    .json
 
 Артефакты формы внешнего объекта::
 
-    <Container>.obj.bsl   # bsl формы; либо <Container>.obj (legacy)
-    <Container>.json      # метаданные формы; Form.json остаётся fallback для совместимости
-    <Container>.elem      # структура формы; Form.elem остаётся fallback для совместимости
-    <Container>.id
+    .obj.bsl   # bsl формы; либо .obj (legacy)
+    .json      # метаданные формы; Form.json остаётся fallback для совместимости
+    .elem      # структура формы; Form.elem остаётся fallback для совместимости
+    .id
+
+**Elem-формы** (issue #57):
+
+Управляемые формы не имеют ``.obj.bsl`` в ряде конфигураций, но
+всегда дают ``*.elem.json``. ``scan_forms`` использует
+:func:`~v8unpack_agent.managed_forms.discover_elem_forms` для обнаружения
+этих форм и добавляет их в ``FormScanIndex`` с заполненным ``elem_json_path``.
+Для ordinary/external форм ``elem_json_path`` берётся из той же discovery,
+если ``*.elem.json`` присутствует в каталоге формы.
+
+``FormEntry.elem_json_path`` — всегда relative-to-root (согласованно с
+``ElemFormEntry.elem_json_path`` из discovery #55). Реестр хранит только
+путь; структуру по требованию даёт ``parse_elem_json`` (второй парсер НЕ
+вводится).
 
 OS-нейтральность:
 - Пути строятся через :mod:`pathlib` / :func:`os.path.join`.
@@ -147,7 +161,9 @@ class FormEntry:
     object_type: str
     """Тип метаобъекта: ``Catalog``, ``Document``, ``CommonForm`` и т.д.
     Для внешних объектов — ``ExternalDataProcessor`` либо ``ExternalReport``
-    (не пересекается с типами конфигурации)."""
+    (не пересекается с типами конфигурации).
+    Для форм, обнаруженных только через discovery (elem-only) — тип берётся
+    из пути файловой системы (container-name) при наличии, иначе пустая строка."""
 
     object_name: str
     """Имя метаобъекта. Пустая строка для общих форм (CommonForm-layout).
@@ -163,11 +179,14 @@ class FormEntry:
     """Абсолютный путь к директории формы."""
 
     bsl_path: Path
-    """Путь к bsl-файлу формы: ``<Container>.obj.bsl`` (config) либо
-    ``<Container>.obj.bsl`` / ``<Container>.obj`` (external)."""
+    """Путь к bsl-файлу формы: ``.obj.bsl`` (config) либо
+    ``.obj.bsl`` / ``.obj`` (external).
+    Для elem-only форм путь может указывать на несуществующий файл
+    (заполняется заглушкой из form_path для сохранения схемы)."""
 
     json_path: Path
-    """Путь к json-файлу формы."""
+    """Путь к json-файлу формы.
+    Для elem-only форм может указывать на несуществующий файл."""
 
     warnings: list[str] = field(default_factory=list)
 
@@ -195,6 +214,14 @@ class FormEntry:
     ``None`` — ``*.elem.json`` не найден, не разобран или элементов нет.
     Используется ``drift_checker.check_drift()`` как независимый сигнал
     ``structure_modified`` (отдельно от ``modified``)."""
+
+    elem_json_path: Optional[Path] = None
+    """Путь к ``*.elem.json`` — источник структуры elem-формы (issue #57).
+    Relative-to-root, согласованно с ``ElemFormEntry.elem_json_path`` из
+    discovery (#55). Для ordinary/external форм заполнен, если ``*.elem.json``
+    присутствует в каталоге формы; иначе ``None``. Для elem-only форм всегда
+    заполнен. Реестр хранит только путь; структуру по требованию даёт
+    ``parse_elem_json`` — второй парсер НЕ вводится."""
 
 
 @dataclass
@@ -228,6 +255,10 @@ class FormScanIndex:
                     ),
                     "bsl_sha256": e.bsl_sha256,
                     "elem_sha256": e.elem_sha256,
+                    "elem_json_path": (
+                        e.elem_json_path.as_posix()
+                        if e.elem_json_path is not None else None
+                    ),
                 }
                 for e in self.forms
             ],
@@ -247,13 +278,16 @@ class FormScanIndex:
         """Загрузить :class:`FormScanIndex` из JSON-файла, сохранённого :meth:`save`.
 
         Если файл отсутствует — возвращает пустой индекс (аналогично
-        :meth:`FormsIndex.load <v8unpack_agent.forms_index.FormsIndex.load>`).
-        Пути (``form_path``, ``bsl_path``, ``json_path``, ``form_elem_path``)
-        восстанавливаются через :class:`pathlib.Path` — OS-нейтрально.
+        :meth:`FormsIndex.load`).
+        Пути (``form_path``, ``bsl_path``, ``json_path``, ``form_elem_path``,
+        ``elem_json_path``) восстанавливаются через :class:`pathlib.Path` —
+        OS-нейтрально.
 
         Обратная совместимость:
         - поле ``bsl_sha256`` отсутствующее в старом индексе → ``None``;
-        - поле ``elem_sha256`` отсутствующее в старом индексе → ``None``.
+        - поле ``elem_sha256`` отсутствующее в старом индексе → ``None``;
+        - поле ``elem_json_path`` отсутствующее в старом индексе → ``None``;
+        - поле ``form_xml_path`` в старом индексе — игнорируется (не обязательно).
 
         Parameters
         ----------
@@ -280,7 +314,12 @@ class FormScanIndex:
                     else None
                 ),
                 bsl_sha256=row.get("bsl_sha256"),   # None for old indexes
-                elem_sha256=row.get("elem_sha256"),  # None for old indexes
+                elem_sha256=row.get("elem_sha256"), # None for old indexes
+                elem_json_path=(
+                    Path(row["elem_json_path"])
+                    if row.get("elem_json_path") is not None
+                    else None
+                ),  # None for old indexes; form_xml_path silently ignored
             )
             for row in raw.get("forms", [])
         ]
@@ -327,15 +366,30 @@ def _is_form_container(directory: Path) -> bool:
     return directory.is_dir() and directory.name.endswith("Form")
 
 
+def _find_elem_json_path(form_dir: Path, root: Path) -> Optional[Path]:
+    """Найти ``*.elem.json`` в каталоге формы и вернуть relative-to-root путь.
+
+    Возвращает ``None``, если ``*.elem.json`` не найден.
+    Не импортирует парсер — только определяет путь (issue #57).
+    """
+    elem_files = sorted(form_dir.glob("*.elem.json"))
+    if not elem_files:
+        return None
+    return elem_files[0].relative_to(root)
+
+
 def _scan_form_dir(
     form_dir: Path,
     object_type: str,
     object_name: str,
     container_name: str,
-) -> Optional[FormEntry]:
+    root: Path,
+) -> Optional["FormEntry"]:
     """Собрать FormEntry из директории формы конфигурации.
 
     Возвращает ``None``, если обязательный артефакт ``.obj.bsl`` отсутствует.
+    Заполняет ``elem_json_path`` (relative-to-root) если ``*.elem.json`` есть
+    в каталоге формы (issue #57).
     """
     bsl_path = form_dir / (container_name + ".obj.bsl")
     json_path = form_dir / (container_name + ".json")
@@ -354,6 +408,7 @@ def _scan_form_dir(
 
     bsl_sha256 = _compute_sha256(bsl_path)
     elem_sha256 = _compute_elem_sha256(form_dir)
+    elem_json_path = _find_elem_json_path(form_dir, root)
 
     return FormEntry(
         object_type=object_type,
@@ -367,6 +422,7 @@ def _scan_form_dir(
         bsl_mtime=bsl_mtime,
         bsl_sha256=bsl_sha256,
         elem_sha256=elem_sha256,
+        elem_json_path=elem_json_path,
     )
 
 
@@ -384,7 +440,7 @@ def _collect_forms_from_container(
         if not form_dir.is_dir():
             continue
         try:
-            entry = _scan_form_dir(form_dir, object_type, object_name, container_name)
+            entry = _scan_form_dir(form_dir, object_type, object_name, container_name, root)
             if entry is not None:
                 forms.append(entry)
             else:
@@ -408,9 +464,10 @@ def _scan_external_form_dir(
 ) -> None:
     """Собрать FormEntry из директории формы внешнего объекта (issues #25, #32).
 
-    Обязательный артефакт — bsl формы: ``<Container>.obj.bsl`` (v8unpack 1.2.11)
-    либо ``<Container>.obj`` (legacy) — берётся первый существующий. Отсутствие
+    Обязательный артефакт — bsl формы: ``.obj.bsl`` (v8unpack 1.2.11)
+    либо ``.obj`` (legacy) — берётся первый существующий. Отсутствие
     обоих → best-effort skip с предупреждением. ``Form.elem`` опционален.
+    Заполняет ``elem_json_path`` если ``*.elem.json`` присутствует (issue #57).
     """
     candidates = _external_bsl_candidates(container_name)
     bsl_path = _first_existing(form_dir, candidates)
@@ -448,6 +505,7 @@ def _scan_external_form_dir(
 
     bsl_sha256 = _compute_sha256(bsl_path)
     elem_sha256 = _compute_elem_sha256(form_dir)
+    elem_json_path = _find_elem_json_path(form_dir, root)
 
     forms.append(FormEntry(
         object_type=object_type,
@@ -462,6 +520,7 @@ def _scan_external_form_dir(
         form_elem_path=elem_path.resolve() if elem_path.exists() else None,
         bsl_sha256=bsl_sha256,
         elem_sha256=elem_sha256,
+        elem_json_path=elem_json_path,
     ))
 
 
@@ -470,7 +529,7 @@ def _scan_external(
     forms: list[FormEntry],
     scan_warnings: list[str],
 ) -> None:
-    """Обход структуры External/<объект>/<Container>/<форма>/ (issues #25, #32).
+    """Обход структуры External/<объект>/<контейнер>/<форма>/ (issues #25, #32).
 
     Устойчив к обоим вариантам корня: если внутри ``root`` есть каталог
     ``External/`` — идём от него; иначе ``root`` уже указывает на уровень
@@ -559,10 +618,128 @@ def _scan_config(
                 )
 
 
+def _infer_elem_only_metadata(
+    rel_form_path: Path,
+    mode: str,
+) -> tuple[str, str, str, str]:
+    """Infer FormEntry metadata from elem-only form path.
+
+    For config layout::
+
+        <object_type>/<object_name>/<container_name>/<form_name>
+
+    For external layout::
+
+        <object_name>.epf/Form/<form_name>
+        <object_name>.erf/ReportForm/<form_name>
+
+    Returns
+    -------
+    tuple(object_type, object_name, container_name, form_name)
+    """
+    parts = rel_form_path.parts
+
+    # External layout: <object>.(epf|erf)/(Form|ReportForm)/<form_name>
+    if mode == "external" and len(parts) >= 3 and parts[-2] in {"Form", "ReportForm"}:
+        object_name = parts[-3]
+        container_name = parts[-2]
+        form_name = parts[-1]
+        object_type = (
+            EXTERNAL_REPORT_OBJECT_TYPE
+            if container_name == "ReportForm" or object_name.lower().endswith(".erf")
+            else EXTERNAL_DEFAULT_OBJECT_TYPE
+        )
+        return object_type, object_name, container_name, form_name
+
+    # Config 4-level layout: <type>/<object>/<container>/<form>
+    if len(parts) >= 4:
+        return parts[-4], parts[-3], parts[-2], parts[-1]
+
+    # Config 3-level layout (CommonForm): <container>/<form>
+    if len(parts) >= 2:
+        return "", "", parts[-2], parts[-1]
+
+    if len(parts) == 1:
+        return "", "", "", parts[0]
+
+    return "", "", "", ""
+
+
+def _collect_elem_only_forms(
+    root: Path,
+    existing_form_paths: set[Path],
+    forms: list[FormEntry],
+    scan_warnings: list[str],
+    mode: str = "config",
+) -> None:
+    """Добавить elem-формы, не попавшие в обычный/external scan (issue #57).
+
+    Использует :func:`~v8unpack_agent.managed_forms.discover_elem_forms`
+    для обнаружения всех ``*.elem.json``. Пропускает формы, уже
+    добавленные через ``_scan_form_dir`` / ``_scan_external_form_dir``
+    (по абсолютному пути директории формы). Добавляет оставшиеся
+    как ``FormEntry`` с заполненным ``elem_json_path`` и ``None``
+    в полях ``bsl_sha256`` / ``bsl_mtime``.
+
+    Метаданные (object_type / object_name / container_name / form_name)
+    восстанавливаются из relative-пути формы через
+    :func:`_infer_elem_only_metadata` — с учётом ``mode``: для external
+    layout корректно разбирается ``<object>.(epf|erf)/(Form|ReportForm)/<form>``
+    (issue #57, фикс метаданных внешних elem-only форм без кода).
+    """
+    try:
+        from v8unpack_agent.managed_forms import discover_elem_forms  # local import
+    except ImportError as exc:
+        scan_warnings.append(f"cannot import discover_elem_forms: {exc}")
+        return
+
+    for elem_entry in discover_elem_forms(root):
+        form_dir_rel = elem_entry.elem_json_path.parent
+        form_dir_abs = (root / form_dir_rel).resolve()
+
+        if form_dir_abs in existing_form_paths:
+            continue
+
+        object_type, object_name, container_name, form_name = _infer_elem_only_metadata(
+            form_dir_rel,
+            mode,
+        )
+
+        elem_sha256 = _compute_elem_sha256(form_dir_abs)
+
+        # bsl_path и json_path — заглушки (форма без bsl)
+        bsl_stub = (
+            form_dir_abs / (container_name + ".obj.bsl")
+            if container_name else form_dir_abs / "Form.obj.bsl"
+        )
+        json_stub = (
+            form_dir_abs / (container_name + ".json")
+            if container_name else form_dir_abs / "Form.json"
+        )
+
+        forms.append(FormEntry(
+            object_type=object_type,
+            object_name=object_name,
+            container_name=container_name,
+            form_name=form_name,
+            form_path=form_dir_abs,
+            bsl_path=bsl_stub,
+            json_path=json_stub,
+            warnings=["elem-only: no .obj.bsl found"],
+            bsl_mtime=0.0,
+            bsl_sha256=None,
+            elem_sha256=elem_sha256,
+            elem_json_path=elem_entry.elem_json_path,
+        ))
+
+        existing_form_paths.add(form_dir_abs)
+
+
 def scan_forms(
     cf_export_root: Path,
     save_to: Optional[Path] = None,
     mode: Literal["config", "external"] = "config",
+    include_elem_only: bool = True,
 ) -> FormScanIndex:
     """Обойти ``cf_export_root`` и собрать FormScanIndex.
 
@@ -580,11 +757,17 @@ def scan_forms(
         Режимы не смешиваются: ``object_type`` внешних форм
         (``ExternalDataProcessor`` / ``ExternalReport``) не пересекается с
         типами конфигурации.
+    include_elem_only:
+        Если ``True`` (по умолчанию), после основного обхода добавляет
+        elem-формы без ``.obj.bsl``, обнаруженные через ``discover_elem_forms``
+        (issue #57). Управляемые формы в конфигурациях смешанного типа
+        попадают в единый ``FormScanIndex``.
 
     Возвращает
     ----------
     :class:`FormScanIndex` с найденными формами. Ошибка отдельной формы не
-    останавливает обход (best-effort).
+    останавливает обход (best-effort). Единый индекс содержит обычные,
+    внешние и elem-формы.
     """
     root = Path(cf_export_root)
     forms: list[FormEntry] = []
@@ -603,6 +786,12 @@ def scan_forms(
         _scan_external(root, forms, scan_warnings)
     else:
         _scan_config(root, forms, scan_warnings)
+
+    if include_elem_only:
+        existing_form_paths: set[Path] = {
+            e.form_path.resolve() for e in forms
+        }
+        _collect_elem_only_forms(root, existing_form_paths, forms, scan_warnings, mode)
 
     index = FormScanIndex(
         forms=forms,
@@ -648,12 +837,23 @@ def main() -> None:
     parser.add_argument(
         "--save",
         action="store_true",
-        help="Сохранить forms_index.json в root",
+        help="Сохранить forms_scan_index.json в root",
     )
+    parser.add_argument(
+        "--no-elem-only",
+        action="store_true",
+        help="Не добавлять elem-only формы (управляемые без .obj.bsl)",
+    )
+
     args = parser.parse_args()
 
     save_to = args.root / "forms_scan_index.json" if args.save else None
-    index = scan_forms(args.root, save_to=save_to, mode=args.mode)
+    index = scan_forms(
+        args.root,
+        save_to=save_to,
+        mode=args.mode,
+        include_elem_only=not args.no_elem_only,
+    )
 
     print(f"Найдено форм: {len(index.forms)}")
     if save_to is not None:

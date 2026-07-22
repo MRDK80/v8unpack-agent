@@ -200,8 +200,21 @@ for form in forms:
     print(form.elem_json_path)
 ```
 
+## Связь с реестром форм (issue #57)
+
+`scan_forms` использует `discover_elem_forms` для подбора форм **без кода**
+(без `.obj.bsl`) в единый `FormScanIndex`: `ElemFormEntry.elem_json_path`
+переносится в `FormEntry.elem_json_path` (тот же относительный путь), а
+недостающие метаданные (`object_type` / `object_name` / `container_name` /
+`form_name`) восстанавливаются из пути формы с учётом режима сканирования
+(config / external). Подробности — [docs/scan_forms.md](scan_forms.md),
+раздел «Формы без кода (elem-only, issue #57)».
+
 ## Открытые вопросы
 
-- Запись форм в общий реестр — issue #57.
-- Расчёт дрейфа форм — issue #58.
 - Классификатор `ordinary/managed` как отдельный шаг — issue #56.
+- Расчёт дрейфа форм — issue #58.
+
+> Запись форм в общий реестр (issue #57) — **закрыто**: elem-формы
+> регистрируются в `FormScanIndex` с заполненным `elem_json_path`
+> (см. [docs/scan_forms.md](scan_forms.md)).
