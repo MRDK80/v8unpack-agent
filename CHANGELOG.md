@@ -28,6 +28,12 @@
   (`External/<имя>/Form/<форма>/Form.obj`); поле `form_elem_path` в FormEntry (#25).
 - scan_forms external: поддержка контейнера `ReportForm/` для внешних отчётов;
   `object_type="ExternalReport"` определяется по контейнеру `ReportForm` (#32).
+- `v8unpack_agent/managed_form_summary.py`: `build_managed_form_summary(form_dir)`
+  + `build_managed_form_summary_from_elem_index(result)` + `to_normalized_json()` —
+  детерминированная семантическая выжимка формы (attributes / commands / elements /
+  events / relations) поверх канонического `parse_elem_json`. Отдельный слой-адаптер
+  реального формата не вводится: `parse_elem_json` — единственный парсер
+  `*.elem.json` (issue #66, PR #68).
 
 ### Changed
 - `check_drift()`: при наличии `bsl_sha256` в baseline-индексе использует hash
