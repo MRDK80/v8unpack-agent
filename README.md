@@ -59,7 +59,7 @@ index_cf(<путь_к_выгрузке>)
 | `pipeline` | `discover_form_bins()`, `unpack_all_forms()`, `update_forms_index()`, `unpack_erf()`, `ErfUnpacker`. |
 | `skd_extractor` | `extract_skd_queries()` + `extract_all_skd_queries()` — СКД из `.erf`. → [подробнее](docs/skd_extractor.md) |
 | `elem_parser` | `parse_elem_json()` + `ElemIndexResult` — структура формы из `elem.json`. → [подробнее](docs/elem_parser.md) |
-| `managed_form_summary` | `build_managed_form_summary(form_dir)` + `to_normalized_json()` — детерминированная семантическая выжимка формы (attributes / commands / elements / events / relations) поверх `parse_elem_json`. → [подробнее](docs/managed_form_summary.md) |
+| `form_summary` | `build_form_summary(form_dir)` + `to_normalized_json()` — детерминированная семантическая выжимка любой elem-формы (обычной и управляемой): attributes / commands / elements / events / relations поверх `parse_elem_json`. → [подробнее](docs/form_summary.md) |
 
 ## Быстрый старт
 
@@ -120,7 +120,7 @@ index.save(Path("forms_index.json"))
 | elem.json и form_elements_index | [docs/elem_parser.md](docs/elem_parser.md) |
 | Discovery форм по `*.elem.json` | [docs/managed_forms_structure.md](docs/managed_forms_structure.md) |
 | Структура распакованных внешних обработок | [docs/external_forms_structure.md](docs/external_forms_structure.md) |
-| Выжимка управляемой формы поверх parse_elem_json | [docs/managed_form_summary.md](docs/managed_form_summary.md) |
+| Семантическая выжимка elem-формы поверх parse_elem_json | [docs/form_summary.md](docs/form_summary.md) |
 
 ## Установка
 

@@ -50,12 +50,12 @@
 | Фильтрация косметических полей (GUID, координаты) | ✅ | #40 |
 | Второй сырой хэш `*.elem.json` | ❌ | не планируется |
 
-## Семантическая выжимка формы (`managed_form_summary`)
+## Семантическая выжимка формы (`form_summary`)
 
 | Функция | Статус | Issue / PR |
 |---|---|---|
-| `build_managed_form_summary` | ✅ | #66 / PR #68 |
-| `build_managed_form_summary_from_elem_index` | ✅ | #66 / PR #68 |
+| `build_form_summary` | ✅ | #66 / PR #68 |
+| `build_form_summary_from_elem_index` | ✅ | #66 / PR #68 |
 | `to_normalized_json` | ✅ | #66 / PR #68 |
 
 ## Управляемые формы (`managed_forms`)

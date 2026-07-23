@@ -1,160 +1,71 @@
-"""Semantic summary for elem-based 1C forms.
+"""DEPRECATED-шим: используйте :mod:`v8unpack_agent.form_summary`.
 
-The module does not parse raw *.elem.json directly.  It builds a compact,
-deterministic view over the canonical ``parse_elem_json(form_dir)`` result.
+Модуль переименован в рамках issue #69. Имя с префиксом ``Managed*`` вводило
+в заблуждение — выжимка строится для ЛЮБОЙ elem-формы (обычной и управляемой),
+никакой привязки к управляемым формам нет.
+
+Старые публичные имена сохранены как deprecated-алиасы к новым символам из
+:mod:`v8unpack_agent.form_summary`. При обращении к ним выдаётся
+:class:`DeprecationWarning`. Уберите этот шим в будущем мажорном релизе.
+
+Соответствие имён:
+
+- ``ManagedFormSummary``                        → ``FormSummary``
+- ``build_managed_form_summary``                → ``build_form_summary``
+- ``build_managed_form_summary_from_elem_index``→ ``build_form_summary_from_elem_index``
+
+``to_normalized_json`` не переименовывалась и реэкспортируется без warning.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from pathlib import Path
-import json
+import warnings
 from typing import Any
 
-from v8unpack_agent.elem_parser import ElemIndexResult, parse_elem_json
+from v8unpack_agent.form_summary import (
+    FormSummary,
+    build_form_summary,
+    build_form_summary_from_elem_index,
+    to_normalized_json,
+)
+
+__all__ = [
+    "ManagedFormSummary",
+    "build_managed_form_summary",
+    "build_managed_form_summary_from_elem_index",
+    "to_normalized_json",
+]
+
+#: Старое имя → (новое имя, новый объект).
+_DEPRECATED: dict[str, tuple[str, Any]] = {
+    "ManagedFormSummary": ("FormSummary", FormSummary),
+    "build_managed_form_summary": ("build_form_summary", build_form_summary),
+    "build_managed_form_summary_from_elem_index": (
+        "build_form_summary_from_elem_index",
+        build_form_summary_from_elem_index,
+    ),
+}
 
 
-@dataclass(frozen=True)
-class ManagedFormSummary:
-    """Compact semantic view of a form element tree."""
+def __getattr__(name: str) -> Any:
+    """PEP 562: warn on access to deprecated aliases.
 
-    elements: list[dict[str, Any]] = field(default_factory=list)
-    attributes: list[dict[str, Any]] = field(default_factory=list)
-    commands: list[dict[str, Any]] = field(default_factory=list)
-    events: list[dict[str, Any]] = field(default_factory=list)
-    relations: list[dict[str, Any]] = field(default_factory=list)
-    warnings: list[str] = field(default_factory=list)
-
-
-def build_managed_form_summary(form_dir: Path) -> ManagedFormSummary:
-    """Build a semantic summary for a form directory.
-
-    ``form_dir`` is the directory that contains ``*.elem.json`` and optionally
-    the form BSL module.  The function delegates real elem parsing to
-    ``parse_elem_json`` and only maps normalized elements to summary buckets.
+    Warning срабатывает при каждом обращении к устаревшему имени, а не только
+    при первом импорте модуля, — так каждый тест/пользователь видит подсказку
+    незави��имо от кеша модулей.
     """
-
-    result = parse_elem_json(Path(form_dir))
-    return build_managed_form_summary_from_elem_index(result)
-
-
-def build_managed_form_summary_from_elem_index(
-    result: ElemIndexResult,
-) -> ManagedFormSummary:
-    """Build a semantic summary from ``ElemIndexResult``.
-
-    This helper keeps the mapping testable without writing temporary elem files.
-    """
-
-    if not result.elem_index_ok:
-        return ManagedFormSummary(warnings=list(result.warnings))
-
-    elements: list[dict[str, Any]] = []
-    attributes: list[dict[str, Any]] = []
-    commands: list[dict[str, Any]] = []
-    events: list[dict[str, Any]] = []
-    relations: list[dict[str, Any]] = []
-
-    for raw in result.elements:
-        item = _normalized_item(raw)
-        source = str(raw.get("source") or "")
-
-        if source == "props":
-            attributes.append(_attribute_item(raw))
-        elif source == "commands":
-            commands.append(_command_item(raw))
-        else:
-            elements.append(item)
-
-        data_path = raw.get("data_path")
-        if data_path:
-            relations.append({
-                "element": item["name"],
-                "target": str(data_path),
-                "kind": "data",
-            })
-
-        handler = raw.get("handler")
-        if handler:
-            events.append({
-                "name": str(handler),
-                "element": item["name"],
-            })
-            relations.append({
-                "element": item["name"],
-                "target": str(handler),
-                "kind": "event",
-            })
-
-    return ManagedFormSummary(
-        elements=_deduplicate(elements),
-        attributes=_deduplicate(attributes),
-        commands=_deduplicate(commands),
-        events=_deduplicate(events),
-        relations=_deduplicate(relations),
-        warnings=list(result.warnings),
-    )
+    entry = _DEPRECATED.get(name)
+    if entry is not None:
+        new_name, obj = entry
+        warnings.warn(
+            f"{name} устарело и будет удалено; используйте "
+            f"v8unpack_agent.form_summary.{new_name}",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return obj
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
-def to_normalized_json(summary: ManagedFormSummary) -> str:
-    """Return a deterministic UTF-8 friendly JSON representation."""
-
-    return json.dumps(
-        {
-            "elements": summary.elements,
-            "attributes": summary.attributes,
-            "commands": summary.commands,
-            "events": summary.events,
-            "relations": summary.relations,
-            "warnings": summary.warnings,
-        },
-        ensure_ascii=False,
-        sort_keys=True,
-        indent=2,
-    )
-
-
-def _normalized_item(raw: dict[str, Any]) -> dict[str, Any]:
-    item: dict[str, Any] = {
-        "name": str(raw.get("name") or ""),
-        "kind": str(raw.get("type") or "Unknown"),
-    }
-
-    for key in ("path", "parent", "parent_path", "page", "source"):
-        value = raw.get(key)
-        if value not in (None, ""):
-            item[key] = str(value)
-
-    return item
-
-
-def _attribute_item(raw: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "name": str(raw.get("name") or ""),
-        "type": str(raw.get("type") or "Unknown"),
-    }
-
-
-def _command_item(raw: dict[str, Any]) -> dict[str, Any]:
-    item = {
-        "name": str(raw.get("name") or ""),
-        "type": str(raw.get("type") or "Unknown"),
-    }
-    handler = raw.get("handler")
-    if handler:
-        item["handler"] = str(handler)
-    return item
-
-
-def _deduplicate(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    result: list[dict[str, Any]] = []
-    seen: set[str] = set()
-
-    for item in items:
-        key = json.dumps(item, ensure_ascii=False, sort_keys=True)
-        if key in seen:
-            continue
-        seen.add(key)
-        result.append(item)
-
-    return result
+def __dir__() -> list[str]:
+    return sorted(__all__)

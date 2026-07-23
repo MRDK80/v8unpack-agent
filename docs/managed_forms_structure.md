@@ -213,10 +213,10 @@ for form in forms:
 ## Связь с выжимкой формы (issue #66)
 
 Каноническую структуру формы из `*.elem.json` даёт `parse_elem_json`, а
-семантическую выжимку поверх неё строит `build_managed_form_summary(form_dir)`
+семантическую выжимку поверх неё строит `build_form_summary(form_dir)`
 (issue #66, PR #68). Отдельного адаптера реального формата нет:
 `parse_elem_json` — единственный парсер `*.elem.json`. Подробности —
-[docs/managed_form_summary.md](managed_form_summary.md).
+[docs/form_summary.md](form_summary.md).
 
 ## Открытые вопросы
 
