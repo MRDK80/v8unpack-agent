@@ -1,11 +1,17 @@
+"""Тесты семантической выжимки формы (issue #69: имена обновлены).
+
+Модуль исторически назывался managed_form_summary; после issue #69 публичные
+символы живут в v8unpack_agent.form_summary. Обратная совместимость (старые
+имена + DeprecationWarning) проверяется отдельно в tests/test_form_summary.py.
+"""
 from __future__ import annotations
 
 import json
 from pathlib import Path
 
-from v8unpack_agent.managed_form_summary import (
-    build_managed_form_summary,
-    build_managed_form_summary_from_elem_index,
+from v8unpack_agent.form_summary import (
+    build_form_summary,
+    build_form_summary_from_elem_index,
     to_normalized_json,
 )
 from v8unpack_agent.elem_parser import ElemIndexResult
@@ -29,7 +35,7 @@ def test_summary_builds_data_relations_from_elem_index() -> None:
         warnings=[],
     )
 
-    summary = build_managed_form_summary_from_elem_index(result)
+    summary = build_form_summary_from_elem_index(result)
 
     assert summary.elements == [
         {
@@ -65,7 +71,7 @@ def test_summary_builds_events_from_elem_index() -> None:
         warnings=[],
     )
 
-    summary = build_managed_form_summary_from_elem_index(result)
+    summary = build_form_summary_from_elem_index(result)
 
     assert summary.events == [
         {
@@ -93,7 +99,7 @@ def test_summary_maps_props_to_attributes() -> None:
         warnings=[],
     )
 
-    summary = build_managed_form_summary_from_elem_index(result)
+    summary = build_form_summary_from_elem_index(result)
 
     assert summary.attributes == [
         {
@@ -111,7 +117,7 @@ def test_summary_keeps_parser_warnings_on_failure() -> None:
         warnings=["elem.json не найден"],
     )
 
-    summary = build_managed_form_summary_from_elem_index(result)
+    summary = build_form_summary_from_elem_index(result)
 
     assert summary.warnings == ["elem.json не найден"]
     assert summary.elements == []
@@ -143,7 +149,7 @@ def test_summary_reads_form_dir_via_parse_elem_json(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    summary = build_managed_form_summary(tmp_path)
+    summary = build_form_summary(tmp_path)
 
     assert {
         "element": "Таблица",
@@ -169,6 +175,6 @@ def test_to_normalized_json_is_deterministic() -> None:
         warnings=[],
     )
 
-    summary = build_managed_form_summary_from_elem_index(result)
+    summary = build_form_summary_from_elem_index(result)
 
     assert to_normalized_json(summary) == to_normalized_json(summary)
