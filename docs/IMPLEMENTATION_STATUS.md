@@ -1,91 +1,41 @@
 # Статус реализации
 
-> Обновлено: 2026-07-23
+## Реализовано
 
-## Легенда
+### scan_forms
+- Config-layout: 4-уровневый (`<Тип>/<Объект>/<Контейнер>/<Форма>/`) и
+  3-уровневый (`CommonForm/<Форма>/`) — issues #9, #13
+- External-layout: `External/<объект>/<Form|ReportForm>/<форма>/` — issues #25, #32
+- Elem-only формы (управляемые без `.obj.bsl`) — issues #55, #57
+- `bsl_sha256` в FormEntry — issue #38
+- `elem_sha256` в FormEntry — issue #40
+- `elem_json_path` (relative-to-root) в FormEntry — issue #57
 
-| Символ | Смысл |
-|---|---|
-| ✅ | Реализовано, тесты зелёные |
-| 🔄 | В процессе (открытый PR) |
-| ❌ | Не реализовано |
-| ⚠️ | Реализовано частично / есть known issue |
+### drift_checker
+- `check_drift()` с `DriftReport`: added / removed / modified /
+  stale_extractions / structure_modified — issues #10, #18, #38, #40
+- Hash-based `modified` detection — issue #38
+- Elem-only формы исключены из removed/stale, включены в structure_modified
+  — issue #58
+- **`check_drift(mode="external")`**: корректная поддержка external-layout
+  через делегирование `_disk_snapshot` → `scan_forms(mode=mode)` — issue #73.
+  Проверено на 14 реальных внешних формах (ExternalDataProcessor + ExternalReport).
 
----
+### Прочее
+- `elem_parser.parse_elem_json()` — единственный парсер `*.elem.json` — issue #40
+- `form_summary.build_form_summary()` — семантическая выжимка формы — issue #66
+- `managed_forms.discover_elem_forms()` — обнаружение elem-only форм — issue #55
+- `form_router` — маршрутизация запросов к формам по типу/имени
 
-## Сканирование форм (`scan_forms`)
+## Не реализовано / В планах
 
-| Функция | Статус | Issue / PR |
-|---|---|---|
-| 4-уровневый config layout (Catalog/Document/…) | ✅ | #9 |
-| 3-уровневый layout (CommonForm) | ✅ | #13 |
-| External layout — обработки `.epf` | ✅ | #25 |
-| External layout — отчёты `.erf` / ReportForm | ✅ | #32 |
-| `bsl_sha256` в FormEntry | ✅ | #38 |
-| `elem_sha256` в FormEntry | ✅ | #40 |
-| `elem_json_path` в FormEntry (relative-to-root) | ✅ | #57 |
-| Elem-only формы без `.obj.bsl` (`include_elem_only`) | ✅ | #55 / #57 |
+- CLI для `check_drift` (аналогично `scan_forms --mode`)
+- Детекция дрейфа по `form_summary` (семантический уровень)
+- Инкрементальный baseline (обновление только изменённых форм)
 
-## Детектор дрейфа (`drift_checker`)
+## Известные ограничения
 
-| Функция | Статус | Issue / PR |
-|---|---|---|
-| `added` / `removed` — config layout | ✅ | #10 |
-| `modified` — legacy mtime | ✅ | #18 |
-| `modified` — hash-based (bsl_sha256) | ✅ | #38 |
-| `stale_extractions` | ✅ | #10 |
-| `structure_modified` — hash-based (elem_sha256) | ✅ | #40 |
-| Elem-only формы корректно исключены из `stale` / `removed` | ✅ | #58 |
-| Elem-only формы участвуют в `structure_modified` | ✅ | #58 |
-| `added` / `removed` — external layout (`mode="external"`) | ❌ | #73 |
-| `modified` — external layout | ❌ | #73 |
-| `stale_extractions` — external layout | ❌ | #73 |
-
-## Парсинг элементов (`elem_parser`)
-
-| Функция | Статус | Issue / PR |
-|---|---|---|
-| `parse_elem_json` — нормализованное дерево | ✅ | #40 |
-| `_compute_elem_sha256` — структурный хэш | ✅ | #40 |
-| Фильтрация косметических полей (GUID, координаты) | ✅ | #40 |
-| Второй сырой хэш `*.elem.json` | ❌ | не планируется |
-
-## Семантическая выжимка формы (`form_summary`)
-
-| Функция | Статус | Issue / PR |
-|---|---|---|
-| `build_form_summary` | ✅ | #66 / PR #68 |
-| `build_form_summary_from_elem_index` | ✅ | #66 / PR #68 |
-| `to_normalized_json` | ✅ | #66 / PR #68 |
-
-## Управляемые формы (`managed_forms`)
-
-| Функция | Статус | Issue / PR |
-|---|---|---|
-| `discover_elem_forms` | ✅ | #55 |
-
-## Открытые issues (продакшн-баги)
-
-| Issue | Описание | Приоритет |
-|---|---|---|
-| [#73](https://github.com/MRDK80/v8unpack-agent/issues/73) | `_disk_snapshot` не поддерживает external-layout → ложный `removed` для всех внешних форм | High |
-
-## Открытые PR
-
-| PR | Описание | Статус |
-|---|---|---|
-| [#72](https://github.com/MRDK80/v8unpack-agent/pull/72) | fix: #58 elem-only формы в drift_checker | 🔄 250 тестов ✅, ожидает merge |
-
-## Верификация на реальных данных (2026-07-23)
-
-Проверка `verify_58_diff.py` на конфигурации УТ 10.3:
-
-| Метрика | Значение |
-|---|---|
-| Всего форм (с elem-only) | 2 216 |
-| Обычных форм с `.obj.bsl` | 2 167 |
-| Обычных с `elem_sha256` | 1 897 |
-| Elem-only с `elem_sha256` | 45 |
-| Elem-only без `elem_sha256` (пустой elem.json) | 4 |
-| Ложный дрейф на `main` (stale+removed) | **49 форм** |
-| Дрейф на `feat/58` (после baseline) | **0** ✅ |
+- `elem_sha256` вычисляется только при наличии `*.elem.json`; формы без него
+  не участвуют в `structure_modified` (не баг, дизайн).
+- Вложенность групп в `elem_parser` не реконструируется полностью —
+  хэш строится по достоверной части дерева.

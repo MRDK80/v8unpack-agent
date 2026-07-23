@@ -4,6 +4,10 @@
 сохранённым `forms_scan_index.json` и возвращает `DriftReport` — отчёт о
 расхождениях.
 
+## Использование
+
+### Config-layout (конфигурация 1С)
+
 ```python
 from pathlib import Path
 from v8unpack_agent import check_drift
@@ -24,6 +28,32 @@ else:
     print("Дрейфа нет, индекс актуален")
 ```
 
+### External-layout (внешние обработки и отчёты, issue #73)
+
+```python
+from pathlib import Path
+from v8unpack_agent.scan_forms import scan_forms
+from v8unpack_agent.drift_checker import check_drift
+
+external_root = Path("/path/to/external_unpacked")
+baseline = Path("/path/to/external_baseline.json")
+
+# Шаг 1 — создать baseline
+idx = scan_forms(external_root, mode="external", include_elem_only=False)
+idx.save(baseline)
+
+# Шаг 2 — проверять дрейф, передав тот же mode
+report = check_drift(external_root, baseline, mode="external")
+
+if report.has_drift:
+    print("modified:", report.modified)
+    print("added:   ", report.added)
+    print("removed: ", report.removed)
+```
+
+> **Важно**: `mode` в `check_drift()` должен совпадать с `mode`, использованным
+> при создании baseline через `scan_forms()`. Смешивать нельзя.
+
 ## DriftReport
 
 | Поле | Тип | Значение |
@@ -38,6 +68,16 @@ else:
 
 **Ключ формы** имеет вид `"ObjectType/ObjectName/ContainerName/FormName"`.
 Для CommonForm: `"CommonForm//CommonForm/ФормаИмя"`.
+Для внешних объектов: `"ExternalDataProcessor/ext__Акт.epf/Form/Форма"`.
+
+## Параметры check_drift()
+
+| Параметр | Тип | По умолчанию | Описание |
+|---|---|---|---|
+| `cf_export_root` | Path | — | Корень выгрузки |
+| `index_path` | Path | — | Путь к `forms_scan_index.json` |
+| `save_to` | Path \| None | `None` | Сохранить `DriftReport` в JSON |
+| `mode` | `"config"` \| `"external"` | `"config"` | Режим обхода диска (issue #73). Должен совпадать с режимом создания baseline |
 
 ## Алгоритм детекции
 
@@ -61,6 +101,8 @@ else:
   тихо пропускается, false-positive не порождается.
 - **Elem-only формы** (без `.obj.bsl`) включены: кандидаты берутся из
   `index_elem` напрямую, пересканирование — с `include_elem_only=True`.
+- **mode пробрасывается** в пересканирование: `scan_forms(root, mode=mode,
+  include_elem_only=True)` — корректно для external-layout (issue #73).
 
 ### elem-only формы (issue #57, #58)
 
@@ -97,8 +139,12 @@ report = DriftReport.load_from(Path("drift_report.json"))
 print(report.checked_at, report.has_drift)
 ```
 
-## Известные ограничения
+## Внутренняя архитектура: _disk_snapshot (issue #73)
 
-- **`mode=external` не поддерживается** в `check_drift()` — `_disk_snapshot`
-  реализован только для config-layout. При использовании с external-выгрузкой
-  все формы ложно уходят в `removed`. Отслеживается в issue #73.
+`_disk_snapshot(cf_export_root, mode)` больше не содержит собственного
+обхода файловой системы. Вместо этого он делегирует в
+`scan_forms(mode=mode, include_elem_only=False)` и строит словарь
+`form_key → (bsl_mtime, bsl_sha256)` из результата.
+
+Это устраняет дублирование логики обхода и автоматически поддерживает
+любые новые layout-ы, реализованные в `scan_forms`.
