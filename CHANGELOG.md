@@ -34,6 +34,14 @@
   events / relations) поверх канонического `parse_elem_json`. Отдельный слой-адаптер
   реального формата не вводится: `parse_elem_json` — единственный парсер
   `*.elem.json` (issue #66, PR #68).
+- **elem-only формы** (`*.elem.json` без `.obj.bsl`) добавлены в `FormScanIndex`
+  через `_collect_elem_only_forms` + `discover_elem_forms` (issue #57 / #55).
+  Поле `FormEntry.elem_json_path` — relative-to-root путь к `*.elem.json`.
+  Подтверждено на 49 формах реальной конфигурации (45 с `elem_sha256`, 4 пустых).
+- **`drift_checker._index_snapshot`** теперь возвращает четвёртый элемент —
+  `elem_only_keys: set[str]`: ключи форм с `elem_json_path` и несуществующим
+  `bsl_path` (elem-only по дизайну). Используется в `_stale_keys` и логике
+  `added/removed` (issue #58).
 
 ### Changed
 - `check_drift()`: при наличии `bsl_sha256` в baseline-индексе использует hash
@@ -50,6 +58,14 @@
   (v8unpack 1.2.11) → `<Container>.obj` (legacy), приоритет у `.bsl`; типизация
   для контейнера `Form/` — по имени модуля объекта с fallback
   `ExternalDataProcessor` (#32).
+- **`check_drift()` — `keys_with_baseline_elem`** теперь строится по всем ключам
+  `index_elem` с непустым хэшем (не только по пересечению с `disk_keys`). Это
+  позволяет elem-only формам участвовать в `structure_modified` (issue #58).
+- **`check_drift()` — пересканирование для `structure_modified`** теперь вызывает
+  `scan_forms(root, include_elem_only=True)` чтобы elem-only формы попали в
+  `current_elem_map` (issue #58).
+- **`check_drift()` — `added/removed/modified`** вычисляются по `index_keys_bsl =
+  index_keys - elem_only_keys`, исключая elem-only из BSL-based логики (issue #58).
 
 ### Fixed
 - `check_drift()` / `modified`: повторная полная распаковка неизменённого `.cf`
@@ -60,3 +76,11 @@
 - scan_forms external: формы с суффиксом `.bsl` (`Form.obj.bsl`, v8unpack 1.2.11)
   не находились — режим искал только `Form.obj` без суффикса, возвращая 0 форм.
   Проверено на реальной выгрузке (13 форм: обработки + отчёты) (issue #32).
+- **`_stale_keys()`: elem-only формы больше не попадают в `stale_extractions`.**
+  Отсутствие `bsl_path` у elem-only форм — это дизайн, а не признак устаревшей
+  экстракции. Исправлено пропуском ключей из `elem_only_keys` (issue #58).
+  Проверено: 49 elem-only форм реальной конфигурации УТ 10.3 — ложный дрейф
+  устранён.
+- **`structure_modified` для elem-only форм**: пересечение с `disk_keys` (только
+  BSL-формы) давало пустое множество — elem-only формы никогда не проверялись.
+  Исправлено: кандидаты берутся напрямую из `index_elem` (issue #58).

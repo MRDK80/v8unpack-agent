@@ -1,7 +1,7 @@
 # v8unpack_agent/drift_checker.py
 """drift_checker — детект дрейфа форм через FormScanIndex.
 
-Реализует issues #10, #38, #40.
+Реализует issues #10, #38, #40, #58.
 
 Сравнивает текущее состояние cf_export_root с ранее сохранённым
 FormScanIndex (forms_index.json) и определяет рассинхрон:
@@ -14,7 +14,7 @@ FormScanIndex (forms_index.json) и определяет рассинхрон:
 - Если ``bsl_sha256`` в индексе отсутствует (старый формат без hash-поля) —
   используется legacy-fallback через ``bsl_mtime`` (поведение до fix #38).
 
-Алгоритм детекции ``structure_modified`` (issue #40):
+Алгоритм детекции ``structure_modified`` (issue #40, #58):
 - Независимый от ``modified`` сигнал: сравнивается ``elem_sha256`` из
   baseline-индекса с хэшем текущего нормализованного дерева элементов.
 - Если ``elem_sha256`` в baseline отсутствует (старый индекс) — сигнал
@@ -23,6 +23,9 @@ FormScanIndex (forms_index.json) и определяет рассинхрон:
   ``structure_modified`` нет.
 - Добавление/удаление элемента без правки кода: ``structure_modified`` есть,
   ``modified`` нет.
+- Elem-only формы (без .obj.bsl) участвуют в ``structure_modified``:
+  они присутствуют в index_elem, но отсутствуют в disk_snapshot (нет BSL).
+  Пересканирование выполняется с include_elem_only=True.
 
 OS-нейтральность:
 - Пути строятся через pathlib / os.path.join.
@@ -125,12 +128,19 @@ def _index_snapshot(
     dict[str, float],
     dict[str, Optional[str]],
     dict[str, Optional[str]],
+    set[str],
 ]:
-    """Построить три словаря из index_path:
+    """Построить структуры из index_path.
 
-    - ``mtime_map``:  dict[form_key -> baseline_mtime]  (legacy fallback)
-    - ``hash_map``:   dict[form_key -> bsl_sha256 | None]
-    - ``elem_map``:   dict[form_key -> elem_sha256 | None]
+    Возвращает кортеж из четырёх объектов:
+
+    - ``mtime_map``:    dict[form_key -> baseline_mtime]  (legacy fallback)
+    - ``hash_map``:     dict[form_key -> bsl_sha256 | None]
+    - ``elem_map``:     dict[form_key -> elem_sha256 | None]
+    - ``elem_only_keys``: set[form_key] — ключи форм, у которых
+      ``bsl_path`` отсутствует (None/пусто) или не существует на диске
+      И при этом ``elem_json_path`` заполнен. Это elem-only формы (#58):
+      они участвуют в ``structure_modified``, но не в BSL-based modified/stale.
 
     ``hash_map[key]`` / ``elem_map[key]`` равны ``None``, если запись
     не содержит соответствующего поля (старый индекс).
@@ -143,6 +153,8 @@ def _index_snapshot(
     mtime_map: dict[str, float] = {}
     hash_map: dict[str, Optional[str]] = {}
     elem_map: dict[str, Optional[str]] = {}
+    elem_only_keys: set[str] = set()
+
     entries = _load_index_dict(index_path)
     for e in entries:
         key = _form_key(
@@ -155,18 +167,34 @@ def _index_snapshot(
         hash_map[key] = e.get("bsl_sha256")    # None when absent
         elem_map[key] = e.get("elem_sha256")   # None when absent
 
+        # --- elem-only detection (#58) ---
+        # Форма считается elem-only, если у неё нет реального bsl_path
+        # (None/пусто/несуществующий файл) И есть elem_json_path.
+        bsl_raw = e.get("bsl_path") or ""
+        has_real_bsl = bool(bsl_raw) and Path(bsl_raw).exists()
+        has_elem_json = bool(e.get("elem_json_path"))
+        is_elem_only = has_elem_json and not has_real_bsl
+        if is_elem_only:
+            elem_only_keys.add(key)
+
         # --- mtime (legacy) ---
-        stored_mtime = float(e.get("bsl_mtime", 0.0))
-        if stored_mtime != 0.0:
-            mtime_map[key] = stored_mtime
+        # Для elem-only форм bsl_mtime бессмысленен, но заполняем -1.0
+        # чтобы ключ присутствовал в mtime_map (для set-операций).
+        if is_elem_only:
+            mtime_map[key] = -1.0
         else:
-            bsl = e.get("bsl_path", "")
-            try:
-                mtime = Path(bsl).stat().st_mtime if bsl else -1.0
-            except OSError:
-                mtime = -1.0
-            mtime_map[key] = mtime
-    return mtime_map, hash_map, elem_map
+            stored_mtime = float(e.get("bsl_mtime", 0.0))
+            if stored_mtime != 0.0:
+                mtime_map[key] = stored_mtime
+            else:
+                bsl = e.get("bsl_path", "")
+                try:
+                    mtime = Path(bsl).stat().st_mtime if bsl else -1.0
+                except OSError:
+                    mtime = -1.0
+                mtime_map[key] = mtime
+
+    return mtime_map, hash_map, elem_map, elem_only_keys
 
 
 def _disk_snapshot(cf_export_root: Path) -> dict[str, tuple[float, Optional[str]]]:
@@ -229,18 +257,25 @@ def _disk_snapshot(cf_export_root: Path) -> dict[str, tuple[float, Optional[str]
     return snapshot
 
 
-def _stale_keys(index_path: Path) -> list[str]:
-    """Вернуть ключи форм, чей .obj.bsl не существует на диске."""
+def _stale_keys(index_path: Path, elem_only_keys: set[str]) -> list[str]:
+    """Вернуть ключи форм, чей .obj.bsl не существует на диске.
+
+    Elem-only формы (ключи из ``elem_only_keys``) пропускаются: у них
+    нет BSL по дизайну — это не признак устаревшей экстракции (#58).
+    """
     stale = []
     for e in _load_index_dict(index_path):
+        key = _form_key(
+            e.get("object_type", ""),
+            e.get("object_name", ""),
+            e.get("container_name", ""),
+            e.get("form_name", ""),
+        )
+        if key in elem_only_keys:
+            # Elem-only форма — нет BSL по дизайну, stale не применяется
+            continue
         bsl = e.get("bsl_path", "")
         if bsl and not Path(bsl).exists():
-            key = _form_key(
-                e.get("object_type", ""),
-                e.get("object_name", ""),
-                e.get("container_name", ""),
-                e.get("form_name", ""),
-            )
             stale.append(key)
     return stale
 
@@ -279,13 +314,16 @@ def check_drift(
     - Без ``bsl_sha256`` (старый индекс) используется legacy-fallback
       через ``bsl_mtime``.
 
-    Детекция ``structure_modified`` (issue #40):
+    Детекция ``structure_modified`` (issue #40, #58):
     - При наличии ``elem_sha256`` в baseline пересчитывается хэш
       нормализованного дерева элементов текущей формы через scan_forms
       (``elem_sha256`` из нового сканирования) и сравнивается с baseline.
     - Если ``elem_sha256`` в baseline отсутствует (старый индекс) —
       сигнал ``structure_modified`` не порождается (обратная совместимость).
     - Сигнал независим от ``modified``.
+    - Elem-only формы (#58): участвуют в ``structure_modified`` напрямую
+      через ``index_elem`` (не требуют присутствия в disk_snapshot).
+      Пересканирование выполняется с ``include_elem_only=True``.
     """
     root = Path(cf_export_root)
     ipath = Path(index_path)
@@ -309,21 +347,22 @@ def check_drift(
 
     # --- Штатный путь ---
     try:
-        index_mtime, index_hash, index_elem = _index_snapshot(ipath)
+        index_mtime, index_hash, index_elem, elem_only_keys = _index_snapshot(ipath)
     except Exception as exc:  # noqa: BLE001
         logger.error("failed to load index %s: %s", ipath, exc)
-        index_mtime, index_hash, index_elem = {}, {}, {}
+        index_mtime, index_hash, index_elem, elem_only_keys = {}, {}, {}, set()
 
     disk_snap = _disk_snapshot(root)
 
-    index_keys = set(index_mtime)
+    # index_keys_bsl: только BSL-формы (не elem-only) — для added/removed/modified
+    index_keys_bsl = set(index_mtime) - elem_only_keys
     disk_keys = set(disk_snap)
 
-    added = sorted(disk_keys - index_keys)
-    removed = sorted(index_keys - disk_keys)
+    added = sorted(disk_keys - index_keys_bsl)
+    removed = sorted(index_keys_bsl - disk_keys)
 
     modified: list[str] = []
-    for k in sorted(index_keys & disk_keys):
+    for k in sorted(index_keys_bsl & disk_keys):
         disk_mtime, disk_hash = disk_snap[k]
         baseline_hash = index_hash.get(k)  # None → old index
         if baseline_hash is not None:
@@ -335,18 +374,19 @@ def check_drift(
             if abs(disk_mtime - index_mtime[k]) > 1.0:
                 modified.append(k)
 
-    # --- structure_modified (issue #40) ---
-    # Пересканируем только формы, присутствующие в обоих множествах,
-    # у которых в baseline есть elem_sha256. Используем scan_forms для
-    # получения актуального elem_sha256 по текущей файловой системе.
+    # --- structure_modified (issue #40 + #58) ---
+    # Кандидаты: все ключи из index_elem с непустым baseline elem_sha256.
+    # Для BSL-форм — только те, что присутствуют на диске (index_keys_bsl & disk_keys).
+    # Для elem-only форм (#58) — проверяем напрямую по ключу в current_elem_map
+    # (пересканирование с include_elem_only=True).
     structure_modified: list[str] = []
     keys_with_baseline_elem = {
-        k for k in sorted(index_keys & disk_keys)
-        if index_elem.get(k) is not None
+        k for k, v in index_elem.items() if v is not None
     }
     if keys_with_baseline_elem:
         from v8unpack_agent.scan_forms import scan_forms as _scan_forms
-        current_index = _scan_forms(root)
+        # include_elem_only=True — чтобы elem-only формы (#58) попали в результат
+        current_index = _scan_forms(root, include_elem_only=True)
         current_elem_map = {
             _form_key(
                 e.object_type, e.object_name, e.container_name, e.form_name
@@ -354,13 +394,16 @@ def check_drift(
             for e in current_index.forms
         }
         for k in sorted(keys_with_baseline_elem):
+            # Для BSL-форм: проверяем только если форма есть на диске
+            if k not in elem_only_keys and k not in disk_keys:
+                continue
             baseline_elem = index_elem[k]
             current_elem = current_elem_map.get(k)  # None if no elem.json
             if current_elem is not None and current_elem != baseline_elem:
                 structure_modified.append(k)
 
     try:
-        stale = sorted(_stale_keys(ipath))
+        stale = sorted(_stale_keys(ipath, elem_only_keys))
     except Exception as exc:  # noqa: BLE001
         logger.warning("stale check failed: %s", exc)
         stale = []
