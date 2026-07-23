@@ -42,6 +42,10 @@
   `elem_only_keys: set[str]`: ключи форм с `elem_json_path` и несуществующим
   `bsl_path` (elem-only по дизайну). Используется в `_stale_keys` и логике
   `added/removed` (issue #58).
+- **`check_drift(mode=...)`** — новый параметр `mode: Literal["config", "external"]`
+  (default `"config"`). При `mode="external"` корректно сканирует external-layout
+  через делегирование в `scan_forms(mode=mode)`. Устраняет ложный дрейф всех
+  внешних форм сразу после создания baseline (issue #73).
 
 ### Changed
 - `check_drift()`: при наличии `bsl_sha256` в baseline-индексе использует hash
@@ -66,6 +70,9 @@
   `current_elem_map` (issue #58).
 - **`check_drift()` — `added/removed/modified`** вычисляются по `index_keys_bsl =
   index_keys - elem_only_keys`, исключая elem-only из BSL-based логики (issue #58).
+- **`_disk_snapshot()`** — убран собственный hard-coded обход 4- и 3-уровневого
+  layout; обход делегирован в `scan_forms(mode=mode, include_elem_only=False)`.
+  Параметр `mode` пробрасывается из `check_drift()` (issue #73).
 
 ### Fixed
 - `check_drift()` / `modified`: повторная полная распаковка неизменённого `.cf`
@@ -84,3 +91,9 @@
 - **`structure_modified` для elem-only форм**: пересечение с `disk_keys` (только
   BSL-формы) давало пустое множество — elem-only формы никогда не проверялись.
   Исправлено: кандидаты берутся напрямую из `index_elem` (issue #58).
+- **`check_drift(mode="external")`: ложный `removed` для всех внешних форм
+  сразу после создания baseline.** `_disk_snapshot` не имел параметра `mode`
+  и возвращал 0 форм при external-layout — `removed = index_keys - {} = все`.
+  Исправлено делегированием обхода в `scan_forms(mode=mode)` (issue #73).
+  Проверено на реальных данных: 14 форм (ExternalDataProcessor + ExternalReport),
+  `has_drift=False` сразу после baseline, изменение BSL корректно детектируется.

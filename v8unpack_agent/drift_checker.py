@@ -1,7 +1,6 @@
-# v8unpack_agent/drift_checker.py
 """drift_checker — детект дрейфа форм через FormScanIndex.
 
-Реализует issues #10, #38, #40, #58.
+Реализует issues #10, #38, #40, #58, #73.
 
 Сравнивает текущее состояние cf_export_root с ранее сохранённым
 FormScanIndex (forms_index.json) и определяет рассинхрон:
@@ -21,11 +20,19 @@ FormScanIndex (forms_index.json) и определяет рассинхрон:
   ``structure_modified`` не порождается (обратная совместимость).
 - Правка кода формы без изменения разметки: ``modified`` есть,
   ``structure_modified`` нет.
-- Добавление/удаление элемента без правки кода: ``structure_modified`` есть,
+- Добавление/удаления элемента без правки кода: ``structure_modified`` есть,
   ``modified`` нет.
 - Elem-only формы (без .obj.bsl) участвуют в ``structure_modified``:
   они присутствуют в index_elem, но отсутствуют в disk_snapshot (нет BSL).
   Пересканирование выполняется с include_elem_only=True.
+
+Поддержка external-layout (issue #73):
+- ``_disk_snapshot`` принимает параметр ``mode`` и делегирует обход
+  в ``scan_forms(mode=mode, include_elem_only=False)``.
+  Собственный hard-coded обход удалён — дублирования логики нет.
+- ``check_drift`` принимает параметр ``mode`` (default ``'config'``) и
+  пробрасывает его в ``_disk_snapshot`` и в ``scan_forms`` при вычислении
+  ``structure_modified``.
 
 OS-нейтральность:
 - Пути строятся через pathlib / os.path.join.
@@ -41,7 +48,7 @@ import logging
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -197,64 +204,32 @@ def _index_snapshot(
     return mtime_map, hash_map, elem_map, elem_only_keys
 
 
-def _disk_snapshot(cf_export_root: Path) -> dict[str, tuple[float, Optional[str]]]:
+def _disk_snapshot(
+    cf_export_root: Path,
+    mode: Literal["config", "external"] = "config",
+) -> dict[str, tuple[float, Optional[str]]]:
     """Обойти cf_export_root и вернуть dict[form_key -> (bsl_mtime, bsl_sha256)].
 
-    Повторяет логику scan_forms: 4-уровневый layout и 3-уровневый
-    (CommonForm). Форма без .obj.bsl не включается.
-    Best-effort: ошибки одной формы не останавливают обход.
+    Делегирует обход в ``scan_forms(mode=mode, include_elem_only=False)``.
+    Поддерживает оба layout: ``config`` (4-уровневый и 3-уровневый CommonForm)
+    и ``external`` (External/<объект>/<контейнер>/<форма>/, issue #73).
+    Форма без .obj.bsl не включается (include_elem_only=False).
+    Best-effort: ошибки одной формы не останавливают обход (внутри scan_forms).
     """
+    from v8unpack_agent.scan_forms import scan_forms as _scan_forms
+
     root = Path(cf_export_root)
-    snapshot: dict[str, tuple[float, Optional[str]]] = {}
-
     if not root.is_dir():
-        return snapshot
+        return {}
 
-    for type_dir in root.iterdir():
-        if not type_dir.is_dir():
-            continue
-        object_type = type_dir.name
-
-        # 3-уровневый layout: CommonForm и аналоги
-        if type_dir.name.endswith("Form"):
-            container_name = type_dir.name
-            for form_dir in type_dir.iterdir():
-                if not form_dir.is_dir():
-                    continue
-                bsl = form_dir / (container_name + ".obj.bsl")
-                try:
-                    if bsl.exists():
-                        key = _form_key(object_type, "", container_name, form_dir.name)
-                        snapshot[key] = (bsl.stat().st_mtime, _sha256_file(bsl))
-                except OSError as exc:
-                    logger.warning("drift scan error %s: %s", form_dir, exc)
-            continue
-
-        # 4-уровневый layout
-        for obj_dir in type_dir.iterdir():
-            if not obj_dir.is_dir():
-                continue
-            object_name = obj_dir.name
-            for container_dir in obj_dir.iterdir():
-                if not container_dir.is_dir():
-                    continue
-                if not container_dir.name.endswith("Form"):
-                    continue
-                container_name = container_dir.name
-                for form_dir in container_dir.iterdir():
-                    if not form_dir.is_dir():
-                        continue
-                    bsl = form_dir / (container_name + ".obj.bsl")
-                    try:
-                        if bsl.exists():
-                            key = _form_key(
-                                object_type, object_name, container_name, form_dir.name
-                            )
-                            snapshot[key] = (bsl.stat().st_mtime, _sha256_file(bsl))
-                    except OSError as exc:
-                        logger.warning("drift scan error %s: %s", form_dir, exc)
-
-    return snapshot
+    idx = _scan_forms(root, mode=mode, include_elem_only=False)
+    return {
+        _form_key(
+            e.object_type, e.object_name, e.container_name, e.form_name
+        ): (e.bsl_mtime, e.bsl_sha256)
+        for e in idx.forms
+        if e.bsl_path.exists()
+    }
 
 
 def _stale_keys(index_path: Path, elem_only_keys: set[str]) -> list[str]:
@@ -288,6 +263,7 @@ def check_drift(
     cf_export_root: Path,
     index_path: Path,
     save_to: Optional[Path] = None,
+    mode: Literal["config", "external"] = "config",
 ) -> DriftReport:
     """Сравнить cf_export_root с сохранённым FormScanIndex.
 
@@ -301,6 +277,11 @@ def check_drift(
         (has_drift=True, added=все).
     save_to:
         Если задан, сохранить DriftReport как JSON по этому пути.
+    mode:
+        Режим обхода диска: ``'config'`` (по умолчанию) или ``'external'``.
+        Должен совпадать с режимом, использованным при создании baseline
+        через ``scan_forms``. Пробрасывается в ``_disk_snapshot`` и в
+        ``scan_forms`` при вычислении ``structure_modified`` (issue #73).
 
     Возвращает
     ----------
@@ -331,7 +312,7 @@ def check_drift(
 
     # --- index_path не найден: всё новое ---
     if not ipath.exists():
-        disk = _disk_snapshot(root)
+        disk = _disk_snapshot(root, mode=mode)
         report = DriftReport(
             has_drift=bool(disk),
             added=sorted(disk),
@@ -352,7 +333,7 @@ def check_drift(
         logger.error("failed to load index %s: %s", ipath, exc)
         index_mtime, index_hash, index_elem, elem_only_keys = {}, {}, {}, set()
 
-    disk_snap = _disk_snapshot(root)
+    disk_snap = _disk_snapshot(root, mode=mode)
 
     # index_keys_bsl: только BSL-формы (не elem-only) — для added/removed/modified
     index_keys_bsl = set(index_mtime) - elem_only_keys
@@ -386,7 +367,8 @@ def check_drift(
     if keys_with_baseline_elem:
         from v8unpack_agent.scan_forms import scan_forms as _scan_forms
         # include_elem_only=True — чтобы elem-only формы (#58) попали в результат
-        current_index = _scan_forms(root, include_elem_only=True)
+        # mode пробрасывается для корректного обхода external-layout (#73)
+        current_index = _scan_forms(root, mode=mode, include_elem_only=True)
         current_elem_map = {
             _form_key(
                 e.object_type, e.object_name, e.container_name, e.form_name
