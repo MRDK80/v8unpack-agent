@@ -24,6 +24,9 @@ pre-step индексации.
 - :class:`~v8unpack_agent.drift_checker.DriftReport`
 - :func:`~v8unpack_agent.managed_forms.discover_elem_forms` (issue #55)
 - :class:`~v8unpack_agent.managed_forms.ElemFormEntry` (issue #55)
+- :class:`~v8unpack_agent.form_summary.FormSummary` (issue #69)
+- :func:`~v8unpack_agent.form_summary.build_form_summary` (issue #69)
+- :func:`~v8unpack_agent.form_summary.build_form_summary_from_elem_index` (issue #69)
 """
 
 from v8unpack_agent.form_artifact import FormArtifact
@@ -80,6 +83,22 @@ def __getattr__(name: str):
         globals().update(values)
         return values[name]
 
+    if name in {"FormSummary", "build_form_summary",
+                "build_form_summary_from_elem_index"}:
+        from v8unpack_agent.form_summary import (
+            FormSummary,
+            build_form_summary,
+            build_form_summary_from_elem_index,
+        )
+
+        values = {
+            "FormSummary": FormSummary,
+            "build_form_summary": build_form_summary,
+            "build_form_summary_from_elem_index": build_form_summary_from_elem_index,
+        }
+        globals().update(values)
+        return values[name]
+
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
@@ -117,4 +136,8 @@ __all__ = [
     # deprecated aliases (обратная совместимость)
     "discover_managed_forms",
     "ManagedFormEntry",
+    # issue #69
+    "FormSummary",
+    "build_form_summary",
+    "build_form_summary_from_elem_index",
 ]
