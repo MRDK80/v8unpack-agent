@@ -1,147 +1,91 @@
-## #66 — Выжимка управляемой формы поверх parse_elem_json
+# Статус реализации
 
-**Статус:** ✅ Закрыто · PR #68 смержен в `main` · 2026-07-22
+> Обновлено: 2026-07-23
 
-### Итоговая концепция
-- `build_managed_form_summary(form_dir)` принимает каталог формы, вызывает
-  канонический `parse_elem_json(form_dir)` и маппит нормализованные элементы в
-  бакеты summary через `build_managed_form_summary_from_elem_index(result)`.
-- `to_normalized_json(summary)` даёт детерминированный JSON для diff/drift.
-- Отдельный адаптер реального формата не вводится: `parse_elem_json` —
-  единственный парсер `*.elem.json` в публичной поверхности.
+## Легенда
 
-### Эволюция реализации
-- `f575b1a` — первый подход: отдельный `managed_form_adapter.adapt_elem_json(raw)`.
-- `979b0ad` — summary переведён на `parse_elem_json` (адаптер давал `relations = 0`).
-- `d10c382` — `managed_form_adapter` удалён как устаревший
-  (superseded by `parse_elem_json`).
-- Итог: отдельного `managed_form_adapter.py` в пакете нет; вся цепочка идёт через
-  `parse_elem_json(form_dir)` и `build_managed_form_summary(form_dir)`.
+| Символ | Смысл |
+|---|---|
+| ✅ | Реализовано, тесты зелёные |
+| 🔄 | В процессе (открытый PR) |
+| ❌ | Не реализовано |
+| ⚠️ | Реализовано частично / есть known issue |
 
-### Проверки
-- `pytest` зелёный целиком; CI 4/4 (py3.10/py3.12 × ubuntu/windows).
-- Смок на живой конфигурации (2216 форм): 0 падений разбора, 0 недетерминированных;
-  пустой summary тогда и только тогда, когда `tree` / `props` / `data` пусты
-  одновременно (~274 формы — легитимно пустые).
-- Обезличенность: нет доменных имён/хостов/строк подключения; GUID отфильтрованы.
+---
 
-### Границы scope
-- Декодирование внутренностей `raw` (бинарная раскладка полей) — вне scope.
-- Извлечение текста модуля формы — вне scope (лежит в отдельном файле).
+## Сканирование форм (`scan_forms`)
 
-### Что это дало
-- Замкнута цепочка «реальный `*.elem.json` → канонический `ElemIndexResult` →
-  семантическая выжимка формы»: #57 регистрирует путь, `parse_elem_json` разбирает
-  структуру, `build_managed_form_summary` даёт детерминированное ядро для
-  diff/drift-контроля форм.
+| Функция | Статус | Issue / PR |
+|---|---|---|
+| 4-уровневый config layout (Catalog/Document/…) | ✅ | #9 |
+| 3-уровневый layout (CommonForm) | ✅ | #13 |
+| External layout — обработки `.epf` | ✅ | #25 |
+| External layout — отчёты `.erf` / ReportForm | ✅ | #32 |
+| `bsl_sha256` в FormEntry | ✅ | #38 |
+| `elem_sha256` в FormEntry | ✅ | #40 |
+| `elem_json_path` в FormEntry (relative-to-root) | ✅ | #57 |
+| Elem-only формы без `.obj.bsl` (`include_elem_only`) | ✅ | #55 / #57 |
 
-## #54 — Нормализованная выжимка управляемой формы (managed_form_summary)
+## Детектор дрейфа (`drift_checker`)
 
-**Статус:** ✅ Закрыто · PR #65 смержен в `main` · 2026-07-20
+| Функция | Статус | Issue / PR |
+|---|---|---|
+| `added` / `removed` — config layout | ✅ | #10 |
+| `modified` — legacy mtime | ✅ | #18 |
+| `modified` — hash-based (bsl_sha256) | ✅ | #38 |
+| `stale_extractions` | ✅ | #10 |
+| `structure_modified` — hash-based (elem_sha256) | ✅ | #40 |
+| Elem-only формы корректно исключены из `stale` / `removed` | ✅ | #58 |
+| Elem-only формы участвуют в `structure_modified` | ✅ | #58 |
+| `added` / `removed` — external layout (`mode="external"`) | ❌ | #73 |
+| `modified` — external layout | ❌ | #73 |
+| `stale_extractions` — external layout | ❌ | #73 |
 
-### Что сделано
-- Модуль `v8unpack_agent/managed_form_summary.py`:
-  - dataclass `ManagedFormSummary` (attributes / commands / elements / events / relations / warnings)
-  - `build_managed_form_summary(payload)` — извлекает семантику, отсекает id/ref/GUID и layout-шум
-  - `to_normalized_json(summary)` — детерминированный вывод (`sort_keys=True`, `ensure_ascii=False`)
-  - разбор `copyinfo`: тип из поля 3.0, имя из 3.1, uuid (поля 0/1) отбрасываются
-  - три раскладки `data`: с `-pages-`, плоская, с `/` в ключах
-- Тесты `tests/test_managed_form_summary.py` — 10 TDD-кейсов.
+## Парсинг элементов (`elem_parser`)
 
-### Коммиты
-- `85ff279` — feat(#54): реализация модуля
-- `c4ca02f` — test(#54): TDD-покрытие (10 кейсов)
+| Функция | Статус | Issue / PR |
+|---|---|---|
+| `parse_elem_json` — нормализованное дерево | ✅ | #40 |
+| `_compute_elem_sha256` — структурный хэш | ✅ | #40 |
+| Фильтрация косметических полей (GUID, координаты) | ✅ | #40 |
+| Второй сырой хэш `*.elem.json` | ❌ | не планируется |
 
-### Проверки
-- Локально: `pytest` → 216 passed.
-- CI: 4/4 зелёные — py3.10 и py3.12 × ubuntu-latest и windows-latest.
-- OS-нейтральность подтверждена (POSIX `/` и NT `\`): чистый stdlib (dataclasses + json + re),
-  пути без литеральных разделителей.
-- Обезличенность: нет доменных имён/хостов/строк подключения; GUID-значения отфильтрованы.
+## Семантическая выжимка формы (`managed_form_summary`)
 
-### Smoke на живой конфигурации (2216 форм *.elem.json)
-- Падений разбора: 0
-- Недетерминированных: 0
-- Структурно пустых форм: 274 (`tree`, `props`, `data` пусты одновременно) — корректно
-  дают пустой summary; это легитимное поведение, не дефект.
+| Функция | Статус | Issue / PR |
+|---|---|---|
+| `build_managed_form_summary` | ✅ | #66 / PR #68 |
+| `build_managed_form_summary_from_elem_index` | ✅ | #66 / PR #68 |
+| `to_normalized_json` | ✅ | #66 / PR #68 |
 
-### Границы scope
-- #54 фиксирует контракт нормализации на семантической модели
-  (attributes / commands / elements / events / relations).
-- Финальная интеграция с реальным форматом выполнена в #66 поверх
-  `parse_elem_json`; отдельный адаптер не используется.
+## Управляемые формы (`managed_forms`)
 
-### Что это дало
-- Детерминированная выжимка «форма → семантическое ядро без шума»: основа для diff-сравнения
-  форм и drift-контроля (перестановка GUID / сдвиг координат не меняют результат).
-- Проверенный кросс-ОС фундамент под последующий анализ форм.
+| Функция | Статус | Issue / PR |
+|---|---|---|
+| `discover_elem_forms` | ✅ | #55 |
 
-## #57 — Единый реестр форм с elem_json_path (формы без кода)
+## Открытые issues (продакшн-баги)
 
-**Статус:** ✅ Реализовано · ветка `feat/57-elem-json-path-registry` · 2026-07-22
-(PR в `main` — по подтверждению)
+| Issue | Описание | Приоритет |
+|---|---|---|
+| [#73](https://github.com/MRDK80/v8unpack-agent/issues/73) | `_disk_snapshot` не поддерживает external-layout → ложный `removed` для всех внешних форм | High |
 
-### Проблема
-`scan_forms` включал в `FormScanIndex` только формы с обязательным `.obj.bsl`.
-Управляемые формы **без кода модуля** (вся логика наследуется от типовых
-механизмов) не имеют `.obj.bsl`, но всегда дают `*.elem.json` — и полностью
-выпадали из индекса.
+## Открытые PR
 
-### Что сделано
-- Поле `FormEntry.elem_json_path` (`Optional[Path]`, relative-to-root) —
-  согласовано с `ElemFormEntry.elem_json_path` (#55). Заполняется для
-  ordinary/external форм при наличии `*.elem.json` и всегда — для elem-only.
-- Elem-only ветка `_collect_elem_only_forms`: через `discover_elem_forms`
-  подбирает формы без `.obj.bsl`, пропущенные основным обходом
-  (дедупликация по абсолютному пути каталога формы).
-- Восстановление метаданных из пути формы `_infer_elem_only_metadata` с учётом
-  режима: config-layout (`<type>/<object>/<container>/<form>`,
-  `<container>/<form>` для CommonForm) и external-layout
-  (`<object>.(epf|erf)/(Form|ReportForm)/<form>`).
-- Параметр `scan_forms(..., include_elem_only: bool = True)` и CLI-флаг
-  `--no-elem-only`.
-- `FormScanIndex.to_dict/load` сериализуют `elem_json_path`; backward-compat:
-  отсутствующее поле в старых индексах → `None`, `form_xml_path` игнорируется.
+| PR | Описание | Статус |
+|---|---|---|
+| [#72](https://github.com/MRDK80/v8unpack-agent/pull/72) | fix: #58 elem-only формы в drift_checker | 🔄 250 тестов ✅, ожидает merge |
 
-### Фикс метаданных external elem-only
-До фикса elem-only ветка разбирала external-путь по правилам config-layout,
-из-за чего внешний управляемый отчёт без кода получал искажённые метаданные
-(пустые `object_type` / `object_name`, `form_name` == имя контейнера). После
-фикса `mode="external"` разбирает `<object>.(epf|erf)/(Form|ReportForm)/<form>`
-корректно; `object_type` выводится по контейнеру (`ReportForm` ⇒
-`ExternalReport`) и расширению (`.erf` ⇒ `ExternalReport`, иначе
-`ExternalDataProcessor`). Заодно закрыт незакрытый dict-литерал
-`EXTERNAL_OBJECT_MODULE_CANDIDATES`.
+## Верификация на реальных данных (2026-07-23)
 
-### Коммиты (ветка `feat/57-elem-json-path-registry`)
-- `1ffea4f` — feat(#57): реализация `elem_json_path` + elem-only ветка в `scan_forms`
-- `3455f07` — test(#57): полное покрытие `test_form_scan_index_elem.py` (8 AC)
-- `b21d6fe` — fix(#57): корректные метаданные external elem-only форм; закрытие dict-литерала
+Проверка `verify_58_diff.py` на конфигурации УТ 10.3:
 
-### Проверки
-- Локально: `pytest` — зелёный.
-- Регрессионный тест `test_external_elem_only_report_without_bsl_has_external_metadata`
-  подтверждает корректные метаданные внешнего управляемого отчёта без кода.
-- Обезличенность: нет доменных имён/хостов/строк подключения; пути через
-  `pathlib` / `os.path.join`, без литеральных разделителей; текст UTF-8 явно.
-
-### Smoke на живой конфигурации (2026-07-22)
-| Индекс | до #57 (`main`) | после #57 (ветка) | подобрано elem-only |
-|--------|-----------------|-------------------|---------------------|
-| Конфигурация | 2167 | 2216 | 49 |
-| Внешние (`--mode external`) | 14 | 15 | 1 |
-
-- Искажённых записей во внешнем индексе: 0 (было 1 до фикса).
-- `elem_json_path` заполнен: 2216/2216 (config), 15/15 (external).
-
-### Границы scope
-- #57 регистрирует форму и путь к `*.elem.json` в реестре; **парсинг**
-  структуры остаётся за `parse_elem_json` (второй парсер не вводится).
-- Классификация ordinary/managed — не в scope (#56).
-- Расчёт дрейфа elem-only форм — отдельный issue (#58).
-
-### Что это дало
-- Полная опись форм: управляемые формы без кода больше не теряются
-  (+50 форм на реальных данных).
-- `elem_json_path` как единая точка входа к структуре формы для последующих
-  шагов (drift по разметке, выжимка формы).
+| Метрика | Значение |
+|---|---|
+| Всего форм (с elem-only) | 2 216 |
+| Обычных форм с `.obj.bsl` | 2 167 |
+| Обычных с `elem_sha256` | 1 897 |
+| Elem-only с `elem_sha256` | 45 |
+| Elem-only без `elem_sha256` (пустой elem.json) | 4 |
+| Ложный дрейф на `main` (stale+removed) | **49 форм** |
+| Дрейф на `feat/58` (после baseline) | **0** ✅ |
