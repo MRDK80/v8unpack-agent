@@ -37,8 +37,59 @@ _PAGE_KEYS = ("page", "Страница", "page_id", "Page")
 _CHILD_KEYS = ("items", "Items", "children", "Children", "elements", "Elements", "child", "Child", "Дети")
 _HANDLER_KEYS = ("handler", "Обработчик", "event_handler", "Action", "Действие")
 _DATA_PATH_KEYS = ("data_path", "ПутьКДанным", "dataPath", "binding", "Привязка")
+_RAW_DICT_DATA_PATH_KEYS = ("DataPath", "data_path", "ПутьКДанным", "dataPath", "binding", "Привязка")
 
 _PAGE_LIST_KEY = "-pages-"
+
+
+def decode_element_data_path(raw: object) -> tuple[str | None, list[str]]:
+    """Best-effort декодирование data_path из raw-поля записи секции data.
+
+    Возвращает ``(data_path, warnings)``.
+
+    Форматы raw, поддерживаемые платформой 1С:
+    - ``None`` — привязки нет; возвращает ``(None, [])``.
+    - ``str`` — уже декодированная строка-путь; возвращается как есть.
+    - ``dict`` — словарь с ключом DataPath/data_path/ПутьКДанным и т.п.
+    - ``list`` — позиционный список платформы 1С: список вложенных списков,
+      среди которых есть подсписок, содержащий строку вида «Объект.Xxx»
+      (или любой непустой строковый элемент, который содержит «.» и не является
+      числовым идентификатором). Алгоритм ищет первую строку-путь в первом
+      вложенном списке; если не нашёл — во втором и т.д.
+
+    При неудаче: ``(None, [warning_str])``.
+    При ``raw is None``: ``(None, [])``.
+    """
+    if raw is None:
+        return None, []
+
+    if isinstance(raw, str):
+        stripped = raw.strip()
+        if stripped:
+            return stripped, []
+        return None, ["decode_element_data_path: пустая строка raw"]
+
+    if isinstance(raw, dict):
+        for key in _RAW_DICT_DATA_PATH_KEYS:
+            val = raw.get(key)
+            if isinstance(val, str) and val.strip():
+                return val.strip(), []
+        return None, [f"decode_element_data_path: raw-словарь не содержит data_path, ключи={list(raw.keys())!r}"]
+
+    if isinstance(raw, list):
+        # Формат платформы 1С: raw = [[числовой вектор, ...], [строка-путь, ...], ...]
+        # Ищем первую строку, содержащую «.» — это и есть data_path.
+        for item in raw:
+            if isinstance(item, list):
+                for sub in item:
+                    if isinstance(sub, str) and "." in sub and sub.strip():
+                        return sub.strip(), []
+            elif isinstance(item, str) and "." in item and item.strip():
+                return item.strip(), []
+        # Список есть, но data_path не нашли (например, нет привязки у кнопки)
+        return None, [f"decode_element_data_path: data_path не найден в raw-списке len={len(raw)}"]
+
+    return None, [f"decode_element_data_path: неизвестный тип raw={type(raw).__name__!r}"]
 
 
 def parse_elem_json(form_root: Path) -> ElemIndexResult:
@@ -89,7 +140,7 @@ def _find_elem_json(form_root: Path) -> Path | None:
 def _extract_elements(data: Any, warnings: list[str]) -> list[dict]:
     if isinstance(data, dict) and isinstance(data.get("data"), dict):
         tree_meta = _types_from_tree(data.get("tree", []))
-        elements = _extract_from_data_paths(data["data"], tree_meta)
+        elements = _extract_from_data_paths(data["data"], tree_meta, warnings)
         elements.extend(_extract_props(data.get("props")))
         if elements:
             return _deduplicate_elements(elements)
@@ -149,9 +200,28 @@ def _types_from_tree(tree_section: Any) -> dict[str, dict]:
     return out
 
 
-def _extract_from_data_paths(data_section: dict, tree_meta: dict[str, dict]) -> list[dict]:
+def _extract_from_data_paths(
+    data_section: dict,
+    tree_meta: dict[str, dict],
+    warnings: list[str] | None = None,
+) -> list[dict]:
+    """Извлекает элементы из секции data, включая best-effort декодирование
+    data_path из поля raw каждой записи (issue #85)."""
+    if warnings is None:
+        warnings = []
     elements: list[dict] = []
     seen_paths: set[str] = set()
+
+    # Собираем raw по имени элемента для последующего декодирования
+    raw_by_element_name: dict[str, object] = {}
+    for key, value in data_section.items():
+        if key in (_PAGE_LIST_KEY,) or key.endswith("/" + _PAGE_LIST_KEY):
+            continue
+        if not isinstance(value, dict) or "id" not in value:
+            continue
+        name = key.rstrip("/").split("/")[-1]
+        if "raw" in value:
+            raw_by_element_name[name] = value["raw"]
 
     def make(name: str, full_path: str, etype: str) -> dict:
         parts = full_path.rstrip("/").split("/")
@@ -168,8 +238,15 @@ def _extract_from_data_paths(data_section: dict, tree_meta: dict[str, dict]) -> 
         meta = tree_meta.get(name, {})
         if meta.get("handler"):
             el["handler"] = meta["handler"]
+        # data_path: сначала из tree_meta (если явно прописан в tree),
+        # затем best-effort из raw секции data
         if meta.get("data_path"):
             el["data_path"] = meta["data_path"]
+        elif name in raw_by_element_name:
+            decoded, decode_warnings = decode_element_data_path(raw_by_element_name[name])
+            warnings.extend(decode_warnings)
+            if decoded is not None:
+                el["data_path"] = decoded
         return el
 
     for key, value in data_section.items():
