@@ -6,6 +6,12 @@
 ## [Unreleased]
 
 ### Added
+- `catalog_resolver`: `resolve_data_path()` + `ResolvedBinding` + `object_json_path()` —
+  best-effort резолюция `data_path` через JSON объекта (`Catalog.json` и др.);
+  поддерживает пути `Объект.Реквизит` и `Объект.ТЧ.Реквизит`; при отсутствии файла
+  или нераспознанном пути возвращает `resolved=False` без исключений.
+  Полная резолюция на реальных выгрузках зависит от #85 (`decode_element_data_path`)
+  и #84 (`decode_object_attributes`) (issue #76, PR #83).
 - `FormEntry.bsl_sha256: Optional[str]` — SHA-256 содержимого `.obj.bsl` на момент
   сканирования; используется как основной критерий детекции изменённого кода формы
   в `check_drift()` (issue #38).

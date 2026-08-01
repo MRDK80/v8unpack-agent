@@ -11,6 +11,15 @@
 ``_warn_unresolved_group_hierarchy``). Если секции ``data`` нет — используется
 фолбэк-обход по секциям ``tree``/``props``/``commands``/``params``.
 
+Привязка к данным (``data_path``) декодируется двумя способами:
+
+* обычные формы — путь лежит готовой строкой внутри ``raw``;
+* управляемые формы — строки-пути нет, привязка задана UUID реквизита
+  объекта-владельца. UUID разрешается через карту ``uuid -> имя реквизита``,
+  построенную из ``Catalog.json``/``Document.json`` соседнего объекта
+  метаданных. Служебные UUID (самой формы, элементов оформления) в карте
+  отсутствуют и отсеиваются автоматически.
+
 Модуль работает best-effort: ошибка парсинга elem.json не должна ломать
 основной пайплайн распаковки.
 """
@@ -42,54 +51,143 @@ _RAW_DICT_DATA_PATH_KEYS = ("DataPath", "data_path", "ПутьКДанным", "
 _PAGE_LIST_KEY = "-pages-"
 
 
-def decode_element_data_path(raw: object) -> tuple[str | None, list[str]]:
-    """Best-effort декодирование data_path из raw-поля записи секции data.
+_METADATA_JSON_NAMES = (
+    "Catalog.json", "Document.json", "InformationRegister.json",
+    "AccumulationRegister.json", "ChartOfCharacteristicTypes.json",
+    "BusinessProcess.json", "Task.json", "ExchangePlan.json",
+)
 
-    Возвращает ``(data_path, warnings)``.
+_NULL_UUID = "00000000-0000-0000-0000-000000000000"
+_OBJECT_PREFIX = "Объект"
 
-    Форматы raw, поддерживаемые платформой 1С:
-    - ``None`` — привязки нет; возвращает ``(None, [])``.
-    - ``str`` — уже декодированная строка-путь; возвращается как есть.
-    - ``dict`` — словарь с ключом DataPath/data_path/ПутьКДанным и т.п.
-    - ``list`` — позиционный список платформы 1С: список вложенных списков,
-      среди которых есть подсписок, содержащий строку вида «Объект.Xxx»
-      (или любой непустой строковый элемент, который содержит «.» и не является
-      числовым идентификатором). Алгоритм ищет первую строку-путь в первом
-      вложенном списке; если не нашёл — во втором и т.д.
 
-    При неудаче: ``(None, [warning_str])``.
-    При ``raw is None``: ``(None, [])``.
+def _is_uuid(value: object) -> bool:
+    if not isinstance(value, str) or len(value) != 36:
+        return False
+    parts = value.split("-")
+    if [len(p) for p in parts] != [8, 4, 4, 4, 12]:
+        return False
+    return all(c in "0123456789abcdefABCDEF" for p in parts for c in p)
+
+
+def _unquote_1c(value: object) -> str | None:
+    if not isinstance(value, str) or len(value) < 3:
+        return None
+    if value[0] == '"' and value[-1] == '"':
+        return value[1:-1].strip() or None
+    return None
+
+
+def _collect_attribute_uuid_map(node: object, out: dict[str, str]) -> None:
+    """UUID реквизита и его имя лежат рядом: node[1][2] и node[2].
+
+    Инвариант подтверждён на header[0][6][i][0][1][1][1] в Catalog.json.
+    """
+    if isinstance(node, list):
+        if len(node) >= 3 and isinstance(node[1], list) and len(node[1]) >= 3:
+            uuid = node[1][2]
+            name = _unquote_1c(node[2])
+            if _is_uuid(uuid) and uuid != _NULL_UUID and name:
+                out.setdefault(uuid, name)
+        for child in node:
+            _collect_attribute_uuid_map(child, out)
+    elif isinstance(node, dict):
+        for child in node.values():
+            _collect_attribute_uuid_map(child, out)
+
+
+def _collect_uuids(node: object, out: list[str]) -> None:
+    if isinstance(node, str):
+        if _is_uuid(node) and node != _NULL_UUID:
+            out.append(node)
+    elif isinstance(node, list):
+        for child in node:
+            _collect_uuids(child, out)
+    elif isinstance(node, dict):
+        for child in node.values():
+            _collect_uuids(child, out)
+
+
+def _find_owner_metadata_json(form_root: Path) -> Path | None:
+    for parent in form_root.parents:
+        for name in _METADATA_JSON_NAMES:
+            candidate = parent / name
+            if candidate.exists():
+                return candidate
+    return None
+
+
+def load_owner_attribute_map(form_root: Path, warnings: list[str]) -> dict[str, str]:
+    """Карта ``uuid реквизита -> имя`` из метаданных объекта-владельца формы."""
+    path = _find_owner_metadata_json(form_root)
+    if path is None:
+        warnings.append(f"Метаданные владельца не найдены для {form_root}")
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8-sig"))
+    except Exception as exc:
+        warnings.append(f"Не удалось прочитать {path}: {exc}")
+        return {}
+    mapping: dict[str, str] = {}
+    _collect_attribute_uuid_map(payload.get("header", payload), mapping)
+    return mapping
+
+
+def decode_element_data_path(
+    raw: object,
+    attribute_map: dict[str, str] | None = None,
+    object_prefix: str = _OBJECT_PREFIX,
+) -> tuple[str | None, list[str]]:
+    """Декодирование data_path из raw секции data.
+
+    Обычные формы: путь лежит строкой внутри raw.
+    Управляемые формы: строки-пути нет, привязка задана UUID реквизита
+    владельца (например raw[11][2][1]); он разрешается через attribute_map,
+    построенную из Catalog.json/Document.json. Служебные UUID (форма,
+    оформление) в карте отсутствуют и отсеиваются автоматически.
+
+    Ограничение: префикс «Объект.» верен для форм элемента/группы. Для форм
+    списка привязка идёт к реквизиту динамического списка.
     """
     if raw is None:
         return None, []
 
     if isinstance(raw, str):
         stripped = raw.strip()
-        if stripped:
-            return stripped, []
-        return None, ["decode_element_data_path: пустая строка raw"]
+        return (stripped, []) if stripped else (None, [])
 
     if isinstance(raw, dict):
         for key in _RAW_DICT_DATA_PATH_KEYS:
             val = raw.get(key)
             if isinstance(val, str) and val.strip():
                 return val.strip(), []
-        return None, [f"decode_element_data_path: raw-словарь не содержит data_path, ключи={list(raw.keys())!r}"]
+        return None, [
+            f"decode_element_data_path: raw-словарь без data_path, ключи={list(raw.keys())!r}"
+        ]
 
-    if isinstance(raw, list):
-        # Формат платформы 1С: raw = [[числовой вектор, ...], [строка-путь, ...], ...]
-        # Ищем первую строку, содержащую «.» — это и есть data_path.
-        for item in raw:
-            if isinstance(item, list):
-                for sub in item:
-                    if isinstance(sub, str) and "." in sub and sub.strip():
-                        return sub.strip(), []
-            elif isinstance(item, str) and "." in item and item.strip():
-                return item.strip(), []
-        # Список есть, но data_path не нашли (например, нет привязки у кнопки)
-        return None, [f"decode_element_data_path: data_path не найден в raw-списке len={len(raw)}"]
+    if not isinstance(raw, list):
+        return None, [f"decode_element_data_path: неизвестный тип raw={type(raw).__name__!r}"]
 
-    return None, [f"decode_element_data_path: неизвестный тип raw={type(raw).__name__!r}"]
+    for item in raw:
+        if isinstance(item, list):
+            for sub in item:
+                if isinstance(sub, str) and "." in sub and sub.strip():
+                    return sub.strip(), []
+        elif isinstance(item, str) and "." in item and item.strip():
+            return item.strip(), []
+
+    if not attribute_map:
+        return None, ["decode_element_data_path: карта реквизитов владельца пуста"]
+
+    uuids: list[str] = []
+    _collect_uuids(raw, uuids)
+    matched = sorted({attribute_map[u] for u in uuids if u in attribute_map})
+
+    if len(matched) == 1:
+        return f"{object_prefix}.{matched[0]}", []
+    if len(matched) > 1:
+        return None, [f"decode_element_data_path: неоднозначная привязка, кандидаты={matched!r}"]
+    return None, []
 
 
 def parse_elem_json(form_root: Path) -> ElemIndexResult:
@@ -104,8 +202,10 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
     except Exception as exc:
         return ElemIndexResult(False, [], [f"Не удалось прочитать {elem_path}: {exc}"])
 
+    attribute_map = load_owner_attribute_map(form_root, warnings)
+
     try:
-        elements = _extract_elements(data, warnings)
+        elements = _extract_elements(data, warnings, attribute_map)
     except Exception as exc:
         return ElemIndexResult(False, [], [f"Не удалось разобрать {elem_path}: {exc}"])
 
@@ -137,10 +237,16 @@ def _find_elem_json(form_root: Path) -> Path | None:
     return recursive[0] if recursive else None
 
 
-def _extract_elements(data: Any, warnings: list[str]) -> list[dict]:
+def _extract_elements(
+    data: Any,
+    warnings: list[str],
+    attribute_map: dict[str, str] | None = None,
+) -> list[dict]:
     if isinstance(data, dict) and isinstance(data.get("data"), dict):
         tree_meta = _types_from_tree(data.get("tree", []))
-        elements = _extract_from_data_paths(data["data"], tree_meta, warnings)
+        elements = _extract_from_data_paths(
+            data["data"], tree_meta, warnings, attribute_map
+        )
         elements.extend(_extract_props(data.get("props")))
         if elements:
             return _deduplicate_elements(elements)
@@ -200,13 +306,32 @@ def _types_from_tree(tree_section: Any) -> dict[str, dict]:
     return out
 
 
+
+def _is_element_record(value: object) -> bool:
+    """Запись секции ``data`` описывает элемент формы.
+
+    Обычные формы: присутствует ключ ``id``.
+    Управляемые формы: ``id`` отсутствует, запись имеет вид
+    ``{"raw": [...], "ver": ...}``.
+    """
+    if not isinstance(value, dict):
+        return False
+    return "id" in value or "raw" in value
+
+
 def _extract_from_data_paths(
     data_section: dict,
     tree_meta: dict[str, dict],
     warnings: list[str] | None = None,
+    attribute_map: dict[str, str] | None = None,
 ) -> list[dict]:
-    """Извлекает элементы из секции data, включая best-effort декодирование
-    data_path из поля raw каждой записи (issue #85)."""
+    """Извлекает элементы из секции data, включая декодирование data_path
+    из поля raw каждой записи (issue #85).
+
+    Записи секции ``data`` в обычных формах содержат ключ ``id``; в
+    управляемых формах ключа ``id`` нет — есть ``raw``/``ver``. Поэтому
+    запись считается элементом при наличии любого из них.
+    """
     if warnings is None:
         warnings = []
     elements: list[dict] = []
@@ -217,7 +342,7 @@ def _extract_from_data_paths(
     for key, value in data_section.items():
         if key in (_PAGE_LIST_KEY,) or key.endswith("/" + _PAGE_LIST_KEY):
             continue
-        if not isinstance(value, dict) or "id" not in value:
+        if not _is_element_record(value):
             continue
         name = key.rstrip("/").split("/")[-1]
         if "raw" in value:
@@ -243,7 +368,9 @@ def _extract_from_data_paths(
         if meta.get("data_path"):
             el["data_path"] = meta["data_path"]
         elif name in raw_by_element_name:
-            decoded, decode_warnings = decode_element_data_path(raw_by_element_name[name])
+            decoded, decode_warnings = decode_element_data_path(
+                raw_by_element_name[name], attribute_map
+            )
             warnings.extend(decode_warnings)
             if decoded is not None:
                 el["data_path"] = decoded
@@ -268,7 +395,7 @@ def _extract_from_data_paths(
     for key, value in data_section.items():
         if key == _PAGE_LIST_KEY or key.endswith("/" + _PAGE_LIST_KEY):
             continue
-        if not isinstance(value, dict) or "id" not in value:
+        if not _is_element_record(value):
             continue
         if key in seen_paths:
             continue
