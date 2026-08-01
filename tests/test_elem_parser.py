@@ -7,6 +7,7 @@
 - группы: data-ключи плоские → parent = страница, вложенность групп НЕ
   реконструируется (raw не декодируем по лицензии), выставляется warning;
 - типы/handler из tree, реквизиты из props (source=props);
+- одноимённые записи data/props схлопываются, побеждает data;
 - best-effort на отсутствие/битый файл;
 - фолбэк-обход для elem.json без секции data.
 """
@@ -132,7 +133,15 @@ def test_group_paths_are_flat_and_warns(tmp_path: Path):
     assert "лицензи" in grp_warn[0]
 
 
-def test_props_kept_separate_from_data(tmp_path: Path):
+def test_props_merged_into_data_record(tmp_path: Path):
+    """Реквизит формы и одноимённый элемент схлопываются в одну запись.
+
+    Имя реквизита формы может совпадать с именем элемента (форма списка
+    справочника — типичный случай). Раньше индекс содержал два элемента с
+    одним именем, и поиск через next() мог вернуть запись без привязки.
+    Теперь побеждает запись из data: она несёт path, page и data_path,
+    а факт наличия реквизита сохраняется в merged_sources.
+    """
     form_root = tmp_path / "Форма"
     elem = {
         "props": [{"name": "ПолеВвода1", "id": "2"}],
@@ -142,9 +151,57 @@ def test_props_kept_separate_from_data(tmp_path: Path):
     _write(form_root, elem)
 
     result = parse_elem_json(form_root)
-    sources = {(e["name"], e["source"]) for e in result.elements}
-    assert ("ПолеВвода1", "props") in sources
-    assert ("ПолеВвода1", "data") in sources
+    matches = [e for e in result.elements if e["name"] == "ПолеВвода1"]
+
+    assert len(matches) == 1
+    merged = matches[0]
+    assert merged["source"] == "data"
+    assert merged["path"] == "Страница1/ПолеВвода1"
+    assert merged["type"] == "Field"
+    assert merged["merged_sources"] == ["data", "props"]
+
+
+def test_props_without_matching_element_is_kept(tmp_path: Path):
+    """Реквизит формы, которому не соответствует ни один элемент, остаётся
+    в индексе отдельной записью с source=props."""
+    form_root = tmp_path / "Форма"
+    elem = {
+        "props": [{"name": "ОбработкаОбъект", "id": "1"}],
+        "tree": [{"name": "ПолеВвода1", "type": "Field"}],
+        "data": {"-pages-": ["Страница1"], "Страница1/ПолеВвода1": {"id": "8"}},
+    }
+    _write(form_root, elem)
+
+    result = parse_elem_json(form_root)
+    prop = next(e for e in result.elements if e["name"] == "ОбработкаОбъект")
+
+    assert prop["source"] == "props"
+
+
+def test_element_names_are_unique_in_index(tmp_path: Path):
+    """Поиск элемента по имени однозначен — дублей по имени в индексе нет."""
+    form_root = tmp_path / "Форма"
+    elem = {
+        "props": [
+            {"name": "Список", "id": "1"},
+            {"name": "Дерево", "id": "2"},
+        ],
+        "tree": [
+            {"name": "Список", "type": "Table"},
+            {"name": "Дерево", "type": "Table"},
+        ],
+        "data": {
+            "-pages-": ["Страница1"],
+            "Страница1/Список": {"id": "8"},
+            "Страница1/Дерево": {"id": "9"},
+        },
+    }
+    _write(form_root, elem)
+
+    result = parse_elem_json(form_root)
+    names = [e["name"] for e in result.elements]
+
+    assert len(names) == len(set(names))
 
 
 # ---------------------------------------------------------------- best-effort

@@ -20,6 +20,10 @@ import pytest
 
 from v8unpack_agent.elem_parser import (
     _is_element_record,
+    _legacy_attribute_name,
+    _merge_source_duplicates,
+    decode_legacy_data_path,
+    is_legacy_form_data,
     decode_element_data_path,
     load_owner_attribute_map,
     parse_elem_json,
@@ -360,3 +364,392 @@ class TestParseLegacyFormRegression:
 
         assert field["path"] == "Страница1/Город"
         assert field["page"] == "Страница1"
+
+
+UUID_SPRAVOCHNIK = "3d446915-2fb8-11d7-85a2-0050bae0a772"
+
+
+def _legacy_widget_raw(name: str, synonym: str | None = None) -> list:
+    """Сокращённый raw элемента обычной формы.
+
+    Значимо: raw[4] = ["14", "\"Имя\"", ...] — тег есть у всех элементов,
+    включая надписи, поэтому сам по себе привязки не означает. UUID в raw
+    описывают класс виджета и одинаковы у разных элементов.
+    """
+    caption = ["1", "1", ['"ru"', f'"{synonym}"']] if synonym else ["1", "0"]
+    return [
+        "381ed624-9217-4e63-85db-c4c3cb87daae",
+        "4",
+        ["9", ['"Pattern"', ['"S"', "100", "1"]], [[["16", "1", caption]]]],
+        ["8", "94", "61", "354", "80", "1"],
+        ["14", f'"{name}"', "4294967295", "0", "0", "0"],
+        ["0"],
+    ]
+
+
+def _legacy_elem_json() -> dict:
+    """Форма вида Catalog/Банки/CatalogForm/ФормаЭлемента."""
+    return {
+        "params": [],
+        "props": [
+            {
+                "name": "СправочникОбъект",
+                "id": "0",
+                "raw": [
+                    ["0"], "0", "0", "1", '"СправочникОбъект"',
+                    ['"Pattern"', ['"#"', UUID_SPRAVOCHNIK]],
+                ],
+            }
+        ],
+        "commands": [],
+        "tree": [
+            {"name": "НадписьКод", "type": "Label"},
+            {"name": "Код", "type": "Field"},
+            {"name": "НадписьНаименование", "type": "Label"},
+            {"name": "Наименование", "type": "Field"},
+            {"name": "НадписьГород", "type": "Label"},
+            {"name": "Город", "type": "Field"},
+            {"name": "КоррСчет", "type": "Field"},
+            {"name": "Родитель", "type": "Field"},
+            {"name": "ДействияФормы", "type": "CommandPanel"},
+        ],
+        "data": {
+            "-pages-": ["Страница1"],
+            "Страница1": {"ver": "1", "page_format_version": "1", "raw": [], "info": {}},
+            "Страница1/НадписьКод": {
+                "id": 1, "ver": "1", "page": "Страница1",
+                "raw": _legacy_widget_raw("НадписьКод"),
+            },
+            "Страница1/Код": {
+                "id": 2, "ver": "1", "page": "Страница1",
+                "raw": _legacy_widget_raw("Код"),
+                "prop": "СправочникОбъект",
+            },
+            "Страница1/НадписьНаименование": {
+                "id": 3, "ver": "1", "page": "Страница1",
+                "raw": _legacy_widget_raw("НадписьНаименование"),
+            },
+            "Страница1/Наименование": {
+                "id": 4, "ver": "1", "page": "Страница1",
+                "raw": _legacy_widget_raw("Наименование"),
+                "prop": "СправочникОбъект",
+            },
+            "Страница1/НадписьГород": {
+                "id": 9, "ver": "1", "page": "Страница1",
+                "raw": _legacy_widget_raw("НадписьГород"),
+            },
+            "Страница1/Город": {
+                "id": 10, "ver": "1", "page": "Страница1",
+                "raw": _legacy_widget_raw("Город", synonym="Город"),
+                "prop": "СправочникОбъект",
+            },
+            "Страница1/КоррСчет": {
+                "id": 8, "ver": "1", "page": "Страница1",
+                "raw": _legacy_widget_raw("КоррСчет", synonym="Корр. счет"),
+                "prop": "СправочникОбъект",
+            },
+            "Страница1/Родитель": {
+                "id": 6, "ver": "1", "page": "Страница1",
+                "raw": _legacy_widget_raw("Родитель"),
+                "prop": "СправочникОбъект",
+            },
+            "Страница1/ДействияФормы": {
+                "id": 15, "ver": "1", "page": "Страница1",
+                "raw": _legacy_widget_raw("ДействияФормы"),
+            },
+        },
+    }
+
+
+def _list_form_elem_json() -> dict:
+    """Форма списка: prop совпадает с именем реквизита формы."""
+    return {
+        "props": [
+            {"name": "СправочникСписок", "id": "0", "raw": []},
+            {"name": "ИнформационнаяНадписьАдрес", "id": "5", "raw": []},
+        ],
+        "tree": [
+            {"name": "СправочникСписок", "type": "Table"},
+            {"name": "ИнформационнаяНадписьАдрес", "type": "Label"},
+            {"name": "РазделительВертикальный", "type": "Separator"},
+        ],
+        "data": {
+            "-pages-": ["Страница1"],
+            "Страница1/СправочникСписок": {
+                "id": 1, "ver": "1", "page": "Страница1",
+                "raw": _legacy_widget_raw("СправочникСписок"),
+                "prop": "СправочникСписок",
+            },
+            "Страница1/ИнформационнаяНадписьАдрес": {
+                "id": 6, "ver": "1", "page": "Страница1",
+                "raw": _legacy_widget_raw("ИнформационнаяНадписьАдрес"),
+                "prop": "ИнформационнаяНадписьАдрес",
+            },
+            "Страница1/РазделительВертикальный": {
+                "id": 4, "ver": "1", "page": "Страница1",
+                "raw": _legacy_widget_raw("РазделительВертикальный"),
+            },
+        },
+    }
+
+
+@pytest.fixture()
+def legacy_element_form(tmp_path: Path) -> Path:
+    catalog_root = tmp_path / "Catalog" / "Банки"
+    form_root = catalog_root / "CatalogForm" / "ФормаЭлемента"
+    form_root.mkdir(parents=True)
+    (catalog_root / "Catalog.json").write_text(
+        json.dumps(_catalog_json(), ensure_ascii=False), encoding="utf-8"
+    )
+    (form_root / "CatalogForm.elem.json").write_text(
+        json.dumps(_legacy_elem_json(), ensure_ascii=False), encoding="utf-8"
+    )
+    return form_root
+
+
+@pytest.fixture()
+def legacy_list_form(tmp_path: Path) -> Path:
+    catalog_root = tmp_path / "Catalog" / "Банки"
+    form_root = catalog_root / "CatalogForm" / "ФормаСписка"
+    form_root.mkdir(parents=True)
+    (catalog_root / "Catalog.json").write_text(
+        json.dumps(_catalog_json(), ensure_ascii=False), encoding="utf-8"
+    )
+    (form_root / "CatalogForm.elem.json").write_text(
+        json.dumps(_list_form_elem_json(), ensure_ascii=False), encoding="utf-8"
+    )
+    return form_root
+
+
+class TestLegacyAttributeName:
+    def test_tag_14_node_is_decoded(self) -> None:
+        raw = _legacy_widget_raw("Город")
+        assert _legacy_attribute_name(raw) == "Город"
+
+    def test_foreign_tag_is_rejected(self) -> None:
+        raw = ["x", "1", "2", "3", ["37", '"Город"']]
+        assert _legacy_attribute_name(raw) is None
+
+    def test_short_raw_is_safe(self) -> None:
+        assert _legacy_attribute_name(["14"]) is None
+
+    def test_non_list_raw_is_safe(self) -> None:
+        assert _legacy_attribute_name("Объект.Город") is None
+
+
+class TestDecodeLegacyDataPath:
+    def test_object_attribute_gets_prefix(self) -> None:
+        record = {
+            "raw": _legacy_widget_raw("Город"),
+            "prop": "СправочникОбъект",
+        }
+        assert decode_legacy_data_path(record) == ("СправочникОбъект.Город", [])
+
+    def test_form_attribute_has_no_prefix(self) -> None:
+        record = {
+            "raw": _legacy_widget_raw("ИнформационнаяНадписьАдрес"),
+            "prop": "ИнформационнаяНадписьАдрес",
+        }
+        assert decode_legacy_data_path(record) == (
+            "ИнформационнаяНадписьАдрес",
+            [],
+        )
+
+    def test_record_without_prop_has_no_binding(self) -> None:
+        record = {"raw": _legacy_widget_raw("НадписьГород")}
+        assert decode_legacy_data_path(record) == (None, [])
+
+    def test_empty_prop_has_no_binding(self) -> None:
+        record = {"raw": _legacy_widget_raw("Город"), "prop": "  "}
+        assert decode_legacy_data_path(record) == (None, [])
+
+    def test_missing_attribute_falls_back_to_prop(self) -> None:
+        record = {"raw": ["a", "b"], "prop": "СправочникОбъект"}
+        path, warnings = decode_legacy_data_path(record)
+        assert path == "СправочникОбъект"
+        assert len(warnings) == 1
+
+
+class TestIsLegacyFormData:
+    def test_legacy_section_detected(self) -> None:
+        assert is_legacy_form_data(_legacy_elem_json()["data"]) is True
+
+    def test_managed_section_not_detected(self) -> None:
+        assert is_legacy_form_data(_managed_elem_json()["data"]) is False
+
+
+class TestParseLegacyElementForm:
+    def test_object_attributes_are_bound(self, legacy_element_form: Path) -> None:
+        result = parse_elem_json(legacy_element_form)
+        actual = {
+            element["name"]: element.get("data_path")
+            for element in result.elements
+        }
+
+        assert actual["Город"] == "СправочникОбъект.Город"
+        assert actual["КоррСчет"] == "СправочникОбъект.КоррСчет"
+
+    def test_standard_attributes_are_bound(self, legacy_element_form: Path) -> None:
+        """Код, Наименование, Родитель отсутствуют в Catalog.json,
+        но в обычных формах привязка идёт по имени и разрешается."""
+        result = parse_elem_json(legacy_element_form)
+        actual = {
+            element["name"]: element.get("data_path")
+            for element in result.elements
+        }
+
+        assert actual["Код"] == "СправочникОбъект.Код"
+        assert actual["Наименование"] == "СправочникОбъект.Наименование"
+        assert actual["Родитель"] == "СправочникОбъект.Родитель"
+
+    def test_labels_have_no_binding(self, legacy_element_form: Path) -> None:
+        result = parse_elem_json(legacy_element_form)
+        labels = [
+            element for element in result.elements
+            if element["name"].startswith("Надпись")
+        ]
+
+        assert len(labels) == 3
+        assert all(element.get("data_path") is None for element in labels)
+
+    def test_command_panel_has_no_binding(self, legacy_element_form: Path) -> None:
+        result = parse_elem_json(legacy_element_form)
+        panel = next(
+            element for element in result.elements
+            if element["name"] == "ДействияФормы"
+        )
+
+        assert panel.get("data_path") is None
+
+    def test_no_warnings_on_legacy_form(self, legacy_element_form: Path) -> None:
+        result = parse_elem_json(legacy_element_form)
+        assert result.warnings == []
+
+    def test_uuid_branch_not_used_for_legacy(self, legacy_element_form: Path) -> None:
+        """UUID в raw обычной формы описывают класс виджета; префикс
+        «Объект.» из ветки управляемых форм появляться не должен."""
+        result = parse_elem_json(legacy_element_form)
+        paths = [
+            element.get("data_path") or "" for element in result.elements
+        ]
+
+        assert not any(path.startswith("Объект.") for path in paths)
+
+
+class TestParseLegacyListForm:
+    """Форма списка: имена реквизитов формы совпадают с именами элементов,
+    поэтому один и тот же name приходит и из ``data``, и из ``props``.
+    Привязку несёт запись из ``data`` — по ней и проверяем.
+    """
+
+    @staticmethod
+    def _by_name(result, name: str) -> dict:
+        return next(
+            element for element in result.elements
+            if element["name"] == name and element.get("source") == "data"
+        )
+
+    def test_form_attribute_bound_without_prefix(self, legacy_list_form: Path) -> None:
+        result = parse_elem_json(legacy_list_form)
+
+        assert self._by_name(result, "СправочникСписок")["data_path"] == (
+            "СправочникСписок"
+        )
+        assert self._by_name(result, "ИнформационнаяНадписьАдрес")["data_path"] == (
+            "ИнформационнаяНадписьАдрес"
+        )
+
+    def test_props_duplicate_is_merged_into_data(self, legacy_list_form: Path) -> None:
+        """Записи об одном элементе из data и props схлопываются в одну,
+        побеждает data — она несёт path, page и data_path."""
+        result = parse_elem_json(legacy_list_form)
+        duplicates = [
+            element for element in result.elements
+            if element["name"] == "СправочникСписок"
+        ]
+
+        assert len(duplicates) == 1
+        merged = duplicates[0]
+        assert merged["source"] == "data"
+        assert merged["data_path"] == "СправочникСписок"
+        assert merged["path"] == "Страница1/СправочникСписок"
+        assert merged["merged_sources"] == ["data", "props"]
+
+    def test_lookup_by_name_is_unambiguous(self, legacy_list_form: Path) -> None:
+        """Потребитель индекса может искать элемент через next() по имени
+        и гарантированно получит запись с привязкой."""
+        result = parse_elem_json(legacy_list_form)
+        names = [element["name"] for element in result.elements]
+
+        assert len(names) == len(set(names))
+
+    def test_separator_has_no_binding(self, legacy_list_form: Path) -> None:
+        result = parse_elem_json(legacy_list_form)
+        separator = self._by_name(result, "РазделительВертикальный")
+
+        assert separator.get("data_path") is None
+
+    def test_no_ambiguity_warning(self, legacy_list_form: Path) -> None:
+        """Раньше форма списка давала «неоднозначная привязка»."""
+        result = parse_elem_json(legacy_list_form)
+        assert not any("неоднозначн" in w for w in result.warnings)
+
+class TestMergeSourceDuplicates:
+    def test_data_wins_over_props(self) -> None:
+        elements = [
+            {"name": "Список", "type": "Table", "path": "Страница1/Список",
+             "parent_path": "Страница1", "page": "Страница1",
+             "source": "data", "data_path": "Список"},
+            {"name": "Список", "type": "Unknown", "path": None,
+             "parent_path": None, "page": None, "source": "props"},
+        ]
+        merged = _merge_source_duplicates(elements)
+
+        assert len(merged) == 1
+        assert merged[0]["source"] == "data"
+        assert merged[0]["type"] == "Table"
+
+    def test_missing_fields_are_taken_from_loser(self) -> None:
+        elements = [
+            {"name": "Список", "type": "Unknown", "path": "Страница1/Список",
+             "source": "data"},
+            {"name": "Список", "type": "Table", "path": None,
+             "source": "props", "comment": "из props"},
+        ]
+        merged = _merge_source_duplicates(elements)
+
+        assert merged[0]["type"] == "Table"
+        assert merged[0]["comment"] == "из props"
+
+    def test_distinct_paths_are_not_merged(self) -> None:
+        """Два разных элемента с одинаковым именем в разных группах
+        остаются раздельными."""
+        elements = [
+            {"name": "Код", "type": "Field", "path": "Группа1/Код",
+             "source": "data"},
+            {"name": "Код", "type": "Field", "path": "Группа2/Код",
+             "source": "data"},
+        ]
+        merged = _merge_source_duplicates(elements)
+
+        assert len(merged) == 2
+
+    def test_order_is_preserved(self) -> None:
+        elements = [
+            {"name": "А", "type": "Field", "path": "П/А", "source": "data"},
+            {"name": "Б", "type": "Field", "path": "П/Б", "source": "data"},
+            {"name": "А", "type": "Unknown", "path": None, "source": "props"},
+        ]
+        merged = _merge_source_duplicates(elements)
+
+        assert [element["name"] for element in merged] == ["А", "Б"]
+
+    def test_single_source_element_is_untouched(self) -> None:
+        elements = [
+            {"name": "Город", "type": "Field", "path": "Страница1/Город",
+             "source": "data", "data_path": "СправочникОбъект.Город"},
+        ]
+        merged = _merge_source_duplicates(elements)
+
+        assert merged == elements
+        assert "merged_sources" not in merged[0]

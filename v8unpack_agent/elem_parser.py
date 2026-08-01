@@ -11,14 +11,25 @@
 ``_warn_unresolved_group_hierarchy``). Если секции ``data`` нет — используется
 фолбэк-обход по секциям ``tree``/``props``/``commands``/``params``.
 
-Привязка к данным (``data_path``) декодируется двумя способами:
+Привязка к данным (``data_path``) декодируется тремя способами:
 
-* обычные формы — путь лежит готовой строкой внутри ``raw``;
-* управляемые формы — строки-пути нет, привязка задана UUID реквизита
-  объекта-владельца. UUID разрешается через карту ``uuid -> имя реквизита``,
-  построенную из ``Catalog.json``/``Document.json`` соседнего объекта
-  метаданных. Служебные UUID (самой формы, элементов оформления) в карте
-  отсутствуют и отсеиваются автоматически.
+* обычные формы — источник данных назван в поле ``prop`` записи ``data``,
+  имя реквизита лежит в ``raw[4][1]``. Если оба совпадают, элемент связан
+  с самостоятельным реквизитом формы и путь состоит из одного имени;
+  иначе путь имеет вид ``<prop>.<реквизит>`` (например
+  ``СправочникОбъект.Город``). Записи без ``prop`` привязки не имеют:
+  маркер ``raw[4][0] == "14"`` присутствует и у надписей, и у разделителей,
+  поэтому опираться на него нельзя;
+* управляемые формы — ни ``prop``, ни строки-пути нет, привязка задана
+  UUID реквизита объекта-владельца. UUID разрешается через карту
+  ``uuid -> имя реквизита``, построенную из ``Catalog.json``/``Document.json``
+  соседнего объекта метаданных. Служебные UUID (самой формы, элементов
+  оформления) в карте отсутствуют и отсеиваются автоматически;
+* редкий случай — путь лежит готовой строкой с точкой внутри ``raw``.
+
+Разбор по UUID применяется только к формам без ``prop``: в обычных формах
+UUID в ``raw`` описывают класс виджета, а не привязку, и попытка их
+разрешить давала ложные срабатывания.
 
 Модуль работает best-effort: ошибка парсинга elem.json не должна ломать
 основной пайплайн распаковки.
@@ -131,6 +142,67 @@ def load_owner_attribute_map(form_root: Path, warnings: list[str]) -> dict[str, 
     mapping: dict[str, str] = {}
     _collect_attribute_uuid_map(payload.get("header", payload), mapping)
     return mapping
+
+
+_LEGACY_BINDING_TAG = "14"
+_LEGACY_NAME_POS = 4
+
+
+def _legacy_attribute_name(raw: object) -> str | None:
+    """Имя реквизита из ``raw[4]`` записи обычной формы.
+
+    Узел имеет вид ``["14", "\"Город\"", "4294967295", "0", "0", "0"]``.
+    Само по себе наличие тега ``"14"`` привязки не доказывает — он есть и у
+    надписей; значение используется только вместе с непустым ``prop``.
+    """
+    if not isinstance(raw, list) or len(raw) <= _LEGACY_NAME_POS:
+        return None
+    node = raw[_LEGACY_NAME_POS]
+    if not isinstance(node, list) or len(node) < 2:
+        return None
+    if node[0] != _LEGACY_BINDING_TAG:
+        return None
+    return _unquote_1c(node[1])
+
+
+def decode_legacy_data_path(record: object) -> tuple[str | None, list[str]]:
+    """data_path элемента обычной формы по полям ``prop`` и ``raw``.
+
+    ``prop`` называет источник данных из секции ``props``. Если имя реквизита
+    совпадает с ``prop``, элемент связан с самим реквизитом формы и путь
+    состоит из одного имени; иначе путь — ``<prop>.<реквизит>``.
+    """
+    if not isinstance(record, dict):
+        return None, []
+
+    prop = record.get("prop")
+    if not isinstance(prop, str) or not prop.strip():
+        return None, []
+    prop = prop.strip()
+
+    attribute = _legacy_attribute_name(record.get("raw"))
+    if attribute is None:
+        return prop, [
+            f"decode_legacy_data_path: не найдено имя реквизита в raw, prop={prop!r}"
+        ]
+    if attribute == prop:
+        return prop, []
+    return f"{prop}.{attribute}", []
+
+
+def is_legacy_form_data(data_section: object) -> bool:
+    """Секция ``data`` принадлежит обычной, а не управляемой форме.
+
+    Признак — хотя бы одна запись с ключом ``prop``: в управляемых формах
+    такого ключа нет. Нужен, чтобы не применять разбор по UUID там, где
+    UUID описывают класс виджета.
+    """
+    if not isinstance(data_section, dict):
+        return False
+    return any(
+        isinstance(value, dict) and "prop" in value
+        for value in data_section.values()
+    )
 
 
 def decode_element_data_path(
@@ -249,7 +321,7 @@ def _extract_elements(
         )
         elements.extend(_extract_props(data.get("props")))
         if elements:
-            return _deduplicate_elements(elements)
+            return _merge_source_duplicates(_deduplicate_elements(elements))
 
     raw_nodes: list[tuple[dict, str | None, str]] = []
     if isinstance(data, dict):
@@ -337,8 +409,10 @@ def _extract_from_data_paths(
     elements: list[dict] = []
     seen_paths: set[str] = set()
 
-    # Собираем raw по имени элемента для последующего декодирования
-    raw_by_element_name: dict[str, object] = {}
+    legacy = is_legacy_form_data(data_section)
+
+    # Записи по имени элемента для последующего декодирования привязки
+    record_by_element_name: dict[str, dict] = {}
     for key, value in data_section.items():
         if key in (_PAGE_LIST_KEY,) or key.endswith("/" + _PAGE_LIST_KEY):
             continue
@@ -346,7 +420,7 @@ def _extract_from_data_paths(
             continue
         name = key.rstrip("/").split("/")[-1]
         if "raw" in value:
-            raw_by_element_name[name] = value["raw"]
+            record_by_element_name[name] = value
 
     def make(name: str, full_path: str, etype: str) -> dict:
         parts = full_path.rstrip("/").split("/")
@@ -367,10 +441,14 @@ def _extract_from_data_paths(
         # затем best-effort из raw секции data
         if meta.get("data_path"):
             el["data_path"] = meta["data_path"]
-        elif name in raw_by_element_name:
-            decoded, decode_warnings = decode_element_data_path(
-                raw_by_element_name[name], attribute_map
-            )
+        elif name in record_by_element_name:
+            record = record_by_element_name[name]
+            if legacy:
+                decoded, decode_warnings = decode_legacy_data_path(record)
+            else:
+                decoded, decode_warnings = decode_element_data_path(
+                    record.get("raw"), attribute_map
+                )
             warnings.extend(decode_warnings)
             if decoded is not None:
                 el["data_path"] = decoded
@@ -475,6 +553,62 @@ def _deduplicate_elements(elements: list[dict]) -> list[dict]:
         seen.add(key)
         result.append(element)
     return result
+
+
+_SOURCE_PRIORITY = {"data": 0, "props": 1, "tree": 2, "commands": 3, "params": 4}
+
+
+def _merge_source_duplicates(elements: list[dict]) -> list[dict]:
+    """Схлопывает записи об одном элементе, пришедшие из разных секций.
+
+    В формах списка имя реквизита формы совпадает с именем элемента, поэтому
+    один элемент приходит и из ``data`` (с привязкой), и из ``props`` (без
+    неё). Побеждает запись из ``data``: она несёт path, page и data_path.
+    Недостающие поля добираются из проигравших записей, чтобы не потерять
+    сведения, которых в ``data`` нет.
+
+    Схлопывание идёт только по элементам без ``path`` у проигравшего: записи
+    ``props`` позиции в дереве не имеют. Два разных элемента с одинаковым
+    именем, но разными путями в ``data``, остаются раздельными.
+    """
+    best: dict[str, dict] = {}
+    order: list[str] = []
+    extra: list[dict] = []
+
+    for element in elements:
+        name = element.get("name") or ""
+        source = element.get("source") or ""
+        if not name or (source != "data" and element.get("path")):
+            extra.append(element)
+            continue
+
+        current = best.get(name)
+        if current is None:
+            best[name] = element
+            order.append(name)
+            continue
+
+        if element.get("path") and current.get("path") and (
+            element["path"] != current["path"]
+        ):
+            extra.append(element)
+            continue
+
+        rank_new = _SOURCE_PRIORITY.get(source, 99)
+        rank_old = _SOURCE_PRIORITY.get(current.get("source") or "", 99)
+        winner, loser = (
+            (element, current) if rank_new < rank_old else (current, element)
+        )
+        for key, value in loser.items():
+            if winner.get(key) in (None, "", "Unknown") and value not in (None, ""):
+                winner[key] = value
+        merged = winner.setdefault("merged_sources", [])
+        for candidate in (current.get("source"), source):
+            if candidate and candidate not in merged:
+                merged.append(candidate)
+        best[name] = winner
+
+    return [best[name] for name in order] + extra
 
 
 def _normalize_parents(elements: list[dict], warnings: list[str]) -> None:
