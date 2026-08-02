@@ -25,6 +25,12 @@ UUID-карта для ``elem_parser`` строится из возвращае�
 
 Best-effort: любая ошибка не пробрасывается, повреждённый узел
 пропускается с записью в ``warnings``.
+
+Type-резолюция (production layout):
+- Примитивные типы: коды S/N/B/D/U/T → String/Number/Boolean/Date/Undefined/Null.
+- Ссылочные типы: ["#", "<uuid>"] → "Ref#<uuid>" (достоверно, без угадывания).
+  Разворачивание Ref#uuid → CatalogRef.X реализуется в issue #88.
+- Действительно неизвестный тип → Type=None + warning TYPE_UNKNOWN.
 """
 from __future__ import annotations
 
@@ -40,7 +46,7 @@ from typing import Any
 # ---------------------------------------------------------------------------
 
 class DecodeError(enum.Enum):
-    """Cтатус ошибки декодирования."""
+    """Статус ошибки декодирования."""
     JSON_NOT_FOUND = "json_not_found"
     JSON_PARSE_ERROR = "json_parse_error"
     HEADER_MISSING = "header_missing"
@@ -49,7 +55,7 @@ class DecodeError(enum.Enum):
 
 @dataclass
 class DecodeResult:
-    """Cтруктурированный результат декодирования."""
+    """Структурированный результат декодирования."""
     ok: bool
     data: dict
     error: DecodeError | None = None
@@ -69,7 +75,7 @@ def _fail(error: DecodeError, msg: str) -> DecodeResult:
 # ---------------------------------------------------------------------------
 
 def decode_object_attributes(object_json: Path) -> DecodeResult:
-    """Cчитать raw-``header`` из файла объекта метаданных и вернуть
+    """Считать raw-``header`` из файла объекта метаданных и вернуть
     нормализованную структуру Properties + TabularSections.
     """
     object_json = Path(object_json)
@@ -95,9 +101,6 @@ def decode_object_attributes(object_json: Path) -> DecodeResult:
 
     warnings: list[str] = []
 
-    # Реальные выгрузки v8unpack используют строковые теги и раздельные
-    # контейнеры реквизитов/табличных частей. Синтетический walker ниже
-    # остаётся fallback для старого и нормализованного формата.
     real_data = _decode_real_header(header, warnings)
     if real_data is not None:
         return DecodeResult(ok=True, data=real_data, warnings=warnings)
@@ -105,7 +108,6 @@ def decode_object_attributes(object_json: Path) -> DecodeResult:
     properties: list[dict] = []
     tabular_sections: list[dict] = []
 
-    # seen-множества создаются пер вызов, не на уровне модуля
     props_seen: set[int] = set()
     ts_seen: set[int] = set()
 
@@ -117,6 +119,79 @@ def decode_object_attributes(object_json: Path) -> DecodeResult:
         data={"Properties": properties, "TabularSections": tabular_sections},
         warnings=warnings,
     )
+
+
+# ---------------------------------------------------------------------------
+# Type resolution
+# ---------------------------------------------------------------------------
+
+# Подтверждённые коды примитивных типов платформы 1С (внутреннее представление).
+# Источник: документация платформы и анализ production raw-header выгрузок v8unpack.
+_PRIMITIVE_TYPE_CODES: dict[str, str] = {
+    "S": "String",
+    "N": "Number",
+    "B": "Boolean",
+    "D": "Date",
+    "U": "Undefined",
+    "T": "Null",
+}
+
+
+def _resolve_type_from_descriptor(
+    descriptor: object,
+    warnings: list[str],
+    prop_name: str = "",
+) -> str | None:
+    """Извлечь и разрешить тип из production descriptor-блока.
+
+    descriptor = ["2", name_entry, type_block, ...]
+    type_block  = ['"Pattern"', type_node]
+    type_node   = ['"S"'] | ['"N"', prec, scale] | ['"#"', uuid] | ...
+
+    Возвращает:
+    - Имя примитивного типа ("String", "Number", ...) — для известных кодов.
+    - "Ref#<uuid>" — для ссылочных типов (#88: разворачивание uuid → CatalogRef.X).
+    - None — если структура не распознана; добавляет warning TYPE_UNKNOWN.
+    """
+    if not isinstance(descriptor, list) or len(descriptor) < 3:
+        return None
+
+    type_block = descriptor[2]
+    if not isinstance(type_block, list) or len(type_block) < 2:
+        # Нет блока типа — не warning, просто None (Type неизвестен структурно)
+        return None
+
+    pattern_tag = _unquote(type_block[0])
+    if pattern_tag != "Pattern":
+        # CompositeType и другие — не поддержаны в этом PR
+        return None
+
+    type_node = type_block[1]
+    if not isinstance(type_node, list) or len(type_node) == 0:
+        return None
+
+    code = _unquote(type_node[0])
+    if code is None:
+        return None
+
+    # Примитивные типы
+    if code in _PRIMITIVE_TYPE_CODES:
+        return _PRIMITIVE_TYPE_CODES[code]
+
+    # Ссылочный тип: ["#", "<object-uuid>"]
+    if code == "#":
+        if len(type_node) >= 2 and isinstance(type_node[1], str):
+            ref_uuid = type_node[1].strip('"').strip()
+            if ref_uuid:
+                return f"Ref#{ref_uuid}"
+        return None
+
+    # Действительно неизвестный код типа
+    context = f" реквизит={prop_name!r}" if prop_name else ""
+    warnings.append(
+        f"object_decoder: TYPE_UNKNOWN — неизвестный код типа {code!r}{context}"
+    )
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -202,16 +277,18 @@ def _container_records(node: object) -> list:
     return node[2:2 + expected]
 
 
-def _decode_real_name_entry(entry: object) -> dict | None:
-    """Декодировать name-entry реального raw-header v8unpack."""
+def _decode_real_name_entry(
+    entry: object,
+    warnings: list[str],
+    descriptor: object = None,
+) -> dict | None:
+    """Декодировать name-entry реального raw-header v8unpack.
+
+    Если передан descriptor (соседний элемент wrapper'а), из него
+    извлекается тип реквизита через _resolve_type_from_descriptor.
+    """
     if not isinstance(entry, list) or len(entry) < 4:
         return None
-    # Код варианта name-entry зависит от типа/версии метаданных. В реальных
-    # выгрузках подтверждены 0, 1, 2 и 3; структура UUID/name/synonym при этом
-    # одинакова. Остальные коды не принимаем, чтобы не собирать служебные узлы.
-    # Строковый тип тега также отличает raw production-layout от старого
-    # нормализованного формата с целочисленными тегами: последний должен
-    # обрабатываться legacy walker, сохраняющим Type, ТЧ и warnings.
     if not isinstance(entry[0], str) or entry[0] not in {"0", "1", "2", "3"}:
         return None
 
@@ -221,23 +298,44 @@ def _decode_real_name_entry(entry: object) -> dict | None:
     if not _is_uuid(uuid) or uuid == _NULL_UUID or not name:
         return None
 
+    type_val = _resolve_type_from_descriptor(descriptor, warnings, prop_name=name or "")
+
     return {
         "UUID": uuid,
         "Name": name,
-        # В реальном формате тип находится в соседнем descriptor. Пока UUID
-        # типа не разрешён в имя метаданных, нельзя подставлять "Pattern"/"ru".
-        "Type": None,
+        "Type": type_val,
         "Synonym": synonym,
     }
 
 
-def _decode_real_attribute_wrapper(wrapper: object) -> dict | None:
-    """Декодировать реквизит из wrapper реального v8unpack-контейнера."""
-    return _decode_real_name_entry(_at(wrapper, 0, 1, 1, 1))
+def _decode_real_attribute_wrapper(
+    wrapper: object,
+    warnings: list[str] | None = None,
+) -> dict | None:
+    """Декодировать реквизит из wrapper реального v8unpack-контейнера.
+
+    wrapper структура: [["8", ["27", descriptor, ...], ...], "0"]
+    descriptor структура: ["2", name_entry, type_block, ...]
+    name_entry: [tag, [_, _, uuid], '"Name"', [_, '"ru"', synonym], ...]
+    """
+    if warnings is None:
+        warnings = []
+    inner = _at(wrapper, 0, 1)
+    if not isinstance(inner, list) or len(inner) < 3:
+        return None
+    # inner[0] = service-tag "27", inner[1] = descriptor, inner[2..] = rest
+    descriptor = inner[1] if len(inner) > 1 else None
+    name_entry = _at(descriptor, 1) if isinstance(descriptor, list) else None
+    return _decode_real_name_entry(name_entry, warnings, descriptor=descriptor)
 
 
-def _decode_compact_attribute_wrapper(wrapper: object) -> dict | None:
+def _decode_compact_attribute_wrapper(
+    wrapper: object,
+    warnings: list[str] | None = None,
+) -> dict | None:
     """Декодировать реквизит compact owner-metadata: [1, 1, node]."""
+    if warnings is None:
+        warnings = []
     if not isinstance(wrapper, list) or len(wrapper) < 3:
         return None
 
@@ -250,12 +348,12 @@ def _decode_compact_attribute_wrapper(wrapper: object) -> dict | None:
     locale = node[5]
     synonym = _unquote(node[6])
 
-    # Проверка locale отделяет compact-layout от production name-entry.
     if not isinstance(locale, str):
         return None
     if not _is_uuid(uuid) or uuid == _NULL_UUID or not name:
         return None
 
+    # В compact-layout отдельного descriptor нет — тип не извлекается
     return {
         "UUID": uuid,
         "Name": name,
@@ -263,18 +361,24 @@ def _decode_compact_attribute_wrapper(wrapper: object) -> dict | None:
         "Synonym": synonym,
     }
 
-def _decode_real_tabular_section(node: object) -> dict | None:
+
+def _decode_real_tabular_section(
+    node: object,
+    warnings: list[str] | None = None,
+) -> dict | None:
     """Декодировать ТЧ и её реквизиты из реального raw-header."""
+    if warnings is None:
+        warnings = []
     if not isinstance(node, list) or len(node) < 3:
         return None
 
-    decoded = _decode_real_name_entry(_at(node, 0, 1, 5, 1))
+    decoded = _decode_real_name_entry(_at(node, 0, 1, 5, 1), warnings)
     if decoded is None:
         return None
 
     properties = []
     for wrapper in _container_records(node[2]):
-        prop = _decode_real_attribute_wrapper(wrapper)
+        prop = _decode_real_attribute_wrapper(wrapper, warnings)
         if prop is not None:
             properties.append(prop)
 
@@ -293,8 +397,7 @@ def _decode_real_header(
     """Декодировать production-layout v8unpack со строковыми тегами.
 
     Позиции контейнеров зависят от типа и версии метаданных, поэтому поиск
-    выполняется по устойчивой структуре wrapper/descriptor, а не по индексам
-    ``root[3]`` и ``root[5]``.
+    выполняется по устойчивой структуре wrapper/descriptor, а не по индексам.
     """
     if not isinstance(header, list):
         return None
@@ -310,10 +413,8 @@ def _decode_real_header(
     section_uuids: set[str] = set()
     nested_uuids: set[str] = set()
 
-    # ТЧ распознаётся по связке: header-wrapper, флаг и counted-контейнер
-    # колонок. Такой узел одинаков для разных позиций в Document/Catalog.
     for node in iter_lists(header):
-        section = _decode_real_tabular_section(node)
+        section = _decode_real_tabular_section(node, warnings)
         if section is None or section["UUID"] in section_uuids:
             continue
         section_uuids.add(section["UUID"])
@@ -326,23 +427,8 @@ def _decode_real_header(
     property_uuids: set[str] = set()
     blocked_uuids = section_uuids | nested_uuids
 
-    # В owner metadata верхнеуровневые реквизиты лежат в header[0][6].
     for wrapper in _container_records(_at(header, 0, 6)):
-        prop = _decode_compact_attribute_wrapper(wrapper)
-        if prop is None:
-            continue
-
-        uuid = prop["UUID"]
-        if uuid in blocked_uuids or uuid in property_uuids:
-            continue
-
-        property_uuids.add(uuid)
-        properties.append(prop)
-
-    # После выделения ТЧ остальные attribute-wrapper являются реквизитами
-    # объекта. UUID предотвращает повторный сбор одного узла на разных уровнях.
-    for node in iter_lists(header):
-        prop = _decode_real_attribute_wrapper(node)
+        prop = _decode_compact_attribute_wrapper(wrapper, warnings)
         if prop is None:
             continue
         uuid = prop["UUID"]
@@ -351,13 +437,18 @@ def _decode_real_header(
         property_uuids.add(uuid)
         properties.append(prop)
 
-    # Последний best-effort слой повторяет доказавший покрытие permissive
-    # подход: собирает непосредственные name-entry независимо от окружающей
-    # версии wrapper. Уже распознанные ТЧ и их колонки исключаются, поэтому
-    # структурный результат имеет приоритет. Для неизвестных layout запись
-    # остаётся верхнеуровневым Property с Type=None, но UUID-карта не теряется.
     for node in iter_lists(header):
-        prop = _decode_real_name_entry(node)
+        prop = _decode_real_attribute_wrapper(node, warnings)
+        if prop is None:
+            continue
+        uuid = prop["UUID"]
+        if uuid in blocked_uuids or uuid in property_uuids:
+            continue
+        property_uuids.add(uuid)
+        properties.append(prop)
+
+    for node in iter_lists(header):
+        prop = _decode_real_name_entry(node, warnings)
         if prop is None:
             continue
         uuid = prop["UUID"]
@@ -377,10 +468,20 @@ def _decode_real_header(
 def _try_decode_prop_entry(entry: Any, warnings: list[str]) -> dict | None:
     """entry[0]=тег, entry[1]=UUID-блок, entry[2]=имя, entry[3]=тип, entry[4]=синоним."""
     if not isinstance(entry, list) or len(entry) < 3:
-        warnings.append(
-            f"object_decoder: повреждённый узел реквизита: "
-            f"type={type(entry).__name__}, len={len(entry) if isinstance(entry, list) else '?'}"
-        )
+        # Генерируем warning только если entry выглядит как реквизит
+        # (есть UUID-блок с правильной структурой), но усечён.
+        if (
+            isinstance(entry, list)
+            and len(entry) >= 2
+            and isinstance(entry[1], list)
+            and len(entry[1]) >= 3
+            and _is_uuid(entry[1][2])
+            and entry[1][2] != _NULL_UUID
+        ):
+            warnings.append(
+                f"object_decoder: повреждённый узел реквизита: "
+                f"type={type(entry).__name__}, len={len(entry)}"
+            )
         return None
 
     uuid_block = entry[1] if len(entry) > 1 else None
@@ -392,6 +493,12 @@ def _try_decode_prop_entry(entry: Any, warnings: list[str]) -> dict | None:
 
     name = _unquote(entry[2]) if len(entry) > 2 else None
     if not name:
+        # UUID есть, имя пустое/отсутствует — повреждение
+        if uuid:
+            warnings.append(
+                f"object_decoder: повреждённый узел реквизита: "
+                f"UUID={uuid}, имя отсутствует"
+            )
         return None
 
     type_val = _extract_type_from_node(entry[3] if len(entry) > 3 else None)
@@ -489,11 +596,7 @@ def _walk_node(
     props_seen: set[int],
     ts_seen: set[int],
 ) -> None:
-    """Best-effort рекурсивный обход header.
-
-    seen-множества передаются сверху вниз и создаются заново при каждом
-    вызове decode_object_attributes, исключая загрязнение между тестами.
-    """
+    """Best-effort рекурсивный обход header."""
     if depth > _MAX_DEPTH or not isinstance(node, list):
         return
     node_id = id(node)

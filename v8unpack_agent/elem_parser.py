@@ -85,26 +85,6 @@ def _unquote_1c(value: object) -> str | None:
     return None
 
 
-def _collect_attribute_uuid_map(node: object, out: dict[str, str]) -> None:
-    """Устаревший вспомогательный обходчик header.
-
-    Оставлен для совместимости. UUID-карта теперь строится через
-    :func:`load_owner_attribute_map`, которая делегирует работу
-    :func:`v8unpack_agent.object_decoder.decode_object_attributes`.
-    """
-    if isinstance(node, list):
-        if len(node) >= 3 and isinstance(node[1], list) and len(node[1]) >= 3:
-            uuid = node[1][2]
-            name = _unquote_1c(node[2])
-            if _is_uuid(uuid) and uuid != _NULL_UUID and name:
-                out.setdefault(uuid, name)
-        for child in node:
-            _collect_attribute_uuid_map(child, out)
-    elif isinstance(node, dict):
-        for child in node.values():
-            _collect_attribute_uuid_map(child, out)
-
-
 def _collect_uuids(node: object, out: list[str]) -> None:
     if isinstance(node, str):
         if _is_uuid(node) and node != _NULL_UUID:
@@ -123,12 +103,7 @@ def _is_common_form(form_root: Path) -> bool:
 
 
 def _find_owner_metadata_json(form_root: Path) -> Path | None:
-    """Найти ``<Type>.json`` владельца без фиксированного списка типов.
-
-    Для пути ``.../<Type>/<Object>/<FormKind>/<Form>`` файл владельца лежит
-    в ``.../<Type>/<Object>/<Type>.json``. Это покрывает новые и редкие типы
-    метаданных без обновления константы в парсере.
-    """
+    """Найти ``<Type>.json`` владельца без фиксированного списка типов."""
     for parent in form_root.parents:
         if parent.parent == parent:
             break
@@ -144,6 +119,9 @@ def load_owner_attribute_map(form_root: Path, warnings: list[str]) -> dict[str, 
     Начиная с #84, карта строится через :func:`decode_object_attributes`
     из ``object_decoder``: Properties и TabularSections.Properties
     декодируются централизованно, без дублирующего обхода ``header``.
+
+    Fallback с независимым обходом header удалён (#84 DoD п.3).
+    При пустом результате декодера возвращается пустая карта с предупреждением.
     """
     path = _find_owner_metadata_json(form_root)
     if path is None:
@@ -173,14 +151,10 @@ def load_owner_attribute_map(form_root: Path, warnings: list[str]) -> dict[str, 
                 mapping.setdefault(uuid, name)
 
     if not mapping:
-        # Фолбэк: raw-header не уложился в строгий паттерн декодера.
-        # Пермиссивный обход сохраняет поведение #85 для нестандартных выгрузок.
-        try:
-            payload = json.loads(path.read_text(encoding="utf-8-sig"))
-        except Exception as exc:
-            warnings.append(f"Не удалось прочитать {path}: {exc}")
-            return {}
-        _collect_attribute_uuid_map(payload.get("header", payload), mapping)
+        warnings.append(
+            f"object_decoder: карта реквизитов пуста для {path.name} — "
+            f"возможно, нестандартный layout выгрузки"
+        )
 
     return mapping
 
@@ -190,12 +164,7 @@ _LEGACY_NAME_POS = 4
 
 
 def _legacy_attribute_name(raw: object) -> str | None:
-    """Имя реквизита из ``raw[4]`` записи обычной формы.
-
-    Узел имеет вид ``["14", "\"Город\"", "4294967295", "0", "0", "0"]``.
-    Само по себе наличие тега ``"14"`` привязки не доказывает — он есть и у
-    надписей; значение используется только вместе с непустым ``prop``.
-    """
+    """Имя реквизита из ``raw[4]`` записи обычной формы."""
     if not isinstance(raw, list) or len(raw) <= _LEGACY_NAME_POS:
         return None
     node = raw[_LEGACY_NAME_POS]
@@ -207,12 +176,7 @@ def _legacy_attribute_name(raw: object) -> str | None:
 
 
 def decode_legacy_data_path(record: object) -> tuple[str | None, list[str]]:
-    """data_path элемента обычной формы по полям ``prop`` и ``raw``.
-
-    ``prop`` называет источник данных из секции ``props``. Если имя реквизита
-    совпадает с ``prop``, элемент связан с самим реквизитом формы и путь
-    состоит из одного имени; иначе путь — ``<prop>.<реквизит>``.
-    """
+    """data_path элемента обычной формы по полям ``prop`` и ``raw``."""
     if not isinstance(record, dict):
         return None, []
 
@@ -232,12 +196,7 @@ def decode_legacy_data_path(record: object) -> tuple[str | None, list[str]]:
 
 
 def is_legacy_form_data(data_section: object) -> bool:
-    """Секция ``data`` принадлежит обычной, а не управляемой форме.
-
-    Признак — хотя бы одна запись с ключом ``prop``: в управляемых формах
-    такого ключа нет. Нужен, чтобы не применять разбор по UUID там, где
-    UUID описывают класс виджета.
-    """
+    """Секция ``data`` принадлежит обычной, а не управляемой форме."""
     if not isinstance(data_section, dict):
         return False
     return any(
@@ -253,17 +212,7 @@ def decode_element_data_path(
     element_name: str | None = None,
     warn_empty_map: bool = True,
 ) -> tuple[str | None, list[str]]:
-    """Декодирование data_path из raw секции data.
-
-    Обычные формы: путь лежит строкой внутри raw.
-    Управляемые формы: строки-пути нет, привязка задана UUID реквизита
-    владельца (например raw[11][2][1]); он разрешается через attribute_map,
-    построенную из Catalog.json/Document.json. Служебные UUID (форма,
-    оформление) в карте отсутствуют и отсеиваются автоматически.
-
-    Ограничение: префикс «Объект.» верен для форм элемента/группы. Для форм
-    списка привязка идёт к реквизиту динамического списка.
-    """
+    """Декодирование data_path из raw секции data."""
     if raw is None:
         return None, []
 
@@ -446,12 +395,6 @@ def _managed_structural_data_path(
     element_name: str,
     form_attribute_names: set[str],
 ) -> str | None:
-    """Консервативный fallback для привязок управляемой формы.
-
-    Точное совпадение означает самостоятельный реквизит формы.
-    Для колонки таблицы непосредственный родитель пути должен быть
-    реквизитом формы; имя колонки может включать имя таблицы как префикс.
-    """
     if element_name in form_attribute_names:
         return element_name
 
@@ -475,12 +418,6 @@ def _managed_structural_data_path(
 
 
 def _is_element_record(value: object) -> bool:
-    """Запись секции ``data`` описывает элемент формы.
-
-    Обычные формы: присутствует ключ ``id``.
-    Управляемые формы: ``id`` отсутствует, запись имеет вид
-    ``{"raw": [...], "ver": ...}``.
-    """
     if not isinstance(value, dict):
         return False
     return "id" in value or "raw" in value
@@ -494,13 +431,6 @@ def _extract_from_data_paths(
     form_attribute_names: set[str] | None = None,
     suppress_empty_map_warning: bool = False,
 ) -> list[dict]:
-    """Извлекает элементы из секции data, включая декодирование data_path
-    из поля raw каждой записи (issue #85).
-
-    Записи секции ``data`` в обычных формах содержат ключ ``id``; в
-    управляемых формах ключа ``id`` нет — есть ``raw``/``ver``. Поэтому
-    запись считается элементом при наличии любого из них.
-    """
     if warnings is None:
         warnings = []
     if form_attribute_names is None:
@@ -672,18 +602,6 @@ _SOURCE_PRIORITY = {"data": 0, "props": 1, "tree": 2, "commands": 3, "params": 4
 
 
 def _merge_source_duplicates(elements: list[dict]) -> list[dict]:
-    """Схлопывает записи об одном элементе, пришедшие из разных секций.
-
-    В формах списка имя реквизита формы совпадает с именем элемента, поэтому
-    один элемент приходит и из ``data`` (с привязкой), и из ``props`` (без
-    неё). Побеждает запись из ``data``: она несёт path, page и data_path.
-    Недостающие поля добираются из проигравших записей, чтобы не потерять
-    сведения, которых в ``data`` нет.
-
-    Схлопывание идёт только по элементам без ``path`` у проигравшего: записи
-    ``props`` позиции в дереве не имеют. Два разных элемента с одинаковым
-    именем, но разными путями в ``data``, остаются раздельными.
-    """
     best: dict[str, dict] = {}
     order: list[str] = []
     extra: list[dict] = []
@@ -735,22 +653,6 @@ def _normalize_parents(elements: list[dict], warnings: list[str]) -> None:
 
 
 def _warn_unresolved_group_hierarchy(elements: list[dict], warnings: list[str]) -> None:
-    """Честный признак неполноты для групп.
-
-    Иерархия панелей/страниц достоверна из путей-ключей data. Для групп же
-    распаковщик кодирует дерево в бинарном слое ('Дочерние элементы отдельно'),
-    а ключи data остаются плоскими — поэтому parent групп и их детей
-    указывает на страницу, а не на группу.
-
-    Зацепки на вложенность групп присутствуют в raw/info-векторах элементов
-    data (позиционные списки дочерних числовых id). Однако raw — это
-    недокументированный внутренний формат платформы 1С, и его декодирование
-    выходит за рамки разбора публичных артефактов распаковки и лицензионно
-    некорректно. Поэтому вложенность групп намеренно НЕ реконструируется.
-
-    Срабатывает, когда в форме есть группы, но ни один элемент не ссылается
-    parent-ом на группу.
-    """
     group_names = {e["name"] for e in elements if e.get("type") == "Group"}
     if not group_names:
         return
