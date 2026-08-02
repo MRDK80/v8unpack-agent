@@ -90,9 +90,9 @@ def make_demo_config_forms(config_root: Path) -> None:
     Демонстрирует drift-детекцию по bsl_sha256 (issue #38) и elem_sha256
     (issue #40): baseline → изменение кода → изменение разметки.
     """
-    form_dir = config_root / "Catalog" / "Товары" / "Forms" / "ФормаЭлемента"
+    form_dir = config_root / "Catalog" / "Товары" / "CatalogForm" / "ФормаЭлемента"
     form_dir.mkdir(parents=True, exist_ok=True)
-    (form_dir / "Form.obj.bsl").write_text("// исходный код", encoding="utf-8")
+    (form_dir / "CatalogForm.obj.bsl").write_text("// исходный код", encoding="utf-8")
     # Минимальный elem.json: нормализованный индекс будет содержать один элемент
     elem_data = [
         {"name": "Наименование", "type": "InputField", "path": "Наименование",
@@ -101,7 +101,7 @@ def make_demo_config_forms(config_root: Path) -> None:
          # косметические поля, которые elem_sha256 игнорирует:
          "left": 10, "top": 20, "color": "#000000"}
     ]
-    (form_dir / "Form.elem.json").write_text(
+    (form_dir / "CatalogForm.elem.json").write_text(
         json.dumps(elem_data, ensure_ascii=False), encoding="utf-8"
     )
 
@@ -119,11 +119,10 @@ def demo_drift(config_root: Path) -> None:
 
     # Эмулируем изменение кода формы (bsl_sha256 изменится).
     form_bsl = (
-        config_root / "Catalog" / "Товары" / "Forms" / "ФормаЭлемента" / "Form.obj.bsl"
+        config_root / "Catalog" / "Товары" / "CatalogForm" / "ФормаЭлемента" / "CatalogForm.obj.bsl"
     )
     form_bsl.write_text("// ИЗМЕНЁННЫЙ код формы", encoding="utf-8")
-    current_after_bsl = scan_forms(config_root, mode="config")
-    report_bsl = check_drift(baseline_path, current_after_bsl)
+    report_bsl  = check_drift(config_root, index_path=baseline_path)
     print("\n[drift] после изменения кода:")
     print(f"  modified         = {report_bsl.modified}")
     print(f"  structure_modified = {report_bsl.structure_modified}")
@@ -132,7 +131,7 @@ def demo_drift(config_root: Path) -> None:
     # Восстанавливаем код и эмулируем изменение разметки (elem_sha256 изменится).
     form_bsl.write_text("// исходный код", encoding="utf-8")
     form_elem = (
-        config_root / "Catalog" / "Товары" / "Forms" / "ФормаЭлемента" / "Form.elem.json"
+        config_root / "Catalog" / "Товары" / "CatalogForm" / "ФормаЭлемента" / "CatalogForm.elem.json"
     )
     elem_changed = [
         {"name": "НоваяКнопка", "type": "Button", "path": "НоваяКнопка",
@@ -142,11 +141,13 @@ def demo_drift(config_root: Path) -> None:
     form_elem.write_text(
         json.dumps(elem_changed, ensure_ascii=False), encoding="utf-8"
     )
-    current_after_elem = scan_forms(config_root, mode="config")
-    report_elem = check_drift(baseline_path, current_after_elem)
+    report_elem = check_drift(config_root, index_path=baseline_path)
     print("\n[drift] после изменения разметки (код не тронут):")
     print(f"  modified           = {report_elem.modified}")
     print(f"  structure_modified = {report_elem.structure_modified}")
+    print(f"  added              = {report_elem.added}")
+    print(f"  removed            = {report_elem.removed}")
+    print(f"  stale_extractions  = {report_elem.stale_extractions}")
     print(f"  has_drift          = {report_elem.has_drift}")
 
 
