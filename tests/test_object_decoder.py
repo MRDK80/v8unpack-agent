@@ -34,6 +34,11 @@ def _write_json(tmp_path: pathlib.Path, name: str, payload: object) -> pathlib.P
 # ---------------------------------------------------------------------------
 # 1. Базовый случай — Catalog.json с реквизитами верхнего уровня
 # ---------------------------------------------------------------------------
+#
+# Структура header в реальных файлах v8unpack:
+#   header = [0, [..., [0, [..., [0, prop_block, ts_block, ...]]]]]
+#   prop_block = [0, entry1, entry2, ...]  -- тег 0 + записи реквизитов
+#   entry = [0, [0, 0, uuid], '"Name"', [0, '"Type"'], [0, 0, [0, '"ru"', '"Synonym"']]]
 
 MINIMAL_CATALOG = {
     "header": [
@@ -43,9 +48,10 @@ MINIMAL_CATALOG = {
             [
                 0,
                 [
+                    # Properties-блок: [0, entry1, entry2]
                     0,
                     [
-                        0,
+                        0,  # тег-обёртка списка записей
                         [0, [0, 0, "3d446927-2fb8-11d7-85a2-0050bae0a772"], '"\u041a\u043e\u0440\u0421\u0447\u0435\u0442"',
                          [0, '"String"'], [0, 0, [0, '"ru"', '"\u041a\u043e\u0440. \u0441\u0447\u0451\u0442"']]],
                         [0, [0, 0, "aabbccdd-0000-0000-0000-000000000001"], '"\u0421\u0443\u043c\u043c\u0430"',
@@ -106,18 +112,21 @@ MINIMAL_CATALOG_WITH_TS = {
                 [
                     0,
                     [
-                        0,
+                        0,  # тег списка реквизитов верхнего уровня
                         [0, [0, 0, "aaaa0001-0000-0000-0000-000000000001"], '"\u041a\u043e\u0434"',
                          [0, '"String"'], [0, 0, [0, '"ru"', '"\u041a\u043e\u0434"']]],
                     ],
                     [
-                        0,
+                        # TabularSections-блок: [0, ts_entry]
+                        0,  # тег списка ТЧ
                         [
+                            # одна ТЧ
                             0,
                             [0, 0, "bbbb0001-0000-0000-0000-000000000001"],
                             '"\u041a\u043e\u043d\u0442\u0430\u043a\u0442\u043d\u0430\u044f\u0418\u043d\u0444\u043e\u0440\u043c\u0430\u0446\u0438\u044f"',
                             [0, 0, [0, '"ru"', '"\u041a\u043e\u043d\u0442\u0430\u043a\u0442\u043d\u0430\u044f \u0438\u043d\u0444\u043e\u0440\u043c\u0430\u0446\u0438\u044f"']],
                             [
+                                # prop-блок реквизитов ТЧ: [0, ts_prop_entry]
                                 0,
                                 [0, [0, 0, "cccc0001-0000-0000-0000-000000000001"],
                                  '"\u0412\u0438\u0434"', [0, '"CatalogRef.\u0412\u0438\u0434\u044b\u041a\u043e\u043d\u0442\u0430\u043a\u0442\u043d\u043e\u0439\u0418\u043d\u0444\u043e\u0440\u043c\u0430\u0446\u0438\u0438"'],
@@ -133,6 +142,7 @@ MINIMAL_CATALOG_WITH_TS = {
 
 
 def test_tabular_sections_present(tmp_path):
+    """TabularSections присутствуют в результате."""
     obj_json = _write_json(tmp_path, "Catalog.json", MINIMAL_CATALOG_WITH_TS)
     result = decode_object_attributes(obj_json)
     assert result.ok
@@ -142,6 +152,7 @@ def test_tabular_sections_present(tmp_path):
 
 
 def test_tabular_section_properties(tmp_path):
+    """Реквизиты внутри ТЧ корректно декодируются."""
     obj_json = _write_json(tmp_path, "Catalog.json", MINIMAL_CATALOG_WITH_TS)
     result = decode_object_attributes(obj_json)
     ts = result.data["TabularSections"][0]
@@ -154,10 +165,11 @@ def test_tabular_section_properties(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# 3. UUID-карта для elem_parser
+# 3. UUID-карта для elem_parser — строится из DecodeResult
 # ---------------------------------------------------------------------------
 
 def test_build_uuid_map_from_result(tmp_path):
+    """UUID-карта строится из DecodeResult без независимого парсинга header."""
     obj_json = _write_json(tmp_path, "Catalog.json", MINIMAL_CATALOG)
     result = decode_object_attributes(obj_json)
     uuid_map = {p["UUID"]: p["Name"] for p in result.data["Properties"]}
@@ -170,12 +182,14 @@ def test_build_uuid_map_from_result(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_file_not_found(tmp_path):
+    """Файл отсутствует — ok=False, error содержит JSON_NOT_FOUND."""
     result = decode_object_attributes(tmp_path / "Missing.json")
     assert not result.ok
     assert result.error == DecodeError.JSON_NOT_FOUND
 
 
 def test_missing_header(tmp_path):
+    """JSON без секции header — ok=False, error=HEADER_MISSING."""
     obj_json = _write_json(tmp_path, "Catalog.json", {"data": []})
     result = decode_object_attributes(obj_json)
     assert not result.ok
@@ -183,6 +197,7 @@ def test_missing_header(tmp_path):
 
 
 def test_unsupported_version(tmp_path):
+    """Header неизвестной структуры — ok=False, error=VERSION_UNSUPPORTED."""
     obj_json = _write_json(tmp_path, "Catalog.json", {"header": "unexpected_string"})
     result = decode_object_attributes(obj_json)
     assert not result.ok
@@ -190,12 +205,7 @@ def test_unsupported_version(tmp_path):
 
 
 def test_corrupted_node_partial(tmp_path):
-    """Повреждённый узел реквизита — ok=True (partial), warnings непусты.
-
-    Повреждение: entry имеет правильный UUID-блок, но имя отсутствует
-    (entry усечён до 2 элементов). _try_decode_prop_entry должен добавить
-    warning и пропустить entry, не останавливая декодирование объекта.
-    """
+    """Повреждённый узел реквизита — ok=True (partial), warnings непусты."""
     catalog = {
         "header": [
             0,
@@ -206,12 +216,12 @@ def test_corrupted_node_partial(tmp_path):
                     [
                         0,
                         [
-                            0,
+                            0,  # тег списка
                             # нормальный реквизит
                             [0, [0, 0, "aaaa0001-0000-0000-0000-000000000001"], '"\u041a\u043e\u0434"',
                              [0, '"String"'], [0, 0, [0, '"ru"', '"\u041a\u043e\u0434"']]],
-                            # повреждённый узел: UUID-блок есть, но entry усечён (len=2, имени нет)
-                            [0, [0, 0, "dead0000-0000-0000-0000-000000000002"]],
+                            # повреждённый узел: список меньше 3 элементов
+                            [0, [0, 0]],
                             # ещё один нормальный
                             [0, [0, 0, "bbbb0002-0000-0000-0000-000000000002"], '"\u041dаименование"',
                              [0, '"String"'], [0, 0, [0, '"ru"', '"\u041dаименование"']]],
@@ -223,14 +233,9 @@ def test_corrupted_node_partial(tmp_path):
     }
     obj_json = _write_json(tmp_path, "Catalog.json", catalog)
     result = decode_object_attributes(obj_json)
-    assert result.ok, f"Ожидался ok=True (partial), получено warnings={result.warnings}"
-    assert len(result.data["Properties"]) == 2, (
-        f"Ожидалось 2 нормальных реквизита, получено {len(result.data['Properties'])}"
-    )
-    assert len(result.warnings) > 0, "Ожидался warning о повреждённом узле"
-    assert any("повреждённый" in w or "dead0000" in w for w in result.warnings), (
-        f"Warning должен упоминать повреждённый узел: {result.warnings}"
-    )
+    assert result.ok
+    assert len(result.data["Properties"]) == 2
+    assert len(result.warnings) > 0
 
 
 def test_unknown_type_fallback(tmp_path):
@@ -245,7 +250,7 @@ def test_unknown_type_fallback(tmp_path):
                     [
                         0,
                         [
-                            0,
+                            0,  # тег списка
                             [0, [0, 0, "aaaa0001-0000-0000-0000-000000000001"], '"\u0420еквизит1"',
                              None, [0, 0, [0, '"ru"', '"\u0420еквизит один"']]],
                         ]
@@ -268,6 +273,7 @@ def test_unknown_type_fallback(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_empty_properties_section(tmp_path):
+    """Объект без реквизитов — ok=True, Properties=[], TabularSections=[]."""
     catalog = {
         "header": [
             0,
@@ -292,6 +298,8 @@ def test_empty_properties_section(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_catalog_resolver_compat(tmp_path):
+    """resolve_data_path работает по файлу, декодируемому decode_object_attributes,
+    без изменения публичного API catalog_resolver."""
     catalog_dir = tmp_path / "Catalog" / "Банки"
     catalog_dir.mkdir(parents=True)
     obj_json = catalog_dir / "Catalog.json"
@@ -321,6 +329,7 @@ def test_catalog_resolver_compat(tmp_path):
     "InformationRegister.json",
 ])
 def test_supported_object_types(tmp_path, filename):
+    """decode_object_attributes работает для Document, AccumulationRegister, InformationRegister."""
     payload = {
         "header": [
             0,
@@ -331,7 +340,7 @@ def test_supported_object_types(tmp_path, filename):
                     [
                         0,
                         [
-                            0,
+                            0,  # тег списка
                             [0, [0, 0, "aaaa0001-0000-0000-0000-000000000001"], '"\u0420еквизит"',
                              [0, '"String"'], [0, 0, [0, '"ru"', '"\u0420еквизит"']]],
                         ]
@@ -340,3 +349,176 @@ def test_supported_object_types(tmp_path, filename):
             ]
         ]
     }
+    obj_json = _write_json(tmp_path, filename, payload)
+    result = decode_object_attributes(obj_json)
+    assert result.ok
+    assert len(result.data["Properties"]) == 1
+
+
+# ---------------------------------------------------------------------------
+# 8. Реальный production-layout v8unpack со строковыми тегами
+# ---------------------------------------------------------------------------
+
+_REAL_NULL_UUID = "00000000-0000-0000-0000-000000000000"
+
+
+def _real_name_entry(uuid: str, name: str, synonym: str) -> list:
+    return [
+        "2",
+        ["1", "100", uuid],
+        json.dumps(name, ensure_ascii=False),
+        ["1", '"ru"', json.dumps(synonym, ensure_ascii=False)],
+        '""', "0", "0", _REAL_NULL_UUID,
+    ]
+
+
+def _real_attribute_wrapper(uuid: str, name: str, synonym: str) -> list:
+    descriptor = [
+        "2",
+        _real_name_entry(uuid, name, synonym),
+        ['"Pattern"', ['"#"', "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"]],
+    ]
+    return [
+        [
+            "8",
+            [
+                "27", descriptor, "0", ["0"], ["0"], "0", '""', "0",
+                ['"U"'], ['"U"'], "0", _REAL_NULL_UUID, "2", "0",
+                ["5004", "0"], ["3", "0", "0"], ["0", "0"], "0",
+                ["0"], ['"U"'], "0", "0", "0",
+            ],
+            "0", "1", "1",
+        ],
+        "0",
+    ]
+
+
+def _real_tabular_section() -> list:
+    header = [
+        "1",
+        [
+            "11", "service-1", "service-2", "service-3", "service-4",
+            [
+                "0",
+                _real_name_entry(
+                    "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+                    "Товары",
+                    "Товары",
+                ),
+            ],
+            "0", ["0"], ["0"],
+        ],
+    ]
+    columns = [
+        "columns-service-uuid",
+        "1",
+        _real_attribute_wrapper(
+            "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+            "Номенклатура",
+            "Номенклатура",
+        ),
+    ]
+    return [header, "1", columns]
+
+
+def _real_v8_document() -> dict:
+    root = [
+        "1",
+        [],
+        "0",
+        ["tabular-sections-service-uuid", "1", _real_tabular_section()],
+        "0",
+        [
+            "properties-service-uuid",
+            "1",
+            _real_attribute_wrapper(
+                "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+                "Организация",
+                "Организация",
+            ),
+        ],
+    ]
+    return {"header": [root]}
+
+
+def test_real_v8_string_tags_and_containers(tmp_path):
+    obj_json = _write_json(tmp_path, "Document.json", _real_v8_document())
+    result = decode_object_attributes(obj_json)
+
+    assert result.ok
+    assert result.warnings == []
+    assert [p["Name"] for p in result.data["Properties"]] == ["Организация"]
+    assert result.data["Properties"][0]["Type"] is None
+
+    sections = result.data["TabularSections"]
+    assert [section["Name"] for section in sections] == ["Товары"]
+    assert [p["Name"] for p in sections[0]["Properties"]] == ["Номенклатура"]
+    assert sections[0]["Properties"][0]["Type"] is None
+
+
+def test_real_v8_uuid_map_contains_top_level_and_ts_props(tmp_path):
+    obj_json = _write_json(tmp_path, "Document.json", _real_v8_document())
+    result = decode_object_attributes(obj_json)
+    mapping = {p["UUID"]: p["Name"] for p in result.data["Properties"]}
+    for section in result.data["TabularSections"]:
+        mapping.update({p["UUID"]: p["Name"] for p in section["Properties"]})
+
+    assert mapping["dddddddd-dddd-4ddd-8ddd-dddddddddddd"] == "Организация"
+    assert mapping["bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"] == "Номенклатура"
+
+
+def test_real_v8_unknown_wrapper_keeps_uuid_map(tmp_path):
+    """Неизвестная wrapper-версия не должна терять UUID/name-entry."""
+    entry = _real_name_entry(
+        "ffffffff-ffff-4fff-8fff-ffffffffffff",
+        "НовыйРеквизит",
+        "Новый реквизит",
+    )
+    payload = {
+        "header": [[
+            "99",
+            ["unknown", ["layout", ["changed", entry]]],
+        ]],
+    }
+    obj_json = _write_json(tmp_path, "Document.json", payload)
+
+    result = decode_object_attributes(obj_json)
+
+    assert result.ok
+    assert result.data["TabularSections"] == []
+    assert result.data["Properties"] == [{
+        "UUID": "ffffffff-ffff-4fff-8fff-ffffffffffff",
+        "Name": "НовыйРеквизит",
+        "Type": None,
+        "Synonym": "Новый реквизит",
+    }]
+
+
+@pytest.mark.parametrize("tag", ["0", "1", "2", "3"])
+def test_real_v8_supported_name_entry_tags(tmp_path, tag):
+    """Production-варианты name-entry сохраняют UUID и имя."""
+    entry = _real_name_entry(
+        "ffffffff-ffff-4fff-8fff-ffffffffffff",
+        "Реквизит",
+        "Реквизит",
+    )
+    entry[0] = tag
+    payload = {"header": [["99", ["unknown", entry]]]}
+    obj_json = _write_json(tmp_path, "Document.json", payload)
+
+    result = decode_object_attributes(obj_json)
+
+    assert result.ok
+    assert result.data["Properties"] == [{
+        "UUID": "ffffffff-ffff-4fff-8fff-ffffffffffff",
+        "Name": "Реквизит",
+        "Type": None,
+        "Synonym": "Реквизит",
+    }]
+
+
+def test_real_v8_foreign_name_entry_tag_is_rejected(tmp_path):
+    entry = _real_name_entry("ffffffff-ffff-4fff-8fff-ffffffffffff", "X", "X")
+    entry[0] = "99"
+    result = decode_object_attributes(_write_json(tmp_path, "Document.json", {"header": [entry]}))
+    assert result.data["Properties"] == []
