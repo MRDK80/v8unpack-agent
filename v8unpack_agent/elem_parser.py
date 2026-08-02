@@ -43,6 +43,8 @@ import json
 import re
 from typing import Any
 
+from v8unpack_agent.object_decoder import decode_object_attributes
+
 
 @dataclass
 class ElemIndexResult:
@@ -84,9 +86,11 @@ def _unquote_1c(value: object) -> str | None:
 
 
 def _collect_attribute_uuid_map(node: object, out: dict[str, str]) -> None:
-    """UUID реквизита и его имя лежат рядом: node[1][2] и node[2].
+    """Устаревший вспомогательный обходчик header.
 
-    Инвариант подтверждён на header[0][6][i][0][1][1][1] в Catalog.json.
+    Оставлен для совместимости. UUID-карта теперь строится через
+    :func:`load_owner_attribute_map`, которая делегирует работу
+    :func:`v8unpack_agent.object_decoder.decode_object_attributes`.
     """
     if isinstance(node, list):
         if len(node) >= 3 and isinstance(node[1], list) and len(node[1]) >= 3:
@@ -135,19 +139,40 @@ def _find_owner_metadata_json(form_root: Path) -> Path | None:
 
 
 def load_owner_attribute_map(form_root: Path, warnings: list[str]) -> dict[str, str]:
-    """Карта ``uuid реквизита -> имя`` из метаданных объекта-владельца формы."""
+    """Карта ``uuid реквизита -> имя`` из метаданных объекта-владельца формы.
+
+    Начиная с #84, карта строится через :func:`decode_object_attributes`
+    из ``object_decoder``: Properties и TabularSections.Properties
+    декодируются централизованно, без дублирующего обхода ``header``.
+    """
     path = _find_owner_metadata_json(form_root)
     if path is None:
         if not _is_common_form(form_root):
             warnings.append(f"Метаданные владельца не найдены для {form_root}")
         return {}
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8-sig"))
-    except Exception as exc:
-        warnings.append(f"Не удалось прочитать {path}: {exc}")
+
+    result = decode_object_attributes(path)
+    if not result.ok:
+        warnings.append(
+            f"object_decoder: не удалось декодировать {path}: "
+            f"{result.error} — {result.warnings}"
+        )
         return {}
+
+    warnings.extend(result.warnings)
+
     mapping: dict[str, str] = {}
-    _collect_attribute_uuid_map(payload.get("header", payload), mapping)
+    for prop in result.data.get("Properties", []):
+        uuid = prop.get("UUID") or ""
+        name = prop.get("Name") or ""
+        if uuid and name:
+            mapping.setdefault(uuid, name)
+    for ts in result.data.get("TabularSections", []):
+        for prop in ts.get("Properties", []):
+            uuid = prop.get("UUID") or ""
+            name = prop.get("Name") or ""
+            if uuid and name:
+                mapping.setdefault(uuid, name)
     return mapping
 
 
@@ -407,7 +432,6 @@ def _types_from_tree(tree_section: Any) -> dict[str, dict]:
     return out
 
 
-
 def _managed_structural_data_path(
     full_path: str,
     element_name: str,
@@ -487,7 +511,6 @@ def _extract_from_data_paths(
     ):
         warnings.append("decode_element_data_path: карта реквизитов владельца пуста")
 
-    # Записи по имени элемента для последующего декодирования привязки
     record_by_element_name: dict[str, dict] = {}
     for key, value in data_section.items():
         if key in (_PAGE_LIST_KEY,) or key.endswith("/" + _PAGE_LIST_KEY):
@@ -513,8 +536,6 @@ def _extract_from_data_paths(
         meta = tree_meta.get(name, {})
         if meta.get("handler"):
             el["handler"] = meta["handler"]
-        # data_path: сначала из tree_meta (если явно прописан в tree),
-        # затем best-effort из raw секции data
         if meta.get("data_path"):
             el["data_path"] = meta["data_path"]
         elif name in record_by_element_name:
