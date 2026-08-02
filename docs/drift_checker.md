@@ -79,6 +79,36 @@ if report.has_drift:
 | `save_to` | Path \| None | `None` | Сохранить `DriftReport` в JSON |
 | `mode` | `"config"` \| `"external"` | `"config"` | Режим обхода диска (issue #73). Должен совпадать с режимом создания baseline |
 
+## Исключения
+
+### NotADirectoryError (issue #91)
+
+`check_drift()` бросает `NotADirectoryError`, если `cf_export_root` не является
+существующей директорией — передан несуществующий путь или файл вместо директории:
+
+```python
+from pathlib import Path
+from v8unpack_agent.drift_checker import check_drift
+
+baseline = Path("forms_index.json")
+
+# ❌ Опечатка: передан файл вместо директории — до фикса #91 давал ложный дрейф
+try:
+    r = check_drift(baseline, index_path=baseline)
+except NotADirectoryError as e:
+    print(e)  # cf_export_root must be an existing directory: forms_index.json
+
+# ✅ Правильно
+r = check_drift(Path("/path/to/cf_export"), index_path=baseline)
+```
+
+### Предупреждение о нулевом скане
+
+Если `cf_export_root` — существующая директория, но скан вернул ноль форм
+(пустая директория или неожиданный layout), `check_drift()` выдаёт
+`logger.WARNING` через стандартный Python `logging`. Исключение не бросается —
+возвращается обычный `DriftReport`.
+
 ## Алгоритм детекции
 
 ### modified (код формы, issue #38)
