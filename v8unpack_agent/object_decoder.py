@@ -263,7 +263,11 @@ def _looks_like_ts_list(node: list) -> bool:
     if not _looks_like_prop_list(node):
         return False
     for item in node[1:]:
-        if _looks_like_prop_entry(item) and len(item) > 4 and isinstance(item[4], list):
+        if (
+            _looks_like_prop_entry(item)
+            and len(item) > 4
+            and _looks_like_prop_list(item[4])
+        ):
             return True
     return False
 
