@@ -26,6 +26,8 @@ index_cf(<путь_к_выгрузке>)
   ├─► 0) scan_forms()               # опись всех форм по layout-у (вкл. формы без кода, #57)
   ├─► 1) unpack_all_forms()         # Form.bin → текстовый слой (BSL виден)
   │       └─► parse_elem_json()      # elem.json → form_elements_index (best-effort)
+  │             ├─► object_decoder    # header → Properties, TabularSections (#84)
+  │             ├─► catalog_resolver  # data_path → ResolvedBinding (best-effort,
   │             └─► catalog_resolver # data_path → ResolvedBinding (best-effort, #76)
   ├─► 1') unpack_erf()              # внешний отчёт (.erf): текстовый слой
   │       └─► extract_skd_queries()  # СКД → skd_queries.json (best-effort)
@@ -60,7 +62,8 @@ index_cf(<путь_к_выгрузке>)
 | `skd_extractor` | `extract_skd_queries()` + `extract_all_skd_queries()` — СКД из `.erf`. → [подробнее](docs/skd_extractor.md) |
 | `elem_parser` | `parse_elem_json()` + `ElemIndexResult` — структура формы из `elem.json`; `data_path` обычных форм через `prop`, управляемых — через UUID и консервативный структурный fallback (точный реквизит формы / колонка таблицы). → [подробнее](docs/elem_parser.md) |
 | `form_summary` | `build_form_summary(form_dir)` + `to_normalized_json()` — детерминированная семантическая выжимка любой elem-формы (обычной и управляемой): attributes / commands / elements / events / relations поверх `parse_elem_json`. → [подробнее](docs/form_summary.md) |
-| `catalog_resolver` | `resolve_data_path()` + `ResolvedBinding` + `object_json_path()` — best-effort обогащение подтверждённого `data_path` через JSON объекта (#76). Извлечение путей из обычных и управляемых форм реализовано в #85; чтение типа и синонима из raw `header` остаётся задачей #84. → [подробнее](docs/catalog_resolver.md) |
+| `catalog_resolver` | `resolve_data_path()` + `ResolvedBinding` + `object_json_path()` — best-effort обогащение подтверждённого `data_path` через JSON объекта (#76). Извлечение путей реализовано в #85, чтение имени, UUID и типа реквизита — в #84. Приведение `Ref#uuid` к имени объекта метаданных — #88. → [подробнее](docs/catalog_resolver.md) |
+| `object_decoder` | `decode_object_attributes()` + `DecodeResult` — реквизиты объекта из raw `header`: имя, UUID, тип, табличные части. Питает карту реквизитов `elem_parser` и `catalog_resolver` (#84). → [подробнее](docs/object_decoder.md) |
 
 ## Быстрый старт
 
@@ -126,7 +129,8 @@ index.save(Path("forms_index.json"))
 | Discovery форм по `*.elem.json` | [docs/managed_forms_structure.md](docs/managed_forms_structure.md) |
 | Структура распакованных внешних обработок | [docs/external_forms_structure.md](docs/external_forms_structure.md) |
 | Семантическая выжимка elem-формы поверх parse_elem_json | [docs/form_summary.md](docs/form_summary.md) |
-| `catalog_resolver`: best-effort резолюция `data_path`, ограничения (#84) | [docs/catalog_resolver.md](docs/catalog_resolver.md) |
+| `catalog_resolver`: резолюция `data_path` через описание объекта | [docs/catalog_resolver.md](docs/catalog_resolver.md) |
+| Реквизиты объекта из raw `header`: типы, UUID, табличные части | [docs/object_decoder.md](docs/object_decoder.md) |
 
 ## Установка
 

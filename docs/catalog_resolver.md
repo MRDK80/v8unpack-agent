@@ -55,6 +55,14 @@ def object_json_path(form_entry: FormEntry) -> Path | None:
 | Одиночный сегмент без точки | `resolved=False` |
 | Любая другая ошибка | `resolved=False`, без исключений |
 
+## Источник данных
+
+Читаемых секций `Properties` / `Attributes` в `Catalog.json` нет: реквизиты
+объекта хранятся в raw-секции `header` в частично декодированном формате
+v8unpack. Разбор этой секции выполняет отдельный модуль
+[`object_decoder`](object_decoder.md) (#84, PR #87), который возвращает
+структуру, совместимую с `resolve_data_path` без изменения его публичного API.
+
 ## Известные ограничения
 
 ### #85 — декодирование `data_path` — закрыто
@@ -75,16 +83,33 @@ def object_json_path(form_entry: FormEntry) -> Path | None:
 Если UUID не дал результата, управляемая форма использует только
 консервативный структурный fallback: точное имя реквизита формы либо колонку
 через непосредственный родительский реквизит. Вложенные узлы `props`
-учитываются рекурсивно; префиксные догадки запрещены. #84, описанная ниже,
-нужна для обогащения пути типом и синонимом, а не для расширения эвристик.
+учитываются рекурсивно; префиксные догадки запрещены.
 
-### Зависимость от #84 — декодирование `Catalog.json/header`
+### #84 — декодирование `Catalog.json/header` — закрыто
 
-Текущий `Catalog.json` хранит реквизиты объекта в raw-секции `header`
-(недекодированный формат v8unpack), а не в читаемых полях `Properties` /
-`Attributes`. До реализации [#84](https://github.com/MRDK80/v8unpack-agent/issues/84)
-(`decode_object_attributes`) `resolve_data_path` возвращает `resolved=False`
-на реальных выгрузках — даже при корректном `data_path`.
+`decode_object_attributes` декодирует raw-секцию `header` и отдаёт имя, UUID
+и тип реквизита, а также табличные части с колонками. После #84
+`resolved=True` достижим на реальных выгрузках.
+
+Прогон на production-выгрузке (6551 объект метаданных, 15888 реквизитов):
+
+| Категория `value_type` | Кол-во | Доля |
+|---|---:|---:|
+| Примитивы (`String`, `Number`, `Boolean`, `Date`) | 7457 | 46.9% |
+| Ссылочные (`Ref#<uuid>`) | 5226 | 32.9% |
+| `None` (compact-layout, составные типы) | 3205 | 20.2% |
+
+Нераспознанных кодов типа — 0, ошибок декодирования — 0.
+
+### Зависимость от #88 — имена ссылочных типов
+
+Ссылочный тип возвращается как `Ref#<uuid>`, а не `CatalogRef.Контрагенты`.
+Приведение UUID к имени объекта метаданных требует глобального индекса всех
+объектов выгрузки и вынесено в
+[#88](https://github.com/MRDK80/v8unpack-agent/issues/88).
+
+Дополнительно `value_type=None` остаётся у compact-layout и составных типов
+(`CompositeType`) — их разбор в #84 не входил.
 
 ### Итоговая картина
 
@@ -97,20 +122,22 @@ def object_json_path(form_entry: FormEntry) -> Path | None:
     управляемые      — через UUID, затем точный структурный fallback
         ↓
   catalog_resolver              ← #76 ✅ реализовано, PR #83
-        ↓ (требует читаемых Properties)
-  decode_object_attributes      ← #84, ожидается
+        ↑ (читаемые Properties)
+  decode_object_attributes      ← #84 ✅ реализовано, PR #87
         ↓
-  ResolvedBinding(resolved=True)
+  ResolvedBinding(resolved=True, value_type="String" | "Ref#<uuid>")
+        ↓
+  имя объекта метаданных        ← #88, ожидается
 ```
 
-До завершения #84 модуль работает в режиме best-effort: `resolved=False`
-на реальной выгрузке — штатный результат, а не ошибка. Входные `data_path`
-при этом уже достоверны.
+`resolved=False` остаётся штатным результатом для реквизитов, отсутствующих
+в описании объекта, и для нераспознанного формата пути.
 
 На контрольной реальной выгрузке структурный fallback безопасно восстановил
 3292 из 4549 исходно неразрешённых Field-записей; 1257 записей оставлены без
 догадок. Это диагностический результат конкретной выгрузки, а не обещание
-универсального покрытия.
+универсального покрытия. Корректная метрика покрытия по всем элементам
+данных — задача [#90](https://github.com/MRDK80/v8unpack-agent/issues/90).
 
 ## Пример использования
 
@@ -125,9 +152,9 @@ obj_json = object_json_path(form_entry)
 if obj_json:
     binding = resolve_data_path("Объект.Город", obj_json)  # путь из parse_elem_json
     if binding.resolved:
-        print(binding.value_type, binding.synonym)
+        print(binding.value_type, binding.synonym)   # "Ref#df7ce7e5-…"
     else:
-        print("резолюция недоступна — ожидается #84")
+        print("реквизит не найден в описании объекта")
 ```
 
 ## Связь с конвейером №3a
@@ -136,5 +163,8 @@ if obj_json:
 |---|---|
 | [#76](https://github.com/MRDK80/v8unpack-agent/issues/76) `catalog_resolver` | ✅ реализовано, PR [#83](https://github.com/MRDK80/v8unpack-agent/pull/83) |
 | [#85](https://github.com/MRDK80/v8unpack-agent/issues/85) `decode_element_data_path` | ✅ реализовано, PR [#86](https://github.com/MRDK80/v8unpack-agent/pull/86) |
-| [#84](https://github.com/MRDK80/v8unpack-agent/issues/84) `decode_object_attributes` | 🔲 open |
-| [#77](https://github.com/MRDK80/v8unpack-agent/issues/77) `form_context` | 🔲 open, ожидает #84 |
+| [#84](https://github.com/MRDK80/v8unpack-agent/issues/84) `decode_object_attributes` | ✅ реализовано, PR [#87](https://github.com/MRDK80/v8unpack-agent/pull/87) |
+| [#90](https://github.com/MRDK80/v8unpack-agent/issues/90) метрика покрытия `data_path` | 🔲 open |
+| [#89](https://github.com/MRDK80/v8unpack-agent/issues/89) формы с нулевой привязкой | 🔲 open |
+| [#88](https://github.com/MRDK80/v8unpack-agent/issues/88) `Ref#uuid` → имя объекта | 🔲 open |
+| [#77](https://github.com/MRDK80/v8unpack-agent/issues/77) `form_context` | 🔲 open |
