@@ -236,6 +236,33 @@ def _decode_real_attribute_wrapper(wrapper: object) -> dict | None:
     return _decode_real_name_entry(_at(wrapper, 0, 1, 1, 1))
 
 
+def _decode_compact_attribute_wrapper(wrapper: object) -> dict | None:
+    """Декодировать реквизит compact owner-metadata: [1, 1, node]."""
+    if not isinstance(wrapper, list) or len(wrapper) < 3:
+        return None
+
+    node = wrapper[2]
+    if not isinstance(node, list) or len(node) < 7:
+        return None
+
+    uuid = node[3]
+    name = _unquote(node[4])
+    locale = node[5]
+    synonym = _unquote(node[6])
+
+    # Проверка locale отделяет compact-layout от production name-entry.
+    if not isinstance(locale, str):
+        return None
+    if not _is_uuid(uuid) or uuid == _NULL_UUID or not name:
+        return None
+
+    return {
+        "UUID": uuid,
+        "Name": name,
+        "Type": None,
+        "Synonym": synonym,
+    }
+
 def _decode_real_tabular_section(node: object) -> dict | None:
     """Декодировать ТЧ и её реквизиты из реального raw-header."""
     if not isinstance(node, list) or len(node) < 3:
@@ -298,6 +325,19 @@ def _decode_real_header(
     properties = []
     property_uuids: set[str] = set()
     blocked_uuids = section_uuids | nested_uuids
+
+    # В owner metadata верхнеуровневые реквизиты лежат в header[0][6].
+    for wrapper in _container_records(_at(header, 0, 6)):
+        prop = _decode_compact_attribute_wrapper(wrapper)
+        if prop is None:
+            continue
+
+        uuid = prop["UUID"]
+        if uuid in blocked_uuids or uuid in property_uuids:
+            continue
+
+        property_uuids.add(uuid)
+        properties.append(prop)
 
     # После выделения ТЧ остальные attribute-wrapper являются реквизитами
     # объекта. UUID предотвращает повторный сбор одного узла на разных уровнях.
