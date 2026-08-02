@@ -159,8 +159,6 @@ def load_owner_attribute_map(form_root: Path, warnings: list[str]) -> dict[str, 
         )
         return {}
 
-    warnings.extend(result.warnings)
-
     mapping: dict[str, str] = {}
     for prop in result.data.get("Properties", []):
         uuid = prop.get("UUID") or ""
@@ -173,6 +171,17 @@ def load_owner_attribute_map(form_root: Path, warnings: list[str]) -> dict[str, 
             name = prop.get("Name") or ""
             if uuid and name:
                 mapping.setdefault(uuid, name)
+
+    if not mapping:
+        # Фолбэк: raw-header не уложился в строгий паттерн декодера.
+        # Пермиссивный обход сохраняет поведение #85 для нестандартных выгрузок.
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8-sig"))
+        except Exception as exc:
+            warnings.append(f"Не удалось прочитать {path}: {exc}")
+            return {}
+        _collect_attribute_uuid_map(payload.get("header", payload), mapping)
+
     return mapping
 
 
