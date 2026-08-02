@@ -42,33 +42,26 @@ from typing import Any
 class DecodeError(enum.Enum):
     """Cтатус ошибки декодирования."""
     JSON_NOT_FOUND = "json_not_found"
-    """JSON-файл владельца не найден."""
     JSON_PARSE_ERROR = "json_parse_error"
-    """JSON-файл не удалось прочитать/разобрать."""
     HEADER_MISSING = "header_missing"
-    """JSON-файл не содержит секции ``header``."""
     VERSION_UNSUPPORTED = "version_unsupported"
-    """Raw-формат header не распознан."""
 
 
 @dataclass
 class DecodeResult:
     """Cтруктурированный результат декодирования."""
     ok: bool
-    """``True`` — декодирование успешно или частично; ``False`` — ошибка."""
     data: dict
-    """Cтруктура ``{"Properties": [...], "TabularSections": [...]}``."""
     error: DecodeError | None = None
-    """Cтатус ошибки, если ``ok=False``."""
     warnings: list[str] = field(default_factory=list)
-    """Cписок некритичных предупреждений (partial decode)."""
 
 
-_EMPTY_DATA: dict = {"Properties": [], "TabularSections": []}
+def _empty_data() -> dict:
+    return {"Properties": [], "TabularSections": []}
 
 
 def _fail(error: DecodeError, msg: str) -> DecodeResult:
-    return DecodeResult(ok=False, data=_EMPTY_DATA.copy(), error=error, warnings=[msg])
+    return DecodeResult(ok=False, data=_empty_data(), error=error, warnings=[msg])
 
 
 # ---------------------------------------------------------------------------
@@ -78,17 +71,6 @@ def _fail(error: DecodeError, msg: str) -> DecodeResult:
 def decode_object_attributes(object_json: Path) -> DecodeResult:
     """Cчитать raw-``header`` из файла объекта метаданных и вернуть
     нормализованную структуру Properties + TabularSections.
-
-    Parameters
-    ----------
-    object_json:
-        Путь к JSON-файлу объекта, например
-        ``cf_export/Catalog/Банки/Catalog.json``.
-
-    Returns
-    -------
-    :class:`DecodeResult` с заполненными полями при успехе или
-    ``ok=False`` при критической ошибке.
     """
     object_json = Path(object_json)
 
@@ -115,7 +97,12 @@ def decode_object_attributes(object_json: Path) -> DecodeResult:
     properties: list[dict] = []
     tabular_sections: list[dict] = []
 
-    _walk_header(header, properties, tabular_sections, warnings)
+    # seen-множества создаются пер вызов, не на уровне модуля
+    props_seen: set[int] = set()
+    ts_seen: set[int] = set()
+
+    _walk_node(header, properties, tabular_sections, warnings,
+               depth=0, props_seen=props_seen, ts_seen=ts_seen)
 
     return DecodeResult(
         ok=True,
@@ -129,6 +116,7 @@ def decode_object_attributes(object_json: Path) -> DecodeResult:
 # ---------------------------------------------------------------------------
 
 _NULL_UUID = "00000000-0000-0000-0000-000000000000"
+_MAX_DEPTH = 20
 
 
 def _is_uuid(value: object) -> bool:
@@ -141,7 +129,6 @@ def _is_uuid(value: object) -> bool:
 
 
 def _unquote(value: object) -> str | None:
-    """Cнять окружающие кавычки 1С-строки, например '"City"' → 'City'."""
     if not isinstance(value, str) or len(value) < 2:
         return None
     if value[0] == '"' and value[-1] == '"':
@@ -150,21 +137,14 @@ def _unquote(value: object) -> str | None:
 
 
 def _extract_synonym_from_node(node: Any) -> str | None:
-    """Извлечь синоним из узла вида ``[0, 0, [0, '"ru"', '"..."\']]``.
-
-    Узел синонима реализует структуру: list[цифра, цифра, list[цифра, язык, строка]]
-    или скалярную строку.
-    """
     if node is None:
         return None
     if isinstance(node, str):
         return _unquote(node)
     if not isinstance(node, list):
         return None
-    # [0, 0, [0, '"ru"', '"..."\']] — синоним лежит в node[2][2]
     if len(node) >= 3 and isinstance(node[2], list) and len(node[2]) >= 3:
         return _unquote(node[2][2])
-    # Фоллбэк: ищем первую цитируемую строку
     for item in node:
         if isinstance(item, str) and item.startswith('"') and item.endswith('"'):
             return _unquote(item)
@@ -172,10 +152,6 @@ def _extract_synonym_from_node(node: Any) -> str | None:
 
 
 def _extract_type_from_node(node: Any) -> str | None:
-    """Извлечь тип из узла вида ``[0, '"String"']``.
-
-    Узел типа: list[цифра, строка] или простая строка.
-    """
     if node is None:
         return None
     if isinstance(node, str):
@@ -191,18 +167,11 @@ def _extract_type_from_node(node: Any) -> str | None:
 
 
 def _try_decode_prop_entry(entry: Any, warnings: list[str]) -> dict | None:
-    """Попытка декодировать одну запись реквизита raw-header.
-
-    Ожидаемая структура (0-индексация):
-        entry[0]  — тег (0)
-        entry[1]  — UUID-блок: [0, 0, "<uuid>"]
-        entry[2]  — имя: '"<Имя>"'
-        entry[3]  — тип: [0, '"<Тип>"'] (None если неизвестен)
-        entry[4]  — синоним: [0, 0, [0, '"ru"', '"<Синоним>"']]
-    """
+    """entry[0]=тег, entry[1]=UUID-блок, entry[2]=имя, entry[3]=тип, entry[4]=синоним."""
     if not isinstance(entry, list) or len(entry) < 3:
         warnings.append(
-            f"object_decoder: повреждённый узел реквизита: {type(entry).__name__}, len={getattr(entry, '__len__', lambda: '?')()}"
+            f"object_decoder: повреждённый узел реквизита: "
+            f"type={type(entry).__name__}, len={len(entry) if isinstance(entry, list) else '?'}"
         )
         return None
 
@@ -229,17 +198,13 @@ def _try_decode_prop_entry(entry: Any, warnings: list[str]) -> dict | None:
 
 
 def _collect_prop_list(prop_list_node: Any, warnings: list[str]) -> list[dict]:
-    """Декодировать список реквизитов из prop-блока.
-
-    prop-блок: [0, [entry1, entry2, ...]] — индекс-0 аналогичен в header.
-    """
+    """prop-блок: [0, entry1, entry2, ...] — индекс 0 является тегом."""
     result: list[dict] = []
     if not isinstance(prop_list_node, list):
         return result
-    # Список записей начинается с индекса 1 (index 0 — тег)
     for i, entry in enumerate(prop_list_node):
         if i == 0:
-            continue  # тег
+            continue
         if entry is None:
             continue
         decoded = _try_decode_prop_entry(entry, warnings)
@@ -248,18 +213,8 @@ def _collect_prop_list(prop_list_node: Any, warnings: list[str]) -> list[dict]:
     return result
 
 
-def _try_decode_ts_entry(
-    entry: Any, warnings: list[str]
-) -> dict | None:
-    """Попытка декодировать запись Табличной части.
-
-    Ожидаемая структура:
-        entry[0]  — тег (0)
-        entry[1]  — UUID-блок ТЧ: [0, 0, "<uuid>"]
-        entry[2]  — имя ТЧ: '"<Имя>"'
-        entry[3]  — синоним ТЧ: [0, 0, [0, '"ru"', '"<Синоним>"']]
-        entry[4]  — prop-блок реквизитов ТЧ: [0, [entry1, ...]]
-    """
+def _try_decode_ts_entry(entry: Any, warnings: list[str]) -> dict | None:
+    """entry[0]=тег, [1]=UUID-блок ТЧ, [2]=имя, [3]=синоним, [4]=prop-блок."""
     if not isinstance(entry, list) or len(entry) < 3:
         return None
 
@@ -286,61 +241,31 @@ def _try_decode_ts_entry(
     }
 
 
-def _walk_header(
-    header: list,
-    properties: list[dict],
-    tabular_sections: list[dict],
-    warnings: list[str],
-) -> None:
-    """Обход raw-header с поиском блоков Properties и TabularSections.
-
-    Паттерн подтверждён на header[0][6][i] в Catalog.json.
-    Функция работает best-effort: проходит все списки рекурсивно
-    и определяет блок-тип по структуре элементов.
-    """
-    _walk_node(header, properties, tabular_sections, warnings, depth=0)
-
-
-_MAX_DEPTH = 20
+def _looks_like_prop_entry(item: Any) -> bool:
+    """item похож на запись реквизита: [0, [0,0,uuid], '"Name"', ...]."""
+    if not isinstance(item, list) or len(item) < 3:
+        return False
+    uuid_block = item[1] if len(item) > 1 else None
+    if not isinstance(uuid_block, list) or len(uuid_block) < 3:
+        return False
+    return _is_uuid(uuid_block[2]) and uuid_block[2] != _NULL_UUID
 
 
 def _looks_like_prop_list(node: list) -> bool:
-    """Узел похож на список реквизитов: [0, [entry...], [entry...]...]
-
-    Признаки:
-    - первый элемент == 0 (тег)
-    - хотя бы один дочерний список с длиной ≥ 3
-    - второй дочерний элемент содержит UUID-блок в [1][2]
-    """
+    """[0, entry, entry, ...] — хотя бы один элемент с UUID-блоком."""
     if not isinstance(node, list) or len(node) < 2 or node[0] != 0:
         return False
-    for item in node[1:]:
-        if not isinstance(item, list) or len(item) < 3:
-            continue
-        uuid_block = item[1] if len(item) > 1 else None
-        if isinstance(uuid_block, list) and len(uuid_block) >= 3:
-            if _is_uuid(uuid_block[2]) and uuid_block[2] != _NULL_UUID:
-                return True
-    return False
+    return any(_looks_like_prop_entry(item) for item in node[1:])
 
 
 def _looks_like_ts_list(node: list) -> bool:
-    """Узел похож на список ТЧ: как prop-список, но внутренний элемент
-    имеет дополнительный признак: entry[4] является списком
-    (список реквизитов ТЧ).
-    """
+    """[0, ts_entry, ...] — ts_entry имеет UUID и entry[4] является списком (prop-блок)."""
     if not _looks_like_prop_list(node):
         return False
     for item in node[1:]:
-        if not isinstance(item, list) or len(item) < 5:
-            continue
-        if isinstance(item[4], list):
+        if _looks_like_prop_entry(item) and len(item) > 4 and isinstance(item[4], list):
             return True
     return False
-
-
-_props_seen: set[int] = set()
-_ts_seen: set[int] = set()
 
 
 def _walk_node(
@@ -349,13 +274,20 @@ def _walk_node(
     tabular_sections: list[dict],
     warnings: list[str],
     depth: int,
+    props_seen: set[int],
+    ts_seen: set[int],
 ) -> None:
+    """Best-effort рекурсивный обход header.
+
+    seen-множества передаются сверху вниз и создаются заново при каждом
+    вызове decode_object_attributes, исключая загрязнение между тестами.
+    """
     if depth > _MAX_DEPTH or not isinstance(node, list):
         return
     node_id = id(node)
 
-    if _looks_like_ts_list(node) and node_id not in _ts_seen:
-        _ts_seen.add(node_id)
+    if _looks_like_ts_list(node) and node_id not in ts_seen:
+        ts_seen.add(node_id)
         for i, entry in enumerate(node):
             if i == 0:
                 continue
@@ -364,8 +296,8 @@ def _walk_node(
                 tabular_sections.append(decoded)
         return
 
-    if _looks_like_prop_list(node) and node_id not in _props_seen:
-        _props_seen.add(node_id)
+    if _looks_like_prop_list(node) and node_id not in props_seen:
+        props_seen.add(node_id)
         for i, entry in enumerate(node):
             if i == 0:
                 continue
@@ -375,4 +307,5 @@ def _walk_node(
         return
 
     for child in node:
-        _walk_node(child, properties, tabular_sections, warnings, depth + 1)
+        _walk_node(child, properties, tabular_sections, warnings,
+                   depth + 1, props_seen=props_seen, ts_seen=ts_seen)
