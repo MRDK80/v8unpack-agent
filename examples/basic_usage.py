@@ -109,8 +109,10 @@ def make_demo_config_forms(config_root: Path) -> None:
 def demo_drift(config_root: Path) -> None:
     """Демонстрация drift-детекции: bsl_sha256 (#38) и elem_sha256 (#40)."""
     # Baseline-сканирование.
+    # baseline_path вынесен за пределы config_root, чтобы JSON-индекс
+    # не попадал в сканируемое дерево (issue #92, low).
     baseline = scan_forms(config_root, mode="config")
-    baseline_path = config_root / "forms_scan_index_baseline.json"
+    baseline_path = config_root.parent / "forms_scan_index_baseline.json"
     baseline.save(baseline_path)
     print("\n[drift] baseline сохранён:", baseline_path)
     for e in baseline.forms:
@@ -122,11 +124,11 @@ def demo_drift(config_root: Path) -> None:
         config_root / "Catalog" / "Товары" / "CatalogForm" / "ФормаЭлемента" / "CatalogForm.obj.bsl"
     )
     form_bsl.write_text("// ИЗМЕНЁННЫЙ код формы", encoding="utf-8")
-    report_bsl  = check_drift(config_root, index_path=baseline_path)
+    report_bsl = check_drift(config_root, index_path=baseline_path)
     print("\n[drift] после изменения кода:")
-    print(f"  modified         = {report_bsl.modified}")
+    print(f"  modified           = {report_bsl.modified}")
     print(f"  structure_modified = {report_bsl.structure_modified}")
-    print(f"  has_drift        = {report_bsl.has_drift}")
+    print(f"  has_drift          = {report_bsl.has_drift}")
 
     # Восстанавливаем код и эмулируем изменение разметки (elem_sha256 изменится).
     form_bsl.write_text("// исходный код", encoding="utf-8")
