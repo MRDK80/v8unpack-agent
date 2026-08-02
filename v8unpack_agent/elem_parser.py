@@ -337,11 +337,18 @@ def _extract_elements(
 ) -> list[dict]:
     if isinstance(data, dict) and isinstance(data.get("data"), dict):
         tree_meta = _types_from_tree(data.get("tree", []))
+        props = _extract_props(data.get("props"))
+        form_attribute_names = {
+            element["name"]
+            for element in props
+            if element.get("name")
+        }
         elements = _extract_from_data_paths(
             data["data"], tree_meta, warnings, attribute_map,
+            form_attribute_names=form_attribute_names,
             suppress_empty_map_warning=suppress_empty_map_warning,
         )
-        elements.extend(_extract_props(data.get("props")))
+        elements.extend(props)
         if elements:
             return _merge_source_duplicates(_deduplicate_elements(elements))
 
@@ -401,6 +408,39 @@ def _types_from_tree(tree_section: Any) -> dict[str, dict]:
 
 
 
+def _managed_structural_data_path(
+    full_path: str,
+    element_name: str,
+    form_attribute_names: set[str],
+) -> str | None:
+    """Консервативный fallback для привязок управляемой формы.
+
+    Точное совпадение означает самостоятельный реквизит формы.
+    Для колонки таблицы непосредственный родитель пути должен быть
+    реквизитом формы; имя колонки может включать имя таблицы как префикс.
+    """
+    if element_name in form_attribute_names:
+        return element_name
+
+    parts = [part for part in full_path.split("/") if part]
+    if len(parts) < 2:
+        return None
+
+    owner = parts[-2]
+    if owner not in form_attribute_names:
+        return None
+
+    column = (
+        element_name[len(owner):]
+        if element_name.startswith(owner)
+        else element_name
+    )
+    if not column:
+        return None
+
+    return f"{owner}.{column}"
+
+
 def _is_element_record(value: object) -> bool:
     """Запись секции ``data`` описывает элемент формы.
 
@@ -418,6 +458,7 @@ def _extract_from_data_paths(
     tree_meta: dict[str, dict],
     warnings: list[str] | None = None,
     attribute_map: dict[str, str] | None = None,
+    form_attribute_names: set[str] | None = None,
     suppress_empty_map_warning: bool = False,
 ) -> list[dict]:
     """Извлекает элементы из секции data, включая декодирование data_path
@@ -429,6 +470,8 @@ def _extract_from_data_paths(
     """
     if warnings is None:
         warnings = []
+    if form_attribute_names is None:
+        form_attribute_names = set()
     elements: list[dict] = []
     seen_paths: set[str] = set()
 
@@ -484,6 +527,12 @@ def _extract_from_data_paths(
                     element_name=name, warn_empty_map=False,
                 )
             warnings.extend(decode_warnings)
+            if decoded is None and not legacy:
+                decoded = _managed_structural_data_path(
+                    full_path,
+                    name,
+                    form_attribute_names,
+                )
             if decoded is not None:
                 el["data_path"] = decoded
         return el

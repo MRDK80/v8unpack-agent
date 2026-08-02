@@ -819,3 +819,110 @@ class TestManagedBindingDiagnosticsRegression:
             "карта реквизитов владельца пуста" in warning
             for warning in result.warnings
         )
+
+
+class TestManagedStructuralDataPaths:
+    @pytest.fixture
+    def structural_form(self, tmp_path: Path) -> Path:
+        form_root = tmp_path / "CommonForm" / "СтруктурныеПривязки"
+        form_root.mkdir(parents=True)
+
+        payload = {
+            "params": [],
+            "props": [
+                {"name": "Список", "id": "1", "raw": []},
+                {"name": "Фильтр", "id": "2", "raw": []},
+                {
+                    "name": "КонтейнерРеквизитов",
+                    "id": "3",
+                    "raw": [],
+                    "child": [
+                        {
+                            "name": "ВложенныйРеквизит",
+                            "id": "4",
+                            "raw": [],
+                        },
+                    ],
+                },
+            ],
+            "commands": [],
+            "tree": [
+                {"name": "СписокНоменклатура", "type": "Field"},
+                {"name": "Фильтр", "type": "Field"},
+                {"name": "ВложенныйРеквизит", "type": "Field"},
+                {"name": "Код", "type": "Field"},
+            ],
+            "data": {
+                "Список/СписокНоменклатура": {
+                    "raw": [UUID_FORM, UUID_DECOR],
+                    "ver": 1,
+                },
+                "ГруппаОтбора/Фильтр": {
+                    "raw": [UUID_FORM, UUID_DECOR],
+                    "ver": 1,
+                },
+                "Группа/ВложенныйРеквизит": {
+                    "raw": [UUID_FORM, UUID_DECOR],
+                    "ver": 1,
+                },
+                "Код": {
+                    "raw": [UUID_FORM, UUID_DECOR],
+                    "ver": 1,
+                },
+            },
+        }
+
+        (form_root / "CommonForm.elem.json").write_text(
+            json.dumps(payload, ensure_ascii=False),
+            encoding="utf-8",
+        )
+        return form_root
+
+    @staticmethod
+    def _by_name(result, name: str) -> dict:
+        return next(
+            element
+            for element in result.elements
+            if element["name"] == name
+            and element.get("source") == "data"
+        )
+
+    def test_table_column_uses_form_attribute_path(
+        self,
+        structural_form: Path,
+    ) -> None:
+        result = parse_elem_json(structural_form)
+
+        element = self._by_name(result, "СписокНоменклатура")
+
+        assert element["data_path"] == "Список.Номенклатура"
+
+    def test_exact_form_attribute_uses_own_name(
+        self,
+        structural_form: Path,
+    ) -> None:
+        result = parse_elem_json(structural_form)
+
+        element = self._by_name(result, "Фильтр")
+
+        assert element["data_path"] == "Фильтр"
+
+    def test_nested_form_attribute_uses_own_name(
+        self,
+        structural_form: Path,
+    ) -> None:
+        result = parse_elem_json(structural_form)
+
+        element = self._by_name(result, "ВложенныйРеквизит")
+
+        assert element["data_path"] == "ВложенныйРеквизит"
+
+    def test_unknown_name_is_not_guessed(
+        self,
+        structural_form: Path,
+    ) -> None:
+        result = parse_elem_json(structural_form)
+
+        element = self._by_name(result, "Код")
+
+        assert element.get("data_path") is None

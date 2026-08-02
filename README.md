@@ -38,8 +38,9 @@ index_cf(<путь_к_выгрузке>)
 - **Отказоустойчивость.** `extraction_ok=False` по одной форме не роняет пайплайн.
 - **Best-effort обогащение.** `parse_elem_json`, `extract_skd_queries` и `catalog_resolver` некритичны.
 - **Привязка к данным.** `parse_elem_json` заполняет `data_path` двумя механизмами:
-  обычные формы — по полю `prop`, управляемые — по UUID реквизита из карты
-  метаданных. Элементы без привязки (надписи, группы, панели команд) — норма.
+  обычные формы — по полю `prop`; управляемые — сначала по UUID реквизита,
+  затем консервативным структурным fallback для точного реквизита формы или
+  колонки таблицы. Элементы без подтверждённой привязки не угадываются.
 - **Полнота описи.** `scan_forms` учитывает и управляемые формы без кода модуля
   (без `.obj.bsl`) — они попадают в индекс через `*.elem.json` (issue #57).
 - **Прозрачность для агента.** Со стороны индексации это просто ещё один источник текстов.
@@ -57,9 +58,9 @@ index_cf(<путь_к_выгрузке>)
 | `managed_forms` | `discover_elem_forms()` + `ElemFormEntry` — обнаружение форм по `*.elem.json`. → [подробнее](docs/managed_forms_structure.md) |
 | `pipeline` | `discover_form_bins()`, `unpack_all_forms()`, `update_forms_index()`, `unpack_erf()`, `ErfUnpacker`. |
 | `skd_extractor` | `extract_skd_queries()` + `extract_all_skd_queries()` — СКД из `.erf`. → [подробнее](docs/skd_extractor.md) |
-| `elem_parser` | `parse_elem_json()` + `ElemIndexResult` — структура формы из `elem.json`; привязка элементов к данным (`data_path`) для обычных форм через `prop` и для управляемых через UUID реквизита. → [подробнее](docs/elem_parser.md) |
+| `elem_parser` | `parse_elem_json()` + `ElemIndexResult` — структура формы из `elem.json`; `data_path` обычных форм через `prop`, управляемых — через UUID и консервативный структурный fallback (точный реквизит формы / колонка таблицы). → [подробнее](docs/elem_parser.md) |
 | `form_summary` | `build_form_summary(form_dir)` + `to_normalized_json()` — детерминированная семантическая выжимка любой elem-формы (обычной и управляемой): attributes / commands / elements / events / relations поверх `parse_elem_json`. → [подробнее](docs/form_summary.md) |
-| `catalog_resolver` | `resolve_data_path()` + `ResolvedBinding` + `object_json_path()` — best-effort резолюция `data_path` через JSON объекта (#76). Обычные формы декодируются полностью (#85); для управляемых форм остаются нерезолвимыми стандартные реквизиты — их UUID нет в метаданных (#84). → [подробнее](docs/catalog_resolver.md) |
+| `catalog_resolver` | `resolve_data_path()` + `ResolvedBinding` + `object_json_path()` — best-effort обогащение подтверждённого `data_path` через JSON объекта (#76). Извлечение путей из обычных и управляемых форм реализовано в #85; чтение типа и синонима из raw `header` остаётся задачей #84. → [подробнее](docs/catalog_resolver.md) |
 
 ## Быстрый старт
 
