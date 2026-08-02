@@ -39,6 +39,12 @@ OS-нейтральность:
 - Текст читается/пишется как UTF-8 явно.
 - Устройство (CPU/GPU) не предполагается — модуль не использует
   тензорные операции.
+
+Изменения (issue #91):
+- ``check_drift`` бросает ``NotADirectoryError``, если ``cf_export_root``
+  не является существующей директорией.
+- Если скан валидной директории дал ноль форм — выдаётся WARNING через
+  ``logger.warning`` (предупреждение о тихом сценарии).
 """
 from __future__ import annotations
 
@@ -185,7 +191,7 @@ def _index_snapshot(
             elem_only_keys.add(key)
 
         # --- mtime (legacy) ---
-        # Для elem-only форм bsl_mtime бессмысленен, но заполняем -1.0
+        # Для elem-only форм bsl_mtime бессмыслен, но заполняем -1.0
         # чтобы ключ присутствовал в mtime_map (для set-операций).
         if is_elem_only:
             mtime_map[key] = -1.0
@@ -271,6 +277,8 @@ def check_drift(
     ---------
     cf_export_root:
         Корень выгрузки (тот же, что передаётся в scan_forms).
+        Должен быть существующей директорией; иначе бросает
+        ``NotADirectoryError``.
     index_path:
         Путь к forms_index.json, созданному scan_forms().
         Если файл не найден — все формы на диске считаются новыми
@@ -287,6 +295,12 @@ def check_drift(
     ----------
     :class:`DriftReport` с полями added / removed / modified /
     stale_extractions / structure_modified / has_drift.
+
+    Исключения
+    ----------
+    NotADirectoryError:
+        Если ``cf_export_root`` не является существующей директорией
+        (несуществующий путь или файл вместо директории).
 
     Детекция ``modified`` (issue #38):
     - При наличии ``bsl_sha256`` в baseline сравнивается hash текущего
@@ -310,9 +324,23 @@ def check_drift(
     ipath = Path(index_path)
     now = datetime.now(tz=timezone.utc).isoformat()
 
+    # --- Фикс #91: проверяем, что cf_export_root — существующая директория ---
+    if not root.is_dir():
+        raise NotADirectoryError(
+            f"cf_export_root must be an existing directory: {root}"
+        )
+
     # --- index_path не найден: всё новое ---
     if not ipath.exists():
         disk = _disk_snapshot(root, mode=mode)
+        # --- Фикс #91: предупреждение о нулевом скане ---
+        if not disk:
+            logger.warning(
+                "check_drift: scan of '%s' (mode=%s) returned zero forms; "
+                "cf_export_root may be empty or have unexpected layout.",
+                root,
+                mode,
+            )
         report = DriftReport(
             has_drift=bool(disk),
             added=sorted(disk),
@@ -334,6 +362,17 @@ def check_drift(
         index_mtime, index_hash, index_elem, elem_only_keys = {}, {}, {}, set()
 
     disk_snap = _disk_snapshot(root, mode=mode)
+
+    # --- Фикс #91: предупреждение о нулевом скане при наличии baseline ---
+    if not disk_snap and index_mtime:
+        logger.warning(
+            "check_drift: scan of '%s' (mode=%s) returned zero forms, "
+            "but baseline has %d entries; "
+            "cf_export_root may be empty or have unexpected layout.",
+            root,
+            mode,
+            len(index_mtime),
+        )
 
     # index_keys_bsl: только BSL-формы (не elem-only) — для added/removed/modified
     index_keys_bsl = set(index_mtime) - elem_only_keys
