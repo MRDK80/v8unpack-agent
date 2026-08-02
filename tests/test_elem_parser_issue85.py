@@ -753,3 +753,69 @@ class TestMergeSourceDuplicates:
 
         assert merged == elements
         assert "merged_sources" not in merged[0]
+
+
+class TestOwnerMetadataDiscoveryRegression:
+    def test_dynamic_owner_type_json(self, tmp_path: Path) -> None:
+        owner = tmp_path / "CustomMetadata" / "Объект1"
+        form_root = owner / "CustomForm" / "Форма1"
+        form_root.mkdir(parents=True)
+        (owner / "CustomMetadata.json").write_text(
+            json.dumps(_catalog_json(), ensure_ascii=False), encoding="utf-8"
+        )
+        warnings: list[str] = []
+        mapping = load_owner_attribute_map(form_root, warnings)
+        assert warnings == []
+        assert mapping[UUID_GOROD] == "Город"
+
+    def test_common_form_has_no_missing_owner_warning(self, tmp_path: Path) -> None:
+        form_root = tmp_path / "CommonForm" / "ОбщаяФорма1"
+        form_root.mkdir(parents=True)
+        warnings: list[str] = []
+        assert load_owner_attribute_map(form_root, warnings) == {}
+        assert warnings == []
+
+
+class TestManagedBindingDiagnosticsRegression:
+    def test_empty_map_warning_emitted_once_per_form(self, tmp_path: Path) -> None:
+        form_root = tmp_path / "Catalog" / "Банки" / "CatalogForm" / "Форма1"
+        form_root.mkdir(parents=True)
+        (form_root / "CatalogForm.elem.json").write_text(
+            json.dumps(_managed_elem_json(), ensure_ascii=False), encoding="utf-8"
+        )
+        result = parse_elem_json(form_root)
+        empty_map = [
+            warning for warning in result.warnings
+            if "карта реквизитов владельца пуста" in warning
+        ]
+        assert len(empty_map) == 1
+
+    def test_ambiguous_candidates_resolved_by_element_name(self) -> None:
+        raw = [["0", UUID_GOROD], ["0", UUID_TELEFONY]]
+        mapping = {UUID_GOROD: "Город", UUID_TELEFONY: "Телефоны"}
+        assert decode_element_data_path(
+            raw, mapping, element_name="Город"
+        ) == ("Объект.Город", [])
+
+    def test_unresolved_ambiguity_mentions_element_name(self) -> None:
+        raw = [["0", UUID_GOROD], ["0", UUID_TELEFONY]]
+        mapping = {UUID_GOROD: "Город", UUID_TELEFONY: "Телефоны"}
+        path, warnings = decode_element_data_path(
+            raw, mapping, element_name="Адрес"
+        )
+        assert path is None
+        assert len(warnings) == 1
+        assert "элемент='Адрес'" in warnings[0]
+
+
+    def test_common_form_has_no_empty_map_warning(self, tmp_path: Path) -> None:
+        form_root = tmp_path / "CommonForm" / "ОбщаяФорма1"
+        form_root.mkdir(parents=True)
+        (form_root / "CommonForm.elem.json").write_text(
+            json.dumps(_managed_elem_json(), ensure_ascii=False), encoding="utf-8"
+        )
+        result = parse_elem_json(form_root)
+        assert not any(
+            "карта реквизитов владельца пуста" in warning
+            for warning in result.warnings
+        )

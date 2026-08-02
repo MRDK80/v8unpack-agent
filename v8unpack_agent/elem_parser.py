@@ -62,12 +62,6 @@ _RAW_DICT_DATA_PATH_KEYS = ("DataPath", "data_path", "ПутьКДанным", "
 _PAGE_LIST_KEY = "-pages-"
 
 
-_METADATA_JSON_NAMES = (
-    "Catalog.json", "Document.json", "InformationRegister.json",
-    "AccumulationRegister.json", "ChartOfCharacteristicTypes.json",
-    "BusinessProcess.json", "Task.json", "ExchangePlan.json",
-)
-
 _NULL_UUID = "00000000-0000-0000-0000-000000000000"
 _OBJECT_PREFIX = "Объект"
 
@@ -119,12 +113,24 @@ def _collect_uuids(node: object, out: list[str]) -> None:
             _collect_uuids(child, out)
 
 
+def _is_common_form(form_root: Path) -> bool:
+    """Общая форма не имеет объекта-владельца и его карты реквизитов."""
+    return "CommonForm" in form_root.parts
+
+
 def _find_owner_metadata_json(form_root: Path) -> Path | None:
+    """Найти ``<Type>.json`` владельца без фиксированного списка типов.
+
+    Для пути ``.../<Type>/<Object>/<FormKind>/<Form>`` файл владельца лежит
+    в ``.../<Type>/<Object>/<Type>.json``. Это покрывает новые и редкие типы
+    метаданных без обновления константы в парсере.
+    """
     for parent in form_root.parents:
-        for name in _METADATA_JSON_NAMES:
-            candidate = parent / name
-            if candidate.exists():
-                return candidate
+        if parent.parent == parent:
+            break
+        candidate = parent / f"{parent.parent.name}.json"
+        if candidate.is_file():
+            return candidate
     return None
 
 
@@ -132,7 +138,8 @@ def load_owner_attribute_map(form_root: Path, warnings: list[str]) -> dict[str, 
     """Карта ``uuid реквизита -> имя`` из метаданных объекта-владельца формы."""
     path = _find_owner_metadata_json(form_root)
     if path is None:
-        warnings.append(f"Метаданные владельца не найдены для {form_root}")
+        if not _is_common_form(form_root):
+            warnings.append(f"Метаданные владельца не найдены для {form_root}")
         return {}
     try:
         payload = json.loads(path.read_text(encoding="utf-8-sig"))
@@ -209,6 +216,8 @@ def decode_element_data_path(
     raw: object,
     attribute_map: dict[str, str] | None = None,
     object_prefix: str = _OBJECT_PREFIX,
+    element_name: str | None = None,
+    warn_empty_map: bool = True,
 ) -> tuple[str | None, list[str]]:
     """Декодирование data_path из raw секции data.
 
@@ -249,7 +258,8 @@ def decode_element_data_path(
             return item.strip(), []
 
     if not attribute_map:
-        return None, ["decode_element_data_path: карта реквизитов владельца пуста"]
+        warnings = ["decode_element_data_path: карта реквизитов владельца пуста"]
+        return None, warnings if warn_empty_map else []
 
     uuids: list[str] = []
     _collect_uuids(raw, uuids)
@@ -258,7 +268,14 @@ def decode_element_data_path(
     if len(matched) == 1:
         return f"{object_prefix}.{matched[0]}", []
     if len(matched) > 1:
-        return None, [f"decode_element_data_path: неоднозначная привязка, кандидаты={matched!r}"]
+        exact = [candidate for candidate in matched if candidate == element_name]
+        if len(exact) == 1:
+            return f"{object_prefix}.{exact[0]}", []
+        context = f", элемент={element_name!r}" if element_name else ""
+        return None, [
+            f"decode_element_data_path: неоднозначная привязка{context}, "
+            f"кандидаты={matched!r}"
+        ]
     return None, []
 
 
@@ -277,7 +294,10 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
     attribute_map = load_owner_attribute_map(form_root, warnings)
 
     try:
-        elements = _extract_elements(data, warnings, attribute_map)
+        elements = _extract_elements(
+            data, warnings, attribute_map,
+            suppress_empty_map_warning=_is_common_form(form_root),
+        )
     except Exception as exc:
         return ElemIndexResult(False, [], [f"Не удалось разобрать {elem_path}: {exc}"])
 
@@ -313,11 +333,13 @@ def _extract_elements(
     data: Any,
     warnings: list[str],
     attribute_map: dict[str, str] | None = None,
+    suppress_empty_map_warning: bool = False,
 ) -> list[dict]:
     if isinstance(data, dict) and isinstance(data.get("data"), dict):
         tree_meta = _types_from_tree(data.get("tree", []))
         elements = _extract_from_data_paths(
-            data["data"], tree_meta, warnings, attribute_map
+            data["data"], tree_meta, warnings, attribute_map,
+            suppress_empty_map_warning=suppress_empty_map_warning,
         )
         elements.extend(_extract_props(data.get("props")))
         if elements:
@@ -396,6 +418,7 @@ def _extract_from_data_paths(
     tree_meta: dict[str, dict],
     warnings: list[str] | None = None,
     attribute_map: dict[str, str] | None = None,
+    suppress_empty_map_warning: bool = False,
 ) -> list[dict]:
     """Извлекает элементы из секции data, включая декодирование data_path
     из поля raw каждой записи (issue #85).
@@ -410,6 +433,16 @@ def _extract_from_data_paths(
     seen_paths: set[str] = set()
 
     legacy = is_legacy_form_data(data_section)
+    if (
+        not legacy
+        and not attribute_map
+        and not suppress_empty_map_warning
+        and not any(
+            "карта реквизитов владельца пуста" in warning
+            for warning in warnings
+        )
+    ):
+        warnings.append("decode_element_data_path: карта реквизитов владельца пуста")
 
     # Записи по имени элемента для последующего декодирования привязки
     record_by_element_name: dict[str, dict] = {}
@@ -447,7 +480,8 @@ def _extract_from_data_paths(
                 decoded, decode_warnings = decode_legacy_data_path(record)
             else:
                 decoded, decode_warnings = decode_element_data_path(
-                    record.get("raw"), attribute_map
+                    record.get("raw"), attribute_map,
+                    element_name=name, warn_empty_map=False,
                 )
             warnings.extend(decode_warnings)
             if decoded is not None:
