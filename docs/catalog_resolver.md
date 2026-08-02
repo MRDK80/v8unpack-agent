@@ -57,21 +57,25 @@ def object_json_path(form_entry: FormEntry) -> Path | None:
 
 ## Известные ограничения
 
-### Зависимость от #85 — декодирование `data_path` из `CatalogForm.elem.json`
+### #85 — декодирование `data_path` — закрыто
 
-`elem_parser` извлекает имена элементов из секции `tree`, но **не декодирует**
-точные пути к данным из `CatalogForm.elem.json/data[*].raw`.
-В результате `FormSummary.relations[kind=data]` на реальной выгрузке остаётся
-пустым — `resolve_data_path` нечего резолвить.
+`parse_elem_json` заполняет `data_path` из секции `data` файла `*.elem.json`:
+обычные формы — через поле `prop`, управляемые — через UUID реквизита
+объекта-владельца. Подробности механизма — в
+[docs/elem_parser.md](elem_parser.md).
 
-До реализации [#85](https://github.com/MRDK80/v8unpack-agent/issues/85)
-(`decode_element_data_path`) связка `elem_parser` → `catalog_resolver` работает
-только на синтетических или вручную заданных `data_path`.
+Связка `elem_parser` → `catalog_resolver` работает на реальных выгрузках:
+`FormSummary.relations[kind=data]` заполняется, и `resolve_data_path`
+получает подтверждённые пути вида `СправочникОбъект.Город` (обычные формы)
+или `Объект.Город` (управляемые).
 
-Поля `Город` и `Телефоны` в диагностических примерах — smoke-примеры одной
-конкретной формы, а не подтверждение общей работоспособности на реальных выгрузках.
-Путь `Объект.<имя элемента>` **не выводится автоматически** без подтверждения
-из сериализованных данных.
+Элементы без привязки — надписи, группы, страницы, панели команд — это
+норма, а не пробел в декодировании.
+
+Остаточное ограничение: стандартные реквизиты (`Код`, `Наименование`,
+`Родитель`) в **управляемых** формах привязки не получают — их UUID
+отсутствуют в метаданных объекта. В обычных формах те же реквизиты
+разрешаются, поскольку привязка идёт по имени. Это #84, см. ниже.
 
 ### Зависимость от #84 — декодирование `Catalog.json/header`
 
@@ -84,21 +88,23 @@ def object_json_path(form_entry: FormEntry) -> Path | None:
 ### Итоговая картина
 
 ```text
-CatalogForm.elem.json
-  → elem_parser (tree)          ← имена элементов без data_path
-  → decode_element_data_path    ← #85, ожидается
+*.elem.json
+  → parse_elem_json             ← #85 ✅ реализовано, PR #86
         ↓
   data_path подтверждённый
+    обычные формы    — через prop
+    управляемые      — через UUID реквизита
         ↓
-  catalog_resolver              ← #76 ✅ реализовано
+  catalog_resolver              ← #76 ✅ реализовано, PR #83
         ↓ (требует читаемых Properties)
   decode_object_attributes      ← #84, ожидается
         ↓
   ResolvedBinding(resolved=True)
 ```
 
-До завершения #85 и #84 модуль работает в режиме best-effort:
-`resolved=False` — не ошибка, а штатный результат на реальной выгрузке.
+До завершения #84 модуль работает в режиме best-effort: `resolved=False`
+на реальной выгрузке — штатный результат, а не ошибка. Входные `data_path`
+при этом уже достоверны.
 
 ## Пример использования
 
@@ -111,11 +117,11 @@ form_entry: FormEntry = ...  # из scan_forms()
 
 obj_json = object_json_path(form_entry)
 if obj_json:
-    binding = resolve_data_path("Объект.Город", obj_json)
+    binding = resolve_data_path("Объект.Город", obj_json)  # путь из parse_elem_json
     if binding.resolved:
         print(binding.value_type, binding.synonym)
     else:
-        print("резолюция недоступна — ожидается #84/#85")
+        print("резолюция недоступна — ожидается #84")
 ```
 
 ## Связь с конвейером №3a
@@ -123,6 +129,6 @@ if obj_json:
 | Задача | Статус |
 |---|---|
 | [#76](https://github.com/MRDK80/v8unpack-agent/issues/76) `catalog_resolver` | ✅ реализовано, PR [#83](https://github.com/MRDK80/v8unpack-agent/pull/83) |
-| [#85](https://github.com/MRDK80/v8unpack-agent/issues/85) `decode_element_data_path` | 🔲 open |
+| [#85](https://github.com/MRDK80/v8unpack-agent/issues/85) `decode_element_data_path` | ✅ реализовано, PR [#86](https://github.com/MRDK80/v8unpack-agent/pull/86) |
 | [#84](https://github.com/MRDK80/v8unpack-agent/issues/84) `decode_object_attributes` | 🔲 open |
-| [#77](https://github.com/MRDK80/v8unpack-agent/issues/77) `form_context` | 🔲 open, ожидает #85 и #84 |
+| [#77](https://github.com/MRDK80/v8unpack-agent/issues/77) `form_context` | 🔲 open, ожидает #84 |
