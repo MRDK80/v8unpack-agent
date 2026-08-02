@@ -18,3 +18,4 @@ proto_adapter.py
 proto_fallback.py
 verify_issue54.py
 /json
+verify_issue85.py
