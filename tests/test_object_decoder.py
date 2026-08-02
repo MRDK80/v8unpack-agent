@@ -353,3 +353,172 @@ def test_supported_object_types(tmp_path, filename):
     result = decode_object_attributes(obj_json)
     assert result.ok
     assert len(result.data["Properties"]) == 1
+
+
+# ---------------------------------------------------------------------------
+# 8. Реальный production-layout v8unpack со строковыми тегами
+# ---------------------------------------------------------------------------
+
+_REAL_NULL_UUID = "00000000-0000-0000-0000-000000000000"
+
+
+def _real_name_entry(uuid: str, name: str, synonym: str) -> list:
+    return [
+        "2",
+        ["1", "100", uuid],
+        json.dumps(name, ensure_ascii=False),
+        ["1", '"ru"', json.dumps(synonym, ensure_ascii=False)],
+        '""', "0", "0", _REAL_NULL_UUID,
+    ]
+
+
+def _real_attribute_wrapper(uuid: str, name: str, synonym: str) -> list:
+    descriptor = [
+        "2",
+        _real_name_entry(uuid, name, synonym),
+        ['"Pattern"', ['"#"', "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"]],
+    ]
+    return [
+        [
+            "8",
+            [
+                "27", descriptor, "0", ["0"], ["0"], "0", '""', "0",
+                ['"U"'], ['"U"'], "0", _REAL_NULL_UUID, "2", "0",
+                ["5004", "0"], ["3", "0", "0"], ["0", "0"], "0",
+                ["0"], ['"U"'], "0", "0", "0",
+            ],
+            "0", "1", "1",
+        ],
+        "0",
+    ]
+
+
+def _real_tabular_section() -> list:
+    header = [
+        "1",
+        [
+            "11", "service-1", "service-2", "service-3", "service-4",
+            [
+                "0",
+                _real_name_entry(
+                    "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+                    "Товары",
+                    "Товары",
+                ),
+            ],
+            "0", ["0"], ["0"],
+        ],
+    ]
+    columns = [
+        "columns-service-uuid",
+        "1",
+        _real_attribute_wrapper(
+            "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+            "Номенклатура",
+            "Номенклатура",
+        ),
+    ]
+    return [header, "1", columns]
+
+
+def _real_v8_document() -> dict:
+    root = [
+        "1",
+        [],
+        "0",
+        ["tabular-sections-service-uuid", "1", _real_tabular_section()],
+        "0",
+        [
+            "properties-service-uuid",
+            "1",
+            _real_attribute_wrapper(
+                "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+                "Организация",
+                "Организация",
+            ),
+        ],
+    ]
+    return {"header": [root]}
+
+
+def test_real_v8_string_tags_and_containers(tmp_path):
+    obj_json = _write_json(tmp_path, "Document.json", _real_v8_document())
+    result = decode_object_attributes(obj_json)
+
+    assert result.ok
+    assert result.warnings == []
+    assert [p["Name"] for p in result.data["Properties"]] == ["Организация"]
+    assert result.data["Properties"][0]["Type"] is None
+
+    sections = result.data["TabularSections"]
+    assert [section["Name"] for section in sections] == ["Товары"]
+    assert [p["Name"] for p in sections[0]["Properties"]] == ["Номенклатура"]
+    assert sections[0]["Properties"][0]["Type"] is None
+
+
+def test_real_v8_uuid_map_contains_top_level_and_ts_props(tmp_path):
+    obj_json = _write_json(tmp_path, "Document.json", _real_v8_document())
+    result = decode_object_attributes(obj_json)
+    mapping = {p["UUID"]: p["Name"] for p in result.data["Properties"]}
+    for section in result.data["TabularSections"]:
+        mapping.update({p["UUID"]: p["Name"] for p in section["Properties"]})
+
+    assert mapping["dddddddd-dddd-4ddd-8ddd-dddddddddddd"] == "Организация"
+    assert mapping["bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"] == "Номенклатура"
+
+
+def test_real_v8_unknown_wrapper_keeps_uuid_map(tmp_path):
+    """Неизвестная wrapper-версия не должна терять UUID/name-entry."""
+    entry = _real_name_entry(
+        "ffffffff-ffff-4fff-8fff-ffffffffffff",
+        "НовыйРеквизит",
+        "Новый реквизит",
+    )
+    payload = {
+        "header": [[
+            "99",
+            ["unknown", ["layout", ["changed", entry]]],
+        ]],
+    }
+    obj_json = _write_json(tmp_path, "Document.json", payload)
+
+    result = decode_object_attributes(obj_json)
+
+    assert result.ok
+    assert result.data["TabularSections"] == []
+    assert result.data["Properties"] == [{
+        "UUID": "ffffffff-ffff-4fff-8fff-ffffffffffff",
+        "Name": "НовыйРеквизит",
+        "Type": None,
+        "Synonym": "Новый реквизит",
+    }]
+
+
+@pytest.mark.parametrize("tag", ["0", "1", "2", "3"])
+def test_real_v8_supported_name_entry_tags(tmp_path, tag):
+    """Production-варианты name-entry сохраняют UUID и имя."""
+    entry = _real_name_entry(
+        "ffffffff-ffff-4fff-8fff-ffffffffffff",
+        "Реквизит",
+        "Реквизит",
+    )
+    entry[0] = tag
+    payload = {"header": [["99", ["unknown", entry]]]}
+    obj_json = _write_json(tmp_path, "Document.json", payload)
+
+    result = decode_object_attributes(obj_json)
+
+    assert result.ok
+    assert result.data["Properties"] == [{
+        "UUID": "ffffffff-ffff-4fff-8fff-ffffffffffff",
+        "Name": "Реквизит",
+        "Type": None,
+        "Synonym": "Реквизит",
+    }]
+
+
+def test_real_v8_foreign_name_entry_tag_is_rejected(tmp_path):
+    entry = _real_name_entry("ffffffff-ffff-4fff-8fff-ffffffffffff", "X", "X")
+    entry[0] = "99"
+    result = decode_object_attributes(_write_json(tmp_path, "Document.json", {"header": [entry]}))
+    assert result.data["Properties"] == []

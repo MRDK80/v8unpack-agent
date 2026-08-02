@@ -94,6 +94,14 @@ def decode_object_attributes(object_json: Path) -> DecodeResult:
                      f"object_decoder: 'header' не является списком в {object_json.name}")
 
     warnings: list[str] = []
+
+    # Реальные выгрузки v8unpack используют строковые теги и раздельные
+    # контейнеры реквизитов/табличных частей. Синтетический walker ниже
+    # остаётся fallback для старого и нормализованного формата.
+    real_data = _decode_real_header(header, warnings)
+    if real_data is not None:
+        return DecodeResult(ok=True, data=real_data, warnings=warnings)
+
     properties: list[dict] = []
     tabular_sections: list[dict] = []
 
@@ -164,6 +172,166 @@ def _extract_type_from_node(node: Any) -> str | None:
             if val:
                 return val
     return None
+
+
+def _tag_eq(value: object, expected: int | str) -> bool:
+    """Сравнить числовой тег независимо от JSON-представления."""
+    return str(value) == str(expected)
+
+
+def _at(node: object, *indexes: int) -> object | None:
+    """Безопасно получить элемент глубоко вложенного списка."""
+    current = node
+    for index in indexes:
+        if not isinstance(current, list) or index >= len(current):
+            return None
+        current = current[index]
+    return current
+
+
+def _container_records(node: object) -> list:
+    """Записи контейнера ``[service-id, count, record, ...]``."""
+    if not isinstance(node, list) or len(node) < 2:
+        return []
+    try:
+        expected = int(node[1])
+    except (TypeError, ValueError):
+        return []
+    if expected < 0:
+        return []
+    return node[2:2 + expected]
+
+
+def _decode_real_name_entry(entry: object) -> dict | None:
+    """Декодировать name-entry реального raw-header v8unpack."""
+    if not isinstance(entry, list) or len(entry) < 4:
+        return None
+    # Код варианта name-entry зависит от типа/версии метаданных. В реальных
+    # выгрузках подтверждены 0, 1, 2 и 3; структура UUID/name/synonym при этом
+    # одинакова. Остальные коды не принимаем, чтобы не собирать служебные узлы.
+    # Строковый тип тега также отличает raw production-layout от старого
+    # нормализованного формата с целочисленными тегами: последний должен
+    # обрабатываться legacy walker, сохраняющим Type, ТЧ и warnings.
+    if not isinstance(entry[0], str) or entry[0] not in {"0", "1", "2", "3"}:
+        return None
+
+    uuid = _at(entry, 1, 2)
+    name = _unquote(entry[2])
+    synonym = _unquote(_at(entry, 3, 2))
+    if not _is_uuid(uuid) or uuid == _NULL_UUID or not name:
+        return None
+
+    return {
+        "UUID": uuid,
+        "Name": name,
+        # В реальном формате тип находится в соседнем descriptor. Пока UUID
+        # типа не разрешён в имя метаданных, нельзя подставлять "Pattern"/"ru".
+        "Type": None,
+        "Synonym": synonym,
+    }
+
+
+def _decode_real_attribute_wrapper(wrapper: object) -> dict | None:
+    """Декодировать реквизит из wrapper реального v8unpack-контейнера."""
+    return _decode_real_name_entry(_at(wrapper, 0, 1, 1, 1))
+
+
+def _decode_real_tabular_section(node: object) -> dict | None:
+    """Декодировать ТЧ и её реквизиты из реального raw-header."""
+    if not isinstance(node, list) or len(node) < 3:
+        return None
+
+    decoded = _decode_real_name_entry(_at(node, 0, 1, 5, 1))
+    if decoded is None:
+        return None
+
+    properties = []
+    for wrapper in _container_records(node[2]):
+        prop = _decode_real_attribute_wrapper(wrapper)
+        if prop is not None:
+            properties.append(prop)
+
+    return {
+        "UUID": decoded["UUID"],
+        "Name": decoded["Name"],
+        "Synonym": decoded["Synonym"],
+        "Properties": properties,
+    }
+
+
+def _decode_real_header(
+    header: object,
+    warnings: list[str],
+) -> dict | None:
+    """Декодировать production-layout v8unpack со строковыми тегами.
+
+    Позиции контейнеров зависят от типа и версии метаданных, поэтому поиск
+    выполняется по устойчивой структуре wrapper/descriptor, а не по индексам
+    ``root[3]`` и ``root[5]``.
+    """
+    if not isinstance(header, list):
+        return None
+
+    def iter_lists(node: object):
+        if not isinstance(node, list):
+            return
+        yield node
+        for child in node:
+            yield from iter_lists(child)
+
+    tabular_sections = []
+    section_uuids: set[str] = set()
+    nested_uuids: set[str] = set()
+
+    # ТЧ распознаётся по связке: header-wrapper, флаг и counted-контейнер
+    # колонок. Такой узел одинаков для разных позиций в Document/Catalog.
+    for node in iter_lists(header):
+        section = _decode_real_tabular_section(node)
+        if section is None or section["UUID"] in section_uuids:
+            continue
+        section_uuids.add(section["UUID"])
+        nested_uuids.update(
+            prop["UUID"] for prop in section["Properties"] if prop["UUID"]
+        )
+        tabular_sections.append(section)
+
+    properties = []
+    property_uuids: set[str] = set()
+    blocked_uuids = section_uuids | nested_uuids
+
+    # После выделения ТЧ остальные attribute-wrapper являются реквизитами
+    # объекта. UUID предотвращает повторный сбор одного узла на разных уровнях.
+    for node in iter_lists(header):
+        prop = _decode_real_attribute_wrapper(node)
+        if prop is None:
+            continue
+        uuid = prop["UUID"]
+        if uuid in blocked_uuids or uuid in property_uuids:
+            continue
+        property_uuids.add(uuid)
+        properties.append(prop)
+
+    # Последний best-effort слой повторяет доказавший покрытие permissive
+    # подход: собирает непосредственные name-entry независимо от окружающей
+    # версии wrapper. Уже распознанные ТЧ и их колонки исключаются, поэтому
+    # структурный результат имеет приоритет. Для неизвестных layout запись
+    # остаётся верхнеуровневым Property с Type=None, но UUID-карта не теряется.
+    for node in iter_lists(header):
+        prop = _decode_real_name_entry(node)
+        if prop is None:
+            continue
+        uuid = prop["UUID"]
+        if uuid in blocked_uuids or uuid in property_uuids:
+            continue
+        property_uuids.add(uuid)
+        properties.append(prop)
+
+    if not properties and not tabular_sections:
+        return None
+    return {
+        "Properties": properties,
+        "TabularSections": tabular_sections,
+    }
 
 
 def _try_decode_prop_entry(entry: Any, warnings: list[str]) -> dict | None:
