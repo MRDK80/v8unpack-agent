@@ -221,7 +221,7 @@ def test_corrupted_node_partial(tmp_path):
                             [0, [0, 0, "aaaa0001-0000-0000-0000-000000000001"], '"\u041a\u043e\u0434"',
                              [0, '"String"'], [0, 0, [0, '"ru"', '"\u041a\u043e\u0434"']]],
                             # повреждённый узел: список меньше 3 элементов
-                            [0, [0, 0]],
+                            [0, [0, 0, "dead0000-0000-0000-0000-000000000002"]],
                             # ещё один нормальный
                             [0, [0, 0, "bbbb0002-0000-0000-0000-000000000002"], '"\u041dаименование"',
                              [0, '"String"'], [0, 0, [0, '"ru"', '"\u041dаименование"']]],
@@ -236,6 +236,7 @@ def test_corrupted_node_partial(tmp_path):
     assert result.ok
     assert len(result.data["Properties"]) == 2
     assert len(result.warnings) > 0
+    assert any("dead0000" in w for w in result.warnings), result.warnings
 
 
 def test_unknown_type_fallback(tmp_path):
@@ -361,6 +362,9 @@ def test_supported_object_types(tmp_path, filename):
 
 _REAL_NULL_UUID = "00000000-0000-0000-0000-000000000000"
 
+# UUID tipa, zashityy v _real_attribute_wrapper nizhe.
+_REF_TYPE_IN_FIXTURE = "Ref#eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"
+
 
 def _real_name_entry(uuid: str, name: str, synonym: str) -> list:
     return [
@@ -448,12 +452,12 @@ def test_real_v8_string_tags_and_containers(tmp_path):
     assert result.ok
     assert result.warnings == []
     assert [p["Name"] for p in result.data["Properties"]] == ["Организация"]
-    assert result.data["Properties"][0]["Type"] is None
+    assert result.data["Properties"][0]["Type"] == _REF_TYPE_IN_FIXTURE
 
     sections = result.data["TabularSections"]
     assert [section["Name"] for section in sections] == ["Товары"]
     assert [p["Name"] for p in sections[0]["Properties"]] == ["Номенклатура"]
-    assert sections[0]["Properties"][0]["Type"] is None
+    assert sections[0]["Properties"][0]["Type"] == _REF_TYPE_IN_FIXTURE
 
 
 def test_real_v8_uuid_map_contains_top_level_and_ts_props(tmp_path):
@@ -522,3 +526,78 @@ def test_real_v8_foreign_name_entry_tag_is_rejected(tmp_path):
     entry[0] = "99"
     result = decode_object_attributes(_write_json(tmp_path, "Document.json", {"header": [entry]}))
     assert result.data["Properties"] == []
+
+# ---------------------------------------------------------------------------
+# 9. Production Type: primitivy, ssylochnye, TYPE_UNKNOWN (#84 DoD p.1)
+# ---------------------------------------------------------------------------
+
+def _wrapper_with_type_node(type_node: list) -> list:
+    # attribute-wrapper s proizvolnym type_node v descriptor
+    descriptor = [
+        "2",
+        _real_name_entry(
+            "cafe0001-0000-4000-8000-000000000001", "TestRekvizit", "Test"
+        ),
+        ['"Pattern"', type_node],
+    ]
+    return [
+        [
+            "8",
+            [
+                "27", descriptor, "0", ["0"], ["0"], "0", '""', "0",
+                ['"U"'], ['"U"'], "0", _REAL_NULL_UUID, "2", "0",
+                ["5004", "0"], ["3", "0", "0"], ["0", "0"], "0",
+                ["0"], ['"U"'], "0", "0", "0",
+            ],
+            "0", "1", "1",
+        ],
+        "0",
+    ]
+
+
+def _doc_with_type_node(type_node: list) -> dict:
+    root = [
+        "1", [], "0", ["ts-service", "0"], "0",
+        ["props-service", "1", _wrapper_with_type_node(type_node)],
+    ]
+    return {"header": [root]}
+
+
+@pytest.mark.parametrize("code,expected", [
+    ("S", "String"),
+    ("N", "Number"),
+    ("B", "Boolean"),
+    ("D", "Date"),
+    ("U", "Undefined"),
+    ("T", "Null"),
+])
+def test_production_type_primitive_resolved(tmp_path, code, expected):
+    payload = _doc_with_type_node(['"%s"' % code])
+    result = decode_object_attributes(_write_json(tmp_path, "Document.json", payload))
+
+    assert result.ok
+    props = result.data["Properties"]
+    assert len(props) == 1
+    assert props[0]["Type"] == expected
+    assert not any("TYPE_UNKNOWN" in w for w in result.warnings)
+
+
+def test_production_type_ref_uuid(tmp_path):
+    ref = "12345678-1234-4234-8234-123456789abc"
+    payload = _doc_with_type_node(['"#"', ref])
+    result = decode_object_attributes(_write_json(tmp_path, "Document.json", payload))
+
+    assert result.ok
+    assert result.data["Properties"][0]["Type"] == "Ref#" + ref
+    assert not any("TYPE_UNKNOWN" in w for w in result.warnings)
+
+
+def test_production_type_unknown_warning(tmp_path):
+    payload = _doc_with_type_node(['"ZZZ"'])
+    result = decode_object_attributes(_write_json(tmp_path, "Document.json", payload))
+
+    assert result.ok
+    props = result.data["Properties"]
+    assert len(props) == 1
+    assert props[0]["Type"] is None
+    assert any("TYPE_UNKNOWN" in w for w in result.warnings), result.warnings

@@ -202,7 +202,71 @@ def _container_records(node: object) -> list:
     return node[2:2 + expected]
 
 
-def _decode_real_name_entry(entry: object) -> dict | None:
+# ---------------------------------------------------------------------------
+# Type resolution (production layout)
+# ---------------------------------------------------------------------------
+
+_PRIMITIVE_TYPE_CODES: dict[str, str] = {
+    "S": "String",
+    "N": "Number",
+    "B": "Boolean",
+    "D": "Date",
+    "U": "Undefined",
+    "T": "Null",
+}
+
+_REF_TYPE_PREFIX = "Ref#"
+
+
+def _resolve_type_from_descriptor(
+    descriptor: object,
+    warnings: list[str] | None = None,
+    prop_name: str = "",
+) -> str | None:
+    # descriptor = [tag, name_entry, type_block, ...]
+    # type_block = [Pattern, type_node]; type_node = [code, ...]
+    # primitive -> name; ref -> Ref#<uuid> (see #88); unknown -> None + warning
+    if warnings is None:
+        warnings = []
+    if not isinstance(descriptor, list) or len(descriptor) < 3:
+        return None
+
+    type_block = descriptor[2]
+    if not isinstance(type_block, list) or len(type_block) < 2:
+        return None
+    if _unquote(type_block[0]) != "Pattern":
+        return None
+
+    type_node = type_block[1]
+    if not isinstance(type_node, list) or not type_node:
+        return None
+
+    code = _unquote(type_node[0])
+    if code is None:
+        return None
+
+    if code in _PRIMITIVE_TYPE_CODES:
+        return _PRIMITIVE_TYPE_CODES[code]
+
+    if code == "#":
+        if len(type_node) >= 2 and isinstance(type_node[1], str):
+            ref_uuid = type_node[1].strip(chr(34)).strip()
+            if ref_uuid:
+                return _REF_TYPE_PREFIX + ref_uuid
+        return None
+
+    context = " rekvizit=%r" % prop_name if prop_name else ""
+    warnings.append(
+        "object_decoder: TYPE_UNKNOWN - neizvestnyy kod tipa %r%s" % (code, context)
+    )
+    return None
+
+
+def _decode_real_name_entry(
+    entry: object,
+    warnings: list[str] | None = None,
+    descriptor: object = None,
+) -> dict | None:
     """Декодировать name-entry реального raw-header v8unpack."""
     if not isinstance(entry, list) or len(entry) < 4:
         return None
@@ -226,14 +290,18 @@ def _decode_real_name_entry(entry: object) -> dict | None:
         "Name": name,
         # В реальном формате тип находится в соседнем descriptor. Пока UUID
         # типа не разрешён в имя метаданных, нельзя подставлять "Pattern"/"ru".
-        "Type": None,
+        "Type": _resolve_type_from_descriptor(descriptor, warnings, name),
         "Synonym": synonym,
     }
 
 
-def _decode_real_attribute_wrapper(wrapper: object) -> dict | None:
+def _decode_real_attribute_wrapper(
+    wrapper: object,
+    warnings: list[str] | None = None,
+) -> dict | None:
     """Декодировать реквизит из wrapper реального v8unpack-контейнера."""
-    return _decode_real_name_entry(_at(wrapper, 0, 1, 1, 1))
+    descriptor = _at(wrapper, 0, 1, 1)
+    return _decode_real_name_entry(_at(descriptor, 1), warnings, descriptor)
 
 
 def _decode_compact_attribute_wrapper(wrapper: object) -> dict | None:
@@ -263,18 +331,22 @@ def _decode_compact_attribute_wrapper(wrapper: object) -> dict | None:
         "Synonym": synonym,
     }
 
-def _decode_real_tabular_section(node: object) -> dict | None:
+def _decode_real_tabular_section(
+    node: object,
+    warnings: list[str] | None = None,
+) -> dict | None:
     """Декодировать ТЧ и её реквизиты из реального raw-header."""
     if not isinstance(node, list) or len(node) < 3:
         return None
 
-    decoded = _decode_real_name_entry(_at(node, 0, 1, 5, 1))
+    ts_descriptor = _at(node, 0, 1, 5)
+    decoded = _decode_real_name_entry(_at(ts_descriptor, 1), warnings, ts_descriptor)
     if decoded is None:
         return None
 
     properties = []
     for wrapper in _container_records(node[2]):
-        prop = _decode_real_attribute_wrapper(wrapper)
+        prop = _decode_real_attribute_wrapper(wrapper, warnings)
         if prop is not None:
             properties.append(prop)
 
@@ -313,7 +385,7 @@ def _decode_real_header(
     # ТЧ распознаётся по связке: header-wrapper, флаг и counted-контейнер
     # колонок. Такой узел одинаков для разных позиций в Document/Catalog.
     for node in iter_lists(header):
-        section = _decode_real_tabular_section(node)
+        section = _decode_real_tabular_section(node, warnings)
         if section is None or section["UUID"] in section_uuids:
             continue
         section_uuids.add(section["UUID"])
@@ -342,7 +414,7 @@ def _decode_real_header(
     # После выделения ТЧ остальные attribute-wrapper являются реквизитами
     # объекта. UUID предотвращает повторный сбор одного узла на разных уровнях.
     for node in iter_lists(header):
-        prop = _decode_real_attribute_wrapper(node)
+        prop = _decode_real_attribute_wrapper(node, warnings)
         if prop is None:
             continue
         uuid = prop["UUID"]
@@ -357,7 +429,7 @@ def _decode_real_header(
     # структурный результат имеет приоритет. Для неизвестных layout запись
     # остаётся верхнеуровневым Property с Type=None, но UUID-карта не теряется.
     for node in iter_lists(header):
-        prop = _decode_real_name_entry(node)
+        prop = _decode_real_name_entry(node, warnings)
         if prop is None:
             continue
         uuid = prop["UUID"]
@@ -374,13 +446,25 @@ def _decode_real_header(
     }
 
 
+def _has_valid_uuid_block(entry: Any) -> bool:
+    # Uzel raspoznan kak rekvizit: entry[1] == [_, _, <valid UUID>]
+    if not isinstance(entry, list) or len(entry) < 2:
+        return False
+    block = entry[1]
+    if not isinstance(block, list) or len(block) < 3:
+        return False
+    return _is_uuid(block[2]) and block[2] != _NULL_UUID
+
+
 def _try_decode_prop_entry(entry: Any, warnings: list[str]) -> dict | None:
     """entry[0]=тег, entry[1]=UUID-блок, entry[2]=имя, entry[3]=тип, entry[4]=синоним."""
+    # Warning tolko dlya RASPOZNANNOGO uzla rekvizita (validnyy UUID-blok).
     if not isinstance(entry, list) or len(entry) < 3:
-        warnings.append(
-            f"object_decoder: повреждённый узел реквизита: "
-            f"type={type(entry).__name__}, len={len(entry) if isinstance(entry, list) else '?'}"
-        )
+        if _has_valid_uuid_block(entry):
+            warnings.append(
+                "object_decoder: povrezhdyonnyy uzel rekvizita: UUID=%s, len=%d"
+                % (entry[1][2], len(entry))
+            )
         return None
 
     uuid_block = entry[1] if len(entry) > 1 else None
@@ -392,6 +476,11 @@ def _try_decode_prop_entry(entry: Any, warnings: list[str]) -> dict | None:
 
     name = _unquote(entry[2]) if len(entry) > 2 else None
     if not name:
+        if uuid:
+            warnings.append(
+                "object_decoder: povrezhdyonnyy uzel rekvizita: UUID=%s, imya otsutstvuet"
+                % uuid
+            )
         return None
 
     type_val = _extract_type_from_node(entry[3] if len(entry) > 3 else None)

@@ -173,14 +173,11 @@ def load_owner_attribute_map(form_root: Path, warnings: list[str]) -> dict[str, 
                 mapping.setdefault(uuid, name)
 
     if not mapping:
-        # Фолбэк: raw-header не уложился в строгий паттерн декодера.
-        # Пермиссивный обход сохраняет поведение #85 для нестандартных выгрузок.
-        try:
-            payload = json.loads(path.read_text(encoding="utf-8-sig"))
-        except Exception as exc:
-            warnings.append(f"Не удалось прочитать {path}: {exc}")
-            return {}
-        _collect_attribute_uuid_map(payload.get("header", payload), mapping)
+        # #84 DoD p.3: nezavisimyy rekursivnyy obkhod header udalyon.
+        warnings.append(
+            f"object_decoder: karta rekvizitov pusta dlya {path.name} - "
+            f"layout ne raspoznan dekoderom"
+        )
 
     return mapping
 
