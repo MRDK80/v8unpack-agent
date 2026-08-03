@@ -1,10 +1,13 @@
 """Tests for coverage_metric module (issue #90).
 
-TDD-first: эти тесты писались до реализации.
+TDD-first: тесты писались до реализации.
 
 Ключевой тест: форма Catalog/Банки/CatalogForm/ФормаЭлементаУправляемая — где
 служебные элементы преобладают: 8 служебных из 19,
 и фактическое покрытие полей данных = 100%.
+
+Обновлено в issue #98: test_to_dict_keys проверяет новый контракт to_dict()
+с полем form_class.
 """
 from __future__ import annotations
 
@@ -70,13 +73,13 @@ BANKS_FORM_ELEMENTS = [
     {"type": "Field", "name": "ОКПО", "data_path": "Объект.ОКПО"},
     {"type": "Field", "name": "ОКОНХ", "data_path": "Объект.ОКОНХ"},
     # Служебные — без привязки
-    {"type": "Group", "name": "Группа1", "data_path": None},
-    {"type": "Group", "name": "Группа2", "data_path": None},
-    {"type": "Group", "name": "Группа3", "data_path": None},
-    {"type": "Button", "name": "Команда1", "data_path": None},
-    {"type": "Label", "name": "Надпись1", "data_path": None},
+    {"type": "Group", "name": "Группа11", "data_path": None},
+    {"type": "Group", "name": "Группа12", "data_path": None},
+    {"type": "Group", "name": "Группа13", "data_path": None},
+    {"type": "Button", "name": "Команда11", "data_path": None},
+    {"type": "Label", "name": "Надпись11", "data_path": None},
     {"type": "CommandPanel", "name": "ПанельКоманд", "data_path": None},
-    {"type": "Panel", "name": "Панель1", "data_path": None},
+    {"type": "Panel", "name": "Панель11", "data_path": None},
     {"type": "Page", "name": "СтраницаОсновная", "data_path": None},
 ]
 
@@ -111,9 +114,21 @@ class TestBanksForm:
         assert "19" in str(report)
 
     def test_to_dict_keys(self):
+        """to_dict() должен включать form_class (issue #98)."""
         report = calc_data_path_coverage(BANKS_FORM_ELEMENTS)
         d = report.to_dict()
-        assert set(d.keys()) == {"total_elements", "data_elements", "bound_data_elements", "coverage_pct"}
+        assert set(d.keys()) == {
+            "total_elements",
+            "data_elements",
+            "bound_data_elements",
+            "coverage_pct",
+            "form_class",  # добавлено в #98
+        }
+
+    def test_to_dict_form_class_is_object(self):
+        """Форма Банки — все привязки к Объект.* → form_class = object."""
+        report = calc_data_path_coverage(BANKS_FORM_ELEMENTS)
+        assert report.to_dict()["form_class"] == "object"
 
 
 # ---------------------------------------------------------------------------
@@ -226,7 +241,7 @@ class TestPlatformAttributes:
         assert report.coverage_pct == pytest.approx(100.0)
 
     def test_platform_attrs_names_in_constant(self):
-        """PLATFORM_STANDARD_ATTRIBUTES должна содержать все 6 обязательных."""
+        """ПЛАТФОРМ_STANDARD_ATTRIBUTES должна содержать все 6 обязательных."""
         expected = {"Код", "Наименование", "Родитель", "Дата", "Номер", "ПометкаУдаления"}
         assert expected.issubset(PLATFORM_STANDARD_ATTRIBUTES)
 
