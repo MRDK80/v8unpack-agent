@@ -186,10 +186,12 @@ class TestClassifyFormByBindings:
         ] * 15
         assert classify_form_by_bindings(elements) == FormClass.SERVICE
 
-    def test_empty_elements_is_unknown(self):
-        """Пустой список — нет никаких элементов → UNKNOWN."""
-        assert classify_form_by_bindings([]) == FormClass.UNKNOWN
-
+    def test_empty_elements_is_service(self):
+        """Пустой список на уровне by_bindings → SERVICE (нет data-элементов).
+        Защита от [] → UNKNOWN реализована в classify_form, не здесь.
+        """
+        assert classify_form_by_bindings([]) == FormClass.SERVICE
+        
     def test_all_service_elements_no_data_elements_is_service(self):
         """Только Label/Group/Panel — нет data-элементов.
         По production-данным это информационные формы (ФормаПодбораИзКлассификатора,
