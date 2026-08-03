@@ -1,24 +1,33 @@
 """Tests for form_classifier module (issue #98).
 
-TDD-first: тесты написаны до реализации.
+TDD-first: тесты написаны до реализации, затем скорректированы по данным
+production-выгрузки (2231 форм, вывод verify_98_form_classifier.py).
 
 Задача: классифицировать формы 1С на объектные и сервисные.
-Сервисные формы (мастера, помощники, диалоги) привязывают поля
-не к Объект.Реквизит, а к временным реквизитам формы — и дают
-заниженное покрытие data_path. Это не баг парсера, а архитектурный
-паттерн платформы 1С.
+Сервисные формы (мастера, помощники, диалоги, информационные) привязывают
+поля не к Объект.Реквизит, а к временным реквизитам формы или не имеют
+полей данных вовсе. Это не баг парсера — архитектурный паттерн платформы 1С.
 
 Критерий классификации — двойной:
-1. По имени формы: паттерны Помощник*, Мастер*, Черновик*, Диалог*, Добавление*
-2. По структуре: data_elements > 0 И нет ни одной привязки к Объект.*
+1. По имени формы: паттерны Помощник*, Мастер*, Диалог*, Добавление* и др.
+   (список SERVICE_FORM_NAME_PATTERNS).
+   Паттерн «черновик» УДАЛЁН из имён: ЧерновикМЧД содержит Объект.* —
+   корректная объектная форма. Классификация делегируется на уровень привязок.
+2. По структуре привязок:
+   - data_elements > 0 И нет ни одной привязки к Объект.* → SERVICE;
+   - data_elements == 0 → SERVICE (информационная/навигационная форма,
+     поля данных отсутствуют по архитектуре; пустой список [] → UNKNOWN);
+   - хотя бы одна привязка к Объект.* → OBJECT.
 
-Форма считается сервисной если выполняется хотя бы одно условие.
+Форма считается SERVICE если выполняется хотя бы одно условие.
+UNKNOWN — только если элементов нет вовсе (список пустой).
 
-Эталонные формы (из issue #98):
+Эталонные формы (из issue #98 и production-верификации):
 - ДобавлениеПредставителя — map=44, elements=43, resolved=0 → service
 - ПомощникПодключенияЭДО  — 45 data, 16 bound → service (по имени)
-- ЧерновикМЧД             — 77 data, 1 bound → service (по имени)
+- ЧерновикМЧД             — 77 data, 1 bound (временный реквизит) → service (по привязкам)
 - ФормаЭлементаУправляемая — 11/11 bound → object
+- ФормаПодбораИзКлассификатора — только Label/Group, data=0 → service (по привязкам)
 """
 from __future__ import annotations
 
@@ -45,9 +54,18 @@ class TestServiceFormNamePatterns:
         assert len(SERVICE_FORM_NAME_PATTERNS) >= 4
 
     def test_known_patterns_present(self):
+        """Паттерны по production-данным. «Черновик» убран — см. docstring модуля."""
         lower = [p.lower() for p in SERVICE_FORM_NAME_PATTERNS]
-        for expected in ("помощник", "мастер", "черновик", "добавление"):
+        for expected in ("помощник", "мастер", "добавление", "диалог"):
             assert any(expected in p for p in lower), f"Паттерн {expected!r} не найден"
+
+    def test_chernovik_absent_from_name_patterns(self):
+        """ЧерновикМЧД классифицируется по привязкам, не по имени."""
+        lower = [p.lower() for p in SERVICE_FORM_NAME_PATTERNS]
+        assert not any(p == "черновик" for p in lower), (
+            "«черновик» должен быть убран из паттернов имён: "
+            "форма ЧерновикМЧД — объектная, классифицируется по Объект.*"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -78,18 +96,23 @@ class TestClassifyFormByName:
     def test_master_is_service(self):
         assert classify_form_by_name("МастерНастройки") == FormClass.SERVICE
 
-    def test_chernovik_is_service(self):
-        assert classify_form_by_name("ЧерновикМЧД") == FormClass.SERVICE
-
     def test_dobavlenie_is_service(self):
         assert classify_form_by_name("ДобавлениеПредставителя") == FormClass.SERVICE
 
     def test_dialog_is_service(self):
         assert classify_form_by_name("ДиалогВыбораПериода") == FormClass.SERVICE
 
-    def test_chernovik_peredoveriya_is_service(self):
-        """Реальное имя из production-выгрузки."""
-        assert classify_form_by_name("ЧерновикПередоверияМЧД") == FormClass.SERVICE
+    def test_chernovik_is_unknown_by_name(self):
+        """ЧерновикМЧД — паттерн «черновик» убран, classify_form_by_name даёт UNKNOWN.
+        Итоговая classify_form определит SERVICE по привязкам (нет Объект.*).
+        """
+        assert classify_form_by_name("ЧерновикМЧД") == FormClass.UNKNOWN
+
+    def test_chernovik_peredoveriya_is_unknown_by_name(self):
+        """ЧерновикПередоверияМЧД — аналогично: classify_form_by_name → UNKNOWN,
+        итог определяется по привязкам в classify_form.
+        """
+        assert classify_form_by_name("ЧерновикПередоверияМЧД") == FormClass.UNKNOWN
 
     def test_nastroyka_reglamen_is_unknown_by_name(self):
         """НастройкаРегламентаЭДО — не подходит под паттерн имени."""
@@ -121,7 +144,14 @@ class TestClassifyFormByName:
 # ---------------------------------------------------------------------------
 
 class TestClassifyFormByBindings:
-    """Форма сервисная если data_elements > 0 и ни одной привязки к Объект.*"""
+    """Семантика (обновлена по production-данным):
+
+    - data_elements > 0, нет Объект.* → SERVICE
+    - data_elements > 0, есть Объект.* → OBJECT
+    - data_elements == 0, есть хоть какие-то элементы → SERVICE
+      (информационная форма: Label, Group, Button, Image и т.п.)
+    - список пустой ([]) → UNKNOWN (нет данных для классификации)
+    """
 
     def test_zero_resolved_many_data_elements_is_service(self):
         """ДобавлениеПредставителя: 43 data-элемента, 0 привязок к Объект.*"""
@@ -157,17 +187,20 @@ class TestClassifyFormByBindings:
         assert classify_form_by_bindings(elements) == FormClass.SERVICE
 
     def test_empty_elements_is_unknown(self):
-        """Нет data-элементов — нельзя определить."""
+        """Пустой список — нет никаких элементов → UNKNOWN."""
         assert classify_form_by_bindings([]) == FormClass.UNKNOWN
 
-    def test_all_service_elements_no_data_elements_is_unknown(self):
-        """Только Label/Group/Panel — нет data-элементов, нельзя определить."""
+    def test_all_service_elements_no_data_elements_is_service(self):
+        """Только Label/Group/Panel — нет data-элементов.
+        По production-данным это информационные формы (ФормаПодбораИзКлассификатора,
+        ФормаПодсказки*, ВключениеЖурналаРегистрации и др.) → SERVICE.
+        """
         elements = [
             {"type": "Label", "data_path": None},
             {"type": "Group", "data_path": None},
             {"type": "Panel", "data_path": None},
         ]
-        assert classify_form_by_bindings(elements) == FormClass.UNKNOWN
+        assert classify_form_by_bindings(elements) == FormClass.SERVICE
 
     def test_tabular_section_binding_counts_as_object(self):
         """Привязка к Объект.ТабличнаяЧасть.Реквизит тоже считается объектной."""
@@ -176,7 +209,7 @@ class TestClassifyFormByBindings:
         ]
         assert classify_form_by_bindings(elements) == FormClass.OBJECT
 
-    def test_objekt_prefix_case_sensitive(self):
+    def test_objekt_prefix_case_insensitive(self):
         """Проверка: 'объект.' в нижнем регистре тоже распознаётся."""
         elements = [
             {"type": "Field", "data_path": "объект.реквизит"},
@@ -192,7 +225,7 @@ class TestClassifyForm:
     """Форма SERVICE если хотя бы один критерий даёт SERVICE."""
 
     def test_service_by_name_overrides_unknown_bindings(self):
-        """Имя = Помощник*, привязки неизвестны (нет data-элементов) → SERVICE."""
+        """Имя = Помощник*, только Label-элементы → SERVICE (по имени)."""
         result = classify_form(
             form_name="ПомощникПодключенияЭДО",
             elements=[{"type": "Label", "data_path": None}],
@@ -235,21 +268,27 @@ class TestClassifyForm:
         )
         assert result == FormClass.SERVICE
 
-    def test_unknown_name_and_unknown_bindings_is_unknown(self):
-        """Ни имя, ни привязки не дали ответа → UNKNOWN."""
+    def test_unknown_name_and_only_label_elements_is_service(self):
+        """Имя нейтральное + только Label-элементы → SERVICE (информационная форма).
+        Изменено: было UNKNOWN, стало SERVICE по результатам production-верификации.
+        ФормаСписка с Label-элементами — это навигационная форма, не объектная.
+        """
         result = classify_form(
             form_name="ФормаСписка",
             elements=[{"type": "Label", "data_path": None}],
         )
+        assert result == FormClass.SERVICE
+
+    def test_empty_name_and_empty_elements_is_unknown(self):
+        result = classify_form(form_name="", elements=[])
         assert result == FormClass.UNKNOWN
 
     def test_dobavlenie_predstavitelya_full_scenario(self):
         """Эталон из issue #98: ДобавлениеПредставителя, map=44, resolved=0."""
-        elements = [
-            {"type": "Field", "data_path": None},
-        ] * 43 + [
-            {"type": "Label", "data_path": None},
-        ]
+        elements = (
+            [{"type": "Field", "data_path": None}] * 43
+            + [{"type": "Label", "data_path": None}]
+        )
         result = classify_form(
             form_name="ДобавлениеПредставителя",
             elements=elements,
@@ -257,7 +296,10 @@ class TestClassifyForm:
         assert result == FormClass.SERVICE
 
     def test_chernovik_mchd_full_scenario(self):
-        """Эталон из issue #98: ЧерновикМЧД, 77 data, 1 bound (к временному)."""
+        """Эталон из issue #98: ЧерновикМЧД, 77 data, 1 bound (к временному).
+        Классифицируется как SERVICE по привязкам (нет Объект.*),
+        несмотря на то что «черновик» убран из паттернов имён.
+        """
         elements = (
             [{"type": "Field", "data_path": "ВременноеЗначение"}]
             + [{"type": "Field", "data_path": None}] * 76
@@ -268,9 +310,35 @@ class TestClassifyForm:
         )
         assert result == FormClass.SERVICE
 
-    def test_empty_name_and_empty_elements_is_unknown(self):
-        result = classify_form(form_name="", elements=[])
-        assert result == FormClass.UNKNOWN
+    def test_chernovik_mchd_with_objekt_path_is_object(self):
+        """ЧерновикМЧД из production — реально содержит Объект.* → OBJECT.
+        Именно поэтому «черновик» убран из паттернов имён: имя ненадёжный сигнал.
+        """
+        elements = (
+            [{"type": "Field", "data_path": "Объект.НомерМЧД"}]
+            + [{"type": "Field", "data_path": None}] * 76
+        )
+        result = classify_form(
+            form_name="ЧерновикМЧД",
+            elements=elements,
+        )
+        assert result == FormClass.OBJECT
+
+    def test_forma_podbora_iz_klassifikatora_is_service(self):
+        """ФормаПодбораИзКлассификатора — только Label/Group/Image, data=0 → SERVICE.
+        Production-эталон: 5 одинаковых форм в Catalog/* с нулевым покрытием.
+        """
+        elements = [
+            {"type": "Label", "data_path": None},
+            {"type": "Group", "data_path": None},
+            {"type": "Image", "data_path": None},
+            {"type": "Button", "data_path": None},
+        ]
+        result = classify_form(
+            form_name="ФормаПодбораИзКлассификатора",
+            elements=elements,
+        )
+        assert result == FormClass.SERVICE
 
 
 # ---------------------------------------------------------------------------
