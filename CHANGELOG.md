@@ -6,6 +6,16 @@
 ## [Unreleased]
 
 ### Added
+- `elem_parser.extract_legacy_list_form_elements()` — fallback-чтение
+  `ФормаСписка` / `ФормаВыбора` с пустым `tree` и виджетом `TabularField`
+  из отдельного legacy `*.json`. Поддержаны два подтверждённых формата
+  привязок колонок: упорядоченные слоты вложенного блока `"20"` и точные
+  ссылки `["0", UUID]`. UUID разрешаются только через карту реквизитов
+  объекта-владельца, построенную `load_owner_attribute_map()` поверх
+  `object_decoder`; имя источника данных извлекается из привязки
+  `TabularField`. Порядок колонок сохраняется, дубликаты удаляются,
+  неоднозначные слоты пропускаются без перехода к менее строгому fallback
+  (issue #103).
 - `elem_parser.extract_legacy_form_elements()` + `_find_legacy_form_json()` —
   fallback-чтение обычных форм с пустым `tree` в `.elem.json`. Когда `tree`
   пуст, ищется отдельный `form/*.json` рядом с `*.elem.json` (ФормаЗаписи,
@@ -14,7 +24,8 @@
   тот же механизм, что `decode_legacy_data_path`. Подняло **49 форм**
   из статуса `ERROR` на реальной конфигурации УТ 10.3 без регресса по
   ранее работавшим формам. Статистика после PR:
-  OK 1942 / FALLBACK 49 / ERROR 225 (ФормаСписка/ФормаВыбора, TabularField → #103)
+  На этом этапе: OK 1942 / FALLBACK 49 / ERROR 225; последующая поддержка
+  TabularField реализована в #103.
   (issue #100, PR #102).
 - `v8unpack_agent/form_classifier.py`: `FormClass` + `classify_form_by_name()` +
   `classify_form_by_bindings()` + `classify_form()` + `classify_empty_tree_form()` —
@@ -56,6 +67,11 @@
   реквизиты, ждут #88); `Catalog/Контрагенты`: 45/45 = 100.0% (issue #90, PR #97).
 
 ### Changed
+- `elem_parser.parse_elem_json()`: при пустом `tree` после обычного legacy
+  fallback дополнительно разбирает `TabularField` через
+  `extract_legacy_list_form_elements()`. Успешно извлечённые колонки получают
+  `type="TabularFieldColumn"`, `source="legacy_list_form_json"` и
+  `data_path="<Источник>.<Реквизит>"` (issue #103).
 - `elem_parser.parse_elem_json()`: при `tree == []` в `.elem.json` вызывается
   `extract_legacy_form_elements` (best-effort). При успехе `elem_index_ok=True`,
   `extraction_source="legacy_form_json"`; при неудаче — поведение прежнее
@@ -128,6 +144,12 @@
   Параметр `mode` пробрасывается из `check_drift()` (issue #73).
 
 ### Fixed
+- **Legacy `ФормаСписка` / `ФормаВыбора` с пустым `tree` не индексировались.**
+  Реализовано безопасное кросс-чтение JSON формы и метаданных владельца.
+  Проверка на полной конфигурации: 2216 форм, OK 2139, fallback #103 — 160,
+  ERROR 77 (до исправления 224), исключений 0, невалидных результатов #103 — 0.
+  Полная регрессия: 487 тестов. Оставшиеся форматы вынесены в #105
+  (issue #103).
 - **49 обычных форм не возвращали элементы при `tree: []`.** ФормаЗаписи
   регистров сведений, ФормаЭлемента справочников, формы отчётов и обработок.
   Исправлено чтением `form/*.json` через `extract_legacy_form_elements`
