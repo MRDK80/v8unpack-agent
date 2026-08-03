@@ -6,6 +6,18 @@
 ## [Unreleased]
 
 ### Added
+- `v8unpack_agent/coverage_metric.py`: `calc_data_path_coverage(elements)` +
+  `CoverageReport` — двухслойная метрика покрытия `data_path`. Знаменатель
+  включает только элементы данных (`DATA_ELEMENT_TYPES`: `Field`, `InputField`,
+  `Table`, `CheckBox`, `Calendar`, `Chart`, `Picture`). Служебные элементы
+  (`Label`, `CommandPanel`, `Panel`, `Page`, `Group`, `Button`, `Separator`)
+  вынесены в именованную константу `SERVICE_ELEMENT_TYPES` и исключены из счёта.
+  Стандартные реквизиты платформы (`Код`, `Наименование`, `Родитель` и др.)
+  учтены в `PLATFORM_STANDARD_ATTRIBUTES`; их корректная привязка зависит от
+  резолюции `Ref#uuid` — тема #88. Отчёт `CoverageReport` хранит обе метрики:
+  `bound_data_elements / data_elements` и `total_elements` для справки.
+  Проверено на `Catalog/Банки`: 11/14 = 78.6% (3 неразрешённых — платформенные
+  реквизиты, ждут #88); `Catalog/Контрагенты`: 45/45 = 100.0% (issue #90, PR #97).
 - `v8unpack_agent/object_decoder.py`: `decode_object_attributes(path)` +
   `DecodeResult` — декодирование реквизитов объекта из raw-секции `header`
   в `Catalog.json`, `Document.json` и других объектных JSON. Возвращает
