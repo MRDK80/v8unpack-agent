@@ -228,44 +228,100 @@ def load_owner_attribute_map(form_root: Path, warnings: list[str]) -> dict[str, 
     return mapping
 
 
-def _extract_tabular_field_uuids(tf_node: list) -> list[str]:
-    """Извлечь UUID реквизитов из паттерн-блока TabularField.
+def _tabular_field_source_name(tf_node: list) -> str:
+    """Имя источника данных TabularField из узла привязки tf[4]."""
+    if len(tf_node) > 4:
+        binding = tf_node[4]
+        if isinstance(binding, list) and len(binding) >= 2 and binding[0] == _LEGACY_BINDING_TAG:
+            name = _unquote_1c(binding[1])
+            if name:
+                return name
+    return _LIST_PREFIX
 
-    Реальная структура блока TabularField в живых данных 1С:
-      tf[0] = UUID TabularField
-      tf[1] = 1  (флаг)
-      tf[2] = ['5', ['"Pattern"', pattern_block], [columns], служебный, ['0']]
-      tf[4] = ['14', '"ИмяВиджета"', ...]   — имя самого виджета
 
-    pattern_block = tf[2][1][1] содержит UUID всех реквизитов объекта.
-    Возвращает UUID-строки в порядке их первого появления, без дублей.
+def _tabular_field_attribute_slots(
+    tf_node: list,
+    attr_map: dict[str, str],
+) -> list[tuple[str, str]]:
+    """Упорядоченные привязки реквизитов внутри TabularField.
+
+    При наличии блока ``20`` используются только его однозначные слоты.
+    Универсальный fallback по ссылкам ``["0", UUID]`` применяется только
+    тогда, когда блок ``20`` полностью отсутствует.
     """
-    uuids: list[str] = []
-    seen: set[str] = set()
+    candidates: list[list[tuple[str, str]]] = []
+    has_node20 = False
 
-    # tf[2] должен быть списком вида ['5', ['"Pattern"', pattern_block], ...]
-    if len(tf_node) < 3:
-        return uuids
-    slot2 = tf_node[2]
-    if not isinstance(slot2, list) or len(slot2) < 2:
-        return uuids
+    def walk_node20(node: Any) -> None:
+        nonlocal has_node20
 
-    # slot2[1] = ['"Pattern"', pattern_block]
-    pattern_entry = slot2[1]
-    if not isinstance(pattern_entry, list) or len(pattern_entry) < 2:
-        return uuids
-    if pattern_entry[0] != _TABULAR_PATTERN_TAG:
-        return uuids
+        if not isinstance(node, list):
+            return
 
-    pattern_block = pattern_entry[1]
-    raw_uuids: list[str] = []
-    _collect_uuids(pattern_block, raw_uuids)
-    for u in raw_uuids:
-        if u not in seen:
-            seen.add(u)
-            uuids.append(u)
-    return uuids
+        if node and node[0] == "20":
+            has_node20 = True
 
+            if len(node) > 6:
+                resolved: list[tuple[str, str]] = []
+
+                for slot in node[6:]:
+                    uuids: list[str] = []
+                    _collect_uuids(slot, uuids)
+
+                    hits: list[tuple[str, str]] = []
+                    seen: set[str] = set()
+
+                    for uuid in uuids:
+                        name = attr_map.get(uuid)
+
+                        if name and uuid not in seen:
+                            seen.add(uuid)
+                            hits.append((uuid, name))
+
+                    # Неоднозначный слот намеренно пропускаем.
+                    if len(hits) == 1:
+                        resolved.append(hits[0])
+
+                if resolved:
+                    candidates.append(resolved)
+
+        for child in node:
+            walk_node20(child)
+
+    walk_node20(tf_node)
+
+    # Блок 20 имеет приоритет. Если он найден, но не дал ни одной
+    # однозначной колонки, возвращаем пустой результат, не переходя
+    # к менее строгому рекурсивному fallback.
+    if has_node20:
+        return max(candidates, key=len, default=[])
+
+    result: list[tuple[str, str]] = []
+    seen_uuids: set[str] = set()
+
+    def walk_refs(node: Any) -> None:
+        if not isinstance(node, list):
+            return
+
+        if (
+            len(node) == 2
+            and node[0] == "0"
+            and isinstance(node[1], str)
+            and node[1] in attr_map
+        ):
+            uuid = node[1]
+
+            if uuid not in seen_uuids:
+                seen_uuids.add(uuid)
+                result.append((uuid, attr_map[uuid]))
+
+            return
+
+        for child in node:
+            walk_refs(child)
+
+    walk_refs(tf_node)
+    return result
 
 _LEGACY_BINDING_TAG = "14"
 _LEGACY_NAME_POS = 4
@@ -427,103 +483,42 @@ def _has_tabular_field(node: Any) -> bool:
     return False
 
 
-def extract_legacy_list_form_elements(
-    form_json: Any,
-    obj_json: Any,
-) -> list[dict]:
-    """Извлечь реквизиты TabularField из большого JSON формы-списка (issue #103).
-
-    Используется как фолбэк для ФормаСписка / ФормаВыбора, у которых
-    elem.json пуст, а большой *.json содержит виджет TabularField
-    (UUID ``ea83fe3a-ac3c-4cce-8045-3dddf35b28b1``).
-
-    Реальная структура блока TabularField в живых данных 1С:
-      tf[0] = UUID TabularField
-      tf[2] = ['5', ['"Pattern"', pattern_block], [columns], ...]
-    UUID всех реквизитов объекта лежат в pattern_block (tf[2][1][1]).
-    Резолвятся через карту ``uuid -> имя`` из obj_json["attr_map"].
-
-    obj_json ожидается в виде ``{"attr_map": {uuid: name, ...}}`` —
-    именно в таком виде его передаёт :func:`parse_elem_json`.
-
-    Возвращает список словарей:
-    - ``name``      — имя реквизита;
-    - ``type``      — ``"TabularFieldColumn"``;
-    - ``data_path`` — ``"Список.<Имя>"``;
-    - ``source``    — ``"legacy_list_form_json"``.
-
-    Дубликаты схлопываются. Порядок — по первому появлению UUID
-    в pattern_block.
-    """
-    if form_json is None or obj_json is None:
+def extract_legacy_list_form_elements(form_json: Any, obj_json: Any) -> list[dict]:
+    """Извлечь колонки TabularField из подтвержденного блока 20."""
+    if form_json is None or not isinstance(obj_json, dict):
         return []
-
-    # attr_map: uuid -> имя реквизита
-    attr_map: dict[str, str] = {}
-    if isinstance(obj_json, dict):
-        # Новый путь: карта передаётся явно через ключ "attr_map"
-        candidate = obj_json.get("attr_map")
-        if isinstance(candidate, dict):
-            attr_map = candidate
-        else:
-            # Обратная совместимость с тестами: TabularFieldAttributeMap
-            # (числовые индексы — для unit-тестов с синтетическими данными)
-            tfa = obj_json.get("TabularFieldAttributeMap")
-            if isinstance(tfa, dict):
-                # В тестах индексы строковые ("10" → "Наименование"),
-                # храним как есть для резолва в walk()
-                attr_map = {str(k): str(v) for k, v in tfa.items() if k and v}
-
-    if not attr_map:
+    attr_map = obj_json.get("attr_map")
+    if not isinstance(attr_map, dict) or not attr_map:
         return []
 
     results: list[dict] = []
     seen_names: set[str] = set()
 
-    def _resolve_and_add(uuids: list[str]) -> None:
-        """Резолвим UUID через attr_map и добавляем новые имена в results."""
-        seen_in_block: set[str] = set()
-        for u in uuids:
-            name = attr_map.get(u)
-            if name and name not in seen_names and name not in seen_in_block:
-                seen_in_block.add(name)
+    def walk(node: Any) -> None:
+        if isinstance(node, dict):
+            for value in node.values():
+                walk(value)
+            return
+        if not isinstance(node, list):
+            return
+        if node and node[0] == _TABULAR_FIELD_UUID:
+            source_name = _tabular_field_source_name(node)
+            for _uuid, name in _tabular_field_attribute_slots(node, attr_map):
+                if name in seen_names:
+                    continue
                 seen_names.add(name)
                 results.append({
                     "name": name,
                     "type": "TabularFieldColumn",
-                    "data_path": f"{_LIST_PREFIX}.{name}",
+                    "data_path": f"{source_name}.{name}",
                     "source": "legacy_list_form_json",
                 })
-
-    def walk(node: Any) -> None:
-        if isinstance(node, dict):
-            for v in node.values():
-                walk(v)
-            return
-        if not isinstance(node, list):
-            return
-        # Блок TabularField
-        if (
-            len(node) >= 3
-            and isinstance(node[0], str)
-            and node[0] == _TABULAR_FIELD_UUID
-        ):
-            uuids = _extract_tabular_field_uuids(node)
-            if uuids:
-                _resolve_and_add(uuids)
-            # Не спускаемся внутрь — один TabularField обработан
             return
         for child in node:
             walk(child)
 
-    if isinstance(form_json, dict):
-        for value in form_json.values():
-            walk(value)
-    elif isinstance(form_json, list):
-        walk(form_json)
-
+    walk(form_json)
     return results
-
 
 def _find_legacy_form_json(form_root: Path) -> Path | None:
     """Найти большой объектный *.json обычной формы."""
