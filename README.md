@@ -27,7 +27,6 @@ index_cf(<путь_к_выгрузке>)
   ├─► 1) unpack_all_forms()         # Form.bin → текстовый слой (BSL виден)
   │       └─► parse_elem_json()      # elem.json → form_elements_index (best-effort)
   │             ├─► object_decoder    # header → Properties, TabularSections (#84)
-  │             ├─► catalog_resolver  # data_path → ResolvedBinding (best-effort,
   │             └─► catalog_resolver # data_path → ResolvedBinding (best-effort, #76)
   ├─► 1') unpack_erf()              # внешний отчёт (.erf): текстовый слой
   │       └─► extract_skd_queries()  # СКД → skd_queries.json (best-effort)
