@@ -7,7 +7,8 @@
 * старая метрика (все элементы в знаменателе) vs новая (только данные);
 * форма с преобладанием служебных элементов;
 * использование CoverageReport.to_dict() для JSON-отчёта;
-* обёртка calc_coverage_from_elem_index() под ElemIndexResult.
+* обёртка calc_coverage_from_elem_index() под ElemIndexResult;
+* form_class в CoverageReport: объектная vs. сервисная форма (issue #98).
 
 Запуск:
 
@@ -27,8 +28,8 @@ from v8unpack_agent.coverage_metric import (
     calc_data_path_coverage,
     calc_coverage_from_elem_index,
 )
-from v8unpack_agent.elem_parser import parse_elem_json
 
+from v8unpack_agent.elem_parser import parse_elem_json
 
 # ---------------------------------------------------------------------------
 # Синтетические элементы формы
@@ -38,17 +39,17 @@ from v8unpack_agent.elem_parser import parse_elem_json
 # 11 полей данных (все привязаны) + 8 служебных (группы, кнопки, панели).
 BANKS_FORM_ELEMENTS = [
     # Данные — привязаны
-    {"type": "Field", "name": "КоррСчет",              "data_path": "Объект.КоррСчет"},
-    {"type": "Field", "name": "БИК",                   "data_path": "Объект.БИК"},
-    {"type": "Field", "name": "НомерКор",              "data_path": "Объект.НомерКор"},
-    {"type": "Field", "name": "ТелефонФакс",           "data_path": "Объект.ТелефонФакс"},
-    {"type": "Field", "name": "Индекс",                "data_path": "Объект.Индекс"},
-    {"type": "Field", "name": "Город",                 "data_path": "Объект.Город"},
-    {"type": "Field", "name": "Адрес",                 "data_path": "Объект.Адрес"},
-    {"type": "Field", "name": "РКЦ",                   "data_path": "Объект.РКЦ"},
-    {"type": "Field", "name": "Участник",              "data_path": "Объект.Участник"},
-    {"type": "Field", "name": "ОКПО",                  "data_path": "Объект.ОКПО"},
-    {"type": "Field", "name": "ОКОНХ",                 "data_path": "Объект.ОКОНХ"},
+    {"type": "Field", "name": "КоррСчет",    "data_path": "Объект.КоррСчет"},
+    {"type": "Field", "name": "БИК",         "data_path": "Объект.БИК"},
+    {"type": "Field", "name": "НомерКор",    "data_path": "Объект.НомерКор"},
+    {"type": "Field", "name": "ТелефонФакс", "data_path": "Объект.ТелефонФакс"},
+    {"type": "Field", "name": "Индекс",      "data_path": "Объект.Индекс"},
+    {"type": "Field", "name": "Город",       "data_path": "Объект.Город"},
+    {"type": "Field", "name": "Адрес",       "data_path": "Объект.Адрес"},
+    {"type": "Field", "name": "РКЦ",         "data_path": "Объект.РКЦ"},
+    {"type": "Field", "name": "Участник",    "data_path": "Объект.Участник"},
+    {"type": "Field", "name": "ОКПО",        "data_path": "Объект.ОКПО"},
+    {"type": "Field", "name": "ОКОНХ",       "data_path": "Объект.ОКОНХ"},
     # Служебные — без привязки (штатно)
     {"type": "Group",        "name": "Группа1",        "data_path": None},
     {"type": "Group",        "name": "Группа2",        "data_path": None},
@@ -64,10 +65,12 @@ BANKS_FORM_ELEMENTS = [
 def demo_constants() -> None:
     """Вывести состав констант модуля."""
     print("=== Константы coverage_metric ===")
-    print(f"DATA_ELEMENT_TYPES    ({len(DATA_ELEMENT_TYPES)}): {sorted(DATA_ELEMENT_TYPES)}")
+    print(f"DATA_ELEMENT_TYPES ({len(DATA_ELEMENT_TYPES)}): {sorted(DATA_ELEMENT_TYPES)}")
     print(f"SERVICE_ELEMENT_TYPES ({len(SERVICE_ELEMENT_TYPES)}): {sorted(SERVICE_ELEMENT_TYPES)}")
-    print(f"PLATFORM_STANDARD_ATTRIBUTES ({len(PLATFORM_STANDARD_ATTRIBUTES)}): "
-          f"{sorted(PLATFORM_STANDARD_ATTRIBUTES)}")
+    print(
+        f"PLATFORM_STANDARD_ATTRIBUTES ({len(PLATFORM_STANDARD_ATTRIBUTES)}): "
+        f"{sorted(PLATFORM_STANDARD_ATTRIBUTES)}"
+    )
     print()
 
 
@@ -81,8 +84,10 @@ def demo_old_vs_new() -> None:
 
     report = calc_data_path_coverage(BANKS_FORM_ELEMENTS)
 
-    print(f"Старая: {bound_all}/{total} = {old_pct:.1f}%  "
-          f"(все элементы в знаменателе, включая Group/Label/Panel...)")
+    print(
+        f"Старая: {bound_all}/{total} = {old_pct:.1f}% "
+        f"(все элементы в знаменателе, включая Group/Label/Panel...)"
+    )
     print(f"Новая:  {report}")
     print()
 
@@ -91,12 +96,12 @@ def demo_partial_coverage() -> None:
     """Форма с частичной привязкой: часть полей не заполнена."""
     print("=== Частичная привязка ===")
     elements = [
-        {"type": "Field",   "name": "Наименование", "data_path": "Объект.Наименование"},
-        {"type": "Field",   "name": "ИНН",           "data_path": None},   # не привязан
-        {"type": "Field",   "name": "КПП",           "data_path": None},   # не привязан
-        {"type": "Table",   "name": "Контакты",      "data_path": "Объект.Контакты"},
-        {"type": "Label",   "name": "НадписьИНН",    "data_path": None},   # служебный
-        {"type": "Group",   "name": "Группа1",       "data_path": None},   # служебный
+        {"type": "Field", "name": "Наименование", "data_path": "Объект.Наименование"},
+        {"type": "Field", "name": "ИНН",  "data_path": None},  # не привязан
+        {"type": "Field", "name": "КПП",  "data_path": None},  # не привязан
+        {"type": "Table", "name": "Контакты", "data_path": "Объект.Контакты"},
+        {"type": "Label", "name": "НадписьИНН", "data_path": None},  # служебный
+        {"type": "Group", "name": "Группа1",    "data_path": None},  # служебный
     ]
     report = calc_data_path_coverage(elements)
     print(report)
@@ -108,7 +113,6 @@ def demo_elem_index_wrapper() -> None:
     """calc_coverage_from_elem_index: обёртка под parse_elem_json."""
     print("=== Обёртка под ElemIndexResult ===")
 
-    # Создаём минимальный синтетический elem.json во временном каталоге
     with tempfile.TemporaryDirectory() as tmp:
         form_dir = Path(tmp) / "Catalog" / "Товары" / "CatalogForm" / "ФормаЭлемента"
         form_dir.mkdir(parents=True)
@@ -130,10 +134,11 @@ def demo_elem_index_wrapper() -> None:
                     "ver": "1", "page": None,
                     "raw": [], "data_path": "Объект.Цена",
                 },
-                "Группа1": {"ver": "1", "page": None, "raw": []},
+                "Группа1":  {"ver": "1", "page": None, "raw": []},
                 "Надпись1": {"ver": "1", "page": None, "raw": []},
             },
         }
+
         (form_dir / "CatalogForm.elem.json").write_text(
             json.dumps(payload, ensure_ascii=False), encoding="utf-8"
         )
@@ -161,12 +166,54 @@ def demo_json_report() -> None:
     print()
 
 
+def demo_form_class() -> None:
+    """form_class в CoverageReport: объектная vs. сервисная форма (issue #98).
+
+    Объектная форма имеет привязки Объект.*; агрегат считается по ней штатно.
+    Сервисная форма (мастер, помощник, диалог) использует временные реквизиты
+    формы вместо Объект.* — нулевое покрытие не является признаком проблемы.
+    form_class позволяет агрегатору исключать сервисные формы из общего знаменателя.
+    """
+    print("=== form_class: объектная vs. сервисная форма (issue #98) ===")
+
+    # Объектная форма — все поля данных привязаны к Объект.*
+    report_obj = calc_data_path_coverage(
+        BANKS_FORM_ELEMENTS,
+        form_name="ФормаЭлемента",
+    )
+    print(f"Объектная  (form_name='ФормаЭлемента'):  {report_obj}")
+    print(f"  form_class = {report_obj.form_class}")
+
+    # Сервисная форма (мастер МЧД) — поля привязаны к временным реквизитам,
+    # Объект.* отсутствует — это архитектурный паттерн платформы 1С, не баг.
+    service_elements = [
+        {"type": "Field",  "name": "ПолеМастера",    "data_path": None},
+        {"type": "Field",  "name": "ДатаОформления", "data_path": None},
+        {"type": "Field",  "name": "ФИОПодписанта",  "data_path": None},
+        {"type": "Button", "name": "Далее",           "data_path": None},
+        {"type": "Button", "name": "Назад",           "data_path": None},
+        {"type": "Group",  "name": "Группа1",         "data_path": None},
+    ]
+    report_svc = calc_data_path_coverage(
+        service_elements,
+        form_name="ЧерновикМЧД",
+    )
+    print(f"Сервисная  (form_name='ЧерновикМЧД'):    {report_svc}")
+    print(f"  form_class = {report_svc.form_class}")
+    print(
+        "\n  Нулевое покрытие сервисной формы — штатный результат.\n"
+        "  Агрегатор исключает её из общего знаменателя."
+    )
+    print()
+
+
 def main() -> None:
     demo_constants()
     demo_old_vs_new()
     demo_partial_coverage()
     demo_elem_index_wrapper()
     demo_json_report()
+    demo_form_class()
 
 
 if __name__ == "__main__":
