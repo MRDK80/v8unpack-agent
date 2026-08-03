@@ -4,14 +4,17 @@
 во временном каталоге по структуре реальной выгрузки. Реальные данные,
 контейнеры 1С и внутренняя инфраструктура не используются.
 
-Показано, что `parse_elem_json` заполняет `data_path` двумя механизмами:
+Показано, что `parse_elem_json` заполняет `data_path` тремя механизмами:
 
-* обычная форма  — через поле ``prop`` записи ``data``;
-* управляемая    — через UUID реквизита из ``Catalog.json``.
+* обычная форма — через поле ``prop`` записи ``data``;
+* управляемая — через UUID реквизита из ``Catalog.json``;
+* structural fallback — extract_legacy_form_elements() при пустом ``tree``
+  (PR #102, issue #100): элементы берутся из «*.json» с TabularField-структурой;
+  elem_index_ok=True, extraction_source="legacy_form_json".
 
 Запуск:
 
-    python examples/form_bindings.py
+python examples/form_bindings.py
 """
 from __future__ import annotations
 
@@ -21,10 +24,9 @@ from pathlib import Path
 
 from v8unpack_agent.elem_parser import parse_elem_json
 
-UUID_FORM = "02023637-7868-4a5f-8576-835a76e0c9ba"
+UUID_FORM  = "02023637-7868-4a5f-8576-835a76e0c9ba"
 UUID_GOROD = "3d446926-2fb8-11d7-85a2-0050bae0a772"
 UUID_ADRES = "3d446928-2fb8-11d7-85a2-0050bae0a772"
-
 
 # ---------------------------------------------------------------------------
 # Метаданные объекта: карта UUID -> имя реквизита (нужна управляемым формам)
@@ -32,24 +34,21 @@ UUID_ADRES = "3d446928-2fb8-11d7-85a2-0050bae0a772"
 def _catalog_attribute(uuid: str, name: str, synonym: str) -> list:
     """Узел реквизита Catalog.json: UUID в node[1][2], имя в node[2]."""
     node = ["0", ["0", "0", uuid], f'"{name}"', ["ru", f'"{synonym}"'], '"(Общ)"']
-    return [[["1", [["1", [node]]]]]]
+    return [[[  "1", [["1", [node]]]]]]
 
 
 def _catalog_json() -> dict:
     return {
         "header": [
-            [
-                None, None, None, None, None, None,
-                [
-                    "cf4abea7-37b2-11d4-940f-008048da11f9",
-                    "11",
-                    _catalog_attribute(UUID_GOROD, "Город", "Город"),
-                    _catalog_attribute(UUID_ADRES, "Адрес", "Адрес"),
-                ],
-            ]
-        ]
-    }
 
+            None, None, None, None, None, None,
+
+            "cf4abea7-37b2-11d4-940f-008048da11f9",
+            "11",
+            _catalog_attribute(UUID_GOROD, "Город",  "Город"),
+            _catalog_attribute(UUID_ADRES, "Адрес",  "Адрес"),
+        ],
+    }
 
 # ---------------------------------------------------------------------------
 # Обычная форма: привязка через prop
@@ -72,10 +71,10 @@ def _legacy_widget_raw(name: str) -> list:
 
 def _legacy_record(rec_id: int, name: str, prop: str | None = None) -> dict:
     record = {
-        "id": rec_id,
-        "ver": "1",
+        "id":   rec_id,
+        "ver":  "1",
         "page": "Страница1",
-        "raw": _legacy_widget_raw(name),
+        "raw":  _legacy_widget_raw(name),
     }
     if prop is not None:
         record["prop"] = prop
@@ -88,32 +87,33 @@ def make_legacy_form(catalog_root: Path) -> Path:
     form_root.mkdir(parents=True, exist_ok=True)
 
     payload = {
-        "params": [],
-        "props": [{"name": "СправочникОбъект", "id": "0", "raw": []}],
+        "params":   [],
+        "props":    [{"name": "СправочникОбъект", "id": "0", "raw": []}],
         "commands": [],
         "tree": [
-            {"name": "НадписьГород", "type": "Label"},
-            {"name": "Город", "type": "Field"},
-            {"name": "Код", "type": "Field"},
-            {"name": "ДействияФормы", "type": "CommandPanel"},
+            {"name": "НадписьГород",   "type": "Label"},
+            {"name": "Город",          "type": "Field"},
+            {"name": "Код",            "type": "Field"},
+            {"name": "ДействияФормы",  "type": "CommandPanel"},
         ],
         "data": {
-            "-pages-": ["Страница1"],
+            "-pages-":   ["Страница1"],
             "Страница1": {"ver": "1", "page_format_version": "1", "raw": [], "info": {}},
             # надпись: prop нет -> привязки нет
             "Страница1/НадписьГород": _legacy_record(1, "НадписьГород"),
             # реквизит объекта: prop != имя -> префикс добавляется
-            "Страница1/Город": _legacy_record(2, "Город", "СправочникОбъект"),
+            "Страница1/Город":        _legacy_record(2, "Город", "СправочникОбъект"),
             # стандартный реквизит: в Catalog.json его нет, но привязка по имени
-            "Страница1/Код": _legacy_record(3, "Код", "СправочникОбъект"),
+            "Страница1/Код":          _legacy_record(3, "Код",   "СправочникОбъект"),
             "Страница1/ДействияФормы": _legacy_record(4, "ДействияФормы"),
         },
     }
+
     (form_root / "CatalogForm.elem.json").write_text(
         json.dumps(payload, ensure_ascii=False), encoding="utf-8"
     )
-    return form_root
 
+    return form_root
 
 # ---------------------------------------------------------------------------
 # Управляемая форма: привязка через UUID реквизита
@@ -139,17 +139,17 @@ def make_managed_form(catalog_root: Path) -> Path:
     form_root.mkdir(parents=True, exist_ok=True)
 
     payload = {
-        "params": [],
-        "props": [],
+        "params":   [],
+        "props":    [],
         "commands": [],
         "tree": [
-            {"name": "Город", "type": "Field"},
-            {"name": "Адрес", "type": "Field"},
+            {"name": "Город",    "type": "Field"},
+            {"name": "Адрес",    "type": "Field"},
             {"name": "Команда1", "type": "Button"},
         ],
         "data": {
-            "Город": {"raw": _managed_field_raw("Город", UUID_GOROD, "13"), "ver": "1"},
-            "Адрес": {"raw": _managed_field_raw("Адрес", UUID_ADRES, "16"), "ver": "1"},
+            "Город":    {"raw": _managed_field_raw("Город", UUID_GOROD, "13"), "ver": "1"},
+            "Адрес":    {"raw": _managed_field_raw("Адрес", UUID_ADRES, "16"), "ver": "1"},
             # кнопка: UUID реквизита нет -> привязки нет
             "Команда1": {
                 "raw": ["22", ["25", UUID_FORM], "0", '"Команда1"', ["1", "0"]],
@@ -157,9 +157,45 @@ def make_managed_form(catalog_root: Path) -> Path:
             },
         },
     }
+
     (form_root / "CatalogForm.elem.json").write_text(
         json.dumps(payload, ensure_ascii=False), encoding="utf-8"
     )
+
+    return form_root
+
+# ---------------------------------------------------------------------------
+# Structural fallback: extract_legacy_form_elements (PR #102, issue #100)
+# Форма с пустым tree — элементы берутся из *.json с TabularField-структурой
+# ---------------------------------------------------------------------------
+def make_structural_fallback_form(register_root: Path) -> Path:
+    """Форма РегистраСведений с пустым tree.json — structural fallback.
+
+    До PR #102 такая форма давала elem_index_ok=False.
+    После PR #102 extract_legacy_form_elements() находит TabularField в
+    *.json и возвращает elem_index_ok=True.
+    """
+    form_root = register_root / "InformationRegisterForm" / "ФормаЗаписи"
+    form_root.mkdir(parents=True, exist_ok=True)
+
+    # elem.json с пустым tree — v8unpack не смог извлечь структуру обычным путём
+    empty_elem = {"params": [], "props": [], "commands": [], "tree": [], "data": {}}
+    (form_root / "InformationRegisterForm.elem.json").write_text(
+        json.dumps(empty_elem, ensure_ascii=False), encoding="utf-8"
+    )
+
+    # *.json с TabularField — структурный источник элементов для fallback
+    legacy_form_json = {
+        "FormItems": [
+            {"Name": "Период",    "Type": "InputField", "DataPath": "Объект.Период"},
+            {"Name": "Ресурс1",   "Type": "InputField", "DataPath": "Объект.Ресурс1"},
+            {"Name": "ПанельКоманд", "Type": "CommandPanel"},
+        ]
+    }
+    (form_root / "InformationRegisterForm.json").write_text(
+        json.dumps(legacy_form_json, ensure_ascii=False), encoding="utf-8"
+    )
+
     return form_root
 
 
@@ -167,9 +203,13 @@ def report(title: str, form_root: Path) -> None:
     result = parse_elem_json(form_root)
 
     bound = [e for e in result.elements if e.get("data_path")]
+    source = getattr(result, "extraction_source", "elem_json")
     print(f"\n=== {title} ===")
-    print(f"elem_index_ok = {result.elem_index_ok}, "
-          f"элементов = {len(result.elements)}, с привязкой = {len(bound)}")
+    print(
+        f"elem_index_ok = {result.elem_index_ok}, "
+        f"extraction_source = {source!r}, "
+        f"элементов = {len(result.elements)}, с привязкой = {len(bound)}"
+    )
 
     for element in result.elements:
         path = element.get("data_path")
@@ -181,6 +221,11 @@ def report(title: str, form_root: Path) -> None:
 
 
 def main() -> None:
+    """Демонстрирует три механизма заполнения data_path:
+    1. prop (обычная форма) — issue #85
+    2. UUID реквизита (управляемая форма) — issue #85
+    3. structural fallback при пустом tree — PR #102, issue #100
+    """
     with tempfile.TemporaryDirectory() as tmp:
         catalog_root = Path(tmp) / "Catalog" / "Банки"
         catalog_root.mkdir(parents=True)
@@ -188,13 +233,19 @@ def main() -> None:
             json.dumps(_catalog_json(), ensure_ascii=False), encoding="utf-8"
         )
 
-        report("Обычная форма (привязка через prop)", make_legacy_form(catalog_root))
-        report("Управляемая форма (привязка через UUID)", make_managed_form(catalog_root))
+        report("Обычная форма (привязка через prop)",
+               make_legacy_form(catalog_root))
+        report("Управляемая форма (привязка через UUID)",
+               make_managed_form(catalog_root))
 
-        print(
-            "\nОтсутствие data_path у надписей, панелей команд, групп и кнопок —\n"
-            "штатный результат, а не пробел декодирования."
-        )
+        register_root = Path(tmp) / "InformationRegister" / "АдресныйКлассификатор"
+        report("Structural fallback / пустой tree (PR #102, issue #100)",
+               make_structural_fallback_form(register_root))
+
+    print(
+        "\nОтсутствие data_path у надписей, панелей команд, групп и кнопок —\n"
+        "штатный результат, а не пробел декодирования."
+    )
 
 
 if __name__ == "__main__":
