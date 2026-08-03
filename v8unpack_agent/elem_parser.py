@@ -40,6 +40,15 @@ UUID в ``raw`` описывают класс виджета, а не привя
 родительского вектора с известным UUID виджета (InputField, ComboBox).
 Функция :func:`extract_legacy_form_elements` реализует этот разбор.
 
+Фолбэк на TabularField-формы (issue #103)
+------------------------------------------
+Для форм-списков (ФормаСписка, ФормаВыбора), у которых elem.json пуст,
+а большой *.json содержит виджет TabularField
+(UUID ``ea83fe3a-ac3c-4cce-8045-3dddf35b28b1``), реквизиты кодируются
+числовыми индексами. Имена реквизитов берутся из метаданных объекта
+(``<Type>.json`` рядом с директорией формы). Функция
+:func:`extract_legacy_list_form_elements` реализует кросс-чтение.
+
 Модуль работает best-effort: ошибка парсинга elem.json не должна ломать
 основной пайплайн распаковки.
 """
@@ -75,6 +84,8 @@ _PAGE_LIST_KEY = "-pages-"
 
 _NULL_UUID = "00000000-0000-0000-0000-000000000000"
 _OBJECT_PREFIX = "Объект"
+# Префикс пути для колонок форм-списков (ФормаСписка / ФормаВыбора)
+_LIST_PREFIX = "Список"
 
 
 # ---------------------------------------------------------------------------
@@ -94,6 +105,13 @@ _LEGACY_WIDGET_TYPE_NAMES: dict[str, str] = {
     "381ed624-9217-4e63-85db-c4c3cb87daae": "InputField",
     "64483e7f-3833-48e2-8c75-2c31aac49f6e": "ComboBox",
 }
+
+# ---------------------------------------------------------------------------
+# Константы для разбора форм-списков с TabularField (issue #103)
+# ---------------------------------------------------------------------------
+
+# UUID виджета TabularField (поле табличного представления, форма-список)
+_TABULAR_FIELD_UUID = "ea83fe3a-ac3c-4cce-8045-3dddf35b28b1"
 
 
 def _is_uuid(value: object) -> bool:
@@ -208,6 +226,51 @@ def load_owner_attribute_map(form_root: Path, warnings: list[str]) -> dict[str, 
         )
 
     return mapping
+
+
+def _load_tabular_field_index_map(form_root: Path, warnings: list[str]) -> dict[str, str]:
+    """Карта ``numeric_index -> имя реквизита`` из метаданных объекта (issue #103).
+
+    Используется для форм-списков (ФормаСписка / ФормаВыбора).
+    Читает ``TabularFieldAttributeMap`` из ``<Type>.json`` объекта-владельца.
+    Если ключ ``TabularFieldAttributeMap`` отсутствует, строит карту из
+    ``Properties`` по порядку их объявления (нулевой индекс → первое свойство).
+    """
+    path = _find_owner_metadata_json(form_root)
+    if path is None:
+        if not _is_common_form(form_root):
+            warnings.append(
+                f"#103: метаданные владельца не найдены для {form_root}"
+            )
+        return {}
+
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8-sig"))
+    except Exception as exc:
+        warnings.append(f"#103: не удалось прочитать {path}: {exc}")
+        return {}
+
+    # Предпочтительный путь: явный маппинг индекс → имя в JSON объекта
+    if isinstance(raw, dict):
+        tfa_map = raw.get("TabularFieldAttributeMap")
+        if isinstance(tfa_map, dict):
+            return {str(k): str(v) for k, v in tfa_map.items() if k and v}
+
+    # Запасной путь: карта из object_decoder по порядку Properties
+    result = decode_object_attributes(path)
+    if not result.ok:
+        warnings.append(
+            f"#103 object_decoder: не удалось декодировать {path}: "
+            f"{result.error}"
+        )
+        return {}
+
+    index_map: dict[str, str] = {}
+    for i, prop in enumerate(result.data.get("Properties", [])):
+        name = prop.get("Name") or ""
+        if name:
+            index_map[str(i)] = name
+    return index_map
 
 
 _LEGACY_BINDING_TAG = "14"
@@ -400,6 +463,113 @@ def extract_legacy_form_elements(form_json: Any) -> list[dict]:
     return results
 
 
+# ---------------------------------------------------------------------------
+# Разбор форм-списков с TabularField (issue #103)
+# ---------------------------------------------------------------------------
+
+def _has_tabular_field(node: Any) -> bool:
+    """Рекурсивно проверяет наличие блока TabularField в JSON формы."""
+    if isinstance(node, list):
+        if node and isinstance(node[0], str) and node[0] == _TABULAR_FIELD_UUID:
+            return True
+        return any(_has_tabular_field(child) for child in node)
+    if isinstance(node, dict):
+        return any(_has_tabular_field(v) for v in node.values())
+    return False
+
+
+def extract_legacy_list_form_elements(
+    form_json: Any,
+    obj_json: Any,
+) -> list[dict]:
+    """Извлечь колонки TabularField из большого JSON формы-списка (issue #103).
+
+    Используется как фолбэк для ФормаСписка / ФормаВыбора, у которых
+    elem.json пуст, а большой *.json содержит виджет TabularField
+    (UUID ``ea83fe3a-ac3c-4cce-8045-3dddf35b28b1``).
+
+    Колонки TabularField кодируются числовыми индексами (строки вида "10",
+    "11", "3"...). Имена реквизитов читаются из ``obj_json`` двумя
+    способами (в порядке приоритета):
+
+    1. Явный ключ ``TabularFieldAttributeMap`` в obj_json:
+       ``{"10": "Наименование", "11": "Код", ...}``
+    2. Если ключ отсутствует — маппинг строится из ``Properties``
+       по порядку объявления (индекс 0 → первое свойство и т.д.).
+
+    Возвращает список словарей:
+    - ``name``      — имя реквизита;
+    - ``type``      — ``"TabularFieldColumn"``;
+    - ``data_path`` — ``"Список.<Имя>"``;
+    - ``source``    — ``"legacy_list_form_json"``.
+
+    Label (``0fc7e20d-...``), CommandBar (``e69bf21d-...``) и прочие
+    служебные UUID **не включаются**. Дубликаты схлопываются.
+    """
+    if form_json is None or obj_json is None:
+        return []
+
+    # Строим карту индекс → имя из obj_json
+    index_map: dict[str, str] = {}
+    if isinstance(obj_json, dict):
+        tfa_map = obj_json.get("TabularFieldAttributeMap")
+        if isinstance(tfa_map, dict):
+            index_map = {str(k): str(v) for k, v in tfa_map.items() if k and v}
+        elif not index_map:
+            # Запасной путь: порядковые индексы Properties
+            props = obj_json.get("Properties") or obj_json.get("properties") or []
+            if isinstance(props, list):
+                for i, prop in enumerate(props):
+                    name = ""
+                    if isinstance(prop, dict):
+                        name = prop.get("Name") or prop.get("name") or ""
+                    elif isinstance(prop, str):
+                        name = prop
+                    if name:
+                        index_map[str(i)] = name
+
+    if not index_map:
+        return []
+
+    results: list[dict] = []
+    seen_names: set[str] = set()
+
+    def walk(node: Any) -> None:
+        if not isinstance(node, list):
+            return
+        # Блок TabularField: node[0] == _TABULAR_FIELD_UUID,
+        # node[4] — список колонок, каждая: [str(index), ...]
+        if (
+            len(node) >= 5
+            and isinstance(node[0], str)
+            and node[0] == _TABULAR_FIELD_UUID
+            and isinstance(node[4], list)
+        ):
+            for col in node[4]:
+                if not isinstance(col, list) or not col:
+                    continue
+                idx = str(col[0]) if col else ""
+                attr_name = index_map.get(idx)
+                if attr_name and attr_name not in seen_names:
+                    seen_names.add(attr_name)
+                    results.append({
+                        "name": attr_name,
+                        "type": "TabularFieldColumn",
+                        "data_path": f"{_LIST_PREFIX}.{attr_name}",
+                        "source": "legacy_list_form_json",
+                    })
+        for child in node:
+            walk(child)
+
+    if isinstance(form_json, dict):
+        for value in form_json.values():
+            walk(value)
+    elif isinstance(form_json, list):
+        walk(form_json)
+
+    return results
+
+
 def _find_legacy_form_json(form_root: Path) -> Path | None:
     """Найти большой объектный *.json обычной формы.
 
@@ -457,13 +627,53 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
                 legacy_data = json.loads(
                     legacy_json_path.read_text(encoding="utf-8-sig")
                 )
-                legacy_elements = extract_legacy_form_elements(legacy_data)
-                if legacy_elements:
-                    warnings.append(
-                        f"elem.json пуст, элементы извлечены из {legacy_json_path.name} "
-                        f"(legacy form JSON, issue #100): {len(legacy_elements)} эл."
-                    )
-                    elements = legacy_elements
+
+                # --- Фолбэк #103: TabularField (ФормаСписка / ФормаВыбора) ---
+                # Проверяем наличие TabularField ДО попытки extract_legacy_form_elements,
+                # чтобы не терять колонки форм-списков.
+                if _has_tabular_field(legacy_data):
+                    index_map = _load_tabular_field_index_map(form_root, warnings)
+                    if index_map:
+                        # Собираем obj_json для передачи в экстрактор
+                        owner_path = _find_owner_metadata_json(form_root)
+                        obj_json_raw: Any = None
+                        if owner_path is not None:
+                            try:
+                                obj_json_raw = json.loads(
+                                    owner_path.read_text(encoding="utf-8-sig")
+                                )
+                            except Exception as exc:
+                                warnings.append(
+                                    f"#103: не удалось прочитать {owner_path}: {exc}"
+                                )
+                        # Инжектируем карту индексов в obj_json
+                        if obj_json_raw is None:
+                            obj_json_raw = {}
+                        if isinstance(obj_json_raw, dict):
+                            obj_json_raw = dict(obj_json_raw)
+                            obj_json_raw.setdefault(
+                                "TabularFieldAttributeMap", index_map
+                            )
+                        list_elements = extract_legacy_list_form_elements(
+                            legacy_data, obj_json_raw
+                        )
+                        if list_elements:
+                            warnings.append(
+                                f"elem.json пуст, колонки TabularField извлечены из "
+                                f"{legacy_json_path.name} (issue #103): "
+                                f"{len(list_elements)} эл."
+                            )
+                            elements = list_elements
+
+                # --- Фолбэк #100: InputField / ComboBox ---
+                if not elements:
+                    legacy_elements = extract_legacy_form_elements(legacy_data)
+                    if legacy_elements:
+                        warnings.append(
+                            f"elem.json пуст, элементы извлечены из {legacy_json_path.name} "
+                            f"(legacy form JSON, issue #100): {len(legacy_elements)} эл."
+                        )
+                        elements = legacy_elements
             except Exception as exc:
                 warnings.append(
                     f"Не удалось разобрать legacy form JSON {legacy_json_path}: {exc}"
