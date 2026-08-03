@@ -191,7 +191,7 @@ class TestClassifyFormByBindings:
         Защита от [] → UNKNOWN реализована в classify_form, не здесь.
         """
         assert classify_form_by_bindings([]) == FormClass.SERVICE
-        
+
     def test_all_service_elements_no_data_elements_is_service(self):
         """Только Label/Group/Panel — нет data-элементов.
         По production-данным это информационные формы (ФормаПодбораИзКлассификатора,
