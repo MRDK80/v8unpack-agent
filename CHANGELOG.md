@@ -31,11 +31,6 @@
   `empty_tree_name_hint` (имя похоже на сервисное, подтверждения нет),
   `unparsed_empty_tree`, `no_name`. Константы `PLATFORM_OBJECT_FORM_NAMES`
   (16 стандартных имён) и `EMPTY_TREE_NAME_HINTS` (issue #98, PR #99).
-- `verify_98_form_classifier.py` — верификация классификатора на production-корпусе.
-  Обходит директории с `*.elem.json`, считает распределение по классам,
-  выводит топ сервисных форм по покрытию, потенциальные ложноположительные
-  (сервисные с `Объект.*` в `data_path`), причины классификации empty-tree форм
-  и проверяет баланс директорий (issue #98, PR #99).
 - `v8unpack_agent/coverage_metric.py`: `calc_data_path_coverage(elements)` +
   `CoverageReport` — двухслойная метрика покрытия `data_path`. Знаменатель
   включает только элементы данных (`DATA_ELEMENT_TYPES`: `Field`, `InputField`,
