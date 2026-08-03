@@ -126,7 +126,9 @@ index.save(Path("forms_index.json"))
 
 - [`examples/basic_usage.py`](examples/basic_usage.py) — распаковка, реестр форм и drift-контроль.
 - [`examples/form_bindings.py`](examples/form_bindings.py) — декодирование `data_path` для обычной формы через `prop` и для управляемой формы через UUID реквизита (issue #85).
+- [`examples/coverage_metric.py`](examples/coverage_metric.py) — расчёт покрытия `data_path` только по элементам данных, классификация объектных и сервисных форм и JSON-отчёт (`CoverageReport`, issues #90, #98).
 - [`examples/extract_skd_queries.py`](examples/extract_skd_queries.py) — извлечение запросов СКД из распакованного внешнего отчёта.
+- [`examples/legacy_list_form_bindings.py`](examples/legacy_list_form_bindings.py) — извлечение подтверждённых привязок колонок legacy `ФормаСписка` / `ФормаВыбора` через fallback `TabularField` (#103).
 
 ## Классификация форм
 

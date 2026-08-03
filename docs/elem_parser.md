@@ -337,6 +337,6 @@ Fallback #103 подтверждён для `AccumulationRegister`, `Catalog`,
 | [#90](https://github.com/MRDK80/v8unpack-agent/issues/90) | Метрика покрытия `data_path` | closed, PR #97 |
 | [#98](https://github.com/MRDK80/v8unpack-agent/issues/98) | Классификация форм: объектные vs. сервисные | closed, PR #99 |
 | [#100](https://github.com/MRDK80/v8unpack-agent/issues/100) | `extract_legacy_form_elements`: fallback для ФормаЗаписи/ФормаЭлемента с пустым `tree` | closed, PR #102 |
-| [#103](https://github.com/MRDK80/v8unpack-agent/issues/103) | `ФормаСписка`/`ФормаВыбора`: безопасное извлечение колонок `TabularField` | implemented, pending merge |
+| [#103](https://github.com/MRDK80/v8unpack-agent/issues/103) | `ФормаСписка`/`ФормаВыбора`: безопасное извлечение колонок `TabularField` | implemented |
 | [#105](https://github.com/MRDK80/v8unpack-agent/issues/105) | Классификация оставшихся 77 неиндексируемых форм | open |
 | [#88](https://github.com/MRDK80/v8unpack-agent/issues/88) | Приведение `Ref#uuid` к имени объекта метаданных | open |
