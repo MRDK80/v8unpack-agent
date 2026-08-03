@@ -17,9 +17,7 @@ Criteria of Done:
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 
@@ -40,14 +38,13 @@ def _make_tag14_node(name: str) -> list:
     return ["14", f'"{name}"', "4294967295", "0", "0", "0"]
 
 
-def _make_element_block(widget_uuid: str, element_id: str, name: str,
-                        extra_data: list | None = None) -> list:
+def _make_element_block(widget_uuid: str, element_id: str, name: str) -> list:
     """Воспроизводит структуру блока элемента из InformationRegisterForm.json.
 
     Структура: [widget_uuid, element_id, <data block>, <positions block>,
                 ["14", '"Имя"', ...], ["0"]]
     """
-    data_block = extra_data or ["9", ["\"Pattern\""], [], [], "0", "1", "0", ["1", "0"], "0"]
+    data_block = ["9", ["\"Pattern\""], [], [], "0", "1", "0", ["1", "0"], "0"]
     positions = ["8", "98", "33", "318", "52", "1"]
     return [
         widget_uuid,
@@ -145,8 +142,8 @@ class TestExtractLegacyFormElements:
         """Дублирующиеся имена в json не должны дублироваться в результате."""
         from v8unpack_agent.elem_parser import extract_legacy_form_elements
 
-        # Дублируем один блок
         dup_json = json.loads(json.dumps(MINIMAL_FORM_JSON))
+        # Добавляем дубль «Код» с другим element_id
         inner = dup_json["form"][0][0][2]
         inner.append(_make_element_block(_UUID_INPUT_FIELD, "99", "Код"))
 
@@ -230,9 +227,8 @@ class TestParseElemJsonFallbackToLegacyFormJson:
 
         result = parse_elem_json(form_dir)
         names = [e["name"] for e in result.elements]
-        # Элемент из elem.json есть
         assert "ПолеИзElemJson" in names
-        # Элементы из Form.json не должны дублироваться поверх
+        # Элементы из Form.json не должны дублировать
         assert "Надпись1" not in names
 
 
@@ -251,7 +247,8 @@ class TestFormClassifierWithLegacyElements:
             {"name": "Наименование", "data_path": "Объект.Наименование"},
             {"name": "Индекс",       "data_path": "Объект.Индекс"},
         ]
-        form_class, reason = classify_form_by_bindings("ФормаЗаписи", elements)
+        # classify_form_by_bindings принимает только elements (без form_name)
+        form_class, reason = classify_form_by_bindings(elements)
         assert form_class == FormClass.OBJECT, (
             f"Ожидали OBJECT, получили {form_class!r} (reason={reason!r})"
         )
