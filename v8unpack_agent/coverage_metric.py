@@ -7,8 +7,8 @@
 Исправлено в issue #98:
 - добавлено поле ``form_class`` в :class:`CoverageReport`;
 - добавлен параметр ``form_name`` в :func:`calc_data_path_coverage`;
-- формы с пустым ``tree`` (платформенные диалоги подтверждения) теперь
-  классифицируются по имени в :func:`calc_coverage_from_elem_index`.
+- формы с пустым ``tree`` диагностируются в :func:`calc_coverage_from_elem_index`
+  через :func:`~v8unpack_agent.form_classifier.classify_empty_tree_form`.
 
 Два слоя метрики
 ----------------
@@ -23,9 +23,9 @@
 Стандартные реквизиты платформы
 --------------------------------
 Реквизиты ``Код``, ``Наименование``, ``Родитель``, ``Дата``, ``Номер``,
-``ПометкаУдаления`` отсутствуют в ``Properties`` объекта (Catalog.json / Document.json),
-но являются полностью валидными полями данных. Они
-учтены через :data:`PLATFORM_STANDARD_ATTRIBUTES` — эта константа
+``ПометкаУдаления`` отсутствуют в ``Properties`` объекта
+(Catalog.json / Document.json), но являются полностью валидными полями данных.
+Они учтены через :data:`PLATFORM_STANDARD_ATTRIBUTES` — эта константа
 используется вызывающим кодом при резолюции привязок.
 
 Классификация форм
@@ -36,13 +36,22 @@
 - ``"service"`` — сервисная (мастер, помощник, диалог);
 - ``"unknown"`` — нельзя определить.
 
+Формы с пустым tree
+--------------------
+Пустой ``tree`` НЕ означает сервисную форму. Верификация на production
+(2231 форма) показала, что среди таких форм есть объектные: ``ФормаЗаписи``
+регистров сведений и основные формы ``Форма`` отчётов и обработок. Их
+разметку elem_parser не распарсил. Отнесение таких форм к SERVICE
+исключило бы объектные формы из агрегированного покрытия и замаскировало
+пробел в парсере, поэтому по умолчанию возвращается ``"unknown"``.
+
 OS-нейтральность, кодировка UTF-8.
 """
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass, field
 from typing import Iterable
+
 
 # ---------------------------------------------------------------------------
 # Константы типов элементов
@@ -138,7 +147,7 @@ class CoverageReport:
             "data_elements": self.data_elements,
             "bound_data_elements": self.bound_data_elements,
             "coverage_pct": round(self.coverage_pct, 2),
-            "form_class": self.form_class,
+            "form_class": str(self.form_class),
         }
 
 
@@ -193,13 +202,20 @@ def calc_data_path_coverage(
     for elem in elements:
         total += 1
         elem_type = elem.get("type") or "Unknown"
+
         if elem_type not in DATA_ELEMENT_TYPES:
             continue
+
         data_count += 1
+
         if elem.get("data_path"):
             bound_count += 1
 
-    coverage = (bound_count / data_count * 100.0) if data_count > 0 else 0.0
+    coverage = (
+        (bound_count / data_count * 100.0)
+        if data_count > 0
+        else 0.0
+    )
 
     form_cls = classify_form(
         form_name=form_name or "",
@@ -211,7 +227,7 @@ def calc_data_path_coverage(
         data_elements=data_count,
         bound_data_elements=bound_count,
         coverage_pct=coverage,
-        form_class=form_cls,
+        form_class=str(form_cls),
     )
 
 
@@ -230,40 +246,46 @@ def calc_coverage_from_elem_index(
 
     Поведение
     ---------
-    - ``elem_index_ok=True``, elements есть → полный расчёт через :func:`calc_data_path_coverage`.
-    - ``elem_index_ok=False`` или elements=[] И form_name есть →
-      классификация по имени (формы с пустым tree: платформенные диалоги).
-      - имя даёт SERVICE → ``form_class="service"``
-      - имя даёт UNKNOWN → ``form_class="service"`` (безопасный дефолт:
-        форма с пустым tree не может быть объектной)
-    - если form_name не передан → ``form_class="unknown"`` (обратная совместимость).
+    - ``elem_index_ok=True`` и elements есть → полный расчёт
+      через :func:`calc_data_path_coverage`.
+    - ``elem_index_ok=False`` или elements=[] и form_name передан →
+      :func:`~v8unpack_agent.form_classifier.classify_empty_tree_form`.
+      SERVICE возвращается только при совпадении с проверенным списком
+      сервисных паттернов; во всех остальных случаях — ``"unknown"``.
+    - form_name не передан → ``"unknown"`` (обратная совместимость).
+
+    Notes
+    -----
+    Ранее пустой ``tree`` трактовался как SERVICE «безопасным дефолтом».
+    Это неверно: среди таких форм есть ``ФормаЗаписи`` регистров сведений
+    и основные формы отчётов ``Форма``. Классификатор не придумывает класс,
+    когда парсер не предоставил структуру формы.
+
+    Причину решения (``platform_object_name_unparsed``,
+    ``empty_tree_name_hint`` и др.) можно получить прямым вызовом
+    :func:`classify_empty_tree_form` — она возвращает пару
+    ``(класс, причина)``.
     """
-    from v8unpack_agent.form_classifier import classify_form_by_name, FormClass  # noqa: PLC0415
+    from v8unpack_agent.form_classifier import (  # noqa: PLC0415
+        FormClass,
+        classify_empty_tree_form,
+    )
 
     elem_index_ok = getattr(result, "elem_index_ok", False)
     elements = getattr(result, "elements", []) or []
 
     if not elem_index_ok or not elements:
-        # Форма с пустым tree (например диалог подтверждения, диалог перезаписи файлов)
-        # — elem_parser не может парсить разметку из бинарного формата.
-        # Разбираемся по имени формы.
         if form_name:
-            by_name = classify_form_by_name(form_name)
-            # Форма с пустым tree никогда не является объектной.
-            # Даже если имя неизвестно (UNKNOWN) — безопаснее считать SERVICE.
-            fc = (
-                FormClass.SERVICE
-                if by_name in (FormClass.SERVICE, FormClass.UNKNOWN)
-                else FormClass.UNKNOWN  # недостижимая ветвь (by_name == OBJECT невозможно)
-            )
+            form_class, _reason = classify_empty_tree_form(form_name)
         else:
-            fc = FormClass.UNKNOWN  # обратная совместимость: form_name не передан
+            form_class = FormClass.UNKNOWN
+
         return CoverageReport(
             total_elements=0,
             data_elements=0,
             bound_data_elements=0,
             coverage_pct=0.0,
-            form_class=fc,
+            form_class=str(form_class),
         )
 
     return calc_data_path_coverage(elements, form_name=form_name)
