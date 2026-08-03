@@ -198,6 +198,18 @@ InformationRegister/ПаспортныеДанныеФизЛиц/InformationRegi
 Это полноценные формы с полями данных — показатели, группировки строк и
 колонок, отборы, период, — а не диалоги подтверждения.
 
+### Результат PR #102 (issue #100)
+
+`extract_legacy_form_elements` + `_find_legacy_form_json` подняли **49 форм**
+(ФормаЗаписи, ФормаЭлемента, формы обработок, отчётов, CommonForm).
+Итоговое распределение после PR #102:
+
+```
+OK:       1942
+FALLBACK:   49  (поднято extract_legacy_form_elements)
+ERROR:     225  → ФормаСписка/ФормаВыбора с TabularField (→ #103)
+```
+
 ### Как это отражается в метрике
 
 Формы с пустым `tree` получают `form_class="unknown"` и **исключаются из
@@ -208,6 +220,35 @@ InformationRegister/ПаспортныеДанныеФизЛиц/InformationRegi
 
 Отнесение таких форм к сервисным было бы ошибкой: объектные формы исчезли бы
 из метрики, а отчёт показал бы благополучные цифры при нечитаемой разметке.
+
+## ФормаСписка и ФормаВыбора — legacy `*.json` с TabularField (issue #103)
+
+Отдельный класс обычных форм — **ФормаСписка** и **ФормаВыбора** —
+хранит разметку в `*.json` рядом с `*.elem.json`, но в принципиально
+другом формате. Текущий `extract_legacy_form_elements` его не читает:
+форма остаётся в статусе `ERROR`.
+
+### Чем отличается от ФормаЗаписи / ФормаЭлемента
+
+| Аспект | ФормаЗаписи / ФормаЭлемента | ФормаСписка / ФормаВыбора |
+|---|---|---|
+| Виджеты в `form[0][0][2]` | UUID типа виджета (`381ed624-…` = InputField) + тег `["14", "\"ИмяРеквизита\"", …]` | Числовые индексы `0`, `1`, `2` — имён нет |
+| Главный виджет | InputField, ComboBox вразброс | TabularField `ea83fe3a-ac3c-4cce-8045-3dddf35b28b1` |
+| Колонки таблицы | прямо в узле виджета с тегом `"14"` | числовые индексы (`10`, `11`, `3`) — расшифровка в метаданных объекта |
+| Где имена реквизитов | внутри `form` через тег `"14"` | в `header[0][5..7][N]` объектного JSON (`AccumulationRegister.json` и т.п.) |
+
+### Масштаб
+
+На конфигурации УТ 10.3 затронуты **225 форм** — исключительно
+`ФормаСписка` и `ФормаВыбора` по всем типам объектов: Catalog, Document,
+AccumulationRegister, InformationRegister, Report, DataProcessor,
+DocumentJournal, ChartOfCharacteristicType, CommonForm.
+
+### Текущий статус
+
+Реализация `extract_legacy_list_form_elements` — кросс-чтение
+`form/*.json` + `../Object.json` через `decode_object_attributes` —
+вынесена в [issue #103](https://github.com/MRDK80/v8unpack-agent/issues/103).
 
 ## Схлопывание одноимённых записей
 
@@ -249,4 +290,6 @@ InformationRegister/ПаспортныеДанныеФизЛиц/InformationRegi
 | [#84](https://github.com/MRDK80/v8unpack-agent/issues/84) | `decode_object_attributes`: карта реквизитов | closed, PR #87 |
 | [#90](https://github.com/MRDK80/v8unpack-agent/issues/90) | Метрика покрытия `data_path` | closed, PR #97 |
 | [#98](https://github.com/MRDK80/v8unpack-agent/issues/98) | Классификация форм: объектные vs. сервисные | closed, PR #99 |
+| [#100](https://github.com/MRDK80/v8unpack-agent/issues/100) | `extract_legacy_form_elements`: fallback для ФормаЗаписи/ФормаЭлемента с пустым `tree` | closed, PR #102 |
+| [#103](https://github.com/MRDK80/v8unpack-agent/issues/103) | `ФормаСписка`/`ФормаВыбора`: TabularField, числовые индексы колонок, 225 форм | open |
 | [#88](https://github.com/MRDK80/v8unpack-agent/issues/88) | Приведение `Ref#uuid` к имени объекта метаданных | open |

@@ -31,6 +31,15 @@
 UUID в ``raw`` описывают класс виджета, а не привязку, и попытка их
 разрешить давала ложные срабатывания.
 
+Фолбэк на большой *.json (issue #100)
+--------------------------------------
+Для обычных форм, у которых elem.json содержит пустые ``tree`` и ``data``,
+парсер пытается извлечь элементы из большого ``<Name>.json`` в той же
+директории. Этот файл — объект формы в бинарном JSON-кодировании платформы
+1С. Реквизиты находятся в виде узлов ["14", '"ИмяРеквизита"', ...] внутри
+родительского вектора с известным UUID виджета (InputField, ComboBox).
+Функция :func:`extract_legacy_form_elements` реализует этот разбор.
+
 Модуль работает best-effort: ошибка парсинга elem.json не должна ломать
 основной пайплайн распаковки.
 """
@@ -66,6 +75,25 @@ _PAGE_LIST_KEY = "-pages-"
 
 _NULL_UUID = "00000000-0000-0000-0000-000000000000"
 _OBJECT_PREFIX = "Объект"
+
+
+# ---------------------------------------------------------------------------
+# Константы для разбора большого *.json обычной формы (issue #100)
+# ---------------------------------------------------------------------------
+
+# UUID виджетов-контейнеров данных, исследованные на production-выгрузке.
+# Только эти UUID порождают элементы с data_path = "Объект.<Имя>".
+# Label (0fc7e20d-...) и CommandBar (e69bf21d-...) намеренно исключены.
+_LEGACY_FORM_DATA_WIDGET_UUIDS: frozenset[str] = frozenset({
+    "381ed624-9217-4e63-85db-c4c3cb87daae",  # InputField
+    "64483e7f-3833-48e2-8c75-2c31aac49f6e",  # ComboBox / ListBox
+})
+
+# Маппинг UUID → человекочитаемое имя типа (для поля "type" элемента).
+_LEGACY_WIDGET_TYPE_NAMES: dict[str, str] = {
+    "381ed624-9217-4e63-85db-c4c3cb87daae": "InputField",
+    "64483e7f-3833-48e2-8c75-2c31aac49f6e": "ComboBox",
+}
 
 
 def _is_uuid(value: object) -> bool:
@@ -310,6 +338,91 @@ def decode_element_data_path(
     return None, []
 
 
+# ---------------------------------------------------------------------------
+# Разбор большого *.json обычной формы (issue #100)
+# ---------------------------------------------------------------------------
+
+def extract_legacy_form_elements(form_json: Any) -> list[dict]:
+    """Извлечь элементы-реквизиты из большого объектного JSON обычной формы.
+
+    Используется как фолбэк, когда elem.json содержит пустые ``tree`` и
+    ``data``. Реквизиты находятся в виде узлов
+    ``["14", '"ИмяРеквизита"', ...]`` внутри родительского вектора
+    с UUID известного виджета-данных (InputField, ComboBox).
+
+    Возвращает список словарей с полями:
+    - ``name``      — имя реквизита;
+    - ``type``      — тип виджета ("InputField", "ComboBox");
+    - ``data_path`` — ``"Объект.<Имя>"``;
+    - ``source``    — ``"legacy_form_json"``.
+
+    Надписи (Label UUID ``0fc7e20d-...``), панели команд (CommandBar) и
+    прочие служебные виджеты **не включаются** в результат.
+
+    Дубликаты (одинаковое имя) схлопываются — побеждает первое вхождение.
+    """
+    results: list[dict] = []
+    seen_names: set[str] = set()
+
+    def walk(node: Any) -> None:
+        if not isinstance(node, list):
+            return
+        # Проверяем: является ли текущий список блоком элемента формы?
+        # Признак: node[0] — UUID виджета из _LEGACY_FORM_DATA_WIDGET_UUIDS,
+        # node[4] — узел ["14", '"ИмяРеквизита"', ...]
+        if (
+            len(node) >= 5
+            and isinstance(node[0], str)
+            and node[0] in _LEGACY_FORM_DATA_WIDGET_UUIDS
+            and isinstance(node[4], list)
+            and len(node[4]) >= 2
+            and node[4][0] == _LEGACY_BINDING_TAG
+        ):
+            name = _unquote_1c(node[4][1])
+            if name and name not in seen_names:
+                seen_names.add(name)
+                widget_type = _LEGACY_WIDGET_TYPE_NAMES.get(node[0], "InputField")
+                results.append({
+                    "name": name,
+                    "type": widget_type,
+                    "data_path": f"{_OBJECT_PREFIX}.{name}",
+                    "source": "legacy_form_json",
+                })
+        for child in node:
+            walk(child)
+
+    if isinstance(form_json, dict):
+        for value in form_json.values():
+            walk(value)
+    elif isinstance(form_json, list):
+        walk(form_json)
+
+    return results
+
+
+def _find_legacy_form_json(form_root: Path) -> Path | None:
+    """Найти большой объектный *.json обычной формы.
+
+    Ищем файл, который:
+    - заканчивается на ``.json``;
+    - НЕ является ``*.elem.json``;
+    - НЕ является ``*.id*.json`` (содержит только UUID);
+    - НЕ является ``form_elements_index.json`` (наш артефакт).
+
+    Обычно это единственный файл вида ``<FormKindName>.json`` в директории.
+    """
+    candidates = [
+        p for p in form_root.glob("*.json")
+        if not p.name.endswith(".elem.json")
+        and ".id" not in p.stem          # *.id.json, *.id-2.json и т.п.
+        and p.name != "form_elements_index.json"
+    ]
+    return candidates[0] if len(candidates) == 1 else (
+        # Если несколько — берём наибольший по размеру (объектный json самый большой)
+        max(candidates, key=lambda p: p.stat().st_size) if candidates else None
+    )
+
+
 def parse_elem_json(form_root: Path) -> ElemIndexResult:
     warnings: list[str] = []
 
@@ -331,6 +444,30 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
         )
     except Exception as exc:
         return ElemIndexResult(False, [], [f"Не удалось разобрать {elem_path}: {exc}"])
+
+    # --- Фолбэк на большой *.json (issue #100) ---
+    # Условие: elem.json был пуст (нет элементов) И существует большой *.json.
+    # Применяется только к обычным (не управляемым) формам, у которых
+    # elem.json содержит пустые tree/data — т.е. платформа не экспортировала
+    # разметку в стандартные секции.
+    if not elements:
+        legacy_json_path = _find_legacy_form_json(form_root)
+        if legacy_json_path is not None:
+            try:
+                legacy_data = json.loads(
+                    legacy_json_path.read_text(encoding="utf-8-sig")
+                )
+                legacy_elements = extract_legacy_form_elements(legacy_data)
+                if legacy_elements:
+                    warnings.append(
+                        f"elem.json пуст, элементы извлечены из {legacy_json_path.name} "
+                        f"(legacy form JSON, issue #100): {len(legacy_elements)} эл."
+                    )
+                    elements = legacy_elements
+            except Exception as exc:
+                warnings.append(
+                    f"Не удалось разобрать legacy form JSON {legacy_json_path}: {exc}"
+                )
 
     if not elements:
         warnings.append(f"Элементы формы не найдены в {elem_path}")

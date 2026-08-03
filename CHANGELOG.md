@@ -6,6 +6,16 @@
 ## [Unreleased]
 
 ### Added
+- `elem_parser.extract_legacy_form_elements()` + `_find_legacy_form_json()` —
+  fallback-чтение обычных форм с пустым `tree` в `.elem.json`. Когда `tree`
+  пуст, ищется отдельный `form/*.json` рядом с `*.elem.json` (ФормаЗаписи,
+  ФормаЭлемента, ФормаОбъекта, формы обработок и отчётов). Имена реквизитов
+  и тип виджета извлекаются по тегу `"14"` в узлах `form[0][0][2]` через
+  тот же механизм, что `decode_legacy_data_path`. Подняло **49 форм**
+  из статуса `ERROR` на реальной конфигурации УТ 10.3 без регресса по
+  ранее работавшим формам. Статистика после PR:
+  OK 1942 / FALLBACK 49 / ERROR 225 (ФормаСписка/ФормаВыбора, TabularField → #103)
+  (issue #100, PR #102).
 - `v8unpack_agent/form_classifier.py`: `FormClass` + `classify_form_by_name()` +
   `classify_form_by_bindings()` + `classify_form()` + `classify_empty_tree_form()` —
   классификация форм на объектные и сервисные. Мастера, помощники и диалоги
@@ -30,7 +40,8 @@
   (стандартное имя объектной формы платформы, красный флаг для парсера),
   `empty_tree_name_hint` (имя похоже на сервисное, подтверждения нет),
   `unparsed_empty_tree`, `no_name`. Константы `PLATFORM_OBJECT_FORM_NAMES`
-  (16 стандартных имён) и `EMPTY_TREE_NAME_HINTS` (issue #98, PR #99).
+  (17 стандартных имён, добавлено `ФормаОбъекта`) и `EMPTY_TREE_NAME_HINTS`
+  (issue #98, PR #99; обновлено в PR #102).
 - `v8unpack_agent/coverage_metric.py`: `calc_data_path_coverage(elements)` +
   `CoverageReport` — двухслойная метрика покрытия `data_path`. Знаменатель
   включает только элементы данных (`DATA_ELEMENT_TYPES`: `Field`, `InputField`,
@@ -43,80 +54,16 @@
   `bound_data_elements / data_elements` и `total_elements` для справки.
   Проверено на `Catalog/Банки`: 11/14 = 78.6% (3 неразрешённых — платформенные
   реквизиты, ждут #88); `Catalog/Контрагенты`: 45/45 = 100.0% (issue #90, PR #97).
-- `v8unpack_agent/object_decoder.py`: `decode_object_attributes(path)` +
-  `DecodeResult` — декодирование реквизитов объекта из raw-секции `header`
-  в `Catalog.json`, `Document.json` и других объектных JSON. Возвращает
-  `{"Properties": [...], "TabularSections": [...]}`, где каждый реквизит
-  содержит `Name`, `UUID` и `Type`. Примитивы разрешаются через таблицу
-  кодов (`String`, `Number`, `Boolean`, `Date`), ссылочные типы — в вид
-  `Ref#<uuid>`; приведение UUID к имени объекта метаданных вынесено в #88.
-  Табличные части декодируются вместе с колонками. При неизвестном layout
-  возвращается частичный результат с диагностикой, без исключений
-  (issue #84, PR #87).
-- `elem_parser`: консервативный структурный fallback для управляемых форм,
-  когда UUID не даёт привязку. Точное совпадение имени элемента с реквизитом
-  формы (включая вложенные узлы `props`) даёт путь из одного сегмента;
-  колонка таблицы разрешается как `<реквизит формы>.<колонка>` только через
-  непосредственный родительский сегмент ключа `data`. UUID и явно заданный
-  путь имеют приоритет; префиксные эвристики намеренно не применяются
-  (issue #85, PR #86).
-- `elem_parser.decode_legacy_data_path()` + `is_legacy_form_data()` —
-  декодирование привязки элемента к данным в **обычных** формах. Источник
-  данных назван в поле `prop` записи `data`, имя реквизита — в `raw[4][1]`
-  при теге `raw[4][0] == "14"`. Путь имеет вид `<prop>.<реквизит>`
-  (`СправочникОбъект.Город`); если имя реквизита совпадает с `prop`,
-  элемент связан с самостоятельным реквизитом формы и путь состоит из
-  одного имени. Записи без `prop` привязки не имеют: тег `"14"` есть и у
-  надписей, и у разделителей, поэтому признаком привязки служить не может
-  (issue #85, PR #86).
-- `catalog_resolver`: `resolve_data_path()` + `ResolvedBinding` + `object_json_path()` —
-  best-effort резолюция `data_path` через JSON объекта (`Catalog.json` и др.);
-  поддерживает пути `Объект.Реквизит` и `Объект.ТЧ.Реквизит`; при отсутствии файла
-  или нераспознанном пути возвращает `resolved=False` без исключений.
-  Полная резолюция на реальных выгрузках обеспечена #84
-  (`decode_object_attributes`) (issue #76, PR #83).
-- `FormEntry.bsl_sha256: Optional[str]` — SHA-256 содержимого `.obj.bsl` на момент
-  сканирования; используется как основной критерий детекции изменённого кода формы
-  в `check_drift()` (issue #38).
-- `FormEntry.elem_sha256: Optional[str]` — SHA-256 нормализованного дерева элементов
-  формы (`form_elements_index`); используется как независимый критерий детекции
-  изменения разметки формы (`structure_modified`) в `check_drift()` (issue #40).
-- `DriftReport.structure_modified: list[str]` — новая категория отчёта: ключи форм,
-  у которых изменилась структура элементов (дерево `elem.json`) при неизменном BSL
-  (issue #40). Учитывается в `has_drift`.
-- `FormEntry.bsl_mtime: float` — поле mtime файла `.obj.bsl` на момент сканирования;
-  сохраняется как диагностическое поле и legacy fallback для старых индексов без
-  `bsl_sha256`.
-- `FormScanIndex.load()` — загрузка индекса из JSON с обратной совместимостью:
-  старые записи без `bsl_sha256` / `elem_sha256` получают `None`; поведение
-  `check_drift()` для таких записей документировано (legacy fallback через
-  `bsl_mtime` / тихий пропуск `structure_modified`).
-- `DriftReport.modified` теперь **работает**: возвращает ключи форм, чей `.obj.bsl`
-  изменился после записи baseline в `FormScanIndex` (issue #18).
-- scan_forms: режим `--mode external` для распакованных внешних обработок
-  (`External/<имя>/Form/<форма>/Form.obj`); поле `form_elem_path` в FormEntry (#25).
-- scan_forms external: поддержка контейнера `ReportForm/` для внешних отчётов;
-  `object_type="ExternalReport"` определяется по контейнеру `ReportForm` (#32).
-- `v8unpack_agent/managed_form_summary.py`: `build_managed_form_summary(form_dir)`
-  + `build_managed_form_summary_from_elem_index(result)` + `to_normalized_json()` —
-  детерминированная семантическая выжимка формы (attributes / commands / elements /
-  events / relations) поверх канонического `parse_elem_json`. Отдельный слой-адаптер
-  реального формата не вводится: `parse_elem_json` — единственный парсер
-  `*.elem.json` (issue #66, PR #68).
-- **elem-only формы** (`*.elem.json` без `.obj.bsl`) добавлены в `FormScanIndex`
-  через `_collect_elem_only_forms` + `discover_elem_forms` (issue #57 / #55).
-  Поле `FormEntry.elem_json_path` — relative-to-root путь к `*.elem.json`.
-  Подтверждено на 49 формах реальной конфигурации (45 с `elem_sha256`, 4 пустых).
-- **`drift_checker._index_snapshot`** теперь возвращает четвёртый элемент —
-  `elem_only_keys: set[str]`: ключи форм с `elem_json_path` и несуществующим
-  `bsl_path` (elem-only по дизайну). Используется в `_stale_keys` и логике
-  `added/removed` (issue #58).
-- **`check_drift(mode=...)`** — новый параметр `mode: Literal["config", "external"]`
-  (default `"config"`). При `mode="external"` корректно сканирует external-layout
-  через делегирование в `scan_forms(mode=mode)`. Устраняет ложный дрейф всех
-  внешних форм сразу после создания baseline (issue #73).
 
 ### Changed
+- `elem_parser.parse_elem_json()`: при `tree == []` в `.elem.json` вызывается
+  `extract_legacy_form_elements` (best-effort). При успехе `elem_index_ok=True`,
+  `extraction_source="legacy_form_json"`; при неудаче — поведение прежнее
+  (`elem_index_ok=False`, warning «Элементы формы не найдены»)
+  (issue #100, PR #102).
+- `form_classifier.classify_empty_tree_form()`: константа
+  `PLATFORM_OBJECT_FORM_NAMES` обновлена до 17 имён (добавлено `ФормаОбъекта`)
+  (issue #100, PR #102).
 - `calc_coverage_from_elem_index()`: при `elem_index_ok=False` или пустом
   списке элементов возвращает `form_class="unknown"`, а не `"service"`.
   Промежуточный вариант трактовал пустой `tree` как «безопасный дефолт:
@@ -181,6 +128,13 @@
   Параметр `mode` пробрасывается из `check_drift()` (issue #73).
 
 ### Fixed
+- **49 обычных форм не возвращали элементы при `tree: []`.** ФормаЗаписи
+  регистров сведений, ФормаЭлемента справочников, формы отчётов и обработок.
+  Исправлено чтением `form/*.json` через `extract_legacy_form_elements`
+  (issue #100, PR #102). Проверено на УТ 10.3: 3 `ФормаЗаписи` регистров
+  сведений и 7 основных форм `Форма` отчётов/обработок теперь имеют
+  `elem_index_ok=True`. Оставшиеся 225 форм (`ФормаСписка`/`ФормаВыбора`) —
+  следующая задача (#103).
 - **Сервисные формы искажали агрегированную метрику покрытия `data_path`.**
   Мастера и помощники давали 0% по объектному критерию, хотя их поля привязаны
   к реквизитам формы корректно. Теперь покрытие считается по 1957 формам
