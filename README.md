@@ -39,10 +39,12 @@ index_cf(<путь_к_выгрузке>)
 - **Идемпотентность.** Повторный прогон не перекладывает формы без изменений.
 - **Отказоустойчивость.** `extraction_ok=False` по одной форме не роняет пайплайн.
 - **Best-effort обогащение.** `parse_elem_json`, `extract_skd_queries`, `object_decoder` и `catalog_resolver` некритичны.
-- **Привязка к данным.** `parse_elem_json` заполняет `data_path` двумя механизмами:
-  обычные формы — по полю `prop`; управляемые — сначала по UUID реквизита,
-  затем консервативным структурным fallback для точного реквизита формы или
-  колонки таблицы. Элементы без подтверждённой привязки не угадываются.
+- **Привязка к данным.** `parse_elem_json` заполняет `data_path` несколькими
+  подтверждёнными механизмами: обычные формы — через `prop`; управляемые —
+  через UUID и консервативный структурный fallback; legacy
+  `ФормаСписка` / `ФормаВыбора` с пустым `tree` — через привязки
+  `TabularField` и UUID-карту реквизитов владельца. Элементы без
+  подтверждённой привязки не угадываются.
 - **Класс формы.** Мастера, помощники и диалоги привязывают поля к временным
   реквизитам формы, а не к объекту метаданных. `form_classifier` отделяет их
   от объектных форм, чтобы агрегированная метрика покрытия не была занижена
@@ -67,7 +69,7 @@ index_cf(<путь_к_выгрузке>)
 | `managed_forms` | `discover_elem_forms()` + `ElemFormEntry` — обнаружение форм по `*.elem.json`. → [подробнее](docs/managed_forms_structure.md) |
 | `pipeline` | `discover_form_bins()`, `unpack_all_forms()`, `update_forms_index()`, `unpack_erf()`, `ErfUnpacker`. |
 | `skd_extractor` | `extract_skd_queries()` + `extract_all_skd_queries()` — СКД из `.erf`. → [подробнее](docs/skd_extractor.md) |
-| `elem_parser` | `parse_elem_json()` + `ElemIndexResult` — структура формы из `elem.json`; `data_path` обычных форм через `prop`, управляемых — через UUID и консервативный структурный fallback (точный реквизит формы / колонка таблицы). → [подробнее](docs/elem_parser.md) |
+| `elem_parser` | `parse_elem_json()` + `ElemIndexResult` — структура формы из `elem.json`; `data_path` обычных форм через `prop`, управляемых — через UUID и структурный fallback, legacy `ФормаСписка` / `ФормаВыбора` — через подтверждённые UUID-привязки `TabularField` (#103). → [подробнее](docs/elem_parser.md) |
 | `form_summary` | `build_form_summary(form_dir)` + `to_normalized_json()` — детерминированная семантическая выжимка любой elem-формы (обычной и управляемой): attributes / commands / elements / events / relations поверх `parse_elem_json`. → [подробнее](docs/form_summary.md) |
 | `catalog_resolver` | `resolve_data_path()` + `ResolvedBinding` + `object_json_path()` — best-effort обогащение подтверждённого `data_path` через JSON объекта (#76). Извлечение путей реализовано в #85, чтение имени, UUID и типа реквизита — в #84. Приведение `Ref#uuid` к имени объекта метаданных — #88. → [подробнее](docs/catalog_resolver.md) |
 | `object_decoder` | `decode_object_attributes()` + `DecodeResult` — реквизиты объекта из raw `header`: имя, UUID, тип, табличные части. Питает карту реквизитов `elem_parser` и `catalog_resolver` (#84). → [подробнее](docs/object_decoder.md) |
@@ -124,7 +126,9 @@ index.save(Path("forms_index.json"))
 
 - [`examples/basic_usage.py`](examples/basic_usage.py) — распаковка, реестр форм и drift-контроль.
 - [`examples/form_bindings.py`](examples/form_bindings.py) — декодирование `data_path` для обычной формы через `prop` и для управляемой формы через UUID реквизита (issue #85).
+- [`examples/coverage_metric.py`](examples/coverage_metric.py) — расчёт покрытия `data_path` только по элементам данных, классификация объектных и сервисных форм и JSON-отчёт (`CoverageReport`, issues #90, #98).
 - [`examples/extract_skd_queries.py`](examples/extract_skd_queries.py) — извлечение запросов СКД из распакованного внешнего отчёта.
+- [`examples/legacy_list_form_bindings.py`](examples/legacy_list_form_bindings.py) — извлечение подтверждённых привязок колонок legacy `ФормаСписка` / `ФормаВыбора` через fallback `TabularField` (#103).
 
 ## Классификация форм
 
@@ -201,6 +205,11 @@ form_class, reason = classify_empty_tree_form("ФормаЗаписи")
 распарсенной разметкой (164 + 1793). Оставшиеся 80 — обычные (неуправляемые)
 формы, разметка которых хранится в бинарном виде и не читается текущим
 парсером. Они честно помечены `unknown` и не искажают метрику.
+
+> Эта таблица зафиксирована до реализации fallback #103. Отдельный полный
+> прогон `parse_elem_json()` после #103: 2216 форм, 2139 успешно
+> проиндексированы, 77 остаются неразобранными; дальнейшая классификация
+> вынесена в #105.
 
 ## Документация
 

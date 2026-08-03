@@ -37,8 +37,25 @@ UUID в ``raw`` описывают класс виджета, а не привя
 парсер пытается извлечь элементы из большого ``<Name>.json`` в той же
 директории. Этот файл — объект формы в бинарном JSON-кодировании платформы
 1С. Реквизиты находятся в виде узлов ["14", '"ИмяРеквизита"', ...] внутри
-родительского вектора с известным UUID виджета (InputField, ComboBox).
+родительского вектора с UUID известного виджета-данных (InputField, ComboBox).
 Функция :func:`extract_legacy_form_elements` реализует этот разбор.
+
+Фолбэк на TabularField-формы (issue #103)
+------------------------------------------
+Для форм-списков (ФормаСписка, ФормаВыбора), у которых elem.json пуст,
+а большой *.json содержит виджет TabularField
+(UUID ``ea83fe3a-ac3c-4cce-8045-3dddf35b28b1``), реквизиты закодированы
+UUID-ами внутри паттерн-блока.
+
+Реальная структура блока TabularField в живых данных:
+  tf[0] = UUID TabularField
+  tf[2] = ['5', ['"Pattern"', pattern_block], [columns], ...]
+  tf[4] = ['14', '"ИмяВиджета"', ...]   — имя самого виджета списка
+
+Все UUID реквизитов объекта лежат в ``pattern_block`` (``tf[2][1][1]``).
+Они разрешаются через карту ``uuid -> имя``, построенную из метаданных
+объекта-владельца функцией :func:`load_owner_attribute_map`.
+Функция :func:`extract_legacy_list_form_elements` реализует кросс-чтение.
 
 Модуль работает best-effort: ошибка парсинга elem.json не должна ломать
 основной пайплайн распаковки.
@@ -75,25 +92,33 @@ _PAGE_LIST_KEY = "-pages-"
 
 _NULL_UUID = "00000000-0000-0000-0000-000000000000"
 _OBJECT_PREFIX = "Объект"
+# Префикс пути для колонок форм-списков (ФормаСписка / ФормаВыбора)
+_LIST_PREFIX = "Список"
 
 
 # ---------------------------------------------------------------------------
 # Константы для разбора большого *.json обычной формы (issue #100)
 # ---------------------------------------------------------------------------
 
-# UUID виджетов-контейнеров данных, исследованные на production-выгрузке.
-# Только эти UUID порождают элементы с data_path = "Объект.<Имя>".
-# Label (0fc7e20d-...) и CommandBar (e69bf21d-...) намеренно исключены.
 _LEGACY_FORM_DATA_WIDGET_UUIDS: frozenset[str] = frozenset({
     "381ed624-9217-4e63-85db-c4c3cb87daae",  # InputField
     "64483e7f-3833-48e2-8c75-2c31aac49f6e",  # ComboBox / ListBox
 })
 
-# Маппинг UUID → человекочитаемое имя типа (для поля "type" элемента).
 _LEGACY_WIDGET_TYPE_NAMES: dict[str, str] = {
     "381ed624-9217-4e63-85db-c4c3cb87daae": "InputField",
     "64483e7f-3833-48e2-8c75-2c31aac49f6e": "ComboBox",
 }
+
+# ---------------------------------------------------------------------------
+# Константы для разбора форм-списков с TabularField (issue #103)
+# ---------------------------------------------------------------------------
+
+# UUID виджета TabularField (поле табличного представления, форма-список)
+_TABULAR_FIELD_UUID = "ea83fe3a-ac3c-4cce-8045-3dddf35b28b1"
+
+# Тег '"Pattern"' внутри tf[2][1][0] — маркер паттерн-блока
+_TABULAR_PATTERN_TAG = '"Pattern"'
 
 
 def _is_uuid(value: object) -> bool:
@@ -154,8 +179,7 @@ def _find_owner_metadata_json(form_root: Path) -> Path | None:
     """Найти ``<Type>.json`` владельца без фиксированного списка типов.
 
     Для пути ``.../<Type>/<Object>/<FormKind>/<Form>`` файл владельца лежит
-    в ``.../<Type>/<Object>/<Type>.json``. Это покрывает новые и редкие типы
-    метаданных без обновления константы в парсере.
+    в ``.../<Type>/<Object>/<Type>.json``.
     """
     for parent in form_root.parents:
         if parent.parent == parent:
@@ -167,12 +191,7 @@ def _find_owner_metadata_json(form_root: Path) -> Path | None:
 
 
 def load_owner_attribute_map(form_root: Path, warnings: list[str]) -> dict[str, str]:
-    """Карта ``uuid реквизита -> имя`` из метаданных объекта-владельца формы.
-
-    Начиная с #84, карта строится через :func:`decode_object_attributes`
-    из ``object_decoder``: Properties и TabularSections.Properties
-    декодируются централизованно, без дублирующего обхода ``header``.
-    """
+    """Карта ``uuid реквизита -> имя`` из метаданных объекта-владельца формы."""
     path = _find_owner_metadata_json(form_root)
     if path is None:
         if not _is_common_form(form_root):
@@ -201,7 +220,6 @@ def load_owner_attribute_map(form_root: Path, warnings: list[str]) -> dict[str, 
                 mapping.setdefault(uuid, name)
 
     if not mapping:
-        # #84 DoD p.3: nezavisimyy rekursivnyy obkhod header udalyon.
         warnings.append(
             f"object_decoder: karta rekvizitov pusta dlya {path.name} - "
             f"layout ne raspoznan dekoderom"
@@ -210,17 +228,107 @@ def load_owner_attribute_map(form_root: Path, warnings: list[str]) -> dict[str, 
     return mapping
 
 
+def _tabular_field_source_name(tf_node: list) -> str:
+    """Имя источника данных TabularField из узла привязки tf[4]."""
+    if len(tf_node) > 4:
+        binding = tf_node[4]
+        if isinstance(binding, list) and len(binding) >= 2 and binding[0] == _LEGACY_BINDING_TAG:
+            name = _unquote_1c(binding[1])
+            if name:
+                return name
+    return _LIST_PREFIX
+
+
+def _tabular_field_attribute_slots(
+    tf_node: list,
+    attr_map: dict[str, str],
+) -> list[tuple[str, str]]:
+    """Упорядоченные привязки реквизитов внутри TabularField.
+
+    При наличии блока ``20`` используются только его однозначные слоты.
+    Универсальный fallback по ссылкам ``["0", UUID]`` применяется только
+    тогда, когда блок ``20`` полностью отсутствует.
+    """
+    candidates: list[list[tuple[str, str]]] = []
+    has_node20 = False
+
+    def walk_node20(node: Any) -> None:
+        nonlocal has_node20
+
+        if not isinstance(node, list):
+            return
+
+        if node and node[0] == "20":
+            has_node20 = True
+
+            if len(node) > 6:
+                resolved: list[tuple[str, str]] = []
+
+                for slot in node[6:]:
+                    uuids: list[str] = []
+                    _collect_uuids(slot, uuids)
+
+                    hits: list[tuple[str, str]] = []
+                    seen: set[str] = set()
+
+                    for uuid in uuids:
+                        name = attr_map.get(uuid)
+
+                        if name and uuid not in seen:
+                            seen.add(uuid)
+                            hits.append((uuid, name))
+
+                    # Неоднозначный слот намеренно пропускаем.
+                    if len(hits) == 1:
+                        resolved.append(hits[0])
+
+                if resolved:
+                    candidates.append(resolved)
+
+        for child in node:
+            walk_node20(child)
+
+    walk_node20(tf_node)
+
+    # Блок 20 имеет приоритет. Если он найден, но не дал ни одной
+    # однозначной колонки, возвращаем пустой результат, не переходя
+    # к менее строгому рекурсивному fallback.
+    if has_node20:
+        return max(candidates, key=len, default=[])
+
+    result: list[tuple[str, str]] = []
+    seen_uuids: set[str] = set()
+
+    def walk_refs(node: Any) -> None:
+        if not isinstance(node, list):
+            return
+
+        if (
+            len(node) == 2
+            and node[0] == "0"
+            and isinstance(node[1], str)
+            and node[1] in attr_map
+        ):
+            uuid = node[1]
+
+            if uuid not in seen_uuids:
+                seen_uuids.add(uuid)
+                result.append((uuid, attr_map[uuid]))
+
+            return
+
+        for child in node:
+            walk_refs(child)
+
+    walk_refs(tf_node)
+    return result
+
 _LEGACY_BINDING_TAG = "14"
 _LEGACY_NAME_POS = 4
 
 
 def _legacy_attribute_name(raw: object) -> str | None:
-    """Имя реквизита из ``raw[4]`` записи обычной формы.
-
-    Узел имеет вид ``["14", "\"Город\"", "4294967295", "0", "0", "0"]``.
-    Само по себе наличие тега ``"14"`` привязки не доказывает — он есть и у
-    надписей; значение используется только вместе с непустым ``prop``.
-    """
+    """Имя реквизита из ``raw[4]`` записи обычной формы."""
     if not isinstance(raw, list) or len(raw) <= _LEGACY_NAME_POS:
         return None
     node = raw[_LEGACY_NAME_POS]
@@ -232,12 +340,7 @@ def _legacy_attribute_name(raw: object) -> str | None:
 
 
 def decode_legacy_data_path(record: object) -> tuple[str | None, list[str]]:
-    """data_path элемента обычной формы по полям ``prop`` и ``raw``.
-
-    ``prop`` называет источник данных из секции ``props``. Если имя реквизита
-    совпадает с ``prop``, элемент связан с самим реквизитом формы и путь
-    состоит из одного имени; иначе путь — ``<prop>.<реквизит>``.
-    """
+    """data_path элемента обычной формы по полям ``prop`` и ``raw``."""
     if not isinstance(record, dict):
         return None, []
 
@@ -257,12 +360,7 @@ def decode_legacy_data_path(record: object) -> tuple[str | None, list[str]]:
 
 
 def is_legacy_form_data(data_section: object) -> bool:
-    """Секция ``data`` принадлежит обычной, а не управляемой форме.
-
-    Признак — хотя бы одна запись с ключом ``prop``: в управляемых формах
-    такого ключа нет. Нужен, чтобы не применять разбор по UUID там, где
-    UUID описывают класс виджета.
-    """
+    """Секция ``data`` принадлежит обычной, а не управляемой форме."""
     if not isinstance(data_section, dict):
         return False
     return any(
@@ -278,17 +376,7 @@ def decode_element_data_path(
     element_name: str | None = None,
     warn_empty_map: bool = True,
 ) -> tuple[str | None, list[str]]:
-    """Декодирование data_path из raw секции data.
-
-    Обычные формы: путь лежит строкой внутри raw.
-    Управляемые формы: строки-пути нет, привязка задана UUID реквизита
-    владельца (например raw[11][2][1]); он разрешается через attribute_map,
-    построенную из Catalog.json/Document.json. Служебные UUID (форма,
-    оформление) в карте отсутствуют и отсеиваются автоматически.
-
-    Ограничение: префикс «Объект.» верен для форм элемента/группы. Для форм
-    списка привязка идёт к реквизиту динамического списка.
-    """
+    """Декодирование data_path из raw секции data."""
     if raw is None:
         return None, []
 
@@ -343,33 +431,13 @@ def decode_element_data_path(
 # ---------------------------------------------------------------------------
 
 def extract_legacy_form_elements(form_json: Any) -> list[dict]:
-    """Извлечь элементы-реквизиты из большого объектного JSON обычной формы.
-
-    Используется как фолбэк, когда elem.json содержит пустые ``tree`` и
-    ``data``. Реквизиты находятся в виде узлов
-    ``["14", '"ИмяРеквизита"', ...]`` внутри родительского вектора
-    с UUID известного виджета-данных (InputField, ComboBox).
-
-    Возвращает список словарей с полями:
-    - ``name``      — имя реквизита;
-    - ``type``      — тип виджета ("InputField", "ComboBox");
-    - ``data_path`` — ``"Объект.<Имя>"``;
-    - ``source``    — ``"legacy_form_json"``.
-
-    Надписи (Label UUID ``0fc7e20d-...``), панели команд (CommandBar) и
-    прочие служебные виджеты **не включаются** в результат.
-
-    Дубликаты (одинаковое имя) схлопываются — побеждает первое вхождение.
-    """
+    """Извлечь элементы-реквизиты из большого объектного JSON обычной формы."""
     results: list[dict] = []
     seen_names: set[str] = set()
 
     def walk(node: Any) -> None:
         if not isinstance(node, list):
             return
-        # Проверяем: является ли текущий список блоком элемента формы?
-        # Признак: node[0] — UUID виджета из _LEGACY_FORM_DATA_WIDGET_UUIDS,
-        # node[4] — узел ["14", '"ИмяРеквизита"', ...]
         if (
             len(node) >= 5
             and isinstance(node[0], str)
@@ -400,25 +468,67 @@ def extract_legacy_form_elements(form_json: Any) -> list[dict]:
     return results
 
 
+# ---------------------------------------------------------------------------
+# Разбор форм-списков с TabularField (issue #103)
+# ---------------------------------------------------------------------------
+
+def _has_tabular_field(node: Any) -> bool:
+    """Рекурсивно проверяет наличие блока TabularField в JSON формы."""
+    if isinstance(node, list):
+        if node and isinstance(node[0], str) and node[0] == _TABULAR_FIELD_UUID:
+            return True
+        return any(_has_tabular_field(child) for child in node)
+    if isinstance(node, dict):
+        return any(_has_tabular_field(v) for v in node.values())
+    return False
+
+
+def extract_legacy_list_form_elements(form_json: Any, obj_json: Any) -> list[dict]:
+    """Извлечь колонки TabularField из подтвержденного блока 20."""
+    if form_json is None or not isinstance(obj_json, dict):
+        return []
+    attr_map = obj_json.get("attr_map")
+    if not isinstance(attr_map, dict) or not attr_map:
+        return []
+
+    results: list[dict] = []
+    seen_names: set[str] = set()
+
+    def walk(node: Any) -> None:
+        if isinstance(node, dict):
+            for value in node.values():
+                walk(value)
+            return
+        if not isinstance(node, list):
+            return
+        if node and node[0] == _TABULAR_FIELD_UUID:
+            source_name = _tabular_field_source_name(node)
+            for _uuid, name in _tabular_field_attribute_slots(node, attr_map):
+                if name in seen_names:
+                    continue
+                seen_names.add(name)
+                results.append({
+                    "name": name,
+                    "type": "TabularFieldColumn",
+                    "data_path": f"{source_name}.{name}",
+                    "source": "legacy_list_form_json",
+                })
+            return
+        for child in node:
+            walk(child)
+
+    walk(form_json)
+    return results
+
 def _find_legacy_form_json(form_root: Path) -> Path | None:
-    """Найти большой объектный *.json обычной формы.
-
-    Ищем файл, который:
-    - заканчивается на ``.json``;
-    - НЕ является ``*.elem.json``;
-    - НЕ является ``*.id*.json`` (содержит только UUID);
-    - НЕ является ``form_elements_index.json`` (наш артефакт).
-
-    Обычно это единственный файл вида ``<FormKindName>.json`` в директории.
-    """
+    """Найти большой объектный *.json обычной формы."""
     candidates = [
         p for p in form_root.glob("*.json")
         if not p.name.endswith(".elem.json")
-        and ".id" not in p.stem          # *.id.json, *.id-2.json и т.п.
+        and ".id" not in p.stem
         and p.name != "form_elements_index.json"
     ]
     return candidates[0] if len(candidates) == 1 else (
-        # Если несколько — берём наибольший по размеру (объектный json самый большой)
         max(candidates, key=lambda p: p.stat().st_size) if candidates else None
     )
 
@@ -445,11 +555,6 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
     except Exception as exc:
         return ElemIndexResult(False, [], [f"Не удалось разобрать {elem_path}: {exc}"])
 
-    # --- Фолбэк на большой *.json (issue #100) ---
-    # Условие: elem.json был пуст (нет элементов) И существует большой *.json.
-    # Применяется только к обычным (не управляемым) формам, у которых
-    # elem.json содержит пустые tree/data — т.е. платформа не экспортировала
-    # разметку в стандартные секции.
     if not elements:
         legacy_json_path = _find_legacy_form_json(form_root)
         if legacy_json_path is not None:
@@ -457,13 +562,31 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
                 legacy_data = json.loads(
                     legacy_json_path.read_text(encoding="utf-8-sig")
                 )
-                legacy_elements = extract_legacy_form_elements(legacy_data)
-                if legacy_elements:
-                    warnings.append(
-                        f"elem.json пуст, элементы извлечены из {legacy_json_path.name} "
-                        f"(legacy form JSON, issue #100): {len(legacy_elements)} эл."
-                    )
-                    elements = legacy_elements
+
+                # --- Фолбэк #103: TabularField ---
+                if _has_tabular_field(legacy_data):
+                    if attribute_map:
+                        # Передаём attr_map явно через ключ "attr_map"
+                        list_elements = extract_legacy_list_form_elements(
+                            legacy_data, {"attr_map": attribute_map}
+                        )
+                        if list_elements:
+                            warnings.append(
+                                f"elem.json пуст, колонки TabularField извлечены из "
+                                f"{legacy_json_path.name} (issue #103): "
+                                f"{len(list_elements)} эл."
+                            )
+                            elements = list_elements
+
+                # --- Фолбэк #100: InputField / ComboBox ---
+                if not elements:
+                    legacy_elements = extract_legacy_form_elements(legacy_data)
+                    if legacy_elements:
+                        warnings.append(
+                            f"elem.json пуст, элементы извлечены из {legacy_json_path.name} "
+                            f"(legacy form JSON, issue #100): {len(legacy_elements)} эл."
+                        )
+                        elements = legacy_elements
             except Exception as exc:
                 warnings.append(
                     f"Не удалось разобрать legacy form JSON {legacy_json_path}: {exc}"
@@ -580,12 +703,6 @@ def _managed_structural_data_path(
     element_name: str,
     form_attribute_names: set[str],
 ) -> str | None:
-    """Консервативный fallback для привязок управляемой формы.
-
-    Точное совпадение означает самостоятельный реквизит формы.
-    Для колонки таблицы непосредственный родитель пути должен быть
-    реквизитом формы; имя колонки может включать имя таблицы как префикс.
-    """
     if element_name in form_attribute_names:
         return element_name
 
@@ -609,12 +726,6 @@ def _managed_structural_data_path(
 
 
 def _is_element_record(value: object) -> bool:
-    """Запись секции ``data`` описывает элемент формы.
-
-    Обычные формы: присутствует ключ ``id``.
-    Управляемые формы: ``id`` отсутствует, запись имеет вид
-    ``{"raw": [...], "ver": ...}``.
-    """
     if not isinstance(value, dict):
         return False
     return "id" in value or "raw" in value
@@ -628,13 +739,6 @@ def _extract_from_data_paths(
     form_attribute_names: set[str] | None = None,
     suppress_empty_map_warning: bool = False,
 ) -> list[dict]:
-    """Извлекает элементы из секции data, включая декодирование data_path
-    из поля raw каждой записи (issue #85).
-
-    Записи секции ``data`` в обычных формах содержат ключ ``id``; в
-    управляемых формах ключа ``id`` нет — есть ``raw``/``ver``. Поэтому
-    запись считается элементом при наличии любого из них.
-    """
     if warnings is None:
         warnings = []
     if form_attribute_names is None:
@@ -806,18 +910,6 @@ _SOURCE_PRIORITY = {"data": 0, "props": 1, "tree": 2, "commands": 3, "params": 4
 
 
 def _merge_source_duplicates(elements: list[dict]) -> list[dict]:
-    """Схлопывает записи об одном элементе, пришедшие из разных секций.
-
-    В формах списка имя реквизита формы совпадает с именем элемента, поэтому
-    один элемент приходит и из ``data`` (с привязкой), и из ``props`` (без
-    неё). Побеждает запись из ``data``: она несёт path, page и data_path.
-    Недостающие поля добираются из проигравших записей, чтобы не потерять
-    сведения, которых в ``data`` нет.
-
-    Схлопывание идёт только по элементам без ``path`` у проигравшего: записи
-    ``props`` позиции в дереве не имеют. Два разных элемента с одинаковым
-    именем, но разными путями в ``data``, остаются раздельными.
-    """
     best: dict[str, dict] = {}
     order: list[str] = []
     extra: list[dict] = []
@@ -869,22 +961,6 @@ def _normalize_parents(elements: list[dict], warnings: list[str]) -> None:
 
 
 def _warn_unresolved_group_hierarchy(elements: list[dict], warnings: list[str]) -> None:
-    """Честный признак неполноты для групп.
-
-    Иерархия панелей/страниц достоверна из путей-ключей data. Для групп же
-    распаковщик кодирует дерево в бинарном слое ('Дочерние элементы отдельно'),
-    а ключи data остаются плоскими — поэтому parent групп и их детей
-    указывает на страницу, а не на группу.
-
-    Зацепки на вложенность групп присутствуют в raw/info-векторах элементов
-    data (позиционные списки дочерних числовых id). Однако raw — это
-    недокументированный внутренний формат платформы 1С, и его декодирование
-    выходит за рамки разбора публичных артефактов распаковки и лицензионно
-    некорректно. Поэтому вложенность групп намеренно НЕ реконструируется.
-
-    Срабатывает, когда в форме есть группы, но ни один элемент не ссылается
-    parent-ом на группу.
-    """
     group_names = {e["name"] for e in elements if e.get("type") == "Group"}
     if not group_names:
         return
