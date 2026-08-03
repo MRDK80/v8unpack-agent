@@ -27,6 +27,10 @@ pre-step индексации.
 - :class:`~v8unpack_agent.form_summary.FormSummary` (issue #69)
 - :func:`~v8unpack_agent.form_summary.build_form_summary` (issue #69)
 - :func:`~v8unpack_agent.form_summary.build_form_summary_from_elem_index` (issue #69)
+- :class:`~v8unpack_agent.form_classifier.FormClass` (issue #98)
+- :func:`~v8unpack_agent.form_classifier.classify_form` (issue #98)
+- :func:`~v8unpack_agent.form_classifier.classify_form_by_name` (issue #98)
+- :func:`~v8unpack_agent.form_classifier.classify_form_by_bindings` (issue #98)
 """
 
 from v8unpack_agent.form_artifact import FormArtifact
@@ -50,6 +54,13 @@ from v8unpack_agent.pipeline import (
 
 from v8unpack_agent.drift_checker import DriftReport, check_drift
 from v8unpack_agent.form_router import FormRouter, RouteResult
+from v8unpack_agent.form_classifier import (
+    FormClass,
+    classify_form,
+    classify_form_by_name,
+    classify_form_by_bindings,
+    SERVICE_FORM_NAME_PATTERNS,
+)
 
 
 def __getattr__(name: str):
@@ -140,4 +151,10 @@ __all__ = [
     "FormSummary",
     "build_form_summary",
     "build_form_summary_from_elem_index",
+    # issue #98
+    "FormClass",
+    "classify_form",
+    "classify_form_by_name",
+    "classify_form_by_bindings",
+    "SERVICE_FORM_NAME_PATTERNS",
 ]

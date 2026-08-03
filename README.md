@@ -27,7 +27,8 @@ index_cf(<путь_к_выгрузке>)
   ├─► 1) unpack_all_forms()         # Form.bin → текстовый слой (BSL виден)
   │       └─► parse_elem_json()      # elem.json → form_elements_index (best-effort)
   │             ├─► object_decoder    # header → Properties, TabularSections (#84)
-  │             └─► catalog_resolver # data_path → ResolvedBinding (best-effort, #76)
+  │             ├─► catalog_resolver # data_path → ResolvedBinding (best-effort, #76)
+  │             └─► form_classifier  # object / service / unknown (#98)
   ├─► 1') unpack_erf()              # внешний отчёт (.erf): текстовый слой
   │       └─► extract_skd_queries()  # СКД → skd_queries.json (best-effort)
   ├─► 2) update_forms_index()       # JSON-карта актуальности
@@ -42,6 +43,13 @@ index_cf(<путь_к_выгрузке>)
   обычные формы — по полю `prop`; управляемые — сначала по UUID реквизита,
   затем консервативным структурным fallback для точного реквизита формы или
   колонки таблицы. Элементы без подтверждённой привязки не угадываются.
+- **Класс формы.** Мастера, помощники и диалоги привязывают поля к временным
+  реквизитам формы, а не к объекту метаданных. `form_classifier` отделяет их
+  от объектных форм, чтобы агрегированная метрика покрытия не была занижена
+  архитектурным паттерном платформы (issue #98).
+- **Неопределённость не маскируется.** Если разметку формы извлечь не удалось,
+  класс остаётся `unknown` — форма исключается из знаменателя метрики, но не
+  объявляется сервисной «по умолчанию».
 - **Полнота описи.** `scan_forms` учитывает и управляемые формы без кода модуля
   (без `.obj.bsl`) — они попадают в индекс через `*.elem.json` (issue #57).
 - **Прозрачность для агента.** Со стороны индексации это просто ещё один источник текстов.
@@ -63,7 +71,8 @@ index_cf(<путь_к_выгрузке>)
 | `form_summary` | `build_form_summary(form_dir)` + `to_normalized_json()` — детерминированная семантическая выжимка любой elem-формы (обычной и управляемой): attributes / commands / elements / events / relations поверх `parse_elem_json`. → [подробнее](docs/form_summary.md) |
 | `catalog_resolver` | `resolve_data_path()` + `ResolvedBinding` + `object_json_path()` — best-effort обогащение подтверждённого `data_path` через JSON объекта (#76). Извлечение путей реализовано в #85, чтение имени, UUID и типа реквизита — в #84. Приведение `Ref#uuid` к имени объекта метаданных — #88. → [подробнее](docs/catalog_resolver.md) |
 | `object_decoder` | `decode_object_attributes()` + `DecodeResult` — реквизиты объекта из raw `header`: имя, UUID, тип, табличные части. Питает карту реквизитов `elem_parser` и `catalog_resolver` (#84). → [подробнее](docs/object_decoder.md) |
-| `coverage_metric` | `calc_data_path_coverage()` + `CoverageReport` — метрика покрытия `data_path` только по элементам данных (`Field`, `Table`, `CheckBox`...), без служебных (`Label`, `Group`, `Panel`...). Константы `DATA_ELEMENT_TYPES`, `SERVICE_ELEMENT_TYPES`, `PLATFORM_STANDARD_ATTRIBUTES` (#90). |
+| `coverage_metric` | `calc_data_path_coverage()` + `CoverageReport` — метрика покрытия `data_path` только по элементам данных (`Field`, `Table`, `CheckBox`...), без служебных (`Label`, `Group`, `Panel`...). Поле `form_class` и параметр `form_name` (#98). Константы `DATA_ELEMENT_TYPES`, `SERVICE_ELEMENT_TYPES`, `PLATFORM_STANDARD_ATTRIBUTES` (#90). |
+| `form_classifier` | `classify_form()` + `FormClass` + `classify_empty_tree_form()` — разделение форм на объектные и сервисные по имени и структуре привязок; диагностика форм с пустым `tree` (#98). |
 
 ## Быстрый старт
 
@@ -117,6 +126,82 @@ index.save(Path("forms_index.json"))
 - [`examples/form_bindings.py`](examples/form_bindings.py) — декодирование `data_path` для обычной формы через `prop` и для управляемой формы через UUID реквизита (issue #85).
 - [`examples/extract_skd_queries.py`](examples/extract_skd_queries.py) — извлечение запросов СКД из распакованного внешнего отчёта.
 
+## Классификация форм
+
+Формы 1С делятся на объектные и сервисные. Объектная форма привязывает поля
+к реквизитам объекта метаданных через путь `Объект.Реквизит`. Сервисная форма
+(мастер, помощник, диалог, информационная) использует временные реквизиты
+самой формы — привязок `Объект.*` у неё нет по архитектуре, а не по ошибке.
+
+```python
+from v8unpack_agent.form_classifier import classify_form
+
+form_class = classify_form(
+    form_name="ПомощникПодключенияЭДО",
+    elements=result.elements,
+)
+# FormClass.SERVICE
+```
+
+Класс формы автоматически попадает в `CoverageReport`:
+
+```python
+from v8unpack_agent.coverage_metric import calc_data_path_coverage
+
+report = calc_data_path_coverage(result.elements, form_name="ФормаЭлемента")
+print(report.form_class)   # "object"
+print(report.coverage_pct) # 78.6
+```
+
+| Класс | Критерий | Роль в метрике |
+|---|---|---|
+| `object` | Есть `data_path`, начинающийся с `Объект.` | Входит в агрегированное покрытие |
+| `service` | Имя из `SERVICE_FORM_NAME_PATTERNS` либо ни одной привязки `Объект.*` | Считается отдельно |
+| `unknown` | Элементы не извлечены из `.elem.json` | Исключена из знаменателя |
+
+Критерии объединяются по OR: достаточно одного признака, чтобы форма
+считалась сервисной. Широкие префиксы вроде `форма` в список паттернов
+намеренно не входят — под них попадают стандартные объектные формы
+платформы (`ФормаЭлемента`, `ФормаДокумента`, `ФормаЗаписи`).
+
+### Формы без извлечённой разметки
+
+Пустой `tree` в `.elem.json` не означает сервисную форму. Для таких случаев
+используйте `classify_empty_tree_form()` — она возвращает пару
+«класс, причина»:
+
+```python
+from v8unpack_agent.form_classifier import classify_empty_tree_form
+
+form_class, reason = classify_empty_tree_form("ФормаЗаписи")
+# (FormClass.UNKNOWN, "platform_object_name_unparsed")
+```
+
+| Причина | Класс | Смысл |
+|---|---|---|
+| `by_service_pattern` | `service` | Совпадение с проверенным списком — единственный случай, когда класс присваивается без разметки |
+| `platform_object_name_unparsed` | `unknown` | Стандартное имя объектной формы платформы; сигнал о пробеле в `elem_parser` |
+| `empty_tree_name_hint` | `unknown` | Имя похоже на сервисное, подтверждения нет |
+| `unparsed_empty_tree` | `unknown` | Имя не распознано, разметки нет |
+| `no_name` | `unknown` | Имя формы не передано |
+
+### Верификация на реальном корпусе
+
+Результат на локальной конфигурации УТ 10.3 (2231 директория форм):
+
+| Категория | Кол-во |
+|---|---|
+| `object` | 164 |
+| `service` | 1793 |
+| `unknown` | 80 |
+| Стандартные автогенерируемые | 194 |
+| Ошибок | 0 |
+
+Агрегированное покрытие `data_path` считается только по 1957 формам с реально
+распарсенной разметкой (164 + 1793). Оставшиеся 80 — обычные (неуправляемые)
+формы, разметка которых хранится в бинарном виде и не читается текущим
+парсером. Они честно помечены `unknown` и не искажают метрику.
+
 ## Документация
 
 | Тема | Файл |
@@ -131,6 +216,7 @@ index.save(Path("forms_index.json"))
 | Семантическая выжимка elem-формы поверх parse_elem_json | [docs/form_summary.md](docs/form_summary.md) |
 | `catalog_resolver`: резолюция `data_path` через описание объекта | [docs/catalog_resolver.md](docs/catalog_resolver.md) |
 | Реквизиты объекта из raw `header`: типы, UUID, табличные части | [docs/object_decoder.md](docs/object_decoder.md) |
+| Классификация форм: объектные vs. сервисные, пустой `tree` | [docs/form_classifier.md](docs/form_classifier.md) |
 
 ## Установка
 
@@ -157,6 +243,12 @@ pytest
 Набор тестов полностью синтетический: проверка идёт на временных файловых
 деревьях с внедрённым распаковщиком-заглушкой — реальный контейнер 1С не
 требуется.
+
+Изменения, влияющие на классификацию форм и метрики покрытия,
+дополнительно проверяются на реальной выгрузке конфигурации. Такие
+прогоны выполняются локально: скрипты verify_* не входят в
+репозиторий, поскольку требуют production-данных. Текстовый вывод
+верификации прикладывается к pull request.
 
 ## Связанное
 

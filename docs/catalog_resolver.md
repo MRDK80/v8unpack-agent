@@ -159,12 +159,13 @@ if obj_json:
 
 ## Связь с конвейером №3a
 
-| Задача | Статус |
-|---|---|
+| Задача | Статус                                                                    |
+|---|---------------------------------------------------------------------------|
 | [#76](https://github.com/MRDK80/v8unpack-agent/issues/76) `catalog_resolver` | ✅ реализовано, PR [#83](https://github.com/MRDK80/v8unpack-agent/pull/83) |
 | [#85](https://github.com/MRDK80/v8unpack-agent/issues/85) `decode_element_data_path` | ✅ реализовано, PR [#86](https://github.com/MRDK80/v8unpack-agent/pull/86) |
 | [#84](https://github.com/MRDK80/v8unpack-agent/issues/84) `decode_object_attributes` | ✅ реализовано, PR [#87](https://github.com/MRDK80/v8unpack-agent/pull/87) |
-| [#90](https://github.com/MRDK80/v8unpack-agent/issues/90) метрика покрытия `data_path` | 🔲 open |
-| [#89](https://github.com/MRDK80/v8unpack-agent/issues/89) формы с нулевой привязкой | 🔲 open |
-| [#88](https://github.com/MRDK80/v8unpack-agent/issues/88) `Ref#uuid` → имя объекта | 🔲 open |
-| [#77](https://github.com/MRDK80/v8unpack-agent/issues/77) `form_context` | 🔲 open |
+| [#90](https://github.com/MRDK80/v8unpack-agent/issues/90) метрика покрытия `data_path` | ✅ реализовано, PR [#97](https://github.com/MRDK80/v8unpack-agent/pull/97) |
+| [#89](https://github.com/MRDK80/v8unpack-agent/issues/89) формы с нулевой привязкой | 🔲 open                                                                   |
+| [#88](https://github.com/MRDK80/v8unpack-agent/issues/88) `Ref#uuid` → имя объекта | 🔲 open                                                                   |
+| [#77](https://github.com/MRDK80/v8unpack-agent/issues/77) `form_context` | 🔲 open                                                                   |
+| #98 | `form_classifier`: объектные vs. сервисные формы                          | closed, PR #99 |
