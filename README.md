@@ -37,7 +37,7 @@ index_cf(<путь_к_выгрузке>)
 
 - **Идемпотентность.** Повторный прогон не перекладывает формы без изменений.
 - **Отказоустойчивость.** `extraction_ok=False` по одной форме не роняет пайплайн.
-- **Best-effort обогащение.** `parse_elem_json`, `extract_skd_queries` и `catalog_resolver` некритичны.
+- **Best-effort обогащение.** `parse_elem_json`, `extract_skd_queries`, `object_decoder` и `catalog_resolver` некритичны.
 - **Привязка к данным.** `parse_elem_json` заполняет `data_path` двумя механизмами:
   обычные формы — по полю `prop`; управляемые — сначала по UUID реквизита,
   затем консервативным структурным fallback для точного реквизита формы или
