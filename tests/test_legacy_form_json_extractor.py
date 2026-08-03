@@ -61,10 +61,10 @@ MINIMAL_FORM_JSON = {
     "form": [
         [
             [
-                "25",  # корневой виджет формы
-                ["uuid-form", ["1", []]],  # заголовок
+                "25",
+                ["uuid-form", ["1", []]],
                 [
-                    "16",  # список виджетов
+                    "16",
                     _make_element_block(_UUID_INPUT_FIELD, "2",  "Код"),
                     _make_element_block(_UUID_INPUT_FIELD, "4",  "Наименование"),
                     _make_element_block(_UUID_INPUT_FIELD, "6",  "Сокращение"),
@@ -143,7 +143,6 @@ class TestExtractLegacyFormElements:
         from v8unpack_agent.elem_parser import extract_legacy_form_elements
 
         dup_json = json.loads(json.dumps(MINIMAL_FORM_JSON))
-        # Добавляем дубль «Код» с другим element_id
         inner = dup_json["form"][0][0][2]
         inner.append(_make_element_block(_UUID_INPUT_FIELD, "99", "Код"))
 
@@ -160,27 +159,20 @@ class TestParseElemJsonFallbackToLegacyFormJson:
     """parse_elem_json должен использовать большой *.json, когда elem.json пуст."""
 
     def _make_form_dir(self, tmp_path: Path) -> Path:
-        """Создаёт директорию формы с пустым elem.json и минимальным Form.json."""
         form_dir = tmp_path / "InformationRegister" / "АдресныйКлассификатор" \
                    / "InformationRegisterForm" / "ФормаЗаписи"
         form_dir.mkdir(parents=True)
-
-        # Пустой elem.json
         (form_dir / "InformationRegisterForm.elem.json").write_text(
             json.dumps({"params": [], "props": [], "commands": [], "tree": [], "data": {}}),
             encoding="utf-8",
         )
-
-        # Большой *.json с реквизитами
         (form_dir / "InformationRegisterForm.json").write_text(
             json.dumps(MINIMAL_FORM_JSON, ensure_ascii=False),
             encoding="utf-8",
         )
-
         return form_dir
 
     def test_fallback_produces_elements(self, tmp_path):
-        """Когда elem.json пустой — результат должен содержать элементы из Form.json."""
         from v8unpack_agent.elem_parser import parse_elem_json
 
         form_dir = self._make_form_dir(tmp_path)
@@ -195,7 +187,6 @@ class TestParseElemJsonFallbackToLegacyFormJson:
         assert "Надпись1" not in names
 
     def test_fallback_data_paths_are_object_prefixed(self, tmp_path):
-        """data_path в элементах из Form.json — 'Объект.<Имя>'."""
         from v8unpack_agent.elem_parser import parse_elem_json
 
         form_dir = self._make_form_dir(tmp_path)
@@ -205,13 +196,11 @@ class TestParseElemJsonFallbackToLegacyFormJson:
         assert by_name["Код"]["data_path"] == "Объект.Код"
 
     def test_no_fallback_when_elem_json_has_elements(self, tmp_path):
-        """Если elem.json содержит элементы — Form.json не используется."""
         from v8unpack_agent.elem_parser import parse_elem_json
 
         form_dir = tmp_path / "InformationRegister" / "Тест" / "InformationRegisterForm" / "ФормаЗаписи"
         form_dir.mkdir(parents=True)
 
-        # elem.json с одним реальным элементом
         elem_data = {
             "params": [], "props": [], "commands": [],
             "tree": [{"name": "ПолеИзElemJson", "type": "Field"}],
@@ -220,7 +209,6 @@ class TestParseElemJsonFallbackToLegacyFormJson:
         (form_dir / "InformationRegisterForm.elem.json").write_text(
             json.dumps(elem_data), encoding="utf-8"
         )
-        # Form.json тоже есть, но трогать не должен
         (form_dir / "InformationRegisterForm.json").write_text(
             json.dumps(MINIMAL_FORM_JSON, ensure_ascii=False), encoding="utf-8"
         )
@@ -228,7 +216,6 @@ class TestParseElemJsonFallbackToLegacyFormJson:
         result = parse_elem_json(form_dir)
         names = [e["name"] for e in result.elements]
         assert "ПолеИзElemJson" in names
-        # Элементы из Form.json не должны дублировать
         assert "Надпись1" not in names
 
 
@@ -242,19 +229,21 @@ class TestFormClassifierWithLegacyElements:
     def test_form_with_object_data_paths_classified_as_object(self):
         from v8unpack_agent.form_classifier import classify_form_by_bindings, FormClass
 
+        # type быть в DATA_ELEMENT_TYPES (из coverage_metric) — иначе classify_form_by_bindings
+        # игнорирует элемент и возвращает SERVICE
         elements = [
-            {"name": "Код",          "data_path": "Объект.Код"},
-            {"name": "Наименование", "data_path": "Объект.Наименование"},
-            {"name": "Индекс",       "data_path": "Объект.Индекс"},
+            {"name": "Код",          "type": "InputField", "data_path": "Объект.Код"},
+            {"name": "Наименование", "type": "InputField", "data_path": "Объект.Наименование"},
+            {"name": "Индекс",       "type": "InputField", "data_path": "Объект.Индекс"},
         ]
-        # classify_form_by_bindings принимает только elements (без form_name)
-        form_class, reason = classify_form_by_bindings(elements)
+        # classify_form_by_bindings(elements) → FormClass (без распаковки на кортеж)
+        form_class = classify_form_by_bindings(elements)
         assert form_class == FormClass.OBJECT, (
-            f"Ожидали OBJECT, получили {form_class!r} (reason={reason!r})"
+            f"Ожидали OBJECT, получили {form_class!r}"
         )
 
     def test_classify_empty_tree_form_returns_unknown_not_service(self):
-        """classify_empty_tree_form для 'формазаписи' → UNKNOWN (не SERVICE)."""
+        """classify_empty_tree_form для 'ФормаЗаписи' → UNKNOWN, reason='platform_object_name_unparsed'."""
         from v8unpack_agent.form_classifier import classify_empty_tree_form, FormClass
 
         form_class, reason = classify_empty_tree_form("ФормаЗаписи")
