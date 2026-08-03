@@ -52,6 +52,10 @@ print(to_normalized_json(summary))
 форм, состоящих из надписей, групп и кнопок. Механизм привязки описан в
 [elem_parser.md](elem_parser.md).
 
+Класс формы (`object` / `service` / `unknown`) в `FormSummary` не входит —
+он вычисляется на уровне метрики покрытия. См.
+[docs/form_classifier.md](form_classifier.md).
+
 ## Границы и переносимость
 
 - Пути через `pathlib`, чтение UTF-8 явно; OS-нейтрально (POSIX `/` и NT `\`).

@@ -90,6 +90,25 @@
   `Catalog/Банки/ФормаЭлементаУправляемая` — 11/14 = 78.6%
   (3 неразрешённых — платформенные реквизиты, ждут #88);
   `Catalog/Контрагенты/ФормаЭлемента` — 45/45 = 100.0% — issue #90, PR #97.
+- Поле `CoverageReport.form_class` и параметр `form_name`
+  в `calc_data_path_coverage()` (issue #98, PR #99). При пустом `tree`
+  `calc_coverage_from_elem_index()` возвращает `"unknown"`, а не `"service"`:
+  среди таких форм есть объектные `ФормаЗаписи` регистров сведений.
+
+### form_classifier — объектные и сервисные формы
+
+- `FormClass` + `classify_form()` + `classify_form_by_name()` +
+  `classify_form_by_bindings()` — разделение форм на `object` / `service` /
+  `unknown` по имени и структуре привязок (issue #98, PR #99).
+- `classify_empty_tree_form()` — диагностика форм с пустым `tree`:
+  возвращает пару «класс, причина». `SERVICE` только при совпадении
+  с проверенным списком `SERVICE_FORM_NAME_PATTERNS`.
+- Константы: `SERVICE_FORM_NAME_PATTERNS` (16 префиксов),
+  `PLATFORM_OBJECT_FORM_NAMES` (17 имён), `EMPTY_TREE_NAME_HINTS` (19).
+- Верификация на УТ 10.3, 2231 директория: object 164, service 1793,
+  unknown 80, platform_auto 194, ошибок 0, баланс сходится.
+- Ограничение: 80 форм в `unknown` — обычные формы с бинарной разметкой,
+  которую `elem_parser` не читает. Вынесено в отдельную задачу.
 
 ### Прочее
 - `elem_parser.parse_elem_json()` — единственный парсер `*.elem.json` — issue #40
