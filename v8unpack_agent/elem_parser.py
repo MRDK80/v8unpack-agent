@@ -37,7 +37,7 @@ UUID в ``raw`` описывают класс виджета, а не привя
 парсер пытается извлечь элементы из большого ``<Name>.json`` в той же
 директории. Этот файл — объект формы в бинарном JSON-кодировании платформы
 1С. Реквизиты находятся в виде узлов ["14", '"ИмяРеквизита"', ...] внутри
-родительского вектора с известным UUID виджета (InputField, ComboBox).
+родительского вектора с UUID известного виджета-данных (InputField, ComboBox).
 Функция :func:`extract_legacy_form_elements` реализует этот разбор.
 
 Фолбэк на TabularField-формы (issue #103)
@@ -535,6 +535,11 @@ def extract_legacy_list_form_elements(
     seen_names: set[str] = set()
 
     def walk(node: Any) -> None:
+        # --- ФИКС #103: рекурсия по dict-значениям ---
+        if isinstance(node, dict):
+            for v in node.values():
+                walk(v)
+            return
         if not isinstance(node, list):
             return
         # Блок TabularField: node[0] == _TABULAR_FIELD_UUID,
