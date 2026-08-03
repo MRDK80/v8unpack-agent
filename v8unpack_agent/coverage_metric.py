@@ -4,6 +4,9 @@
 потому что знаменатель включал Label, CommandPanel, Panel, Page и другие
 элементы, которым data_path не нужен по определению.
 
+Исправлено в issue #98: добавлено поле ``form_class`` в :class:`CoverageReport`
+и параметр ``form_name`` в :func:`calc_data_path_coverage`.
+
 Два слоя метрики
 ----------------
 ``data_elements``
@@ -18,16 +21,23 @@
 --------------------------------
 Реквизиты ``Код``, ``Наименование``, ``Родитель``, ``Дата``, ``Номер``,
 ``ПометкаУдаления`` отсутствуют в ``Properties`` объекта (они добавляются
-платформой автоматически), но являются валидными полями данных. Они
+платформой автоматически), но являются полностью валидными полями данных. Они
 учтены через :data:`PLATFORM_STANDARD_ATTRIBUTES` — эта константа
 используется вызывающим кодом при резолюции привязок.
+
+Классификация форм
+--------------------Поле ``form_class`` определяется модулем
+:mod:`~v8unpack_agent.form_classifier` (задача #98):
+- ``"object"`` — объектная форма;
+- ``"service"`` — сервисная (мастер, помощник, диалог);
+- ``"unknown"`` — нельзя определить.
 
 OS-нейтральность, кодировка UTF-8.
 """
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Iterable
 
 # ---------------------------------------------------------------------------
@@ -96,18 +106,25 @@ class CoverageReport:
     coverage_pct:
         bound_data_elements / data_elements * 100.
         0.0, если data_elements == 0.
+    form_class:
+        Класс формы: ``"object"`` | ``"service"`` | ``"unknown"``.
+        Определяется :mod:`~v8unpack_agent.form_classifier` (issue #98).
+        По умолчанию ``"unknown"`` — обратная совместимость
+        (старый код, не передающий form_name, получит UNKNOWN).
     """
 
     total_elements: int
     data_elements: int
     bound_data_elements: int
     coverage_pct: float
+    form_class: str = field(default="unknown")
 
     def __str__(self) -> str:
         return (
             f"Привязано {self.bound_data_elements} из {self.data_elements} "
             f"элементов данных = {self.coverage_pct:.1f}% "
             f"(всего элементов формы: {self.total_elements})"
+            f" [form_class={self.form_class}]"
         )
 
     def to_dict(self) -> dict:
@@ -117,6 +134,7 @@ class CoverageReport:
             "data_elements": self.data_elements,
             "bound_data_elements": self.bound_data_elements,
             "coverage_pct": round(self.coverage_pct, 2),
+            "form_class": self.form_class,
         }
 
 
@@ -124,26 +142,35 @@ class CoverageReport:
 # Основная функция
 # ---------------------------------------------------------------------------
 
-def calc_data_path_coverage(elements: Iterable[dict]) -> CoverageReport:
+def calc_data_path_coverage(
+    elements: Iterable[dict],
+    form_name: str | None = None,
+) -> CoverageReport:
     """Рассчитать покрытие data_path только по элементам данных.
 
     Параметры
     ---------
     elements:
-        Итерируемое коллекции dict-элементов формы.
+        Итерируемая коллекция dict-элементов формы.
         Каждый dict должен содержать:
 
         - ``"type"`` (str) — тип элемента (например ``"Field"``, ``"Label"``);
         - ``"data_path"`` (str | None) — привязка к данным или ``None``.
 
         Остальные ключи игнорируются.
+    form_name:
+        Короткое имя формы (лист-часть пути), например ``"ПомощникПодключенияЭДО"``.
+        Если указано, используется в :func:`classify_form` для
+        заполнения ``form_class`` в :class:`CoverageReport`.
+        Если ``None`` — классификация только по привязкам.
 
     Возвращает
     ----------
-    :class:`CoverageReport` с двумя метриками:
+    :class:`CoverageReport` с тремя метриками:
 
     - покрытие по полям данных (``bound_data_elements / data_elements``);
-    - общее число элементов формы (``total_elements``).
+    - общее число элементов формы (``total_elements``);
+    - класс формы (``form_class``).
 
     Notes
     -----
@@ -151,6 +178,10 @@ def calc_data_path_coverage(elements: Iterable[dict]) -> CoverageReport:
     (``bool(data_path)`` истинно). Значения ``None``, ``""`` и ``0``
     считаются отсутствием привязки.
     """
+    # Ленивый импорт внутри функции — избегаем циклический импорт на уровне модуля.
+    from v8unpack_agent.form_classifier import classify_form  # noqa: PLC0415
+
+    elements = list(elements)
     total = 0
     data_count = 0
     bound_count = 0
@@ -165,15 +196,25 @@ def calc_data_path_coverage(elements: Iterable[dict]) -> CoverageReport:
             bound_count += 1
 
     coverage = (bound_count / data_count * 100.0) if data_count > 0 else 0.0
+
+    form_cls = classify_form(
+        form_name=form_name or "",
+        elements=elements,
+    )
+
     return CoverageReport(
         total_elements=total,
         data_elements=data_count,
         bound_data_elements=bound_count,
         coverage_pct=coverage,
+        form_class=form_cls,
     )
 
 
-def calc_coverage_from_elem_index(result: object) -> CoverageReport:
+def calc_coverage_from_elem_index(
+    result: object,
+    form_name: str | None = None,
+) -> CoverageReport:
     """Удобная обёртка: принимает ``ElemIndexResult`` из elem_parser.
 
     Параметры
@@ -182,6 +223,8 @@ def calc_coverage_from_elem_index(result: object) -> CoverageReport:
         Экземпляр :class:`~v8unpack_agent.elem_parser.ElemIndexResult`.
         Если ``result.elem_index_ok`` ложен или ``result.elements`` пуст —
         возвращает нулевой :class:`CoverageReport`.
+    form_name:
+        Короткое имя формы для классификации (передаётся в :func:`calc_data_path_coverage`).
     """
     elem_index_ok = getattr(result, "elem_index_ok", False)
     elements = getattr(result, "elements", []) or []
@@ -191,5 +234,6 @@ def calc_coverage_from_elem_index(result: object) -> CoverageReport:
             data_elements=0,
             bound_data_elements=0,
             coverage_pct=0.0,
+            form_class="unknown",
         )
-    return calc_data_path_coverage(elements)
+    return calc_data_path_coverage(elements, form_name=form_name)
