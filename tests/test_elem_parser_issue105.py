@@ -98,10 +98,10 @@ def _write_catalog_json(
     properties: list[dict] | None = None,
     name: str = "Catalog.json",
 ) -> Path:
-    """Записать Catalog.json владельца (на два уровня выше form_dir).
+    """Записать Catalog.json в формате {"Properties":[...]} (без header).
 
-    Структура: cf_export/Catalog/<ObjectName>/CatalogForm/<FormName>/
-    Catalog.json лежит в cf_export/Catalog/<ObjectName>/Catalog.json
+    Используется только в fixture категории A — где ожидается пустая attr_map.
+    Для категории B используй _write_catalog_json_with_header.
     """
     obj_dir = form_dir.parent.parent
     owner_json = obj_dir / name
@@ -114,11 +114,78 @@ def _write_catalog_json(
 
 
 # ---------------------------------------------------------------------------
+# Фикстура категории B: Catalog.json с настоящим production-layout (header)
+# ---------------------------------------------------------------------------
+# object_decoder ожидает секцию header — фикстура без header даёт HEADER_MISSING
+# → ok=False → attr_map={} → реализация правильно классифицирует как A,
+# а не B. Для B нужен валидный header с чужими UUID.
+
+def _real_name_entry(uuid: str, name: str, synonym: str) -> list:
+    """Строитель name-entry production-layout v8unpack."""
+    return [
+        "2",
+        ["1", "100", uuid],
+        json.dumps(name, ensure_ascii=False),
+        ["1", '"ru"', json.dumps(synonym, ensure_ascii=False)],
+        '""', "0", "0", _NULL_UUID,
+    ]
+
+
+def _real_attribute_wrapper(uuid: str, name: str, synonym: str = "") -> list:
+    """Строитель attribute-wrapper production v8unpack."""
+    descriptor = [
+        "2",
+        _real_name_entry(uuid, name, synonym or name),
+        ['"Pattern"', ['"S"']],  # String — достаточно для резолюции UUID
+    ]
+    return [
+        [
+            "8",
+            [
+                "27", descriptor, "0", ["0"], ["0"], "0", '""', "0",
+                ['"U"'], ['"U"'], "0", _NULL_UUID, "2", "0",
+                ["5004", "0"], ["3", "0", "0"], ["0", "0"], "0",
+                ["0"], ['"U"'], "0", "0", "0",
+            ],
+            "0", "1", "1",
+        ],
+        "0",
+    ]
+
+
+def _write_catalog_json_with_header(
+    form_dir: Path,
+    prop_uuids: list[str],
+    name: str = "Catalog.json",
+) -> Path:
+    """Записать Catalog.json с валидным header-layout, понятным object_decoder.
+
+    Создаёт настоящие реквизиты с UUID из prop_uuids, которые
+    object_decoder распознает → attr_map непустая.
+    """
+    obj_dir = form_dir.parent.parent
+    owner_json = obj_dir / name
+
+    wrappers = [
+        _real_attribute_wrapper(u, f"Реквизит{i}")
+        for i, u in enumerate(prop_uuids)
+    ]
+    root = [
+        "1", [], "0",
+        ["ts-service", "0"],  # пустой блок ТЧ
+        "0",
+        ["props-service", str(len(wrappers)), *wrappers],
+    ]
+    payload = {"header": [root]}
+    owner_json.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+    return owner_json
+
+
+# ---------------------------------------------------------------------------
 # Импортируем то, что ещё НЕ существует → тесты красные
 # ---------------------------------------------------------------------------
 
-# После реализации эти строки должны работать без ImportError:
-from v8unpack_agent.elem_parser import (  # noqa: E402  # будет красным до реализации
+from v8unpack_agent.elem_parser import (  # noqa: E402
     UnindexedReason,
     UnindexedResult,
     classify_unindexed_form,
@@ -184,10 +251,12 @@ class TestCategoryC:
 class TestCategoryB:
     """48 живых форм — Catalog/Валюты/ФормаВыбора и аналоги.
 
-    Большой *.json содержит TabularField, attr_map не пуста,
+    Большой *.json содержит TabularField, attr_map непустая,
     но UUID колонок не совпадают с UUID реквизитов в Catalog.json.
-    Типичная причина: колонки формы-списка привязаны к реквизитам
-    табличной части или это независимые значения (курсы валют и т.п.).
+
+    IMPORTANT: Catalog.json должен быть в валидном production header-layout
+    (object_decoder ожидает секцию header; {"Properties":[...]} без header
+    даёт HEADER_MISSING → ok=False → attr_map={} → классификация A).
     """
 
     def _make_form_dir(
@@ -206,13 +275,10 @@ class TestCategoryB:
         col_uuids = tf_uuids or [_uuid(), _uuid()]
         _write(form_dir, "ФормаВыбора.json", _tabular_field(col_uuids))
 
-        # Catalog.json содержит ДРУГИЕ UUID (не пересекаются с col_uuids)
-        known_uuid = catalog_uuids or [_uuid()]
-        _write_catalog_json(
-            form_dir,
-            properties=[{"UUID": u, "Name": f"Реквизит{i}", "Type": "String", "Synonym": ""}
-                        for i, u in enumerate(known_uuid)],
-        )
+        # Catalog.json с валидным header-layout, но ДРУГИЕ UUID
+        # (не пересекаются с col_uuids — attr_map непуста, UUID не совпадают)
+        known_uuids = catalog_uuids or [_uuid(), _uuid()]
+        _write_catalog_json_with_header(form_dir, known_uuids)
         return form_dir
 
     def test_reason_is_tabular_no_uuid_hits(self, tmp_path):
@@ -301,7 +367,6 @@ class TestCategoryA:
         form_dir = self._make_form_dir(tmp_path, write_catalog=False)
         result = ElemIndexResult(elem_index_ok=False, elements=[], warnings=[])
         unindexed = classify_unindexed_form(form_dir, result)
-        # Нет Catalog.json → attr_map={} → A, а не D (D только когда нет большого *.json)
         assert unindexed.reason == UnindexedReason.TABULAR_FIELD_EMPTY_ATTR_MAP
 
 
@@ -343,7 +408,6 @@ class TestInvariants:
         """Несуществующая директория не бросает исключение — best-effort."""
         form_dir = tmp_path / "nonexistent" / "form"
         result = ElemIndexResult(elem_index_ok=False, elements=[], warnings=[])
-        # НЕ должно бросать
         unindexed = classify_unindexed_form(form_dir, result)
         assert isinstance(unindexed, UnindexedResult)
 
