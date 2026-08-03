@@ -4,8 +4,11 @@
 потому что знаменатель включал Label, CommandPanel, Panel, Page и другие
 элементы, которым data_path не нужен по определению.
 
-Исправлено в issue #98: добавлено поле ``form_class`` в :class:`CoverageReport`
-и параметр ``form_name`` в :func:`calc_data_path_coverage`.
+Исправлено в issue #98:
+- добавлено поле ``form_class`` в :class:`CoverageReport`;
+- добавлен параметр ``form_name`` в :func:`calc_data_path_coverage`;
+- формы с пустым ``tree`` (платформенные диалоги подтверждения) теперь
+  классифицируются по имени в :func:`calc_coverage_from_elem_index`.
 
 Два слоя метрики
 ----------------
@@ -20,13 +23,14 @@
 Стандартные реквизиты платформы
 --------------------------------
 Реквизиты ``Код``, ``Наименование``, ``Родитель``, ``Дата``, ``Номер``,
-``ПометкаУдаления`` отсутствуют в ``Properties`` объекта (они добавляются
-платформой автоматически), но являются полностью валидными полями данных. Они
+``ПометкаУдаления`` отсутствуют в ``Properties`` объекта (Catalog.json / Document.json),
+но являются полностью валидными полями данных. Они
 учтены через :data:`PLATFORM_STANDARD_ATTRIBUTES` — эта константа
 используется вызывающим кодом при резолюции привязок.
 
 Классификация форм
---------------------Поле ``form_class`` определяется модулем
+--------------------
+Поле ``form_class`` определяется модулем
 :mod:`~v8unpack_agent.form_classifier` (задача #98):
 - ``"object"`` — объектная форма;
 - ``"service"`` — сервисная (мастер, помощник, диалог);
@@ -221,19 +225,45 @@ def calc_coverage_from_elem_index(
     ---------
     result:
         Экземпляр :class:`~v8unpack_agent.elem_parser.ElemIndexResult`.
-        Если ``result.elem_index_ok`` ложен или ``result.elements`` пуст —
-        возвращает нулевой :class:`CoverageReport`.
     form_name:
-        Короткое имя формы для классификации (передаётся в :func:`calc_data_path_coverage`).
+        Короткое имя формы для классификации.
+
+    Поведение
+    ---------
+    - ``elem_index_ok=True``, elements есть → полный расчёт через :func:`calc_data_path_coverage`.
+    - ``elem_index_ok=False`` или elements=[] И form_name есть →
+      классификация по имени (формы с пустым tree: платформенные диалоги).
+      - имя даёт SERVICE → ``form_class="service"``
+      - имя даёт UNKNOWN → ``form_class="service"`` (безопасный дефолт:
+        форма с пустым tree не может быть объектной)
+    - если form_name не передан → ``form_class="unknown"`` (обратная совместимость).
     """
+    from v8unpack_agent.form_classifier import classify_form_by_name, FormClass  # noqa: PLC0415
+
     elem_index_ok = getattr(result, "elem_index_ok", False)
     elements = getattr(result, "elements", []) or []
+
     if not elem_index_ok or not elements:
+        # Форма с пустым tree (например диалог подтверждения, диалог перезаписи файлов)
+        # — elem_parser не может парсить разметку из бинарного формата.
+        # Разбираемся по имени формы.
+        if form_name:
+            by_name = classify_form_by_name(form_name)
+            # Форма с пустым tree никогда не является объектной.
+            # Даже если имя неизвестно (UNKNOWN) — безопаснее считать SERVICE.
+            fc = (
+                FormClass.SERVICE
+                if by_name in (FormClass.SERVICE, FormClass.UNKNOWN)
+                else FormClass.UNKNOWN  # недостижимая ветвь (by_name == OBJECT невозможно)
+            )
+        else:
+            fc = FormClass.UNKNOWN  # обратная совместимость: form_name не передан
         return CoverageReport(
             total_elements=0,
             data_elements=0,
             bound_data_elements=0,
             coverage_pct=0.0,
-            form_class="unknown",
+            form_class=fc,
         )
+
     return calc_data_path_coverage(elements, form_name=form_name)
