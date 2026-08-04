@@ -402,9 +402,9 @@ if not result.elem_index_ok:
 | [#100](https://github.com/MRDK80/v8unpack-agent/issues/100) | `extract_legacy_form_elements`: fallback для ФормаЗаписи/ФормаЭлемента с пустым `tree` | closed, PR #102 |
 | [#103](https://github.com/MRDK80/v8unpack-agent/issues/103) | `ФормаСписка`/`ФормаВыбора`: безопасное извлечение колонок `TabularField` | implemented |
 | [#105](https://github.com/MRDK80/v8unpack-agent/issues/105) | Классификация оставшихся 47 неиндексируемых форм (`UnindexedReason`) | implemented, PR #106 |
-| [#107](https://github.com/MRDK80/v8unpack-agent/issues/107) | Категория B: UUID колонок в реквизитах табличных частей | open |
-| [#108](https://github.com/MRDK80/v8unpack-agent/issues/108) | Категория A: `ChartOfCharacteristicType` закрыт (issue #108); `CommonForm` → `NO_OWNER_OBJECT` by design | closed |
-| [#109](https://github.com/MRDK80/v8unpack-agent/issues/109) | Категория C: формы без виджетов данных → `service` | open |
+| [#107](https://github.com/MRDK80/v8unpack-agent/issues/107) | Категория B: UUID колонок в реквизитах табличных частей | closed, PR #110 |
+| [#108](https://github.com/MRDK80/v8unpack-agent/issues/108) | Категория A (4 формы): `ChartOfCharacteristicType` (2) и `CommonForm` (2) — `NO_OWNER_OBJECT` by design | closed, PR #110 |
+| [#109](https://github.com/MRDK80/v8unpack-agent/issues/109) | Категория C: формы без виджетов данных → `service` | closed, PR #111 |
 | [#88](https://github.com/MRDK80/v8unpack-agent/issues/88) | Приведение `Ref#uuid` к имени объекта метаданных | open |
 
 

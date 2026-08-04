@@ -297,10 +297,14 @@ fc = classify_no_widgets_form(
 `form_class="unknown"` и исключаются из знаменателя метрики покрытия.
 Начиная с #105 у каждой такой формы есть машиночитаемая причина —
 `elem_parser.classify_unindexed_form()` возвращает `UnindexedReason`
-(см. [`elem_parser`](elem_parser.md)). На УТ 10.3 это 77 форм:
-17 без виджетов данных, 48 с непопадающими UUID колонок `TabularField`,
-12 с пустой картой реквизитов владельца.
+(см. [`elem_parser`](elem_parser.md)). На УТ 10.3 это 47 форм:
+17 без виджетов данных, 26 с непопадающими UUID колонок `TabularField` (26 форм исправлено в #107),
+2 с пустой картой реквизитов владельца.
 
+Категория B (26 форм с непопадающими UUID) исправлена в #107 (PR #110).
+Категория A (2 оставшиеся формы `CommonForm`) получила диагноз `NO_OWNER_OBJECT` by design (#108).
+Категория B (26 форм с непопадающими UUID) исправлена в #107 (PR #110).
+Категория A (2 оставшиеся формы `CommonForm`) получила диагноз `NO_OWNER_OBJECT` by design (#108).
 Перевод 17 форм категории `NO_TABULAR_NO_WIDGETS` из `unknown` в `service`
 реализован в #109 (PR #111) через новую функцию `classify_no_widgets_form()`.
 `classify_empty_tree_form()` не расширялась: `SERVICE` по-прежнему выдаётся
