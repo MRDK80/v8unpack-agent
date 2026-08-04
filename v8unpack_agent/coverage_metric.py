@@ -10,6 +10,15 @@
 - формы с пустым ``tree`` диагностируются в :func:`calc_coverage_from_elem_index`
   через :func:`~v8unpack_agent.form_classifier.classify_empty_tree_form`.
 
+Issue #112 (Вариант B):
+:func:`calc_coverage_from_elem_index` теперь использует структурное подтверждение:
+- при ``elem_index_ok=False`` вызывает ``classify_unindexed_form()``;
+- если reason == ``NO_TABULAR_NO_WIDGETS`` — вычисляет
+  ``has_data_widgets = not _has_tabular_field(legacy_data)`` и передаёт
+  флаг в :func:`~v8unpack_agent.form_classifier.classify_no_widgets_form`;
+- конфликт сигналов (``has_data_widgets=True``) → UNKNOWN;
+- для всех остальных reason — поведение PR #111.
+
 Два слоя метрики
 ----------------
 ``data_elements``
@@ -234,6 +243,7 @@ def calc_data_path_coverage(
 def calc_coverage_from_elem_index(
     result: object,
     form_name: str | None = None,
+    form_root: object = None,
 ) -> CoverageReport:
     """Удобная обёртка: принимает ``ElemIndexResult`` из elem_parser.
 
@@ -243,42 +253,86 @@ def calc_coverage_from_elem_index(
         Экземпляр :class:`~v8unpack_agent.elem_parser.ElemIndexResult`.
     form_name:
         Короткое имя формы для классификации.
+    form_root:
+        Путь к директории формы (Path). Если указан и
+        ``elem_index_ok=False``, используется для
+        структурного подтверждения SERVICE через
+        ``classify_unindexed_form`` + ``classify_no_widgets_form``
+        (issue #112, Вариант B).
 
     Поведение
     ---------
     - ``elem_index_ok=True`` и elements есть → полный расчёт
       через :func:`calc_data_path_coverage`.
-    - ``elem_index_ok=False`` или elements=[] и form_name передан →
-      :func:`~v8unpack_agent.form_classifier.classify_empty_tree_form`.
-      SERVICE возвращается только при совпадении с проверенным списком
-      сервисных паттернов; во всех остальных случаях — ``"unknown"``.
+    - ``elem_index_ok=False`` + ``form_root`` указан →
+      ``classify_unindexed_form()``;
+      если reason == ``NO_TABULAR_NO_WIDGETS`` —
+      вычисляет ``has_data_widgets`` и вызывает
+      :func:`~v8unpack_agent.form_classifier.classify_no_widgets_form`
+      с флагом (issue #112 Вариант B).
+    - ``elem_index_ok=False`` без ``form_root`` / другой reason →
+      :func:`~v8unpack_agent.form_classifier.classify_empty_tree_form`
+      (поведение PR #111).
     - form_name не передан → ``"unknown"`` (обратная совместимость).
-
-    Notes
-    -----
-    Ранее пустой ``tree`` трактовался как SERVICE «безопасным дефолтом».
-    Это неверно: среди таких форм есть ``ФормаЗаписи`` регистров сведений
-    и основные формы отчётов ``Форма``. Классификатор не придумывает класс,
-    когда парсер не предоставил структуру формы.
-
-    Причину решения (``platform_object_name_unparsed``,
-    ``empty_tree_name_hint`` и др.) можно получить прямым вызовом
-    :func:`classify_empty_tree_form` — она возвращает пару
-    ``(класс, причина)``.
     """
     from v8unpack_agent.form_classifier import (  # noqa: PLC0415
         FormClass,
         classify_empty_tree_form,
+        classify_no_widgets_form,
     )
+    from v8unpack_agent.elem_parser import (  # noqa: PLC0415
+        UnindexedReason,
+        classify_unindexed_form,
+        _has_tabular_field,
+    )
+    import json  # noqa: PLC0415
+    from pathlib import Path  # noqa: PLC0415
 
     elem_index_ok = getattr(result, "elem_index_ok", False)
     elements = getattr(result, "elements", []) or []
 
     if not elem_index_ok or not elements:
-        if form_name:
+        form_class = FormClass.UNKNOWN
+
+        # issue #112 Вариант B: структурное подтверждение
+        if form_root is not None and form_name:
+            try:
+                _form_root = Path(form_root)
+                _dummy_result = type("_R", (), {"elem_index_ok": False, "elements": []})()  # noqa: UP012
+                unindexed = classify_unindexed_form(_form_root, _dummy_result)
+
+                if unindexed.reason is UnindexedReason.NO_TABULAR_NO_WIDGETS:
+                    # Вычисляем has_data_widgets: есть ли виджеты в legacy JSON
+                    legacy_path = _form_root / _find_legacy_json_name(_form_root)
+                    if legacy_path.exists():
+                        try:
+                            legacy_data = json.loads(
+                                legacy_path.read_text(encoding="utf-8-sig")
+                            )
+                            has_data_widgets = _has_tabular_field(legacy_data)
+                        except Exception:  # noqa: BLE001
+                            has_data_widgets = None
+                    else:
+                        has_data_widgets = None
+
+                    form_class = classify_no_widgets_form(
+                        form_name,
+                        unindexed.reason,
+                        has_data_widgets=has_data_widgets,
+                    )
+                else:
+                    # Другой reason — поведение PR #111
+                    if form_name:
+                        form_class, _reason = classify_empty_tree_form(form_name)
+
+            except Exception:  # noqa: BLE001
+                # best-effort: не ломаем пиплайн при ошибке чтения
+                if form_name:
+                    form_class, _reason = classify_empty_tree_form(form_name)
+
+        elif form_name:
+            # form_root не передан — поведение PR #111
             form_class, _reason = classify_empty_tree_form(form_name)
-        else:
-            form_class = FormClass.UNKNOWN
 
         return CoverageReport(
             total_elements=0,
@@ -289,3 +343,17 @@ def calc_coverage_from_elem_index(
         )
 
     return calc_data_path_coverage(elements, form_name=form_name)
+
+
+def _find_legacy_json_name(form_root: object) -> str:
+    """Найти имя legacy JSON-файла в директории формы (best-effort).
+
+    Дублирует логику ``_find_legacy_form_json`` из elem_parser,
+    но возвращает только имя файла (не Path) для безопасного join.
+    Если файл не найден — возвращает пустую строку (exists() вернёт False).
+    """
+    from pathlib import Path  # noqa: PLC0415
+    from v8unpack_agent.elem_parser import _find_legacy_form_json  # noqa: PLC0415
+
+    result = _find_legacy_form_json(Path(form_root))
+    return result.name if result is not None else ""
