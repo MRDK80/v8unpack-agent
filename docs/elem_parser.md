@@ -278,7 +278,7 @@ legacy JSON формы. Для `ФормаСписка` и `ФормаВыбор
 
 ```text
 Всего elem.json : 2216
-OK              : 2139
+OK              : 2169
 Fallback #103   : 160
 Fallback #100   : 37
 Ошибки          : 77
@@ -290,7 +290,7 @@ Fallback #103 подтверждён для `AccumulationRegister`, `Catalog`,
 `DataProcessor`, `Document`, `DocumentJournal`, `InformationRegister`
 и `Report`. Число извлечённых колонок на форму — от 1 до 19.
 
-Оставшиеся 77 форм используют другие структуры, не имеют UUID-попаданий
+Оставшиеся 47 форм используют другие структуры, не имеют UUID-попаданий
 в карте владельца, имеют пустую карту реквизитов либо вообще не содержат
 `TabularField`. Их причины классифицированы в
 [#105](https://github.com/MRDK80/v8unpack-agent/issues/105) — см. раздел ниже;
@@ -332,7 +332,7 @@ if not result.elem_index_ok:
 
 ### Распределение на реальной конфигурации
 
-УТ 10.3, 2216 форм: проиндексировано 2139 (96.5%), неиндексировано 77.
+УТ 10.3, 2216 форм: проиндексировано 2169 (97.9%), неиндексировано 77.
 
 | Причина | Форм | Типичные представители |
 |---|---:|---|
@@ -397,8 +397,44 @@ if not result.elem_index_ok:
 | [#98](https://github.com/MRDK80/v8unpack-agent/issues/98) | Классификация форм: объектные vs. сервисные | closed, PR #99 |
 | [#100](https://github.com/MRDK80/v8unpack-agent/issues/100) | `extract_legacy_form_elements`: fallback для ФормаЗаписи/ФормаЭлемента с пустым `tree` | closed, PR #102 |
 | [#103](https://github.com/MRDK80/v8unpack-agent/issues/103) | `ФормаСписка`/`ФормаВыбора`: безопасное извлечение колонок `TabularField` | implemented |
-| [#105](https://github.com/MRDK80/v8unpack-agent/issues/105) | Классификация оставшихся 77 неиндексируемых форм (`UnindexedReason`) | implemented, PR #106 |
+| [#105](https://github.com/MRDK80/v8unpack-agent/issues/105) | Классификация оставшихся 47 неиндексируемых форм (`UnindexedReason`) | implemented, PR #106 |
 | [#107](https://github.com/MRDK80/v8unpack-agent/issues/107) | Категория B: UUID колонок в реквизитах табличных частей | open |
 | [#108](https://github.com/MRDK80/v8unpack-agent/issues/108) | Категория A: layout `ChartOfCharacteristicType`, `CommonForm` без владельца | open |
 | [#109](https://github.com/MRDK80/v8unpack-agent/issues/109) | Категория C: формы без виджетов данных → `service` | open |
 | [#88](https://github.com/MRDK80/v8unpack-agent/issues/88) | Приведение `Ref#uuid` к имени объекта метаданных | open |
+
+
+### Issue #107 — Pattern-ссылки и разложение категории B
+
+Три исправления подняли покрытие с 96.5% до **97.9%** (2169 из 2216 форм).
+
+**1. Стандартные реквизиты владельца.** `_standard_attribute_map` читала
+`data[0][1]` вместо `data["header"][0][1]`. Для dict-layout это молча давало
+`KeyError` → пустую карту. После фикса `Наименование` (header[7]) и `Код`
+(header[8]) попадают в `attr_map` для всех справочников.
+
+**2. Pattern-ссылки `["#", UUID]`.** `walk_refs` распознавала только
+`["0", UUID]`. UUID стандартных реквизитов в формах-списках лежат в
+Pattern-блоке под тегом `"#"`. Расширение проверки закрыло **26 форм**.
+
+**3. Категория B разложена на точные резоны.** Общий
+`TABULAR_FIELD_NO_UUID_HITS` больше не используется — оставшиеся 19 форм
+получили конкретные причины.
+
+| Резон | Форм | Причина |
+|---|---:|---|
+| `TABULAR_FIELD_BSL_SOURCE_MISMATCH` | 11 | В BSL есть `Колонки.Добавить`, но у другого источника (`ВыбранныеСтроки` vs `ТабличноеПоле`). Матчинг по имени дал бы фантомные колонки. |
+| `TABULAR_FIELD_PROGRAMMATIC_NO_DEFS` | 8 | Ни UUID-привязок в TF, ни `Колонки.Добавить` в модуле. Восстанавливать нечего. |
+
+Итоговое распределение (2216 форм, 2026-08-04):
+
+| Категория | Форм |
+|---|---:|
+| OK | 2169 |
+| `NO_TABULAR_NO_WIDGETS` (C) | 17 |
+| `TABULAR_FIELD_BSL_SOURCE_MISMATCH` | 11 |
+| `TABULAR_FIELD_PROGRAMMATIC_NO_DEFS` | 8 |
+| `TABULAR_FIELD_PLATFORM_DYNAMIC` | 7 |
+| `TABULAR_FIELD_EMPTY_ATTR_MAP` (A) | 4 |
+| `TABULAR_FIELD_NO_UUID_HITS` (B) | 0 |
+| `NO_LEGACY_JSON` (D) | 0 |

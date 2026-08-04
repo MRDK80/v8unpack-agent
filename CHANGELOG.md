@@ -5,6 +5,40 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **`elem_parser._standard_attribute_map`** читала `data[0][1]` вместо
+  `data["header"][0][1]`. Для dict-layout карта стандартных реквизитов
+  всегда возвращалась пустой, из-за чего `Наименование` и `Код` не
+  попадали в `attr_map` (issue #107, PR #110).
+- **`elem_parser._tabular_field_attribute_slots`**: `walk_refs` распознаёт
+  Pattern-ссылки `["#", UUID]` наряду с `["0", UUID]`. UUID стандартных
+  реквизитов в формах-списках лежат в Pattern-блоке под тегом `"#"`.
+  Закрыто 26 форм live-базы (issue #107, PR #110).
+
+### Added
+
+- **`UnindexedReason.TABULAR_FIELD_PROGRAMMATIC_NO_DEFS`** — программная
+  `ТаблицаЗначений`/`ДеревоЗначений`, колонки не объявлены нигде: ни UUID
+  в TabularField, ни `Колонки.Добавить` в модуле формы. 8 форм
+  (issue #107, PR #110).
+- **`UnindexedReason.TABULAR_FIELD_BSL_SOURCE_MISMATCH`** — в BSL есть
+  объявления колонок, но у другого источника (`ВыбранныеСтроки` vs
+  `ТабличноеПоле`). Сопоставление по имени дало бы фантомные колонки.
+  11 форм (issue #107, PR #110).
+- **`tests/test_elem_parser_issue103.py::test_pattern_hash_reference_fallback`**
+  — регрессионный тест на Pattern-ссылки. Всего 505 тестов.
+
+### Changed
+
+- **Категория B обнулена.** `TABULAR_FIELD_NO_UUID_HITS` больше не
+  возвращается: 26 форм проиндексированы, 19 получили точные резоны.
+  Покрытие live-базы 2169/2216 = 97.9% (было 2139/2216 = 96.5%).
+  Распределение: OK 2169, C 17, BSL_SOURCE_MISMATCH 11,
+  PROGRAMMATIC_NO_DEFS 8, PLATFORM_DYNAMIC 7, A 4, B 0, D 0
+  (issue #107, PR #110).
+
+
 ### Added
 - `elem_parser.UnindexedReason` (Enum) + `elem_parser.UnindexedResult` (dataclass) —
   диагностическая классификация форм, оставшихся с `elem_index_ok=False` после
