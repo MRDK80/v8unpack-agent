@@ -635,7 +635,7 @@ def _tabular_field_attribute_slots(
 
         if (
             len(node) == 2
-            and node[0] == "0"
+            and node[0] in ("0", '"#"')
             and isinstance(node[1], str)
             and node[1] in attr_map
         ):

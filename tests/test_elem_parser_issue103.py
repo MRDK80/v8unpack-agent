@@ -88,3 +88,18 @@ def test_reference_pair_fallback():
         "РегистрНакопленияСписок.Склад",
         "РегистрНакопленияСписок.Номенклатура",
     ]
+
+def test_pattern_hash_reference_fallback():
+    uuid, name = ATTRS[0]
+    form = [
+        _TABULAR_FIELD_UUID,
+        "1",
+        ["5", ['"Pattern"', ['"#"', uuid]]],
+        "0",
+        ["14", f'"{SOURCE}"'],
+    ]
+
+    result = extract_legacy_list_form_elements(form, _obj())
+
+    assert [item["name"] for item in result] == [name]
+    assert result[0]["data_path"] == f"{SOURCE}.{name}"
