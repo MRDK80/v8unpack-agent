@@ -6,6 +6,29 @@
 ## [Unreleased]
 
 ### Added
+- `elem_parser.UnindexedReason` (Enum) + `elem_parser.UnindexedResult` (dataclass) —
+  диагностическая классификация форм, оставшихся с `elem_index_ok=False` после
+  fallback #100 и #103. Значения: `TABULAR_FIELD_EMPTY_ATTR_MAP` (A),
+  `TABULAR_FIELD_NO_UUID_HITS` (B), `NO_TABULAR_NO_WIDGETS` (C),
+  `NO_LEGACY_JSON` (D), `UNKNOWN` (issue #105, PR #106).
+- `elem_parser.classify_unindexed_form(form_root, elem_result) -> UnindexedResult` —
+  определяет причину, по которой форма не проиндексирована, и возвращает
+  человекочитаемый `detail`. Функция строго диагностическая: она **не создаёт
+  `data_path`**, не добавляет элементов и не мутирует переданный `ElemIndexResult`.
+  Внешняя обёртка перехватывает любые исключения (best-effort), внутренняя
+  `_classify_unindexed_form_impl()` содержит логику приоритетов:
+  нет legacy `*.json` → **D**; нет `TabularField` → **C**;
+  `load_owner_attribute_map()` пуста → **A**;
+  `_tabular_field_attribute_slots()` пуст → **B**; слоты есть, но форма
+  не проиндексирована → **UNKNOWN** (issue #105, PR #106).
+- `tests/test_elem_parser_issue105.py` — 17 тестов в пяти классах
+  (`TestCategoryA`, `TestCategoryB`, `TestCategoryC`, `TestCategoryD`,
+  `TestInvariants`). Фикстура категории B использует
+  `_write_catalog_json_with_header()` — валидный production-layout с секцией
+  `header`, который `object_decoder` успешно декодирует: карта реквизитов
+  непустая, но UUID колонок в неё не попадают. Инварианты: отсутствие
+  исключений на несуществующей директории, неизменность `elem_result`,
+  полнота покрытия enum (issue #105, PR #106).
 - `elem_parser.extract_legacy_list_form_elements()` — fallback-чтение
   `ФормаСписка` / `ФормаВыбора` с пустым `tree` и виджетом `TabularField`
   из отдельного legacy `*.json`. Поддержаны два подтверждённых формата
@@ -67,6 +90,10 @@
   реквизиты, ждут #88); `Catalog/Контрагенты`: 45/45 = 100.0% (issue #90, PR #97).
 
 ### Changed
+- Формулировка «оставшиеся 77 форм — предмет исследования #105» заменена
+  результатом: причины классифицированы, дальнейшая работа разделена на
+  #107 (категория B, 48 форм), #108 (категория A, 12 форм) и
+  #109 (категория C, 17 форм) (issue #105, PR #106).
 - `elem_parser.parse_elem_json()`: при пустом `tree` после обычного legacy
   fallback дополнительно разбирает `TabularField` через
   `extract_legacy_list_form_elements()`. Успешно извлечённые колонки получают
@@ -144,6 +171,14 @@
   Параметр `mode` пробрасывается из `check_drift()` (issue #73).
 
 ### Fixed
+- **77 неиндексируемых форм не имели машиночитаемой причины.** После #103
+  формы с `elem_index_ok=False` давали единственное общее предупреждение
+  «Элементы формы не найдены», из-за чего нельзя было отличить норму
+  (форма без виджетов данных) от пробела декодера. `classify_unindexed_form()`
+  присваивает каждой такой форме конкретную причину. Прогон на полной
+  конфигурации УТ 10.3: 2216 форм, проиндексировано 2139 (96.5%),
+  неиндексировано 77 — **C** 17, **B** 48, **A** 12, **D** 0, **unknown** 0.
+  Ложных `data_path` не создано, исключений 0 (issue #105, PR #106).
 - **Legacy `ФормаСписка` / `ФормаВыбора` с пустым `tree` не индексировались.**
   Реализовано безопасное кросс-чтение JSON формы и метаданных владельца.
   Проверка на полной конфигурации: 2216 форм, OK 2139, fallback #103 — 160,

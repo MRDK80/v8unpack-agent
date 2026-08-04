@@ -1,8 +1,9 @@
-"""Пример: привязки колонок legacy ФормаСписка/ФормаВыбора (#103).
+"""Пример: привязки колонок legacy ФормаСписка/ФормаВыбора (#103, #105).
 
 Скрипт разбирает существующую директорию формы из выгрузки v8unpack и
 показывает колонки TabularField, извлечённые безопасным fallback #103.
-Исходные файлы не изменяются.
+Если форма не проиндексирована, печатается причина из
+`classify_unindexed_form()` (#105). Исходные файлы не изменяются.
 
 Запуск:
 
@@ -20,7 +21,7 @@ import json
 from pathlib import Path
 from typing import Any, Sequence
 
-from v8unpack_agent.elem_parser import parse_elem_json
+from v8unpack_agent.elem_parser import classify_unindexed_form, parse_elem_json
 
 EXPECTED_SOURCE = "legacy_list_form_json"
 EXPECTED_TYPE = "TabularFieldColumn"
@@ -41,10 +42,21 @@ def _build_report(form_dir: Path) -> dict[str, Any]:
     columns = _legacy_list_columns(result.elements)
     extraction_source = getattr(result, "extraction_source", None)
 
+    unindexed_reason = None
+    unindexed_detail = None
+    if not result.elem_index_ok:
+        # Диагностика #105: причина, по которой форма осталась без разметки.
+        # Вызов не создаёт data_path и не изменяет result.
+        info = classify_unindexed_form(form_dir, result)
+        unindexed_reason = info.reason.value
+        unindexed_detail = info.detail
+
     return {
         "form_dir": str(form_dir),
         "elem_index_ok": result.elem_index_ok,
         "extraction_source": extraction_source,
+        "unindexed_reason": unindexed_reason,
+        "unindexed_detail": unindexed_detail,
         "elements": len(result.elements),
         "legacy_list_columns": len(columns),
         "columns": [
@@ -76,6 +88,10 @@ def _print_text(report: dict[str, Any]) -> None:
             print(f"  {name:<32} {data_path}")
     else:
         print("\nFallback #103 не вернул колонок для этой формы.")
+
+    if report["unindexed_reason"]:
+        print(f"\nПричина (#105): {report['unindexed_reason']}")
+        print(f"  {report['unindexed_detail']}")
 
     if report["warnings"]:
         print("\nWarnings:")

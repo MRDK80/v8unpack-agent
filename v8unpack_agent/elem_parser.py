@@ -63,6 +63,7 @@ UUID-ами внутри паттерн-блока.
 
 from __future__ import annotations
 
+import enum
 from dataclasses import dataclass, field
 from pathlib import Path
 import json
@@ -77,6 +78,151 @@ class ElemIndexResult:
     elem_index_ok: bool
     elements: list[dict]
     warnings: list[str] = field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# Классификация неиндексируемых форм (issue #105)
+# ---------------------------------------------------------------------------
+
+class UnindexedReason(enum.Enum):
+    """Причина, по которой форма не была проиндексирована.
+
+    Приоритеты (от высшего к низшему):
+      D — нет большого *.json (нечего разбирать)
+      A — TabularField есть, но attr_map пуста (object_decoder не распознал layout)
+      B — TabularField есть, attr_map непустая, но UUID колонок не совпадают
+      C — нет ни TabularField, ни InputField/ComboBox (норма: регистры, сервисные формы)
+
+    Реальное распределение по live-базе (2026-08-03, 1130 форм):
+      C: 1070, B: 48, A: 12
+    """
+    TABULAR_FIELD_EMPTY_ATTR_MAP = "tabular_field_empty_attr_map"  # A
+    TABULAR_FIELD_NO_UUID_HITS   = "tabular_field_no_uuid_hits"   # B
+    NO_TABULAR_NO_WIDGETS        = "no_tabular_no_widgets"        # C
+    NO_LEGACY_JSON               = "no_legacy_json"               # D
+    UNKNOWN                      = "unknown"
+
+
+@dataclass
+class UnindexedResult:
+    """Результат классификации неиндексируемой формы."""
+    reason: UnindexedReason
+    detail: str = ""  # человекочитаемое объяснение для логов и метрик
+
+
+def classify_unindexed_form(
+    form_root: Path,
+    elem_result: ElemIndexResult,
+) -> UnindexedResult:
+    """Классифицировать форму, которую parse_elem_json не смог проиндексировать.
+
+    Не мутирует ``elem_result``. Не бросает исключений (best-effort).
+    Вызывать только когда ``elem_result.elem_index_ok is False``
+    или ``elem_result.elements == []``.
+    """
+    try:
+        return _classify_unindexed_form_impl(form_root)
+    except Exception as exc:  # noqa: BLE001
+        return UnindexedResult(
+            reason=UnindexedReason.UNKNOWN,
+            detail=f"classify_unindexed_form: неожиданное исключение: {exc}",
+        )
+
+
+def _classify_unindexed_form_impl(form_root: Path) -> UnindexedResult:
+    """Внутренняя реализация без перехвата исключений."""
+    # --- шаг 1: есть ли вообще большой *.json? ---
+    legacy_path = _find_legacy_form_json(form_root)
+    if legacy_path is None:
+        return UnindexedResult(
+            reason=UnindexedReason.NO_LEGACY_JSON,
+            detail=f"Большой *.json не найден в {form_root}",
+        )
+
+    # --- шаг 2: читаем и ищем TabularField ---
+    try:
+        legacy_data = json.loads(legacy_path.read_text(encoding="utf-8-sig"))
+    except Exception as exc:
+        return UnindexedResult(
+            reason=UnindexedReason.UNKNOWN,
+            detail=f"Не удалось прочитать {legacy_path}: {exc}",
+        )
+
+    if not _has_tabular_field(legacy_data):
+        return UnindexedResult(
+            reason=UnindexedReason.NO_TABULAR_NO_WIDGETS,
+            detail=(
+                f"TabularField и InputField/ComboBox не найдены "
+                f"в {legacy_path.name} — форма без виджетов данных"
+            ),
+        )
+
+    # --- шаг 3: TabularField найден — проверяем attr_map ---
+    dummy_warnings: list[str] = []
+    attr_map = load_owner_attribute_map(form_root, dummy_warnings)
+
+    if not attr_map:
+        detail_parts = [f"TabularField найден в {legacy_path.name}"]
+        if dummy_warnings:
+            detail_parts.append("; ".join(dummy_warnings))
+        else:
+            detail_parts.append("attr_map пуста — object_decoder не распознал layout владельца")
+        return UnindexedResult(
+            reason=UnindexedReason.TABULAR_FIELD_EMPTY_ATTR_MAP,
+            detail=" | ".join(detail_parts),
+        )
+
+    # --- шаг 4: attr_map непустая — ищем TabularField-блок и резолвим UUID ---
+    tf_node = _find_tabular_field_node(legacy_data)
+    if tf_node is None:
+        # TabularField был найден _has_tabular_field, но как список-примитив,
+        # не как полноценный узел — считаем категорией B.
+        return UnindexedResult(
+            reason=UnindexedReason.TABULAR_FIELD_NO_UUID_HITS,
+            detail=(
+                f"TabularField найден в {legacy_path.name}, "
+                f"но извлечь узел не удалось; attr_map содержит "
+                f"{len(attr_map)} реквизитов"
+            ),
+        )
+
+    slots = _tabular_field_attribute_slots(tf_node, attr_map)
+    if not slots:
+        return UnindexedResult(
+            reason=UnindexedReason.TABULAR_FIELD_NO_UUID_HITS,
+            detail=(
+                f"TabularField в {legacy_path.name}: UUID колонок не совпадают "
+                f"с {len(attr_map)} реквизитами владельца "
+                f"(ТЧ-реквизиты или независимые значения)"
+            ),
+        )
+
+    # Если вдруг попали сюда — слоты есть, но форма всё равно не проиндексирована.
+    # Это неожиданный случай, логируем как UNKNOWN.
+    return UnindexedResult(
+        reason=UnindexedReason.UNKNOWN,
+        detail=(
+            f"TabularField разрешён ({len(slots)} слотов), "
+            f"но форма не проиндексирована — неизвестная причина"
+        ),
+    )
+
+
+def _find_tabular_field_node(node: Any) -> list | None:
+    """Найти первый полноценный узел TabularField (list с tf[0] == UUID)."""
+    if isinstance(node, list):
+        if node and isinstance(node[0], str) and node[0] == _TABULAR_FIELD_UUID:
+            return node
+        for child in node:
+            result = _find_tabular_field_node(child)
+            if result is not None:
+                return result
+    elif isinstance(node, dict):
+        for value in node.values():
+            result = _find_tabular_field_node(value)
+            if result is not None:
+                return result
+    return None
 
 
 _ELEMENT_TYPE_KEYS = ("type", "Тип", "item_type", "kind", "Вид")
