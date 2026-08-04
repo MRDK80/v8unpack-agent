@@ -126,14 +126,20 @@ class UnindexedResult:
 # Константы для стандартных реквизитов и служебных UUID (issue #107)
 # ---------------------------------------------------------------------------
 
-# Позиции стандартных реквизитов в header[0][1] для объектов Catalog
-# header[7] = UUID «Наименование», header[8] = UUID «Код»
-# Проверено на 5 справочниках: Валюты, ЛичныеКонтакты, Номенклатура,
-# Контрагенты, Подразделения.
+# Позиции стандартных реквизитов в header[0][1].
+# header[7] = UUID «Наименование», header[8] = UUID «Код».
+# Проверено на Catalog (Валюты, ЛичныеКонтакты, Номенклатура, Контрагенты,
+# Подразделения) и ChartOfCharacteristicType (НазначенияСвойствКатегорийОбъектов,
+# НастройкиПользователей) — позиции идентичны у обоих типов объектов.
 _STD_ATTR_HEADER_POSITIONS: dict[int, str] = {7: "Наименование", 8: "Код"}
 
-# Типы объектов, для которых применяется _standard_attribute_map
-_STD_ATTR_OWNER_TYPES: frozenset[str] = frozenset({"Catalog"})
+# Типы объектов, для которых применяется _standard_attribute_map.
+# ChartOfCharacteristicType добавлен в issue #108: структура header[0][1]
+# идентична Catalog, позиции 7/8 подтверждены на живых данных.
+_STD_ATTR_OWNER_TYPES: frozenset[str] = frozenset({
+    "Catalog",
+    "ChartOfCharacteristicType",
+})
 
 # Служебные UUID платформы 1С.
 # Смысловые подписи подтверждены только частотой встречаемости и косвенно;
@@ -605,7 +611,7 @@ def load_owner_attribute_map(form_root: Path, warnings: list[str]) -> dict[str, 
             if uuid and name:
                 mapping.setdefault(uuid, name)
 
-    # issue #107: дописываем стандартные реквизиты из data["header"][0][1][7/8]
+    # issue #107/#108: дописываем стандартные реквизиты из data["header"][0][1][7/8]
     # через setdefault — не затираем данные декодера
     for uuid, attr_name in _standard_attribute_map(path).items():
         mapping.setdefault(uuid, attr_name)
