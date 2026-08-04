@@ -16,9 +16,7 @@ inspect_empty.py
 classify_empty.py
 proto_adapter.py
 proto_fallback.py
-verify_issue54.py
 /json
-verify_issue85.py
 cf_export/
 sys
 *.log
