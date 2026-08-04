@@ -1,4 +1,4 @@
-"""Пример: отчёт по неиндексируемым формам (issue #105).
+"""Пример: отчёт по неиндексируемым формам (issue #105, #107).
 
 Пример полностью синтетический и самодостаточный: формы собираются во
 временном каталоге по структуре реальной выгрузки. Реальные данные,
@@ -13,8 +13,17 @@
   ни InputField/ComboBox — форма без виджетов данных;
 * A — TABULAR_FIELD_EMPTY_ATTR_MAP: TabularField есть, но карта реквизитов
   владельца пуста (нет объекта-владельца либо layout не распознан);
-* B — TABULAR_FIELD_NO_UUID_HITS: карта непуста, но UUID колонок в неё
-  не попадают.
+* B1 — TABULAR_FIELD_PROGRAMMATIC_NO_DEFS: карта непуста, UUID колонок
+  в неё не попадают и в модуле формы нет `Колонки.Добавить` — программная
+  ТаблицаЗначений/ДеревоЗначений без объявлений (#107);
+* B2 — TABULAR_FIELD_BSL_SOURCE_MISMATCH: `Колонки.Добавить` в модуле есть,
+  но у другого источника (`ВыбранныеСтроки` vs `ТабличноеПоле`) —
+  сопоставление по имени дало бы фантомные колонки (#107);
+* B3 — TABULAR_FIELD_PLATFORM_DYNAMIC: колонки формирует платформа
+  (СКД, диаграммы) — привязок нет by design.
+
+Резон TABULAR_FIELD_NO_UUID_HITS сохранён в enum для обратной
+совместимости, но после #107 не возвращается.
 
 Функция строго диагностическая: она не создаёт `data_path`, не добавляет
 элементов и не изменяет переданный `ElemIndexResult`.
@@ -140,12 +149,27 @@ def build_demo_export(root: Path) -> list[Path]:
         catalog=None,
     ))
 
-    # B — карта непуста, но UUID колонок в неё не попадают
+    # B1 — карта непуста, UUID чужие, объявлений колонок нет нигде
     forms.append(_write_form(
         root, "Catalog/ЧужиеUUID/CatalogForm/ФормаВыбора", "CatalogForm",
         form_json=_form_json_with_tabular_field(UUID_ALIEN_1, UUID_ALIEN_2),
         catalog=_catalog_json((UUID_OWN_1, "Город"), (UUID_OWN_2, "Адрес")),
     ))
+
+    # B2 — колонки в BSL объявлены, но у другого источника (#107)
+    mismatch = _write_form(
+        root, "Catalog/ЧужойИсточник/CatalogForm/ФормаВыбора", "CatalogForm",
+        form_json=_form_json_with_tabular_field(UUID_ALIEN_1),
+        catalog=_catalog_json((UUID_OWN_1, "Город")),
+    )
+    (mismatch / "CatalogForm.obj.bsl").write_text(
+        'Процедура ПриОткрытии()\n'
+        '    ВыбранныеСтроки.Колонки.Добавить("Ссылка");\n'
+        '    ВыбранныеСтроки.Колонки.Добавить("Пометка");\n'
+        'КонецПроцедуры\n',
+        encoding="utf-8",
+    )
+    forms.append(mismatch)
 
     return forms
 

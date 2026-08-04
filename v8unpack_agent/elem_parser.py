@@ -92,15 +92,28 @@ class UnindexedReason(enum.Enum):
       A — TabularField есть, но attr_map пуста (object_decoder не распознал layout)
       B — TabularField есть, attr_map непустая, но UUID колонок не совпадают
       C — нет ни TabularField, ни InputField/ComboBox (норма: регистры, сервисные формы)
+      PLATFORM_DYNAMIC — все TF-источники платформенные (wontfix by design)
+      PROGRAMMATIC_NO_DEFS — программная ТЗ/ДЗ, колонки нигде не объявлены:
+        ни UUID в TF, ни Колонки.Добавить в BSL
+      BSL_SOURCE_MISMATCH — колонки в BSL объявлены, но у другого источника
+        (напр. ВыбранныеСтроки vs ТабличноеПоле); матчинг дал бы фантомы
 
-    Реальное распределение по live-базе (2026-08-03, 1130 форм):
-      C: 1070, B: 48, A: 12
+    Распределение по live-базе после патча #107 (2216 форм, 2026-08-04):
+      OK: 2169 (97.9%), C: 17, BSL_SOURCE_MISMATCH: 11,
+      PROGRAMMATIC_NO_DEFS: 8, PLATFORM_DYNAMIC: 7, A: 4, B: 0, D: 0
+
+    Категория B обнулена. +26 OK дало распознавание Pattern-ссылок
+    ["#", UUID] в walk_refs; оставшиеся 19 форм получили точные резоны
+    вместо общего «UUID колонок не совпадают».
     """
-    TABULAR_FIELD_EMPTY_ATTR_MAP = "tabular_field_empty_attr_map"  # A
-    TABULAR_FIELD_NO_UUID_HITS   = "tabular_field_no_uuid_hits"   # B
-    NO_TABULAR_NO_WIDGETS        = "no_tabular_no_widgets"        # C
-    NO_LEGACY_JSON               = "no_legacy_json"               # D
-    UNKNOWN                      = "unknown"
+    TABULAR_FIELD_EMPTY_ATTR_MAP    = "tabular_field_empty_attr_map"    # A
+    TABULAR_FIELD_NO_UUID_HITS      = "tabular_field_no_uuid_hits"      # B
+    TABULAR_FIELD_PLATFORM_DYNAMIC  = "tabular_field_platform_dynamic"  # issue #107
+    TABULAR_FIELD_PROGRAMMATIC_NO_DEFS = "tabular_field_programmatic_no_defs"  # B-noop
+    TABULAR_FIELD_BSL_SOURCE_MISMATCH  = "tabular_field_bsl_source_mismatch"   # B-noop
+    NO_TABULAR_NO_WIDGETS           = "no_tabular_no_widgets"           # C
+    NO_LEGACY_JSON                  = "no_legacy_json"                  # D
+    UNKNOWN                         = "unknown"
 
 
 @dataclass
@@ -108,6 +121,151 @@ class UnindexedResult:
     """Результат классификации неиндексируемой формы."""
     reason: UnindexedReason
     detail: str = ""  # человекочитаемое объяснение для логов и метрик
+
+
+# ---------------------------------------------------------------------------
+# Константы для стандартных реквизитов и служебных UUID (issue #107)
+# ---------------------------------------------------------------------------
+
+# Позиции стандартных реквизитов в header[0][1] для объектов Catalog
+# header[7] = UUID «Наименование», header[8] = UUID «Код»
+# Проверено на 5 справочниках: Валюты, ЛичныеКонтакты, Номенклатура,
+# Контрагенты, Подразделения.
+_STD_ATTR_HEADER_POSITIONS: dict[int, str] = {7: "Наименование", 8: "Код"}
+
+# Типы объектов, для которых применяется _standard_attribute_map
+_STD_ATTR_OWNER_TYPES: frozenset[str] = frozenset({"Catalog"})
+
+# Служебные UUID платформы 1С.
+# Смысловые подписи подтверждены только частотой встречаемости и косвенно;
+# точная семантика не доказана — в коде они помечены нейтрально.
+_PLATFORM_SERVICE_UUIDS: frozenset[str] = frozenset({
+    "e1692cc2-605b-4535-84dd-28440238746c",  # служебный, описание колонки
+    "35af3d93-d7c7-4a2e-a8eb-bac87a1a3f26",  # служебный, описание колонки
+    "d2314b5d-8da4-4e0f-822b-45e7500eae09",  # служебный, динамический список
+    "48a6ebc3-fcc8-4f8f-b399-459fb32aa46b",  # служебный узел СправочникСписок
+    "99f52caa-7b96-4bd4-a649-aedbd230a555",  # служебный (ПометкаУдаления)
+    "e603c0f2-19d7-4f5d-9374-e61a0ee5c5a6",  # ДеревоЗначений
+    "737535a4-4743-4d3e-98f7-0b40d6ab0c02",  # ТаблицаЗначений
+    "acf6192e-8d63-4a2f-977a-3d88d786b0ac",  # строка отбора СКД
+    "4652c4ec-6a7a-43ab-9a7e-7c39ea42e870",  # строка отбора СКД
+    "381ed624-9217-4e63-85db-c4c3cb87daae",  # виджет InputField
+    "ea83fe3a-ac3c-4cce-8045-3dddf35b28b1",  # виджет TabularField
+})
+
+# Имена платформенных источников TF — колонки генерируются динамически,
+# привязка к реквизитам объекта отсутствует (wontfix by design).
+_PLATFORM_DYNAMIC_SOURCE_NAMES: frozenset[str] = frozenset({
+    "Отбор",
+    "ПостроительОтбор",
+    "ИзмеренияСтроки",
+    "ИзмеренияКолонки",
+    "Порядок",
+    "ПоляДляПорядка",
+    "ПоляДляВыбранных",
+    "ВыбранныеПоля",
+    "ПоказателиДиаграммы",
+    "СерииИТочкиДиаграммы",
+    "ТабличноеПолеДеревоПоказателей",
+    "ТабличноеПолеПараметров",
+})
+
+
+def _owner_type_name(owner_json_path: Path) -> str | None:
+    """Тип объекта-владельца из имени его JSON-файла (например 'Catalog')."""
+    stem = owner_json_path.stem  # 'Catalog'
+    return stem if stem else None
+
+
+def _standard_attribute_map(owner_json_path: Path) -> dict[str, str]:
+    """Стандартные реквизиты объекта из фиксированных позиций header.
+
+    Для Catalog.json: data["header"][0][1][7] = UUID «Наименование»,
+    data["header"][0][1][8] = UUID «Код».
+
+    Catalog.json имеет структуру словаря с ключом "header", а НЕ список:
+      {"name": ..., "header": [[uuid, [uuid, ...]], ...], ...}
+    Поэтому используется data["header"][0][1], а НЕ data[0][1].
+
+    Возвращает пустой dict если тип не поддерживается или структура
+    не соответствует ожидаемой.
+    """
+    owner_type = _owner_type_name(owner_json_path)
+    if owner_type not in _STD_ATTR_OWNER_TYPES:
+        return {}
+    try:
+        data = json.loads(owner_json_path.read_text(encoding="utf-8-sig"))
+        header_row = data["header"][0][1]  # dict → ключ "header", затем [0][1]
+        result: dict[str, str] = {}
+        for pos, attr_name in _STD_ATTR_HEADER_POSITIONS.items():
+            uuid = header_row[pos]
+            if _is_uuid(uuid) and uuid != _NULL_UUID:
+                result[uuid] = attr_name
+        return result
+    except Exception:  # noqa: BLE001
+        return {}
+
+
+# ---------------------------------------------------------------------------
+# BSL-парсер колонок программных ТЗ/ДЗ (issue #107)
+# ---------------------------------------------------------------------------
+
+# Regex на Источник.Колонки.Добавить("ИмяКолонки"
+# Поддержаны:
+#   - русский API: Колонки.Добавить
+#   - английский API: Columns.Add
+#   - префикс «ЭтаФорма.»
+#   - регистронезависимо
+_BSL_COLUMN_ADD_RE = re.compile(
+    r'(?i)(?:ЭтаФорма\.)?([А-Яа-яA-Za-z0-9_]+)'
+    r'\.(?:Колонки|Columns)\.(?:Добавить|Add)'
+    r'\s*\(\s*"([^"]+)"',
+)
+
+
+def _extract_bsl_column_names(
+    form_root: Path,
+    source_name: str,
+) -> list[str]:
+    """Извлечь имена колонок из BSL-модуля формы для заданного источника данных.
+
+    Ищет паттерн ``<source_name>.Колонки.Добавить("ИмяКолонки"``.
+    Порядок сохраняется, дубли удаляются.
+    Возвращает [] если BSL-модуль не найден или колонки не обнаружены.
+    """
+    bsl_path = _find_form_bsl(form_root)
+    if bsl_path is None:
+        return []
+    try:
+        text = bsl_path.read_text(encoding="utf-8-sig")
+    except Exception:  # noqa: BLE001
+        return []
+
+    columns: list[str] = []
+    seen: set[str] = set()
+    for match in _BSL_COLUMN_ADD_RE.finditer(text):
+        src, col_name = match.group(1), match.group(2)
+        if src.lower() == source_name.lower() and col_name not in seen:
+            seen.add(col_name)
+            columns.append(col_name)
+    return columns
+
+
+# ---------------------------------------------------------------------------
+# Вспомогательные функции для _find_all_tabular_field_nodes
+# ---------------------------------------------------------------------------
+
+def _find_all_tabular_field_nodes(node: Any, out: list) -> None:  # issue #107
+    """Рекурсивно собрать все TF-узлы формы в список out."""
+    if isinstance(node, list):
+        if node and isinstance(node[0], str) and node[0] == _TABULAR_FIELD_UUID:
+            out.append(node)
+            return  # не углубляемся внутрь найденного TF
+        for child in node:
+            _find_all_tabular_field_nodes(child, out)
+    elif isinstance(node, dict):
+        for value in node.values():
+            _find_all_tabular_field_nodes(value, out)
 
 
 def classify_unindexed_form(
@@ -172,38 +330,113 @@ def _classify_unindexed_form_impl(form_root: Path) -> UnindexedResult:
             detail=" | ".join(detail_parts),
         )
 
-    # --- шаг 4: attr_map непустая — ищем TabularField-блок и резолвим UUID ---
-    tf_node = _find_tabular_field_node(legacy_data)
-    if tf_node is None:
-        # TabularField был найден _has_tabular_field, но как список-примитив,
-        # не как полноценный узел — считаем категорией B.
+    # --- шаг 4: attr_map непустая — собираем все TF-узлы ---
+    tf_nodes: list = []
+    _find_all_tabular_field_nodes(legacy_data, tf_nodes)
+
+    if not tf_nodes:
+        tf_node = _find_tabular_field_node(legacy_data)
+        if tf_node is None:
+            return UnindexedResult(
+                reason=UnindexedReason.TABULAR_FIELD_NO_UUID_HITS,
+                detail=(
+                    f"TabularField найден в {legacy_path.name}, "
+                    f"но извлечь узел не удалось; attr_map содержит "
+                    f"{len(attr_map)} реквизитов"
+                ),
+            )
+        tf_nodes = [tf_node]
+
+    # --- шаг 5: проверяем источники — все ли платформенные? ---
+    source_names = [
+        _tabular_field_source_name(tf) for tf in tf_nodes
+    ]
+    non_platform_sources = [
+        s for s in source_names if s not in _PLATFORM_DYNAMIC_SOURCE_NAMES
+    ]
+
+    if not non_platform_sources:
         return UnindexedResult(
-            reason=UnindexedReason.TABULAR_FIELD_NO_UUID_HITS,
+            reason=UnindexedReason.TABULAR_FIELD_PLATFORM_DYNAMIC,
             detail=(
-                f"TabularField найден в {legacy_path.name}, "
-                f"но извлечь узел не удалось; attr_map содержит "
-                f"{len(attr_map)} реквизитов"
+                f"Все TF-источники платформенные (wontfix): "
+                f"{sorted(set(source_names))}"
             ),
         )
 
-    slots = _tabular_field_attribute_slots(tf_node, attr_map)
-    if not slots:
+    # --- шаг 6: пробуем разрешить UUID хотя бы для одного непл. источника ---
+    unresolved_uuids_count = 0
+    for tf in tf_nodes:
+        src = _tabular_field_source_name(tf)
+        if src in _PLATFORM_DYNAMIC_SOURCE_NAMES:
+            continue
+        slots = _tabular_field_attribute_slots(tf, attr_map)
+        if slots:
+            return UnindexedResult(
+                reason=UnindexedReason.UNKNOWN,
+                detail=(
+                    f"TabularField разрешён ({len(slots)} слотов), "
+                    f"но форма не проиндексирована — неизвестная причина"
+                ),
+            )
+        uuids: list[str] = []
+        _collect_uuids(tf, uuids)
+        unresolved = [
+            u for u in uuids
+            if u not in attr_map and u not in _PLATFORM_SERVICE_UUIDS
+        ]
+        unresolved_uuids_count += len(set(unresolved))
+
+    # issue #107: отделяем формы, где колонки принципиально не восстановимы.
+    # BSL-модуль читаем один раз и смотрим, что в нём вообще объявлено.
+    bsl_path = _find_form_bsl(form_root)
+    bsl_sources: set[str] = set()
+    if bsl_path is not None:
+        try:
+            bsl_text = bsl_path.read_text(encoding="utf-8-sig", errors="replace")
+            bsl_sources = {m.group(1) for m in _BSL_COLUMN_ADD_RE.finditer(bsl_text)}
+        except Exception:  # noqa: BLE001
+            bsl_sources = set()
+
+    tf_sources_lower = {s.lower() for s in non_platform_sources}
+
+    if not bsl_sources:
         return UnindexedResult(
-            reason=UnindexedReason.TABULAR_FIELD_NO_UUID_HITS,
+            reason=UnindexedReason.TABULAR_FIELD_PROGRAMMATIC_NO_DEFS,
             detail=(
-                f"TabularField в {legacy_path.name}: UUID колонок не совпадают "
-                f"с {len(attr_map)} реквизитами владельца "
-                f"(ТЧ-реквизиты или независимые значения)"
+                f"TabularField программной ТЗ/ДЗ без объявления колонок: источники "
+                f"{non_platform_sources}; в BSL нет Колонки.Добавить, "
+                f"UUID-привязки в TF отсутствуют — восстанавливать нечего"
             ),
         )
 
-    # Если вдруг попали сюда — слоты есть, но форма всё равно не проиндексирована.
-    # Это неожиданный случай, логируем как UNKNOWN.
+    if not (bsl_sources & tf_sources_lower) and not any(
+        s.lower() in tf_sources_lower for s in bsl_sources
+    ):
+        return UnindexedResult(
+            reason=UnindexedReason.TABULAR_FIELD_BSL_SOURCE_MISMATCH,
+            detail=(
+                f"Колонки в BSL объявлены у другого объекта: "
+                f"TF-источники {non_platform_sources}, "
+                f"BSL-источники {sorted(bsl_sources)} — "
+                f"сопоставление дало бы ложные колонки"
+            ),
+        )
+
+    src_label = (
+        "(динамический список B1a)"
+        if all(s in {"СправочникСписок", "СправочникДерево", "ДеревоГрупп",
+                     "Список", "СписокХарактеристикиНоменклатуры"}
+               for s in non_platform_sources)
+        else "(программные ТЗ/ДЗ B2)"
+    )
     return UnindexedResult(
-        reason=UnindexedReason.UNKNOWN,
+        reason=UnindexedReason.TABULAR_FIELD_NO_UUID_HITS,
         detail=(
-            f"TabularField разрешён ({len(slots)} слотов), "
-            f"но форма не проиндексирована — неизвестная причина"
+            f"TabularField в {legacy_path.name}: источники {non_platform_sources} "
+            f"{src_label}; "
+            f"{unresolved_uuids_count} UUID вне attr_map и вне служебных; "
+            f"attr_map содержит {len(attr_map)} реквизитов"
         ),
     )
 
@@ -238,7 +471,6 @@ _PAGE_LIST_KEY = "-pages-"
 
 _NULL_UUID = "00000000-0000-0000-0000-000000000000"
 _OBJECT_PREFIX = "Объект"
-# Префикс пути для колонок форм-списков (ФормаСписка / ФормаВыбора)
 _LIST_PREFIX = "Список"
 
 
@@ -260,10 +492,7 @@ _LEGACY_WIDGET_TYPE_NAMES: dict[str, str] = {
 # Константы для разбора форм-списков с TabularField (issue #103)
 # ---------------------------------------------------------------------------
 
-# UUID виджета TabularField (поле табличного представления, форма-список)
 _TABULAR_FIELD_UUID = "ea83fe3a-ac3c-4cce-8045-3dddf35b28b1"
-
-# Тег '"Pattern"' внутри tf[2][1][0] — маркер паттерн-блока
 _TABULAR_PATTERN_TAG = '"Pattern"'
 
 
@@ -288,8 +517,7 @@ def _collect_attribute_uuid_map(node: object, out: dict[str, str]) -> None:
     """Устаревший вспомогательный обходчик header.
 
     Оставлен для совместимости. UUID-карта теперь строится через
-    :func:`load_owner_attribute_map`, которая делегирует работу
-    :func:`v8unpack_agent.object_decoder.decode_object_attributes`.
+    :func:`load_owner_attribute_map`.
     """
     if isinstance(node, list):
         if len(node) >= 3 and isinstance(node[1], list) and len(node[1]) >= 3:
@@ -317,16 +545,11 @@ def _collect_uuids(node: object, out: list[str]) -> None:
 
 
 def _is_common_form(form_root: Path) -> bool:
-    """Общая форма не имеет объекта-владельца и его карты реквизитов."""
     return "CommonForm" in form_root.parts
 
 
 def _find_owner_metadata_json(form_root: Path) -> Path | None:
-    """Найти ``<Type>.json`` владельца без фиксированного списка типов.
-
-    Для пути ``.../<Type>/<Object>/<FormKind>/<Form>`` файл владельца лежит
-    в ``.../<Type>/<Object>/<Type>.json``.
-    """
+    """Найти ``<Type>.json`` владельца без фиксированного списка типов."""
     for parent in form_root.parents:
         if parent.parent == parent:
             break
@@ -337,7 +560,12 @@ def _find_owner_metadata_json(form_root: Path) -> Path | None:
 
 
 def load_owner_attribute_map(form_root: Path, warnings: list[str]) -> dict[str, str]:
-    """Карта ``uuid реквизита -> имя`` из метаданных объекта-владельца формы."""
+    """Карта ``uuid реквизита -> имя`` из метаданных объекта-владельца формы.
+
+    Помимо пользовательских реквизитов (Properties, TabularSections)
+    дописывает стандартные реквизиты из фиксированных позиций header
+    (issue #107): для Catalog — «Наименование» (pos 7) и «Код» (pos 8).
+    """
     path = _find_owner_metadata_json(form_root)
     if path is None:
         if not _is_common_form(form_root):
@@ -364,6 +592,11 @@ def load_owner_attribute_map(form_root: Path, warnings: list[str]) -> dict[str, 
             name = prop.get("Name") or ""
             if uuid and name:
                 mapping.setdefault(uuid, name)
+
+    # issue #107: дописываем стандартные реквизиты из data["header"][0][1][7/8]
+    # через setdefault — не затираем данные декодера
+    for uuid, attr_name in _standard_attribute_map(path).items():
+        mapping.setdefault(uuid, attr_name)
 
     if not mapping:
         warnings.append(
@@ -392,8 +625,8 @@ def _tabular_field_attribute_slots(
     """Упорядоченные привязки реквизитов внутри TabularField.
 
     При наличии блока ``20`` используются только его однозначные слоты.
-    Универсальный fallback по ссылкам ``["0", UUID]`` применяется только
-    тогда, когда блок ``20`` полностью отсутствует.
+    Ранний выход применяется только если candidates непуст — иначе
+    переходим к fallback по ссылкам ``["0", UUID]``. (issue #107)
     """
     candidates: list[list[tuple[str, str]]] = []
     has_node20 = False
@@ -419,12 +652,10 @@ def _tabular_field_attribute_slots(
 
                     for uuid in uuids:
                         name = attr_map.get(uuid)
-
                         if name and uuid not in seen:
                             seen.add(uuid)
                             hits.append((uuid, name))
 
-                    # Неоднозначный слот намеренно пропускаем.
                     if len(hits) == 1:
                         resolved.append(hits[0])
 
@@ -436,10 +667,10 @@ def _tabular_field_attribute_slots(
 
     walk_node20(tf_node)
 
-    # Блок 20 имеет приоритет. Если он найден, но не дал ни одной
-    # однозначной колонки, возвращаем пустой результат, не переходя
-    # к менее строгому рекурсивному fallback.
-    if has_node20:
+    # issue #107: ранний выход ТОЛЬКО если candidates непуст.
+    # Если блок 20 найден, но все кандидаты пусты — переходим к fallback:
+    # нужный UUID может лежать в TF в другом месте (напр. через ["0", UUID]).
+    if has_node20 and candidates:
         return max(candidates, key=len, default=[])
 
     result: list[tuple[str, str]] = []
@@ -451,16 +682,14 @@ def _tabular_field_attribute_slots(
 
         if (
             len(node) == 2
-            and node[0] == "0"
+            and node[0] in ("0", '"#"')
             and isinstance(node[1], str)
             and node[1] in attr_map
         ):
             uuid = node[1]
-
             if uuid not in seen_uuids:
                 seen_uuids.add(uuid)
                 result.append((uuid, attr_map[uuid]))
-
             return
 
         for child in node:
@@ -474,7 +703,6 @@ _LEGACY_NAME_POS = 4
 
 
 def _legacy_attribute_name(raw: object) -> str | None:
-    """Имя реквизита из ``raw[4]`` записи обычной формы."""
     if not isinstance(raw, list) or len(raw) <= _LEGACY_NAME_POS:
         return None
     node = raw[_LEGACY_NAME_POS]
@@ -486,7 +714,6 @@ def _legacy_attribute_name(raw: object) -> str | None:
 
 
 def decode_legacy_data_path(record: object) -> tuple[str | None, list[str]]:
-    """data_path элемента обычной формы по полям ``prop`` и ``raw``."""
     if not isinstance(record, dict):
         return None, []
 
@@ -506,7 +733,6 @@ def decode_legacy_data_path(record: object) -> tuple[str | None, list[str]]:
 
 
 def is_legacy_form_data(data_section: object) -> bool:
-    """Секция ``data`` принадлежит обычной, а не управляемой форме."""
     if not isinstance(data_section, dict):
         return False
     return any(
@@ -522,7 +748,6 @@ def decode_element_data_path(
     element_name: str | None = None,
     warn_empty_map: bool = True,
 ) -> tuple[str | None, list[str]]:
-    """Декодирование data_path из raw секции data."""
     if raw is None:
         return None, []
 
@@ -577,7 +802,6 @@ def decode_element_data_path(
 # ---------------------------------------------------------------------------
 
 def extract_legacy_form_elements(form_json: Any) -> list[dict]:
-    """Извлечь элементы-реквизиты из большого объектного JSON обычной формы."""
     results: list[dict] = []
     seen_names: set[str] = set()
 
@@ -615,11 +839,10 @@ def extract_legacy_form_elements(form_json: Any) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# Разбор форм-списков с TabularField (issue #103)
+# Разбор форм-списков с TabularField (issue #103, #107)
 # ---------------------------------------------------------------------------
 
 def _has_tabular_field(node: Any) -> bool:
-    """Рекурсивно проверяет наличие блока TabularField в JSON формы."""
     if isinstance(node, list):
         if node and isinstance(node[0], str) and node[0] == _TABULAR_FIELD_UUID:
             return True
@@ -629,8 +852,17 @@ def _has_tabular_field(node: Any) -> bool:
     return False
 
 
-def extract_legacy_list_form_elements(form_json: Any, obj_json: Any) -> list[dict]:
-    """Извлечь колонки TabularField из подтвержденного блока 20."""
+def extract_legacy_list_form_elements(
+    form_json: Any,
+    obj_json: Any,
+    form_root: Path | None = None,  # issue #107: опциональный BSL-путь
+) -> list[dict]:
+    """Извлечь колонки TabularField из подтвержденного блока 20.
+
+    Если UUID-слоты пусты и источник не платформенный — пытается
+    извлечь имена колонок из BSL-модуля формы (issue #107).
+    Старая двухаргументная сигнатура работает как раньше.
+    """
     if form_json is None or not isinstance(obj_json, dict):
         return []
     attr_map = obj_json.get("attr_map")
@@ -649,16 +881,31 @@ def extract_legacy_list_form_elements(form_json: Any, obj_json: Any) -> list[dic
             return
         if node and node[0] == _TABULAR_FIELD_UUID:
             source_name = _tabular_field_source_name(node)
-            for _uuid, name in _tabular_field_attribute_slots(node, attr_map):
-                if name in seen_names:
-                    continue
-                seen_names.add(name)
-                results.append({
-                    "name": name,
-                    "type": "TabularFieldColumn",
-                    "data_path": f"{source_name}.{name}",
-                    "source": "legacy_list_form_json",
-                })
+            slots = _tabular_field_attribute_slots(node, attr_map)
+            if slots:
+                for _uuid, name in slots:
+                    if name in seen_names:
+                        continue
+                    seen_names.add(name)
+                    results.append({
+                        "name": name,
+                        "type": "TabularFieldColumn",
+                        "data_path": f"{source_name}.{name}",
+                        "source": "legacy_list_form_json",
+                    })
+            elif form_root is not None and source_name not in _PLATFORM_DYNAMIC_SOURCE_NAMES:
+                # issue #107: fallback на BSL-парсер колонок
+                bsl_columns = _extract_bsl_column_names(form_root, source_name)
+                for col_name in bsl_columns:
+                    if col_name in seen_names:
+                        continue
+                    seen_names.add(col_name)
+                    results.append({
+                        "name": col_name,
+                        "type": "TabularFieldColumn",
+                        "data_path": f"{source_name}.{col_name}",
+                        "source": "legacy_list_form_bsl",
+                    })
             return
         for child in node:
             walk(child)
@@ -666,8 +913,8 @@ def extract_legacy_list_form_elements(form_json: Any, obj_json: Any) -> list[dic
     walk(form_json)
     return results
 
+
 def _find_legacy_form_json(form_root: Path) -> Path | None:
-    """Найти большой объектный *.json обычной формы."""
     candidates = [
         p for p in form_root.glob("*.json")
         if not p.name.endswith(".elem.json")
@@ -709,17 +956,17 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
                     legacy_json_path.read_text(encoding="utf-8-sig")
                 )
 
-                # --- Фолбэк #103: TabularField ---
+                # --- Фолбэк #103/#107: TabularField ---
                 if _has_tabular_field(legacy_data):
                     if attribute_map:
-                        # Передаём attr_map явно через ключ "attr_map"
+                        # issue #107: передаём form_root для BSL-fallback
                         list_elements = extract_legacy_list_form_elements(
-                            legacy_data, {"attr_map": attribute_map}
+                            legacy_data, {"attr_map": attribute_map}, form_root
                         )
                         if list_elements:
                             warnings.append(
                                 f"elem.json пуст, колонки TabularField извлечены из "
-                                f"{legacy_json_path.name} (issue #103): "
+                                f"{legacy_json_path.name} (issue #103/#107): "
                                 f"{len(list_elements)} эл."
                             )
                             elements = list_elements
