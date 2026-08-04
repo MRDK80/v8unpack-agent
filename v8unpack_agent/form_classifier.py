@@ -50,6 +50,19 @@ production (2231 форма) показала, что пустой tree НЕ о�
 структуру формы: ложное отнесение объектной формы к SERVICE исключило бы
 её из метрики покрытия и скрыло реальную проблему парсера.
 
+Формы без виджетов данных (NO_TABULAR_NO_WIDGETS)
+--------------------------------------------------
+Отдельный случай: ``classify_unindexed_form`` вернул
+``UnindexedReason.NO_TABULAR_NO_WIDGETS`` — legacy JSON читается, но не
+содержит ни TabularField, ни InputField/ComboBox. В отличие от пустого
+тree, здесь отсутствие виджетов **структурно подтверждено** парсером.
+
+:func:`classify_no_widgets_form` использует это дополнительное условие,
+чтобы безопасно выдавать SERVICE для форм с именами из
+:data:`EMPTY_TREE_NAME_HINTS` или :data:`SERVICE_FORM_NAME_PATTERNS`:
+визуальная проверка 17 production-форм подтвердила, что все они —
+диалоги, информационные и настроечные формы без полей данных.
+
 OS-нейтральность, кодировка UTF-8.
 """
 from __future__ import annotations
@@ -120,6 +133,9 @@ PLATFORM_OBJECT_FORM_NAMES: frozenset[str] = frozenset({
 # Причина: ФормаНастройки отчёта — это полноценная форма настроек СКД
 # с полями данных, а не диалог. ФормаОтбора и ФормаВыбора также могут
 # содержать привязки. Без разметки решение принять нельзя.
+#
+# Исключение: при UnindexedReason.NO_TABULAR_NO_WIDGETS структурное
+# подтверждение предоставляет elem_parser — см. classify_no_widgets_form.
 EMPTY_TREE_NAME_HINTS: tuple[str, ...] = (
     "форма",           # ФормаЗапросаПерезаписиФайлов, ФормаНастройки, ФормаОтбора
     "редактирование",  # РедактированиеДокументаУдостоверяющегоЛичность
@@ -258,6 +274,61 @@ def classify_empty_tree_form(form_name: str) -> tuple[FormClass, str]:
 
 
 # ---------------------------------------------------------------------------
+# Классификация форм без виджетов данных (issue #109)
+# ---------------------------------------------------------------------------
+
+def classify_no_widgets_form(
+    form_name: str,
+    reason: object,
+) -> FormClass:
+    """Cклассифицировать форму, у которой структурно подтверждено отсутствие
+    виджетов данных (``UnindexedReason.NO_TABULAR_NO_WIDGETS``).
+
+    В отличие от :func:`classify_empty_tree_form`, здесь
+    ``elem_parser.classify_unindexed_form`` уже установил, что legacy JSON
+    читается корректно и не содержит ни TabularField, ни InputField/ComboBox.
+    Это структурное доказательство, а не предположение по имени.
+
+    Правило (оба условия обязательны):
+
+    1. ``reason == UnindexedReason.NO_TABULAR_NO_WIDGETS``
+    2. ``classify_empty_tree_form(form_name)`` возвращает причину
+       ``"by_service_pattern"`` или ``"empty_tree_name_hint"``
+
+    → :data:`FormClass.SERVICE`
+
+    Возвращает :data:`FormClass.UNKNOWN` если:
+    - ``reason != NO_TABULAR_NO_WIDGETS``
+    - имя пустое или не передано
+    - имя даёт ``"platform_object_name_unparsed"`` (объектная форма платформы)
+    - имя даёт ``"unparsed_empty_tree"`` (неизвестный паттерн — не угадываем)
+
+    Параметры
+    ----------
+    form_name:
+        Короткое имя формы (лист-часть пути).
+    reason:
+        Результат ``classify_unindexed_form().reason``
+        (``UnindexedReason`` enum). Принимается как ``object`` для
+        избежания циклического импорта; сравнивается по значению.
+    """
+    # Импорт здесь для избежания циклической зависимости на уровне модулей.
+    # elem_parser импортирует form_classifier, поэтому form_classifier
+    # не должен импортировать elem_parser на верхнем уровне.
+    from v8unpack_agent.elem_parser import UnindexedReason  # noqa: PLC0415
+
+    if reason is not UnindexedReason.NO_TABULAR_NO_WIDGETS:
+        return FormClass.UNKNOWN
+
+    _form_class, hint_reason = classify_empty_tree_form(form_name)
+
+    if hint_reason in ("by_service_pattern", "empty_tree_name_hint"):
+        return FormClass.SERVICE
+
+    return FormClass.UNKNOWN
+
+
+# ---------------------------------------------------------------------------
 # Классификация по структуре привязок
 # ---------------------------------------------------------------------------
 
@@ -327,6 +398,9 @@ def classify_form(
     -----
     Для форм с пустым ``tree`` используйте :func:`classify_empty_tree_form` —
     она даёт диагностическую причину вместо голого UNKNOWN.
+    Для форм с ``UnindexedReason.NO_TABULAR_NO_WIDGETS`` используйте
+    :func:`classify_no_widgets_form` — она учитывает структурное
+    подтверждение от elem_parser.
     """
     elements = list(elements)
 
