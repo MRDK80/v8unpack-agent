@@ -71,7 +71,12 @@ import re
 from typing import Any
 
 from v8unpack_agent.object_decoder import decode_object_attributes
-
+from v8unpack_agent.chain_data_path import (  # noqa: F401  # реэкспорт для #89
+    build_form_attribute_ids,
+    build_form_segment_tables,
+    decode_chain_data_path,
+    enrich_elements_with_chain_paths,
+)
 
 @dataclass
 class ElemIndexResult:
@@ -965,6 +970,12 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
         )
     except Exception as exc:
         return ElemIndexResult(False, [], [f"Не удалось разобрать {elem_path}: {exc}"])
+
+    if elements:
+        try:
+            enrich_elements_with_chain_paths(form_root, data, elements, warnings)
+        except Exception as exc:  # noqa: BLE001
+            warnings.append(f"chain_data_path: не удалось разобрать цепочки: {exc}")
 
     if not elements:
         legacy_json_path = _find_legacy_form_json(form_root)
