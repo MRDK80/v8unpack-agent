@@ -162,7 +162,6 @@ _PLATFORM_DYNAMIC_SOURCE_NAMES: frozenset[str] = frozenset({
 
 def _owner_type_name(owner_json_path: Path) -> str | None:
     """Тип объекта-владельца из имени его JSON-файла (например 'Catalog')."""
-    # Файл лежит в .../Catalog/ИмяСправочника/Catalog.json
     stem = owner_json_path.stem  # 'Catalog'
     return stem if stem else None
 
@@ -170,8 +169,13 @@ def _owner_type_name(owner_json_path: Path) -> str | None:
 def _standard_attribute_map(owner_json_path: Path) -> dict[str, str]:
     """Стандартные реквизиты объекта из фиксированных позиций header.
 
-    Для Catalog.json: header[0][1][7] = UUID «Наименование»,
-    header[0][1][8] = UUID «Код».
+    Для Catalog.json: data["header"][0][1][7] = UUID «Наименование»,
+    data["header"][0][1][8] = UUID «Код».
+
+    Catalog.json имеет структуру словаря с ключом "header", а НЕ список:
+      {"name": ..., "header": [[uuid, [uuid, ...]], ...], ...}
+    Поэтому используется data["header"][0][1], а НЕ data[0][1].
+
     Возвращает пустой dict если тип не поддерживается или структура
     не соответствует ожидаемой.
     """
@@ -180,7 +184,7 @@ def _standard_attribute_map(owner_json_path: Path) -> dict[str, str]:
         return {}
     try:
         data = json.loads(owner_json_path.read_text(encoding="utf-8-sig"))
-        header_row = data[0][1]  # header[0][1]
+        header_row = data["header"][0][1]  # dict → ключ "header", затем [0][1]
         result: dict[str, str] = {}
         for pos, attr_name in _STD_ATTR_HEADER_POSITIONS.items():
             uuid = header_row[pos]
@@ -230,7 +234,6 @@ def _extract_bsl_column_names(
     seen: set[str] = set()
     for match in _BSL_COLUMN_ADD_RE.finditer(text):
         src, col_name = match.group(1), match.group(2)
-        # Сравниваем без учёта регистра, оба могут быть любого регистра
         if src.lower() == source_name.lower() and col_name not in seen:
             seen.add(col_name)
             columns.append(col_name)
@@ -365,7 +368,6 @@ def _classify_unindexed_form_impl(form_root: Path) -> UnindexedResult:
                     f"но форма не проиндексирована — неизвестная причина"
                 ),
             )
-        # Считаем UUID вне служебных для детализации
         uuids: list[str] = []
         _collect_uuids(tf, uuids)
         unresolved = [
@@ -544,7 +546,7 @@ def load_owner_attribute_map(form_root: Path, warnings: list[str]) -> dict[str, 
             if uuid and name:
                 mapping.setdefault(uuid, name)
 
-    # issue #107: дописываем стандартные реквизиты из header[7/8]
+    # issue #107: дописываем стандартные реквизиты из data["header"][0][1][7/8]
     # через setdefault — не затираем данные декодера
     for uuid, attr_name in _standard_attribute_map(path).items():
         mapping.setdefault(uuid, attr_name)
