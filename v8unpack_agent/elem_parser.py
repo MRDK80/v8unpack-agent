@@ -88,32 +88,31 @@ class UnindexedReason(enum.Enum):
     """Причина, по которой форма не была проиндексирована.
 
     Приоритеты (от высшего к низшему):
-      D — нет большого *.json (нечего разбирать)
-      A — TabularField есть, но attr_map пуста (object_decoder не распознал layout)
-      B — TabularField есть, attr_map непустая, но UUID колонок не совпадают
-      C — нет ни TabularField, ни InputField/ComboBox (норма: регистры, сервисные формы)
+      D  — нет большого *.json (нечего разбирать)
+      A2 — CommonForm с TabularField: объекта-владельца нет по дизайну (issue #108)
+      A  — TabularField есть, но attr_map пуста (object_decoder не распознал layout)
+      B  — TabularField есть, attr_map непустая, но UUID колонок не совпадают
+      C  — нет ни TabularField, ни InputField/ComboBox (норма: регистры, сервисные формы)
       PLATFORM_DYNAMIC — все TF-источники платформенные (wontfix by design)
       PROGRAMMATIC_NO_DEFS — программная ТЗ/ДЗ, колонки нигде не объявлены:
         ни UUID в TF, ни Колонки.Добавить в BSL
       BSL_SOURCE_MISMATCH — колонки в BSL объявлены, но у другого источника
         (напр. ВыбранныеСтроки vs ТабличноеПоле); матчинг дал бы фантомы
 
-    Распределение по live-базе после патча #107 (2216 форм, 2026-08-04):
+    Распределение по live-базе после патча #108:
       OK: 2169 (97.9%), C: 17, BSL_SOURCE_MISMATCH: 11,
-      PROGRAMMATIC_NO_DEFS: 8, PLATFORM_DYNAMIC: 7, A: 4, B: 0, D: 0
-
-    Категория B обнулена. +26 OK дало распознавание Pattern-ссылок
-    ["#", UUID] в walk_refs; оставшиеся 19 форм получили точные резоны
-    вместо общего «UUID колонок не совпадают».
+      PROGRAMMATIC_NO_DEFS: 8, PLATFORM_DYNAMIC: 7,
+      NO_OWNER_OBJECT: 2, A: 2, B: 0, D: 0
     """
-    TABULAR_FIELD_EMPTY_ATTR_MAP    = "tabular_field_empty_attr_map"    # A
-    TABULAR_FIELD_NO_UUID_HITS      = "tabular_field_no_uuid_hits"      # B
-    TABULAR_FIELD_PLATFORM_DYNAMIC  = "tabular_field_platform_dynamic"  # issue #107
-    TABULAR_FIELD_PROGRAMMATIC_NO_DEFS = "tabular_field_programmatic_no_defs"  # B-noop
-    TABULAR_FIELD_BSL_SOURCE_MISMATCH  = "tabular_field_bsl_source_mismatch"   # B-noop
-    NO_TABULAR_NO_WIDGETS           = "no_tabular_no_widgets"           # C
-    NO_LEGACY_JSON                  = "no_legacy_json"                  # D
-    UNKNOWN                         = "unknown"
+    TABULAR_FIELD_EMPTY_ATTR_MAP       = "tabular_field_empty_attr_map"       # A
+    TABULAR_FIELD_NO_UUID_HITS         = "tabular_field_no_uuid_hits"         # B
+    TABULAR_FIELD_PLATFORM_DYNAMIC     = "tabular_field_platform_dynamic"     # issue #107
+    TABULAR_FIELD_PROGRAMMATIC_NO_DEFS = "tabular_field_programmatic_no_defs" # B-noop
+    TABULAR_FIELD_BSL_SOURCE_MISMATCH  = "tabular_field_bsl_source_mismatch"  # B-noop
+    NO_TABULAR_NO_WIDGETS              = "no_tabular_no_widgets"              # C
+    NO_LEGACY_JSON                     = "no_legacy_json"                     # D
+    NO_OWNER_OBJECT                    = "no_owner_object"                    # A2 issue #108
+    UNKNOWN                            = "unknown"
 
 
 @dataclass
@@ -312,6 +311,19 @@ def _classify_unindexed_form_impl(form_root: Path) -> UnindexedResult:
             detail=(
                 f"TabularField и InputField/ComboBox не найдены "
                 f"в {legacy_path.name} — форма без виджетов данных"
+            ),
+        )
+
+    # --- шаг 2a: CommonForm — объекта-владельца нет по дизайну (issue #108) ---
+    # Проверяем ДО attr_map: отсутствие владельца — не дефект декодера,
+    # а архитектурная особенность. Это вычищает CommonForm из счётчика A.
+    if _is_common_form(form_root):
+        return UnindexedResult(
+            reason=UnindexedReason.NO_OWNER_OBJECT,
+            detail=(
+                f"CommonForm не имеет объекта-владельца по дизайну платформы 1С; "
+                f"TabularField найден в {legacy_path.name}, "
+                f"но attr_map строить не из чего — это норма, не дефект"
             ),
         )
 
