@@ -263,6 +263,34 @@ Empty-tree формы (80) — причины классификации:
 Классификатор эту проблему не решает и не должен: его задача — не скрыть её.
 
 
+### classify_no_widgets_form
+
+Точка входа для форм категории `NO_TABULAR_NO_WIDGETS` (#109).
+Принимает `form_name` и `reason`; возвращает `FormClass`.
+
+```python
+from v8unpack_agent.form_classifier import classify_no_widgets_form
+from v8unpack_agent.elem_parser import UnindexedReason
+
+fc = classify_no_widgets_form(
+    form_name="ФормаПечати",
+    reason=UnindexedReason.NO_TABULAR_NO_WIDGETS,
+)
+# FormClass.SERVICE
+```
+
+**Правило (оба условия обязательны):**
+1. `reason == UnindexedReason.NO_TABULAR_NO_WIDGETS`
+2. `classify_empty_tree_form(form_name)` → `"by_service_pattern"` или `"empty_tree_name_hint"`
+
+**Возвращает `UNKNOWN` если:**
+- `reason != NO_TABULAR_NO_WIDGETS`
+- Пустое имя
+- Имя даёт `"platform_object_name_unparsed"` (`ФормаЗаписи`, `Форма` и т.п.)
+- Имя даёт `"unparsed_empty_tree"` (неизвестный паттерн)
+
+`classify_form` и `classify_empty_tree_form` **не изменены**.
+
 ## Связь с диагностикой неиндексируемых форм (#105)
 
 Формы с пустым `tree`, которые не подняли fallback #100 и #103, получают
@@ -274,7 +302,9 @@ Empty-tree формы (80) — причины классификации:
 12 с пустой картой реквизитов владельца.
 
 Перевод 17 форм категории `NO_TABULAR_NO_WIDGETS` из `unknown` в `service`
-рассматривается в #109: это формы печати, настроек и диалоги, у которых
-отсутствие привязок к `Объект.*` — норма, а не пробел парсера. До принятия
-решения `classify_empty_tree_form()` не расширяется: `SERVICE` по-прежнему
-выдаётся только при совпадении с проверенным `SERVICE_FORM_NAME_PATTERNS`.
+реализован в #109 (PR #111) через новую функцию `classify_no_widgets_form()`.
+`classify_empty_tree_form()` не расширялась: `SERVICE` по-прежнему выдаётся
+только при совпадении с проверенным `SERVICE_FORM_NAME_PATTERNS`.
+
+Production-результат (#109): 17/17 форм → `SERVICE`, 0 ложных SERVICE,
+0 исключений. Полный прогон: **542 теста**, 0 регрессий.

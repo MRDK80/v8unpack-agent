@@ -5,6 +5,20 @@
 
 ## [Unreleased]
 
+### Added
+
+- **`form_classifier.classify_no_widgets_form(form_name, reason) -> FormClass`** —
+  новая точка входа для форм с `UnindexedReason.NO_TABULAR_NO_WIDGETS`.
+  Возвращает `FormClass.SERVICE`, когда имя совпадает с проверенным паттерном
+  или `classify_empty_tree_form` возвращает `by_service_pattern` /
+  `empty_tree_name_hint`; иначе `UNKNOWN`. Ни одна форма с
+  `platform_object_name_unparsed` не получает `SERVICE`.
+  17 форм live-базы переведены из `UNKNOWN` → `SERVICE` (issue #109, PR #111).
+- **`tests/test_form_classifier_issue109.py`** — 37 тестов (TDD RED→GREEN):
+  17 параметризованных сервисных форм, граничные случаи (`ФормаЗаписи`,
+  `Форма`, пустое имя, неизвестный паттерн), детерминизм, иммутабельность,
+  регрессии `classify_form` и `classify_empty_tree_form` (issue #109, PR #111).
+
 ### Fixed
 
 - **`elem_parser._standard_attribute_map`** читала `data[0][1]` вместо
