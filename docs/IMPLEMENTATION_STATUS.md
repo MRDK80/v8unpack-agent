@@ -90,7 +90,7 @@
   исключения не пробрасываются (issue #105, PR #106).
 - Верификация #105 на 2216 формах: проиндексировано 2169 (97.9%),
   неиндексировано 47 — `NO_TABULAR_NO_WIDGETS` 17, `TABULAR_FIELD_BSL_SOURCE_MISMATCH` 11, `TABULAR_FIELD_PROGRAMMATIC_NO_DEFS` 8, `TABULAR_FIELD_PLATFORM_DYNAMIC` 7,
-  `TABULAR_FIELD_EMPTY_ATTR_MAP` 4, `NO_LEGACY_JSON` 0, `UNKNOWN` 0.
+  `TABULAR_FIELD_EMPTY_ATTR_MAP` 2, `NO_LEGACY_JSON` 0, `UNKNOWN` 0.
   Категория A целиком — `CommonForm` и `ChartOfCharacteristicType`:
   у `CommonForm` объекта-владельца нет, пустая карта реквизитов правомерна.
   17 тестов в `tests/test_elem_parser_issue105.py`, полная регрессия зелёная.
