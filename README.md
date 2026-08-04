@@ -129,6 +129,7 @@ index.save(Path("forms_index.json"))
 - [`examples/coverage_metric.py`](examples/coverage_metric.py) — расчёт покрытия `data_path` только по элементам данных, классификация объектных и сервисных форм и JSON-отчёт (`CoverageReport`, issues #90, #98).
 - [`examples/extract_skd_queries.py`](examples/extract_skd_queries.py) — извлечение запросов СКД из распакованного внешнего отчёта.
 - [`examples/legacy_list_form_bindings.py`](examples/legacy_list_form_bindings.py) — извлечение подтверждённых привязок колонок legacy `ФормаСписка` / `ФормаВыбора` через fallback `TabularField` (#103).
+- [`examples/unindexed_forms_report.py`](examples/unindexed_forms_report.py) — отчёт по причинам, из-за которых форма осталась с `elem_index_ok=False`: `UnindexedReason` и `classify_unindexed_form()` (#105).
 
 ## Классификация форм
 
@@ -161,7 +162,7 @@ print(report.coverage_pct) # 78.6
 |---|---|---|
 | `object` | Есть `data_path`, начинающийся с `Объект.` | Входит в агрегированное покрытие |
 | `service` | Имя из `SERVICE_FORM_NAME_PATTERNS` либо ни одной привязки `Объект.*` | Считается отдельно |
-| `unknown` | Элементы не извлечены из `.elem.json` | Исключена из знаменателя |
+| `unknown` | Элементы не извлечены из `.elem.json`; причину даёт `classify_unindexed_form()` (#105) | Исключена из знаменателя |
 
 Критерии объединяются по OR: достаточно одного признака, чтобы форма
 считалась сервисной. Широкие префиксы вроде `форма` в список паттернов

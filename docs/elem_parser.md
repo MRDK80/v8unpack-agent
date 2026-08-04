@@ -292,9 +292,68 @@ Fallback #103 подтверждён для `AccumulationRegister`, `Catalog`,
 
 Оставшиеся 77 форм используют другие структуры, не имеют UUID-попаданий
 в карте владельца, имеют пустую карту реквизитов либо вообще не содержат
-`TabularField`. Их исследование вынесено в
-[#105](https://github.com/MRDK80/v8unpack-agent/issues/105); менее строгие
-эвристики намеренно не добавляются.
+`TabularField`. Их причины классифицированы в
+[#105](https://github.com/MRDK80/v8unpack-agent/issues/105) — см. раздел ниже;
+менее строгие эвристики намеренно не добавляются.
+
+## Классификация неиндексируемых форм (#105)
+
+Если `parse_elem_json()` вернул `elem_index_ok=False`, причину можно получить
+отдельным вызовом. Функция диагностическая: она не добавляет элементов,
+не создаёт `data_path` и не изменяет переданный результат.
+
+```python
+from v8unpack_agent.elem_parser import (
+    parse_elem_json, classify_unindexed_form, UnindexedReason,
+)
+
+result = parse_elem_json(form_root)
+if not result.elem_index_ok:
+    info = classify_unindexed_form(form_root, result)
+    print(info.reason, info.detail)
+```
+
+### Причины и порядок проверки
+
+Проверки выполняются строго сверху вниз — первое совпадение выигрывает:
+
+| # | Условие | `UnindexedReason` | Смысл |
+|---|---|---|---|
+| 1 | `_find_legacy_form_json()` → `None` | `NO_LEGACY_JSON` (D) | Рядом с `.elem.json` нет большого JSON формы |
+| 2 | `_has_tabular_field()` → `False` | `NO_TABULAR_NO_WIDGETS` (C) | Нет ни `TabularField`, ни `InputField`/`ComboBox` — форма без виджетов данных |
+| 3 | `load_owner_attribute_map()` → `{}` | `TABULAR_FIELD_EMPTY_ATTR_MAP` (A) | `TabularField` есть, но карта реквизитов владельца пуста |
+| 4 | `_tabular_field_attribute_slots()` → `[]` | `TABULAR_FIELD_NO_UUID_HITS` (B) | Карта непуста, но UUID колонок в неё не попадают |
+| 5 | слоты есть, форма не проиндексирована | `UNKNOWN` | Непокрытый сценарий, требует разбора |
+
+`classify_unindexed_form()` — тонкая обёртка над
+`_classify_unindexed_form_impl()`: любое исключение внутри превращается
+в `UNKNOWN` с диагностикой в `detail`. Вызов безопасен на несуществующей
+директории.
+
+### Распределение на реальной конфигурации
+
+УТ 10.3, 2216 форм: проиндексировано 2139 (96.5%), неиндексировано 77.
+
+| Причина | Форм | Типичные представители |
+|---|---:|---|
+| `NO_TABULAR_NO_WIDGETS` (C) | 17 | `CommonForm/ФормаРедактированияТекста`, `Document/ЭлектронноеПисьмо/.../ФормаПечати`, формы обработок |
+| `TABULAR_FIELD_NO_UUID_HITS` (B) | 48 | `ФормаВыбораГруппы` справочников, `ФормаВыбора` отчётов и обработок |
+| `TABULAR_FIELD_EMPTY_ATTR_MAP` (A) | 12 | `CommonForm/*`, `ChartOfCharacteristicType/*` |
+| `NO_LEGACY_JSON` (D) | 0 | — |
+| `UNKNOWN` | 0 | — |
+
+Категория **A** целиком приходится на `CommonForm` и
+`ChartOfCharacteristicType`. У `CommonForm` объекта-владельца нет вовсе,
+поэтому пустая карта реквизитов — корректный результат, а не сбой декодера;
+отдельная причина `NO_OWNER_OBJECT` вынесена в #108.
+
+Категория **C** — норма: печатные формы, формы настроек и диалоги
+не содержат виджетов данных. Перевод их из `unknown` в `service`
+вынесен в #109.
+
+Категория **B** — единственная, где вероятен реальный пробел: UUID колонок,
+скорее всего, указывают на реквизиты табличных частей владельца
+(`TabularSections[].Properties`) или на независимые значения (#107).
 
 ## Схлопывание одноимённых записей
 
@@ -338,5 +397,8 @@ Fallback #103 подтверждён для `AccumulationRegister`, `Catalog`,
 | [#98](https://github.com/MRDK80/v8unpack-agent/issues/98) | Классификация форм: объектные vs. сервисные | closed, PR #99 |
 | [#100](https://github.com/MRDK80/v8unpack-agent/issues/100) | `extract_legacy_form_elements`: fallback для ФормаЗаписи/ФормаЭлемента с пустым `tree` | closed, PR #102 |
 | [#103](https://github.com/MRDK80/v8unpack-agent/issues/103) | `ФормаСписка`/`ФормаВыбора`: безопасное извлечение колонок `TabularField` | implemented |
-| [#105](https://github.com/MRDK80/v8unpack-agent/issues/105) | Классификация оставшихся 77 неиндексируемых форм | open |
+| [#105](https://github.com/MRDK80/v8unpack-agent/issues/105) | Классификация оставшихся 77 неиндексируемых форм (`UnindexedReason`) | implemented, PR #106 |
+| [#107](https://github.com/MRDK80/v8unpack-agent/issues/107) | Категория B: UUID колонок в реквизитах табличных частей | open |
+| [#108](https://github.com/MRDK80/v8unpack-agent/issues/108) | Категория A: layout `ChartOfCharacteristicType`, `CommonForm` без владельца | open |
+| [#109](https://github.com/MRDK80/v8unpack-agent/issues/109) | Категория C: формы без виджетов данных → `service` | open |
 | [#88](https://github.com/MRDK80/v8unpack-agent/issues/88) | Приведение `Ref#uuid` к имени объекта метаданных | open |
