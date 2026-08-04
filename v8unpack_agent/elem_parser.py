@@ -88,32 +88,31 @@ class UnindexedReason(enum.Enum):
     """Причина, по которой форма не была проиндексирована.
 
     Приоритеты (от высшего к низшему):
-      D — нет большого *.json (нечего разбирать)
-      A — TabularField есть, но attr_map пуста (object_decoder не распознал layout)
-      B — TabularField есть, attr_map непустая, но UUID колонок не совпадают
-      C — нет ни TabularField, ни InputField/ComboBox (норма: регистры, сервисные формы)
+      D  — нет большого *.json (нечего разбирать)
+      A2 — CommonForm с TabularField: объекта-владельца нет по дизайну (issue #108)
+      A  — TabularField есть, но attr_map пуста (object_decoder не распознал layout)
+      B  — TabularField есть, attr_map непустая, но UUID колонок не совпадают
+      C  — нет ни TabularField, ни InputField/ComboBox (норма: регистры, сервисные формы)
       PLATFORM_DYNAMIC — все TF-источники платформенные (wontfix by design)
       PROGRAMMATIC_NO_DEFS — программная ТЗ/ДЗ, колонки нигде не объявлены:
         ни UUID в TF, ни Колонки.Добавить в BSL
       BSL_SOURCE_MISMATCH — колонки в BSL объявлены, но у другого источника
         (напр. ВыбранныеСтроки vs ТабличноеПоле); матчинг дал бы фантомы
 
-    Распределение по live-базе после патча #107 (2216 форм, 2026-08-04):
+    Распределение по live-базе после патча #108:
       OK: 2169 (97.9%), C: 17, BSL_SOURCE_MISMATCH: 11,
-      PROGRAMMATIC_NO_DEFS: 8, PLATFORM_DYNAMIC: 7, A: 4, B: 0, D: 0
-
-    Категория B обнулена. +26 OK дало распознавание Pattern-ссылок
-    ["#", UUID] в walk_refs; оставшиеся 19 форм получили точные резоны
-    вместо общего «UUID колонок не совпадают».
+      PROGRAMMATIC_NO_DEFS: 8, PLATFORM_DYNAMIC: 7,
+      NO_OWNER_OBJECT: 2, A: 2, B: 0, D: 0
     """
-    TABULAR_FIELD_EMPTY_ATTR_MAP    = "tabular_field_empty_attr_map"    # A
-    TABULAR_FIELD_NO_UUID_HITS      = "tabular_field_no_uuid_hits"      # B
-    TABULAR_FIELD_PLATFORM_DYNAMIC  = "tabular_field_platform_dynamic"  # issue #107
-    TABULAR_FIELD_PROGRAMMATIC_NO_DEFS = "tabular_field_programmatic_no_defs"  # B-noop
-    TABULAR_FIELD_BSL_SOURCE_MISMATCH  = "tabular_field_bsl_source_mismatch"   # B-noop
-    NO_TABULAR_NO_WIDGETS           = "no_tabular_no_widgets"           # C
-    NO_LEGACY_JSON                  = "no_legacy_json"                  # D
-    UNKNOWN                         = "unknown"
+    TABULAR_FIELD_EMPTY_ATTR_MAP       = "tabular_field_empty_attr_map"       # A
+    TABULAR_FIELD_NO_UUID_HITS         = "tabular_field_no_uuid_hits"         # B
+    TABULAR_FIELD_PLATFORM_DYNAMIC     = "tabular_field_platform_dynamic"     # issue #107
+    TABULAR_FIELD_PROGRAMMATIC_NO_DEFS = "tabular_field_programmatic_no_defs" # B-noop
+    TABULAR_FIELD_BSL_SOURCE_MISMATCH  = "tabular_field_bsl_source_mismatch"  # B-noop
+    NO_TABULAR_NO_WIDGETS              = "no_tabular_no_widgets"              # C
+    NO_LEGACY_JSON                     = "no_legacy_json"                     # D
+    NO_OWNER_OBJECT                    = "no_owner_object"                    # A2 issue #108
+    UNKNOWN                            = "unknown"
 
 
 @dataclass
@@ -127,14 +126,20 @@ class UnindexedResult:
 # Константы для стандартных реквизитов и служебных UUID (issue #107)
 # ---------------------------------------------------------------------------
 
-# Позиции стандартных реквизитов в header[0][1] для объектов Catalog
-# header[7] = UUID «Наименование», header[8] = UUID «Код»
-# Проверено на 5 справочниках: Валюты, ЛичныеКонтакты, Номенклатура,
-# Контрагенты, Подразделения.
+# Позиции стандартных реквизитов в header[0][1].
+# header[7] = UUID «Наименование», header[8] = UUID «Код».
+# Проверено на Catalog (Валюты, ЛичныеКонтакты, Номенклатура, Контрагенты,
+# Подразделения) и ChartOfCharacteristicType (НазначенияСвойствКатегорийОбъектов,
+# НастройкиПользователей) — позиции идентичны у обоих типов объектов.
 _STD_ATTR_HEADER_POSITIONS: dict[int, str] = {7: "Наименование", 8: "Код"}
 
-# Типы объектов, для которых применяется _standard_attribute_map
-_STD_ATTR_OWNER_TYPES: frozenset[str] = frozenset({"Catalog"})
+# Типы объектов, для которых применяется _standard_attribute_map.
+# ChartOfCharacteristicType добавлен в issue #108: структура header[0][1]
+# идентична Catalog, позиции 7/8 подтверждены на живых данных.
+_STD_ATTR_OWNER_TYPES: frozenset[str] = frozenset({
+    "Catalog",
+    "ChartOfCharacteristicType",
+})
 
 # Служебные UUID платформы 1С.
 # Смысловые подписи подтверждены только частотой встречаемости и косвенно;
@@ -312,6 +317,19 @@ def _classify_unindexed_form_impl(form_root: Path) -> UnindexedResult:
             detail=(
                 f"TabularField и InputField/ComboBox не найдены "
                 f"в {legacy_path.name} — форма без виджетов данных"
+            ),
+        )
+
+    # --- шаг 2a: CommonForm — объекта-владельца нет по дизайну (issue #108) ---
+    # Проверяем ДО attr_map: отсутствие владельца — не дефект декодера,
+    # а архитектурная особенность. Это вычищает CommonForm из счётчика A.
+    if _is_common_form(form_root):
+        return UnindexedResult(
+            reason=UnindexedReason.NO_OWNER_OBJECT,
+            detail=(
+                f"CommonForm не имеет объекта-владельца по дизайну платформы 1С; "
+                f"TabularField найден в {legacy_path.name}, "
+                f"но attr_map строить не из чего — это норма, не дефект"
             ),
         )
 
@@ -593,7 +611,7 @@ def load_owner_attribute_map(form_root: Path, warnings: list[str]) -> dict[str, 
             if uuid and name:
                 mapping.setdefault(uuid, name)
 
-    # issue #107: дописываем стандартные реквизиты из data["header"][0][1][7/8]
+    # issue #107/#108: дописываем стандартные реквизиты из data["header"][0][1][7/8]
     # через setdefault — не затираем данные декодера
     for uuid, attr_name in _standard_attribute_map(path).items():
         mapping.setdefault(uuid, attr_name)

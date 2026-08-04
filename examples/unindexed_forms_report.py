@@ -14,7 +14,9 @@
   `classify_no_widgets_form()` (#109) уточняет, является ли такая форма
   сервисной (мастер/помощник) или просто пустой.
 * A — TABULAR_FIELD_EMPTY_ATTR_MAP: TabularField есть, но карта реквизитов
-  владельца пуста (нет объекта-владельца либо layout не распознан);
+  владельца пуста. После issue #108 сюда попадает только `CommonForm`
+  (объекта-владельца нет по дизайну платформы). `ChartOfCharacteristicType`
+  закрыт в #108: positions 7/8 header[0][1] идентичны `Catalog`.
 * B1 — TABULAR_FIELD_PROGRAMMATIC_NO_DEFS: карта непуста, UUID колонок
   в неё не попадают и в модуле формы нет `Колонки.Добавить` — программная
   ТаблицаЗначений/ДеревоЗначений без объявлений (#107);
@@ -144,7 +146,7 @@ def build_demo_export(root: Path) -> list[Path]:
         form_json=_form_json_without_widgets(), catalog=None,
     ))
 
-    # A — TabularField есть, карта реквизитов владельца пуста
+    # A — TabularField есть, карта реквизитов владельца пуста (CommonForm по дизайну)
     forms.append(_write_form(
         root, "Catalog/БезВладельца/CatalogForm/ФормаСписка", "CatalogForm",
         form_json=_form_json_with_tabular_field(UUID_OWN_1, UUID_OWN_2),

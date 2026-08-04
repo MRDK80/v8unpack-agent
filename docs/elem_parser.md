@@ -342,7 +342,7 @@ if not result.elem_index_ok:
 | `TABULAR_FIELD_PROGRAMMATIC_NO_DEFS` (B1) | 8 | программная ТЗ/ДЗ без объявлений колонок (#107) |
 | `TABULAR_FIELD_PLATFORM_DYNAMIC` (B3) | 7 | колонки формирует платформа (СКД, диаграммы) |
 | `TABULAR_FIELD_NO_UUID_HITS` (B) | 0 | не возвращается после #107, оставлен для совместимости |
-| `TABULAR_FIELD_EMPTY_ATTR_MAP` (A) | 4 | `CommonForm/*`, `ChartOfCharacteristicType/*` |
+| `TABULAR_FIELD_EMPTY_ATTR_MAP` (A) | 2 | `CommonForm/*` |
 | `NO_LEGACY_JSON` (D) | 0 | — |
 | `UNKNOWN` | 0 | — |
 
@@ -403,7 +403,7 @@ if not result.elem_index_ok:
 | [#103](https://github.com/MRDK80/v8unpack-agent/issues/103) | `ФормаСписка`/`ФормаВыбора`: безопасное извлечение колонок `TabularField` | implemented |
 | [#105](https://github.com/MRDK80/v8unpack-agent/issues/105) | Классификация оставшихся 47 неиндексируемых форм (`UnindexedReason`) | implemented, PR #106 |
 | [#107](https://github.com/MRDK80/v8unpack-agent/issues/107) | Категория B: UUID колонок в реквизитах табличных частей | open |
-| [#108](https://github.com/MRDK80/v8unpack-agent/issues/108) | Категория A: layout `ChartOfCharacteristicType`, `CommonForm` без владельца | open |
+| [#108](https://github.com/MRDK80/v8unpack-agent/issues/108) | Категория A: `ChartOfCharacteristicType` закрыт (issue #108); `CommonForm` → `NO_OWNER_OBJECT` by design | closed |
 | [#109](https://github.com/MRDK80/v8unpack-agent/issues/109) | Категория C: формы без виджетов данных → `service` | open |
 | [#88](https://github.com/MRDK80/v8unpack-agent/issues/88) | Приведение `Ref#uuid` к имени объекта метаданных | open |
 
@@ -439,6 +439,6 @@ Pattern-блоке под тегом `"#"`. Расширение проверк�
 | `TABULAR_FIELD_BSL_SOURCE_MISMATCH` | 11 |
 | `TABULAR_FIELD_PROGRAMMATIC_NO_DEFS` | 8 |
 | `TABULAR_FIELD_PLATFORM_DYNAMIC` | 7 |
-| `TABULAR_FIELD_EMPTY_ATTR_MAP` (A) | 4 |
+| `TABULAR_FIELD_EMPTY_ATTR_MAP` (A) | 2 |
 | `TABULAR_FIELD_NO_UUID_HITS` (B) | 0 |
 | `NO_LEGACY_JSON` (D) | 0 |
