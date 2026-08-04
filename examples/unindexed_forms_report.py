@@ -11,6 +11,8 @@
   большого JSON формы;
 * C — NO_TABULAR_NO_WIDGETS: JSON есть, но нет ни TabularField,
   ни InputField/ComboBox — форма без виджетов данных;
+  `classify_no_widgets_form()` (#109) уточняет, является ли такая форма
+  сервисной (мастер/помощник) или просто пустой.
 * A — TABULAR_FIELD_EMPTY_ATTR_MAP: TabularField есть, но карта реквизитов
   владельца пуста (нет объекта-владельца либо layout не распознан);
 * B1 — TABULAR_FIELD_PROGRAMMATIC_NO_DEFS: карта непуста, UUID колонок
