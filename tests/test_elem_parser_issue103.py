@@ -35,10 +35,16 @@ def test_largest_node20_selected():
     r=extract_legacy_list_form_elements(form, _obj())
     assert [x["name"] for x in r] == [n for _,n in ATTRS]
 
-def test_ambiguous_slot_skipped():
+def test_ambiguous_slot_falls_back_to_walk_refs():
+    """Слот с двумя UUID неоднозначен для блока "20" (candidates пуст).
+    После патча #107 _tabular_field_attribute_slots уходит в fallback
+    walk_refs и находит оба реквизита через ["0", uuid].
+    """
     block=["20", "s1", "s2", "0", "0", "0", ["column", ["0", ATTRS[0][0]], ["0", ATTRS[1][0]]]]
     form=_tf([]); form[2][2][1].append(block)
-    assert extract_legacy_list_form_elements(form, _obj()) == []
+    r = extract_legacy_list_form_elements(form, _obj())
+    assert [x["name"] for x in r] == ["Организация", "Склад"]
+    assert all(x["source"] == "legacy_list_form_json" for x in r)
 
 def test_default_source():
     form=_tf([ATTRS[0][0]]); form[4]=[]
