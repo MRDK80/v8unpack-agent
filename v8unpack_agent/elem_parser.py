@@ -95,7 +95,9 @@ class UnindexedReason(enum.Enum):
       PLATFORM_DYNAMIC — все TF-источники платформенные (wontfix by design)
 
     Распределение по live-базе после патча #107 (2216 форм, 2026-08-04):
-      OK: 2143, B: 45, A: 4, PLATFORM_DYNAMIC: 7, C: 17, D: 0
+      OK: 2169, B: 19, A: 4, PLATFORM_DYNAMIC: 7, C: 17, D: 0
+      Покрытие 97.9%. Скачок +26 OK дало распознавание
+      Pattern-ссылок ["#", UUID] в walk_refs.
     """
     TABULAR_FIELD_EMPTY_ATTR_MAP    = "tabular_field_empty_attr_map"    # A
     TABULAR_FIELD_NO_UUID_HITS      = "tabular_field_no_uuid_hits"      # B
