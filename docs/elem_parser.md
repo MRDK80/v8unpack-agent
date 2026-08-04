@@ -324,7 +324,7 @@ if not result.elem_index_ok:
 | 3 | `load_owner_attribute_map()` → `{}` | `TABULAR_FIELD_EMPTY_ATTR_MAP` (A) | `TabularField` есть, но карта реквизитов владельца пуста |
 | 4 | `_tabular_field_attribute_slots()` → `[]`, в BSL нет `Колонки.Добавить` | `TABULAR_FIELD_PROGRAMMATIC_NO_DEFS` | Колонки не объявлены нигде (#107) |
 | 5 | `_tabular_field_attribute_slots()` → `[]`, `Колонки.Добавить` у другого источника | `TABULAR_FIELD_BSL_SOURCE_MISMATCH` | Матчинг дал бы фантомные колонки (#107) |
-| 5 | слоты есть, форма не проиндексирована | `UNKNOWN` | Непокрытый сценарий, требует разбора |
+| 6 | слоты есть, форма не проиндексирована | `UNKNOWN` | Непокрытый сценарий, требует разбора |
 
 `classify_unindexed_form()` — тонкая обёртка над
 `_classify_unindexed_form_impl()`: любое исключение внутри превращается
