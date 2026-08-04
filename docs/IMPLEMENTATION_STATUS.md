@@ -89,8 +89,8 @@
   машиночитаемым enum, `data_path` не создаётся, `ElemIndexResult` не мутируется,
   исключения не пробрасываются (issue #105, PR #106).
 - Верификация #105 на 2216 формах: проиндексировано 2169 (97.9%),
-  неиндексировано 77 — `NO_TABULAR_NO_WIDGETS` 17, `TABULAR_FIELD_NO_UUID_HITS` 48,
-  `TABULAR_FIELD_EMPTY_ATTR_MAP` 12, `NO_LEGACY_JSON` 0, `UNKNOWN` 0.
+  неиндексировано 47 — `NO_TABULAR_NO_WIDGETS` 17, `TABULAR_FIELD_BSL_SOURCE_MISMATCH` 11, `TABULAR_FIELD_PROGRAMMATIC_NO_DEFS` 8, `TABULAR_FIELD_PLATFORM_DYNAMIC` 7,
+  `TABULAR_FIELD_EMPTY_ATTR_MAP` 4, `NO_LEGACY_JSON` 0, `UNKNOWN` 0.
   Категория A целиком — `CommonForm` и `ChartOfCharacteristicType`:
   у `CommonForm` объекта-владельца нет, пустая карта реквизитов правомерна.
   17 тестов в `tests/test_elem_parser_issue105.py`, полная регрессия зелёная.
@@ -185,6 +185,6 @@
   корректно показывает их как непривязанные.
 - На проверенной конфигурации остаются 47 форм без достоверно извлечённой
   разметки. Они сохраняют `elem_index_ok=False`, но после #105 каждая имеет
-  явную причину (`UnindexedReason`): C 17, B 48, A 12. Нестрогий рекурсивный
+  явную причину (`UnindexedReason`): C 17, BSL_SOURCE_MISMATCH 11, PROGRAMMATIC_NO_DEFS 8, PLATFORM_DYNAMIC 7, A 4. Нестрогий рекурсивный
   поиск UUID намеренно не применяется — извлечение по этим категориям
   вынесено в #107 / #108 / #109.

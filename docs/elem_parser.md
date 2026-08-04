@@ -322,7 +322,8 @@ if not result.elem_index_ok:
 | 1 | `_find_legacy_form_json()` → `None` | `NO_LEGACY_JSON` (D) | Рядом с `.elem.json` нет большого JSON формы |
 | 2 | `_has_tabular_field()` → `False` | `NO_TABULAR_NO_WIDGETS` (C) | Нет ни `TabularField`, ни `InputField`/`ComboBox` — форма без виджетов данных |
 | 3 | `load_owner_attribute_map()` → `{}` | `TABULAR_FIELD_EMPTY_ATTR_MAP` (A) | `TabularField` есть, но карта реквизитов владельца пуста |
-| 4 | `_tabular_field_attribute_slots()` → `[]` | `TABULAR_FIELD_NO_UUID_HITS` (B) | Карта непуста, но UUID колонок в неё не попадают |
+| 4 | `_tabular_field_attribute_slots()` → `[]`, в BSL нет `Колонки.Добавить` | `TABULAR_FIELD_PROGRAMMATIC_NO_DEFS` | Колонки не объявлены нигде (#107) |
+| 5 | `_tabular_field_attribute_slots()` → `[]`, `Колонки.Добавить` у другого источника | `TABULAR_FIELD_BSL_SOURCE_MISMATCH` | Матчинг дал бы фантомные колонки (#107) |
 | 5 | слоты есть, форма не проиндексирована | `UNKNOWN` | Непокрытый сценарий, требует разбора |
 
 `classify_unindexed_form()` — тонкая обёртка над
@@ -332,13 +333,16 @@ if not result.elem_index_ok:
 
 ### Распределение на реальной конфигурации
 
-УТ 10.3, 2216 форм: проиндексировано 2169 (97.9%), неиндексировано 77.
+УТ 10.3, 2216 форм: проиндексировано 2169 (97.9%), неиндексировано 47.
 
 | Причина | Форм | Типичные представители |
 |---|---:|---|
 | `NO_TABULAR_NO_WIDGETS` (C) | 17 | `CommonForm/ФормаРедактированияТекста`, `Document/ЭлектронноеПисьмо/.../ФормаПечати`, формы обработок |
-| `TABULAR_FIELD_NO_UUID_HITS` (B) | 48 | `ФормаВыбораГруппы` справочников, `ФормаВыбора` отчётов и обработок |
-| `TABULAR_FIELD_EMPTY_ATTR_MAP` (A) | 12 | `CommonForm/*`, `ChartOfCharacteristicType/*` |
+| `TABULAR_FIELD_BSL_SOURCE_MISMATCH` (B2) | 11 | колонки в BSL у другого источника (#107) |
+| `TABULAR_FIELD_PROGRAMMATIC_NO_DEFS` (B1) | 8 | программная ТЗ/ДЗ без объявлений колонок (#107) |
+| `TABULAR_FIELD_PLATFORM_DYNAMIC` (B3) | 7 | колонки формирует платформа (СКД, диаграммы) |
+| `TABULAR_FIELD_NO_UUID_HITS` (B) | 0 | не возвращается после #107, оставлен для совместимости |
+| `TABULAR_FIELD_EMPTY_ATTR_MAP` (A) | 4 | `CommonForm/*`, `ChartOfCharacteristicType/*` |
 | `NO_LEGACY_JSON` (D) | 0 | — |
 | `UNKNOWN` | 0 | — |
 
