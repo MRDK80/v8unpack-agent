@@ -57,11 +57,19 @@ production (2231 форма) показала, что пустой tree НЕ о�
 содержит ни TabularField, ни InputField/ComboBox. В отличие от пустого
 тree, здесь отсутствие виджетов **структурно подтверждено** парсером.
 
-:func:`classify_no_widgets_form` использует это дополнительное условие,
-чтобы безопасно выдавать SERVICE для форм с именами из
-:data:`EMPTY_TREE_NAME_HINTS` или :data:`SERVICE_FORM_NAME_PATTERNS`:
-визуальная проверка 17 production-форм подтвердила, что все они —
-диалоги, информационные и настроечные формы без полей данных.
+:func:`classify_no_widgets_form` принимает необязательный параметр
+``has_data_widgets: bool | None`` (issue #112 — Вариант B):
+
+- ``has_data_widgets=False``  — ``elem_parser`` явно подтвердил отсутствие
+  виджетов данных (вычисляется через ``_has_tabular_field`` до вызова).
+  В сочетании с ``reason==NO_TABULAR_NO_WIDGETS`` и именем из списков
+  паттернов даёт **двойное структурное подтверждение** → SERVICE.
+
+- ``has_data_widgets=True``   — конфликт сигналов: reason говорит «нет
+  виджетов», флаг говорит «есть». Не угадываем → UNKNOWN.
+
+- ``has_data_widgets=None``   — параметр не передан; поведение PR #111
+  (только эвристика имени). Обратная совместимость со всеми call site.
 
 OS-нейтральность, кодировка UTF-8.
 """
@@ -274,12 +282,13 @@ def classify_empty_tree_form(form_name: str) -> tuple[FormClass, str]:
 
 
 # ---------------------------------------------------------------------------
-# Классификация форм без виджетов данных (issue #109)
+# Классификация форм без виджетов данных (issue #109, расширено issue #112)
 # ---------------------------------------------------------------------------
 
 def classify_no_widgets_form(
     form_name: str,
     reason: object,
+    has_data_widgets: bool | None = None,
 ) -> FormClass:
     """Cклассифицировать форму, у которой структурно подтверждено отсутствие
     виджетов данных (``UnindexedReason.NO_TABULAR_NO_WIDGETS``).
@@ -289,19 +298,34 @@ def classify_no_widgets_form(
     читается корректно и не содержит ни TabularField, ни InputField/ComboBox.
     Это структурное доказательство, а не предположение по имени.
 
-    Правило (оба условия обязательны):
+    Параметр ``has_data_widgets`` (issue #112, Вариант B)
+    ------------------------------------------------------
+    Булев флаг вычисляет ``elem_parser`` (через ``_has_tabular_field``)
+    **до** вызова этой функции и передаёт его как явный аргумент.
+    ``form_classifier`` остаётся чистым от JSON-структуры 1С — он не знает
+    о формате legacy JSON и не вызывает функции ``elem_parser``.
 
-    1. ``reason == UnindexedReason.NO_TABULAR_NO_WIDGETS``
-    2. ``classify_empty_tree_form(form_name)`` возвращает причину
-       ``"by_service_pattern"`` или ``"empty_tree_name_hint"``
+    Контракт:
 
-    → :data:`FormClass.SERVICE`
+    ``has_data_widgets=False`` + ``reason==NO_TABULAR_NO_WIDGETS``
+        + ``by_service_pattern`` / ``empty_tree_name_hint``
+        → :data:`FormClass.SERVICE` (двойное структурное подтверждение)
+
+    ``has_data_widgets=True`` + ``reason==NO_TABULAR_NO_WIDGETS``
+        → :data:`FormClass.UNKNOWN` (конфликт сигналов — не угадываем)
+
+    ``has_data_widgets=False`` + ``reason != NO_TABULAR_NO_WIDGETS``
+        → :data:`FormClass.UNKNOWN` (reason не подтверждает категорию C)
+
+    ``has_data_widgets=None``
+        → поведение PR #111 (только эвристика имени, обратная совместимость)
 
     Возвращает :data:`FormClass.UNKNOWN` если:
     - ``reason != NO_TABULAR_NO_WIDGETS``
     - имя пустое или не передано
     - имя даёт ``"platform_object_name_unparsed"`` (объектная форма платформы)
     - имя даёт ``"unparsed_empty_tree"`` (неизвестный паттерн — не угадываем)
+    - ``has_data_widgets=True`` при любом reason (конфликт сигналов)
 
     Параметры
     ----------
@@ -311,15 +335,28 @@ def classify_no_widgets_form(
         Результат ``classify_unindexed_form().reason``
         (``UnindexedReason`` enum). Принимается как ``object`` для
         избежания циклического импорта; сравнивается по значению.
+    has_data_widgets:
+        ``False``  — elem_parser подтвердил: виджетов данных нет структурно.
+        ``True``   — elem_parser обнаружил виджеты (конфликт с reason C).
+        ``None``   — флаг не передан; применяется поведение PR #111.
     """
     # Импорт здесь для избежания циклической зависимости на уровне модулей.
     # elem_parser импортирует form_classifier, поэтому form_classifier
     # не должен импортировать elem_parser на верхнем уровне.
     from v8unpack_agent.elem_parser import UnindexedReason  # noqa: PLC0415
 
+    # Конфликт сигналов: виджеты есть, но reason говорит «нет» — не угадываем.
+    if has_data_widgets is True:
+        return FormClass.UNKNOWN
+
     if reason is not UnindexedReason.NO_TABULAR_NO_WIDGETS:
         return FormClass.UNKNOWN
 
+    # has_data_widgets=False: reason подтверждён структурно + флаг совпадает.
+    # has_data_widgets=None:  только эвристика имени (поведение PR #111).
+    # В обоих случаях логика принятия решения одна — по hint_reason.
+    # Разница: при False мы более уверены (двойное подтверждение),
+    # при None — только имя. Оба случая допускают SERVICE по паттернам.
     _form_class, hint_reason = classify_empty_tree_form(form_name)
 
     if hint_reason in ("by_service_pattern", "empty_tree_name_hint"):

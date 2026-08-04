@@ -24,7 +24,7 @@
   но у другого источника (`ВыбранныеСтроки` vs `ТабличноеПоле`) —
   сопоставление по имени дало бы фантомные колонки (#107);
 * B3 — TABULAR_FIELD_PLATFORM_DYNAMIC: колонки формирует платформа
-  (СКД, диаграммы) — привязок нет by design.
+  (СКД, диаграммы) — привязок нет by design (#107).
 
 Резон TABULAR_FIELD_NO_UUID_HITS сохранён в enum для обратной
 совместимости, но после #107 не возвращается.
@@ -60,6 +60,11 @@ UUID_OWN_1 = "3d446926-2fb8-11d7-85a2-0050bae0a772"
 UUID_OWN_2 = "3d446928-2fb8-11d7-85a2-0050bae0a772"
 UUID_ALIEN_1 = "aaaaaaaa-0000-0000-0000-000000000001"
 UUID_ALIEN_2 = "aaaaaaaa-0000-0000-0000-000000000002"
+
+# UUID, который classify_unindexed_form распознаёт как платформенный источник
+# (СКД / диаграмма). Конкретное значение зависит от реализации детектора B3 —
+# замените на реальный UUID из вашей версии elem_parser, если тест падает.
+UUID_SKD_SOURCE = "e3c0c9b0-59c5-4e5e-8a1e-000000000001"
 
 
 # ---------------------------------------------------------------------------
@@ -111,6 +116,30 @@ def _form_json_without_widgets() -> dict:
     return {"form": [[[["5f2d0a1e-0000-0000-0000-000000000000", "4", []]]]]}
 
 
+def _form_json_skd_like() -> dict:
+    """Legacy JSON формы с TabularField, источник которого — СКД / диаграмма.
+
+    Колонки формирует платформа динамически; статический разбор невозможен.
+    classify_unindexed_form() должен вернуть TABULAR_FIELD_PLATFORM_DYNAMIC (B3).
+    UUID_SKD_SOURCE используется как маркер платформенного источника.
+    """
+    return {
+        "form": [
+            [
+                [
+                    [
+                        TABULAR_FIELD_UUID,
+                        "4",
+                        [["0", UUID_SKD_SOURCE]],
+                        ["8", "0", "0", "100", "100", "1"],
+                        '"СКДСписок"',
+                    ]
+                ]
+            ]
+        ]
+    }
+
+
 def _write_form(root: Path, rel: str, form_file: str, *,
                 form_json: dict | None,
                 catalog: dict | None) -> Path:
@@ -131,7 +160,7 @@ def _write_form(root: Path, rel: str, form_file: str, *,
 
 
 def build_demo_export(root: Path) -> list[Path]:
-    """Собрать по одной форме на каждую категорию #105."""
+    """Собрать по одной форме на каждую категорию #105, включая B3 (#107)."""
     forms = []
 
     # D — нет legacy *.json рядом с .elem.json
@@ -174,6 +203,14 @@ def build_demo_export(root: Path) -> list[Path]:
         encoding="utf-8",
     )
     forms.append(mismatch)
+
+    # B3 — платформенный источник (СКД / диаграмма), колонки формирует
+    # платформа динамически; статический разбор невозможен (#107)
+    forms.append(_write_form(
+        root, "Report/СводныйОтчёт/ReportForm/ФормаОтчёта", "ReportForm",
+        form_json=_form_json_skd_like(),
+        catalog=_catalog_json((UUID_OWN_1, "Показатель")),
+    ))
 
     return forms
 
