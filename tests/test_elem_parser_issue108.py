@@ -183,11 +183,9 @@ class TestCategoryA2CommonForm:
         )
         form_dir.mkdir(parents=True)
         _write_elem_json(form_dir)
-        # Большой json без TabularField
         _write(form_dir, "ФормаИндикации.json", ["label-uuid", "1", "some-data"])
         result = ElemIndexResult(elem_index_ok=False, elements=[], warnings=[])
         unindexed = classify_unindexed_form(form_dir, result)
-        # Без TF → C, а не A2
         assert unindexed.reason != UnindexedReason.NO_OWNER_OBJECT
 
     def test_does_not_mutate_result(self, tmp_path):
@@ -227,7 +225,7 @@ class TestCategoryA3ChartOfCharacteristicType:
     ) -> tuple[Path, list[str], list[str]]:
         """Дерево ChartOfCharacteristicType с ФормаВыбораГруппы."""
         p_uuids = prop_uuids or [_uuid(), _uuid()]
-        t_uuids = tf_uuids or list(p_uuids)  # TF использует те же UUID → должны разрезолвиться
+        t_uuids = tf_uuids or list(p_uuids)
         form_dir = (
             tmp_path
             / "ChartOfCharacteristicType"
@@ -238,7 +236,6 @@ class TestCategoryA3ChartOfCharacteristicType:
         form_dir.mkdir(parents=True)
         _write_elem_json(form_dir)
         _write(form_dir, "ФормаВыбораГруппы.json", _tabular_field(t_uuids))
-        # ChartOfCharacteristicType.json лежит уровнем выше (рядом с ФормаВыбораГруппы/../..)
         owner_dir = form_dir.parent.parent
         self._write_coct_json(owner_dir, p_uuids)
         return form_dir, p_uuids, t_uuids
@@ -284,19 +281,19 @@ class TestCategoryA3ChartOfCharacteristicType:
 
     def test_coct_form_indexed_when_attr_map_filled(self, tmp_path):
         """Когда attr_map заполнена, TF разрезолвится → форма не получает TABULAR_FIELD_EMPTY_ATTR_MAP."""
-        form_dir, p_uuids, t_uuids = self._make_coct_form_dir(
-            tmp_path, prop_uuids=p_uuids := [_uuid(), _uuid()], tf_uuids=list(p_uuids)
+        p_uuids = [_uuid(), _uuid()]
+        form_dir, _, _ = self._make_coct_form_dir(
+            tmp_path, prop_uuids=p_uuids, tf_uuids=list(p_uuids)
         )
         result = ElemIndexResult(elem_index_ok=False, elements=[], warnings=[])
         unindexed = classify_unindexed_form(form_dir, result)
-        # Карта непуста → не A
         assert unindexed.reason != UnindexedReason.TABULAR_FIELD_EMPTY_ATTR_MAP, (
             "ChartOfCharacteristicType с заполненной attr_map не должен "
             "получать TABULAR_FIELD_EMPTY_ATTR_MAP"
         )
 
     def test_coct_with_empty_header_gives_empty_attr_map(self, tmp_path):
-        """Если COCT.json повреждён — карта пуста, причина A. Нет фантомных реквизитов."""
+        """Если COCT.json повреждён — карта пуста, причина A."""
         form_dir = (
             tmp_path
             / "ChartOfCharacteristicType"
@@ -309,7 +306,6 @@ class TestCategoryA3ChartOfCharacteristicType:
         col_uuids = [_uuid()]
         _write(form_dir, "ФормаВыбораГруппы.json", _tabular_field(col_uuids))
         owner_dir = form_dir.parent.parent
-        # Намеренно повреждённый header
         p = owner_dir / "ChartOfCharacteristicType.json"
         p.write_text(json.dumps({"header": "not_a_list"}, ensure_ascii=False), encoding="utf-8")
 
@@ -372,14 +368,12 @@ class TestRegressions:
         _write_elem_json(form_dir)
         col_uuids = [_uuid()]
         _write(form_dir, "ФормаВыбора.json", _tabular_field(col_uuids))
-        # Catalog.json с нераспознанным layout (даёт attr_map={} → причина A)
         owner_dir = form_dir.parent.parent
         (owner_dir / "Catalog.json").write_text(
             json.dumps({"header": ["bad_layout"]}), encoding="utf-8"
         )
         result = ElemIndexResult(elem_index_ok=False, elements=[], warnings=[])
         unindexed = classify_unindexed_form(form_dir, result)
-        # Каталог с JSON → A, не NO_OWNER_OBJECT
         assert unindexed.reason != UnindexedReason.NO_OWNER_OBJECT
 
     def test_document_layout_still_works(self, tmp_path):
@@ -466,11 +460,9 @@ class TestInvariantsIssue108:
         """Частично заполненный header даёт частичный результат без исключения."""
         owner_dir = tmp_path / "ChartOfCharacteristicType" / "Тест"
         owner_dir.mkdir(parents=True)
-        # Только один из двух UUID валидный
         valid_uuid = _uuid()
         wrappers = [
             _real_attribute_wrapper(valid_uuid, "ВалидныйРеквизит"),
-            # Намеренно повреждённый wrapper: нет UUID
             [["8", ["27", ["2", ["1", "100", _NULL_UUID], '"ПовреждённыйРеквизит"',
                             ["1", '"ru"', '"Синоним"']], ['"Pattern"', ['"S"']]], "0", "1", "1"], "0"],
         ]
@@ -483,6 +475,6 @@ class TestInvariantsIssue108:
         p = owner_dir / "ChartOfCharacteristicType.json"
         p.write_text(json.dumps({"header": [root]}, ensure_ascii=False), encoding="utf-8")
         result = decode_object_attributes(p)
-        assert result.ok  # не падает
+        assert result.ok
         found_uuids = {prop["UUID"] for prop in result.data["Properties"]}
-        assert valid_uuid in found_uuids  # валидный реквизит присутствует
+        assert valid_uuid in found_uuids
