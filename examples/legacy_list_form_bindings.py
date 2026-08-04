@@ -1,9 +1,15 @@
-"""Пример: привязки колонок legacy ФормаСписка/ФормаВыбора (#103, #105).
+"""Пример: привязки колонок legacy ФормаСписка/ФормаВыбора (#103, #105, #107).
 
 Скрипт разбирает существующую директорию формы из выгрузки v8unpack и
 показывает колонки TabularField, извлечённые безопасным fallback #103.
 Если форма не проиндексирована, печатается причина из
 `classify_unindexed_form()` (#105). Исходные файлы не изменяются.
+
+Источник колонки виден в поле `source`:
+
+* `legacy_list_form_json` — UUID-привязка из блока 20 либо Pattern-ссылка
+  `["#", UUID]` (#107);
+* `legacy_list_form_bsl` — имя взято из `Колонки.Добавить` в модуле формы.
 
 Запуск:
 
@@ -23,7 +29,7 @@ from typing import Any, Sequence
 
 from v8unpack_agent.elem_parser import classify_unindexed_form, parse_elem_json
 
-EXPECTED_SOURCE = "legacy_list_form_json"
+EXPECTED_SOURCES = {"legacy_list_form_json", "legacy_list_form_bsl"}
 EXPECTED_TYPE = "TabularFieldColumn"
 
 
@@ -33,7 +39,7 @@ def _legacy_list_columns(elements: Sequence[dict[str, Any]]) -> list[dict[str, A
         element
         for element in elements
         if element.get("type") == EXPECTED_TYPE
-        or element.get("source") == EXPECTED_SOURCE
+        or element.get("source") in EXPECTED_SOURCES
     ]
 
 
