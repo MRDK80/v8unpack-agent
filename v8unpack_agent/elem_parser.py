@@ -93,15 +93,24 @@ class UnindexedReason(enum.Enum):
       B — TabularField есть, attr_map непустая, но UUID колонок не совпадают
       C — нет ни TabularField, ни InputField/ComboBox (норма: регистры, сервисные формы)
       PLATFORM_DYNAMIC — все TF-источники платформенные (wontfix by design)
+      PROGRAMMATIC_NO_DEFS — программная ТЗ/ДЗ, колонки нигде не объявлены:
+        ни UUID в TF, ни Колонки.Добавить в BSL
+      BSL_SOURCE_MISMATCH — колонки в BSL объявлены, но у другого источника
+        (напр. ВыбранныеСтроки vs ТабличноеПоле); матчинг дал бы фантомы
 
     Распределение по live-базе после патча #107 (2216 форм, 2026-08-04):
-      OK: 2169, B: 19, A: 4, PLATFORM_DYNAMIC: 7, C: 17, D: 0
-      Покрытие 97.9%. Скачок +26 OK дало распознавание
-      Pattern-ссылок ["#", UUID] в walk_refs.
+      OK: 2169 (97.9%), C: 17, BSL_SOURCE_MISMATCH: 11,
+      PROGRAMMATIC_NO_DEFS: 8, PLATFORM_DYNAMIC: 7, A: 4, B: 0, D: 0
+
+    Категория B обнулена. +26 OK дало распознавание Pattern-ссылок
+    ["#", UUID] в walk_refs; оставшиеся 19 форм получили точные резоны
+    вместо общего «UUID колонок не совпадают».
     """
     TABULAR_FIELD_EMPTY_ATTR_MAP    = "tabular_field_empty_attr_map"    # A
     TABULAR_FIELD_NO_UUID_HITS      = "tabular_field_no_uuid_hits"      # B
     TABULAR_FIELD_PLATFORM_DYNAMIC  = "tabular_field_platform_dynamic"  # issue #107
+    TABULAR_FIELD_PROGRAMMATIC_NO_DEFS = "tabular_field_programmatic_no_defs"  # B-noop
+    TABULAR_FIELD_BSL_SOURCE_MISMATCH  = "tabular_field_bsl_source_mismatch"   # B-noop
     NO_TABULAR_NO_WIDGETS           = "no_tabular_no_widgets"           # C
     NO_LEGACY_JSON                  = "no_legacy_json"                  # D
     UNKNOWN                         = "unknown"
@@ -377,6 +386,42 @@ def _classify_unindexed_form_impl(form_root: Path) -> UnindexedResult:
             if u not in attr_map and u not in _PLATFORM_SERVICE_UUIDS
         ]
         unresolved_uuids_count += len(set(unresolved))
+
+    # issue #107: отделяем формы, где колонки принципиально не восстановимы.
+    # BSL-модуль читаем один раз и смотрим, что в нём вообще объявлено.
+    bsl_path = _find_form_bsl(form_root)
+    bsl_sources: set[str] = set()
+    if bsl_path is not None:
+        try:
+            bsl_text = bsl_path.read_text(encoding="utf-8-sig", errors="replace")
+            bsl_sources = {m.group(1) for m in _BSL_COLUMN_ADD_RE.finditer(bsl_text)}
+        except Exception:  # noqa: BLE001
+            bsl_sources = set()
+
+    tf_sources_lower = {s.lower() for s in non_platform_sources}
+
+    if not bsl_sources:
+        return UnindexedResult(
+            reason=UnindexedReason.TABULAR_FIELD_PROGRAMMATIC_NO_DEFS,
+            detail=(
+                f"TabularField программной ТЗ/ДЗ без объявления колонок: источники "
+                f"{non_platform_sources}; в BSL нет Колонки.Добавить, "
+                f"UUID-привязки в TF отсутствуют — восстанавливать нечего"
+            ),
+        )
+
+    if not (bsl_sources & tf_sources_lower) and not any(
+        s.lower() in tf_sources_lower for s in bsl_sources
+    ):
+        return UnindexedResult(
+            reason=UnindexedReason.TABULAR_FIELD_BSL_SOURCE_MISMATCH,
+            detail=(
+                f"Колонки в BSL объявлены у другого объекта: "
+                f"TF-источники {non_platform_sources}, "
+                f"BSL-источники {sorted(bsl_sources)} — "
+                f"сопоставление дало бы ложные колонки"
+            ),
+        )
 
     src_label = (
         "(динамический список B1a)"

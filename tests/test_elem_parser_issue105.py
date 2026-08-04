@@ -281,18 +281,19 @@ class TestCategoryB:
         _write_catalog_json_with_header(form_dir, known_uuids)
         return form_dir
 
-    def test_reason_is_tabular_no_uuid_hits(self, tmp_path):
+    def test_reason_is_programmatic_no_defs(self, tmp_path):
         form_dir = self._make_form_dir(tmp_path)
         result = ElemIndexResult(elem_index_ok=False, elements=[], warnings=[])
         unindexed = classify_unindexed_form(form_dir, result)
-        assert unindexed.reason == UnindexedReason.TABULAR_FIELD_NO_UUID_HITS
+        assert unindexed.reason == UnindexedReason.TABULAR_FIELD_PROGRAMMATIC_NO_DEFS
 
     def test_detail_mentions_tabular_field(self, tmp_path):
         form_dir = self._make_form_dir(tmp_path)
         result = ElemIndexResult(elem_index_ok=False, elements=[], warnings=[])
         unindexed = classify_unindexed_form(form_dir, result)
         detail_lower = unindexed.detail.lower()
-        assert "tabular" in detail_lower or "tabularfield" in detail_lower
+        assert "tabularfield" in detail_lower
+        assert "колонки.добавить" in detail_lower
 
     def test_returns_b_not_c_when_tf_present_but_no_hits(self, tmp_path):
         """Приоритет: если TabularField найден — не C, даже если slots пусты."""
