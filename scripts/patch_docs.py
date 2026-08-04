@@ -12,8 +12,8 @@ patch_docs.py — патч документации v8unpack-agent после PR
                           "12 с пустой картой" → 2; добавляем упоминание #107/#108.
   3. IMPLEMENTATION_STATUS.md — #108 "(12 форм)" → "(4 формы)";
                                  убираем осиротевший хвост после #107 closed.
-  4. CHANGELOG.md — [Unreleased] содержит два блока "### Added" подряд —
-                    объединяем второй в первый.
+  4. CHANGELOG.md — объединяем все лишние блоки "### Added" / "### Changed" / "### Fixed"
+                    в [Unreleased] в первые соответствующие.
 
 Запуск:
     python patch_docs.py [--dry-run] [--docs-dir PATH]
@@ -88,7 +88,7 @@ def patch_elem_parser(text: str) -> str:
         text
     )
 
-    # 1d. Добавить PLATFORM_DYNAMIC в таблицу "Причины и порядок проверки" если отсутствует
+    # 1d. Добавить PLATFORM_DYNAMIC если отсутствует
     if 'TABULAR_FIELD_PLATFORM_DYNAMIC' not in text:
         old_row = (
             '| 3 | `load_owner_attribute_map()` → `{}` | `TABULAR_FIELD_EMPTY_ATTR_MAP` (A) '
@@ -109,28 +109,21 @@ def patch_elem_parser(text: str) -> str:
 
 def patch_form_classifier(text: str) -> str:
 
-    # 2a. "На УТ 10.3 это 77 форм" → 47
     text = sub1(
         r'(На УТ 10\.3 это )77( форм)',
         r'\g<1>47\2',
         text
     )
-
-    # 2b. "48 с непопадающими UUID колонок `TabularField`" → 26 + ссылка на #107
     text = sub1(
         r'48 с непопадающими UUID колонок `TabularField`',
         '26 с непопадающими UUID колонок `TabularField` (26 форм исправлено в #107)',
         text
     )
-
-    # 2c. "12 с пустой картой реквизитов владельца" → 2
     text = sub1(
         r'12 с пустой картой реквизитов владельца',
         '2 с пустой картой реквизитов владельца',
         text
     )
-
-    # 2d. После упоминания #109 добавить статусы #107 и #108
     text = sub1(
         r'(Перевод 17 форм категории `NO_TABULAR_NO_WIDGETS` из `unknown` в `service`\n'
         r'реализован в #109 \(PR #111\) через новую функцию `classify_no_widgets_form\(\)`\.)',
@@ -139,7 +132,6 @@ def patch_form_classifier(text: str) -> str:
         r'\1',
         text
     )
-
     return text
 
 
@@ -149,54 +141,95 @@ def patch_form_classifier(text: str) -> str:
 
 def patch_impl_status(text: str) -> str:
 
-    # 3a. "#108 — категория A (12 форм):" → "(4 формы)"
     text = sub1(
         r'(#108 — категория A \()12( форм\))',
         r'\g<1>4\2',
         text
     )
-
-    # 3b. Удалить осиротевший хвост после "#107 closed"
     text = sub1(
         r'\n  реквизитов владельца\. Гипотеза — колонки ссылаются на реквизиты табличных\n'
         r'  частей \(`TabularSections\[\]\.Properties`\) или на независимые значения\.',
         '',
         text
     )
-
     return text
 
 
 # ---------------------------------------------------------------------------
 # Патч 4: CHANGELOG.md
+# Объединяем дублирующие блоки ### Added / ### Changed / ### Fixed
+# в секции [Unreleased].
+#
+# CHANGELOG может не иметь ни одной версионной секции — обрабатываем оба случая.
 # ---------------------------------------------------------------------------
 
+def _extract_unreleased(text: str) -> tuple[str, str, str]:
+    """Возвращает (prefix, section, suffix).
+    prefix — всё до начала заголовка ## [Unreleased].
+    section — сам блок [Unreleased] (до следующей ## [ или до конца файла).
+    suffix — всё после section.
+    """
+    # С lookahead: есть следующая версионная секция
+    m = re.search(r'(## \[Unreleased\].*?)(?=\n## \[)', text, re.DOTALL)
+    if m:
+        return text[:m.start()], m.group(1), text[m.end():]
+    # Без lookahead: [Unreleased] — единственная секция в файле
+    m2 = re.search(r'(## \[Unreleased\].*)', text, re.DOTALL)
+    if m2:
+        return text[:m2.start()], m2.group(1), ""
+    raise ValueError("Секция [Unreleased] не найдена в CHANGELOG")
+
+
+def _merge_duplicate_subheadings(section: str) -> str:
+    """  Объединяет повторные ### Added / ### Changed / ### Fixed.
+
+    Алгоритм:
+    1. Разбиваем section на блоки (разделитель — заголовки ### или начало секции).
+    2. Для каждой метки (Added/Changed/Fixed) собираем все строки-буллеты в один блок.
+    3. Порядок: Added, Changed, Fixed, остальные по порядку первого вхождения.
+    """
+    header_re = re.compile(r'^(### .+)$', re.MULTILINE)
+    parts = header_re.split(section)  # [текстдо1гозаг, заг, тело, заг, тело, ...]
+
+    if len(parts) <= 1:
+        return section  # нет подзаголовков
+
+    preamble = parts[0]  # текст до первой ### заголовки
+    blocks: dict[str, list[str]] = {}  # метка → [список тел блоков]
+    order: list[str] = []
+
+    it = iter(parts[1:])
+    for heading, body in zip(it, it):
+        key = heading.strip()  # "### Added"
+        if key not in blocks:
+            blocks[key] = []
+            order.append(key)
+        # Выделяем буллеты: строки, начинающиеся с '- ' или продолжающие абзац (с пробелом)
+        stripped = body.strip('\n')
+        if stripped:
+            blocks[key].append(stripped)
+
+    # Предпочтительный порядок заголовков
+    preferred = ["### Added", "### Changed", "### Fixed"]
+    ordered_keys = [k for k in preferred if k in blocks] + \
+                   [k for k in order if k not in preferred]
+
+    result = preamble
+    for key in ordered_keys:
+        result += key + "\n\n"
+        result += "\n\n".join(blocks[key])
+        result += "\n\n"
+
+    return result.rstrip('\n') + '\n'
+
+
 def patch_changelog(text: str) -> str:
-    unreleased_re = re.compile(r'(## \[Unreleased\].*?)(?=\n## \[)', re.DOTALL)
-    m = unreleased_re.search(text)
-    if not m:
-        raise ValueError("Секция [Unreleased] не найдена")
-
-    section = m.group(1)
-    added_count = len(re.findall(r'^### Added', section, re.MULTILINE))
-
-    if added_count <= 1:
-        print("[CHANGELOG] Дублирующий ### Added не найден — пропускаем")
-        return text
-
-    # Убираем второй "### Added\n\n" (тот, что после ### Fixed)
-    new_section = re.sub(
-        r'(\n### Fixed\n(?:.*?\n)*?)\n### Added\n\n',
-        r'\1\n',
-        section,
-        count=1,
-        flags=re.DOTALL
-    )
-
+    prefix, section, suffix = _extract_unreleased(text)
+    new_section = _merge_duplicate_subheadings(section)
     if new_section == section:
-        raise ValueError("Не удалось убрать дублирующий ### Added")
-
-    return text[:m.start()] + new_section + text[m.end():]
+        print("[CHANGELOG] Дублирующих блоков не найдено — пропускаем")
+        return text
+    return prefix + new_section + suffix
 
 
 # ---------------------------------------------------------------------------
