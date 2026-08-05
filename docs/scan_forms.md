@@ -9,6 +9,10 @@
 всегда присутствует `*.elem.json`. Такие формы подбираются elem-only веткой и
 получают заполненное поле `elem_json_path` (см. ниже).
 
+Начиная с issue #88 тот же обход конфигурации попутно строит индекс ссылочных
+типов `uuid → имя ссылочного типа` (`reference_types`). Второй обход дерева не
+вводится (см. ниже).
+
 ```python
 from pathlib import Path
 from v8unpack_agent.scan_forms import scan_forms
@@ -76,7 +80,7 @@ def scan_forms(
 
 Оба layout обходятся одним структурным правилом: контейнер форм — каталог,
 чьё имя `endswith("Form")`. **Нет хардкода конкретных имён контейнеров.**
-Различие — только в глубине вложенности: в 4-уровневом е��ть промежуточный
+Различие — только в глубине вложенности: в 4-уровневом есть промежуточный
 уровень `ObjectName` между типом и контейнером, в 3-уровневом он
 отсутствует (контейнер совпадает с корневым типом).
 
@@ -128,6 +132,70 @@ v8unpack материализует каждую форму как `*.elem.json`
 > а `object_type` выводится по контейнеру (`ReportForm` ⇒ `ExternalReport`) и
 > расширению (`.erf` ⇒ `ExternalReport`, иначе `ExternalDataProcessor`).
 
+## Индекс ссылочных типов (issue #88)
+
+Реквизиты объектов метаданных ссылаются на другие объекты по UUID, а не по
+имени. `object_decoder` возвращает такой тип как `Ref#<uuid>` — достоверно, но
+нечитаемо. Приведение UUID к имени требует **глобального** знания о выгрузке,
+которое обход `scan_forms` уже имеет.
+
+Поэтому индекс собирается в той же точке, где обход и так перебирает каталоги
+объектов — отдельного discovery нет, дерево читается один раз. В режиме
+`mode="external"` индекс не собирается: у внешних объектов нет каталогов
+метаданных конфигурации.
+
+```python
+from pathlib import Path
+from v8unpack_agent.scan_forms import scan_forms
+from v8unpack_agent.object_decoder import decode_object_attributes
+
+index = scan_forms(Path("/path/to/cf_export"))
+
+print(len(index.reference_types))                       # размер индекса
+print(index.resolve_reference_type("<uuid>"))           # "CatalogRef.Города" | None
+
+result = decode_object_attributes(
+    Path("/path/to/cf_export/Catalog/Города/Catalog.json"),
+    type_resolver=index.resolve_reference_type,
+)
+```
+
+Как строится индекс:
+
+- UUID берутся из блока идентификации объекта `header[0][1]`, слоты 1–3.
+  У объекта метаданных несколько идентификаторов, и ссылка реквизита адресует
+  не обязательно слот 2 — на контрольной выгрузке встречаются слоты 1 и 3.
+  Все они принадлежат одному объекту, поэтому имя типа для них одно.
+- Имя строится как `<Префикс>.<ИмяОбъекта>` по таблице
+  `REFERENCE_TYPE_PREFIXES`.
+- Порядок обхода отсортирован, дубликаты внутри объекта убираются —
+  результат детерминирован.
+- Первая запись по UUID сохраняется; конфликт разных объектов по одному UUID
+  попадает в `scan_warnings` как `reference type duplicate UUID …`.
+- Неполные или нечитаемые метаданные дают
+  `reference type metadata is incomplete: …` в `scan_warnings`; исключение не
+  выбрасывается, тип не угадывается.
+
+Поддерживаемые виды метаданных:
+
+| Вид | Префикс имени |
+|---|---|
+| `Catalog` | `CatalogRef` |
+| `Document` | `DocumentRef` |
+| `Enum` | `EnumRef` |
+| `ChartOfCharacteristicType` | `ChartOfCharacteristicTypeRef` |
+| `ExchangePlan` | `ExchangePlanRef` |
+| `BusinessProcess` | `BusinessProcessRef` |
+| `Task` | `TaskRef` |
+
+Регистры в таблицу не входят: ссылочного типа у них нет. Виды, отсутствующие
+в таблице, в индекс не попадают, а их UUID остаются безопасным `Ref#<uuid>`.
+
+Результат на контрольной выгрузке: индекс из 2230 записей, 4670 из 5226
+ссылочных реквизитов получили читаемое имя, 556 остались `Ref#<uuid>`;
+изменённых нессылочных записей, потерь и исключений — 0. Подробности —
+[`object_decoder`](object_decoder.md).
+
 ## Layout внешних обработок и отчётов (mode="external")
 
 См. подробное описание структуры файлов, маппинга и поддержки версий:
@@ -172,8 +240,20 @@ index = scan_forms(Path("/path/to/External"), mode="external",
 
 ## FormScanIndex
 
-`FormScanIndex` содержит список `forms`, счётчик `total`, метку `scanned_at` и
-список `scan_warnings`.
+`FormScanIndex` содержит список `forms`, счётчик `total`, метку `scanned_at`,
+список `scan_warnings` и индекс `reference_types`.
+
+| Поле | Тип | Значение |
+|---|---|---|
+| `forms` | list\[FormEntry\] | Найденные формы |
+| `total` | int | Количество форм |
+| `scanned_at` | string | Метка времени сканирования (UTC, ISO 8601) |
+| `scan_warnings` | array | Предупреждения обхода, включая диагностику индекса ссылочных типов |
+| `reference_types` | dict\[str, str\] | `uuid → имя ссылочного типа` (issue #88). Пустой словарь для `mode="external"` и для старых индексов. |
+
+Метод `resolve_reference_type(uuid)` возвращает имя ссылочного типа либо
+`None`. Подпись совместима с параметром `type_resolver` функции
+`decode_object_attributes`, поэтому индекс передаётся в декодер напрямую.
 
 Загрузка сохранённого индекса:
 
@@ -184,6 +264,7 @@ index = FormScanIndex.load(Path("forms_scan_index.json"))
 # Старые индексы без bsl_sha256 / elem_sha256 / elem_json_path:
 #   соответствующие поля получают None (backward-compat).
 # Старые индексы без bsl_mtime: поле получает 0.0 (backward-compat).
+# Старые индексы без reference_types: поле получает {} (backward-compat).
 # Поле form_xml_path в старых индексах игнорируется.
 ```
 
@@ -195,6 +276,8 @@ index = FormScanIndex.load(Path("forms_scan_index.json"))
   - при `include_elem_only=False` — пропускается: запись
     `skipped (no <Container>.obj.bsl / <Container>.obj): <path>` в `scan_warnings`,
     в индекс не попадает.
+- Нечитаемые или неполные метаданные объекта не прерывают обход: UUID не
+  попадает в индекс, в `scan_warnings` пишется причина (issue #88).
 - Ошибка в одной форме не останавливает обход (best-effort).
 
 ## Конвенция путей (формы конфигурации)

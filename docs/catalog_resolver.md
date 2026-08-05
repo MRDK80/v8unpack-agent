@@ -63,6 +63,12 @@ v8unpack. Разбор этой секции выполняет отдельны
 [`object_decoder`](object_decoder.md) (#84, PR #87), который возвращает
 структуру, совместимую с `resolve_data_path` без изменения его публичного API.
 
+Имя ссылочного типа приходит из того же модуля после #88 (PR #118): резолвер
+`uuid → имя типа` строится в `scan_forms` и передаётся в
+`decode_object_attributes` как `type_resolver`. Публичный API
+`catalog_resolver` при этом не менялся — в `value_type` просто приходит
+читаемое имя вместо `Ref#<uuid>`.
+
 ## Известные ограничения
 
 ### #85 — декодирование `data_path` — закрыто
@@ -101,15 +107,35 @@ v8unpack. Разбор этой секции выполняет отдельны
 
 Нераспознанных кодов типа — 0, ошибок декодирования — 0.
 
-### Зависимость от #88 — имена ссылочных типов
+### #88 — имена ссылочных типов — закрыто
 
-Ссылочный тип возвращается как `Ref#<uuid>`, а не `CatalogRef.Контрагенты`.
-Приведение UUID к имени объекта метаданных требует глобального индекса всех
-объектов выгрузки и вынесено в
-[#88](https://github.com/MRDK80/v8unpack-agent/issues/88).
+Ссылочный тип приводится к имени объекта метаданных: `CatalogRef.Регионы`,
+`DocumentRef.РеализацияТоваров`, `EnumRef.ЮрФизЛицо` и т. д. Глобальный индекс
+`uuid → имя типа` строится в `scan_forms` во время уже существующего обхода
+выгрузки и передаётся декодеру как `type_resolver`; второго обхода дерева нет.
 
-Дополнительно `value_type=None` остаётся у compact-layout и составных типов
-(`CompositeType`) — их разбор в #84 не входил.
+Постановка #88 предполагала, что ссылка адресует UUID объекта из
+`header[0][1][2]`. На реальных данных такой индекс дал ноль резолюций:
+ссылка адресует соседние слоты того же блока идентификации (`[1]` и `[3]`).
+Индексируются все валидные UUID блока `header[0][1]` — они принадлежат одному
+объекту, поэтому имя типа для них одно.
+
+Прогон на контрольной выгрузке текущей версией инструмента (15717 реквизитов):
+
+| Метрика | без резолвера | с резолвером |
+|---|---:|---:|
+| Ссылочных `Ref#uuid` | 5226 | 556 |
+| Разрешено в читаемые имена | 0 | 4670 |
+| Изменено нессылочных записей | — | 0 |
+| `data_path` изменён | — | 0 |
+| Потерь и исключений | 0 | 0 |
+
+Метрики #84 и #88 считаны разными версиями инструмента (15888 против 15717
+реквизитов) и не смешиваются.
+
+Неизвестный UUID остаётся `Ref#<uuid>` — тип не угадывается. Дополнительно
+`value_type=None` остаётся у compact-layout и составных типов
+(`CompositeType`) — их разбор в #84 не входил и в #88 не расширялся.
 
 ### Итоговая картина
 
@@ -124,10 +150,10 @@ v8unpack. Разбор этой секции выполняет отдельны
   catalog_resolver              ← #76 ✅ реализовано, PR #83
         ↑ (читаемые Properties)
   decode_object_attributes      ← #84 ✅ реализовано, PR #87
+        ↑ (type_resolver из FormScanIndex)
+  индекс ссылочных типов        ← #88 ✅ реализовано, PR #118
         ↓
-  ResolvedBinding(resolved=True, value_type="String" | "Ref#<uuid>")
-        ↓
-  имя объекта метаданных        ← #88, ожидается
+  ResolvedBinding(resolved=True, value_type="String" | "CatalogRef.Регионы" | "Ref#<uuid>")
 ```
 
 `resolved=False` остаётся штатным результатом для реквизитов, отсутствующих
@@ -152,20 +178,21 @@ obj_json = object_json_path(form_entry)
 if obj_json:
     binding = resolve_data_path("Объект.Город", obj_json)  # путь из parse_elem_json
     if binding.resolved:
-        print(binding.value_type, binding.synonym)   # "Ref#df7ce7e5-…"
+        print(binding.value_type, binding.synonym)   # "CatalogRef.Города"
     else:
         print("реквизит не найден в описании объекта")
 ```
 
 ## Связь с конвейером №3a
 
-| Задача | Статус                                                                    |
-|---|---------------------------------------------------------------------------|
+| Задача | Статус |
+|---|---|
 | [#76](https://github.com/MRDK80/v8unpack-agent/issues/76) `catalog_resolver` | ✅ реализовано, PR [#83](https://github.com/MRDK80/v8unpack-agent/pull/83) |
 | [#85](https://github.com/MRDK80/v8unpack-agent/issues/85) `decode_element_data_path` | ✅ реализовано, PR [#86](https://github.com/MRDK80/v8unpack-agent/pull/86) |
 | [#84](https://github.com/MRDK80/v8unpack-agent/issues/84) `decode_object_attributes` | ✅ реализовано, PR [#87](https://github.com/MRDK80/v8unpack-agent/pull/87) |
 | [#90](https://github.com/MRDK80/v8unpack-agent/issues/90) метрика покрытия `data_path` | ✅ реализовано, PR [#97](https://github.com/MRDK80/v8unpack-agent/pull/97) |
-| [#89](https://github.com/MRDK80/v8unpack-agent/issues/89) формы с нулевой привязкой | 🔲 open                                                                   |
-| [#88](https://github.com/MRDK80/v8unpack-agent/issues/88) `Ref#uuid` → имя объекта | 🔲 open                                                                   |
-| [#77](https://github.com/MRDK80/v8unpack-agent/issues/77) `form_context` | 🔲 open                                                                   |
-| #98 | `form_classifier`: объектные vs. сервисные формы                          | closed, PR #99 |
+| [#89](https://github.com/MRDK80/v8unpack-agent/issues/89) формы с нулевой привязкой | ✅ реализовано, PR [#115](https://github.com/MRDK80/v8unpack-agent/pull/115) |
+| [#88](https://github.com/MRDK80/v8unpack-agent/issues/88) `Ref#uuid` → имя объекта | ✅ реализовано, PR [#118](https://github.com/MRDK80/v8unpack-agent/pull/118) |
+| [#116](https://github.com/MRDK80/v8unpack-agent/issues/116) 42 формы без блока привязки | 🔲 open |
+| [#77](https://github.com/MRDK80/v8unpack-agent/issues/77) `form_context` | 🔲 open |
+| [#98](https://github.com/MRDK80/v8unpack-agent/issues/98) `form_classifier`: объектные vs. сервисные формы | ✅ реализовано, PR [#99](https://github.com/MRDK80/v8unpack-agent/pull/99) |
