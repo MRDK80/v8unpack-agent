@@ -24,9 +24,11 @@
 ```
 index_cf(<путь_к_выгрузке>)
   ├─► 0) scan_forms()               # опись всех форм по layout-у (вкл. формы без кода, #57)
+  │       └─► reference_types        # uuid → имя ссылочного типа, тот же обход (#88)
   ├─► 1) unpack_all_forms()         # Form.bin → текстовый слой (BSL виден)
   │       └─► parse_elem_json()      # elem.json → form_elements_index (best-effort)
   │             ├─► object_decoder    # header → Properties, TabularSections (#84)
+  │             │      └─► type_resolver  # Ref#uuid → CatalogRef.Имя (#88)
   │             ├─► catalog_resolver # data_path → ResolvedBinding (best-effort, #76)
   │             └─► form_classifier  # object / service / unknown (#98)
   ├─► 1') unpack_erf()              # внешний отчёт (.erf): текстовый слой
@@ -45,6 +47,10 @@ index_cf(<путь_к_выгрузке>)
   `ФормаСписка` / `ФормаВыбора` с пустым `tree` — через привязки
   `TabularField` и UUID-карту реквизитов владельца. Элементы без
   подтверждённой привязки не угадываются.
+- **Читаемые типы.** Ссылочный тип реквизита приводится к имени объекта
+  метаданных (`CatalogRef.Города`) через индекс, собранный тем же обходом
+  выгрузки. Неизвестный UUID остаётся достоверным `Ref#<uuid>` — тип не
+  угадывается (issue #88).
 - **Класс формы.** Мастера, помощники и диалоги привязывают поля к временным
   реквизитам формы, а не к объекту метаданных. `form_classifier` отделяет их
   от объектных форм, чтобы агрегированная метрика покрытия не была занижена
@@ -60,7 +66,7 @@ index_cf(<путь_к_выгрузке>)
 
 | Модуль | Что даёт |
 |---|---|
-| `scan_forms` | `scan_forms()` + `FormEntry` + `FormScanIndex` — опись всех форм по layout-у выгрузки, включая формы без кода (`elem_json_path`, #57). Нулевой шаг пайплайна. → [подробнее](docs/scan_forms.md) |
+| `scan_forms` | `scan_forms()` + `FormEntry` + `FormScanIndex` — опись всех форм по layout-у выгрузки, включая формы без кода (`elem_json_path`, #57), и индекс ссылочных типов `reference_types` / `resolve_reference_type()` (#88). Нулевой шаг пайплайна. → [подробнее](docs/scan_forms.md) |
 | `drift_checker` | `check_drift()` + `DriftReport` — added / removed / modified (hash-based) / structure_modified (elem hash) / stale_extractions. → [подробнее](docs/drift_checker.md) |
 | `form_router` | `FormRouter` — маршрутизация LLM-запроса к форме по имени объекта/формы. → [подробнее](docs/form_router.md) |
 | `form_paths` | Фабрика путей по конвенции: `form_paths()`, `item_modules()`, `all_module_paths()`. Чистая арифметика путей. |
@@ -71,8 +77,8 @@ index_cf(<путь_к_выгрузке>)
 | `skd_extractor` | `extract_skd_queries()` + `extract_all_skd_queries()` — СКД из `.erf`. → [подробнее](docs/skd_extractor.md) |
 | `elem_parser` | `parse_elem_json()` + `ElemIndexResult` — структура формы из `elem.json`; `data_path` обычных форм через `prop`, управляемых — через UUID и структурный fallback, legacy `ФормаСписка` / `ФормаВыбора` — через подтверждённые UUID-привязки `TabularField` (#103). → [подробнее](docs/elem_parser.md) |
 | `form_summary` | `build_form_summary(form_dir)` + `to_normalized_json()` — детерминированная семантическая выжимка любой elem-формы (обычной и управляемой): attributes / commands / elements / events / relations поверх `parse_elem_json`. → [подробнее](docs/form_summary.md) |
-| `catalog_resolver` | `resolve_data_path()` + `ResolvedBinding` + `object_json_path()` — best-effort обогащение подтверждённого `data_path` через JSON объекта (#76). Извлечение путей реализовано в #85, чтение имени, UUID и типа реквизита — в #84. Приведение `Ref#uuid` к имени объекта метаданных — #88. → [подробнее](docs/catalog_resolver.md) |
-| `object_decoder` | `decode_object_attributes()` + `DecodeResult` — реквизиты объекта из raw `header`: имя, UUID, тип, табличные части. Питает карту реквизитов `elem_parser` и `catalog_resolver` (#84). → [подробнее](docs/object_decoder.md) |
+| `catalog_resolver` | `resolve_data_path()` + `ResolvedBinding` + `object_json_path()` — best-effort обогащение подтверждённого `data_path` через JSON объекта (#76). Извлечение путей реализовано в #85, чтение имени, UUID и типа реквизита — в #84, приведение `Ref#uuid` к имени объекта метаданных — в #88. → [подробнее](docs/catalog_resolver.md) |
+| `object_decoder` | `decode_object_attributes()` + `DecodeResult` — реквизиты объекта из raw `header`: имя, UUID, тип, табличные части. Опциональный `type_resolver` приводит ссылочный тип к имени объекта (#88). Питает карту реквизитов `elem_parser` и `catalog_resolver` (#84). → [подробнее](docs/object_decoder.md) |
 | `coverage_metric` | `calc_data_path_coverage()` + `CoverageReport` — метрика покрытия `data_path` только по элементам данных (`Field`, `Table`, `CheckBox`...), без служебных (`Label`, `Group`, `Panel`...). Поле `form_class` и параметр `form_name` (#98). Константы `DATA_ELEMENT_TYPES`, `SERVICE_ELEMENT_TYPES`, `PLATFORM_STANDARD_ATTRIBUTES` (#90). |
 | `form_classifier` | `classify_form()` + `FormClass` + `classify_empty_tree_form()` — разделение форм на объектные и сервисные по имени и структуре привязок; диагностика форм с пустым `tree` (#98). |
 
@@ -109,6 +115,7 @@ def unpack_one(bin_path: Path, root: Path, form_name: str) -> FormArtifact:
 # 0) опись форм (включает формы без кода: elem_json_path заполнен, #57)
 scan_index = scan_forms(dump_root, save_to=Path("forms_scan_index.json"))
 print(f"Всего форм: {scan_index.total}")
+print(f"Ссылочных типов в индексе: {len(scan_index.reference_types)}")  # #88
 
 # 3) контроль дрейфа
 report = check_drift(dump_root, index_path=Path("forms_scan_index.json"))
@@ -121,6 +128,21 @@ artifacts = unpack_all_forms(dump_root, unpacked_root, unpack_one)
 index = update_forms_index(dump_root, unpacked_root, artifacts)
 index.save(Path("forms_index.json"))
 ```
+
+Читаемые имена ссылочных типов (issue #88):
+
+```python
+from v8unpack_agent.object_decoder import decode_object_attributes
+
+result = decode_object_attributes(
+    dump_root / "Catalog" / "Города" / "Catalog.json",
+    type_resolver=scan_index.resolve_reference_type,
+)
+for prop in result.data["Properties"]:
+    print(prop["Name"], prop["Type"])   # "Регион CatalogRef.Регионы"
+```
+
+Без `type_resolver` поведение не меняется: ссылочный тип остаётся `Ref#<uuid>`.
 
 Полные примеры:
 
@@ -212,11 +234,27 @@ form_class, reason = classify_empty_tree_form("ФормаЗаписи")
 > проиндексированы, 77 остаются неразобранными; дальнейшая классификация
 > вынесена в #105.
 
+### Ссылочные типы реквизитов
+
+Прогон #88 на контрольной выгрузке (15717 реквизитов):
+
+| Метрика | без резолвера | с резолвером |
+|---|---:|---:|
+| Ссылочных `Ref#uuid` | 5226 | 556 |
+| Разрешено в читаемые имена | 0 | 4670 |
+| Изменено нессылочных записей | — | 0 |
+| Потерь и исключений | 0 | 0 |
+
+Разбивка: `CatalogRef` 3197, `EnumRef` 843, `DocumentRef` 596,
+`ChartOfCharacteristicTypeRef` 25, `ExchangePlanRef` 9. Индекс — 2230 записей.
+Метрика относится к проверенной выгрузке и не является обещанием процента
+покрытия для других конфигураций.
+
 ## Документация
 
 | Тема | Файл |
 |---|---|
-| Сканер форм: layout, FormEntry, elem-only, CLI, external-режим | [docs/scan_forms.md](docs/scan_forms.md) |
+| Сканер форм: layout, FormEntry, elem-only, CLI, external-режим, индекс ссылочных типов | [docs/scan_forms.md](docs/scan_forms.md) |
 | Контроль дрейфа: DriftReport, алгоритм, сценарии | [docs/drift_checker.md](docs/drift_checker.md) |
 | Маршрутизация агента: FormRouter, приоритеты | [docs/form_router.md](docs/form_router.md) |
 | Внешние отчёты (.erf), СКД, Template.bin | [docs/skd_extractor.md](docs/skd_extractor.md) |
@@ -225,7 +263,7 @@ form_class, reason = classify_empty_tree_form("ФормаЗаписи")
 | Структура распакованных внешних обработок | [docs/external_forms_structure.md](docs/external_forms_structure.md) |
 | Семантическая выжимка elem-формы поверх parse_elem_json | [docs/form_summary.md](docs/form_summary.md) |
 | `catalog_resolver`: резолюция `data_path` через описание объекта | [docs/catalog_resolver.md](docs/catalog_resolver.md) |
-| Реквизиты объекта из raw `header`: типы, UUID, табличные части | [docs/object_decoder.md](docs/object_decoder.md) |
+| Реквизиты объекта из raw `header`: типы, UUID, табличные части, ссылочные типы | [docs/object_decoder.md](docs/object_decoder.md) |
 | Классификация форм: объектные vs. сервисные, пустой `tree` | [docs/form_classifier.md](docs/form_classifier.md) |
 
 ## Установка
