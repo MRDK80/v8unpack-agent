@@ -2,29 +2,17 @@
 
 Цель модуля — читать raw-секцию ``header`` из ``Catalog.json``, ``Document.json``
 и аналогичных файлов выгрузки v8unpack и возвращать
-нормализованную структуру совместимую с ``catalog_resolver``:
-
-.. code-block:: json
-
-    {
-      "Properties": [
-        {"UUID": "...", "Name": "...", "Type": "...", "Synonym": "..."}
-      ],
-      "TabularSections": [
-        {
-          "UUID": "...", "Name": "...", "Synonym": "...",
-          "Properties": [
-            {"UUID": "...", "Name": "...", "Type": "...", "Synonym": "..."}
-          ]
-        }
-      ]
-    }
+нормализованную структуру совместимую с ``catalog_resolver``.
 
 UUID-карта для ``elem_parser`` строится из возвращаемого ``DecodeResult``
 без дублирующего парсинга header.
 
 Best-effort: любая ошибка не пробрасывается, повреждённый узел
 пропускается с записью в ``warnings``.
+
+Начиная с #88 ссылочный тип может быть приведён к имени объекта метаданных
+через опциональный ``type_resolver``. Без резолвера поведение не меняется:
+ссылка остаётся в виде ``Ref#<uuid>``.
 """
 from __future__ import annotations
 
@@ -32,7 +20,7 @@ import enum
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 
 # ---------------------------------------------------------------------------
@@ -68,9 +56,16 @@ def _fail(error: DecodeError, msg: str) -> DecodeResult:
 # Public function
 # ---------------------------------------------------------------------------
 
-def decode_object_attributes(object_json: Path) -> DecodeResult:
+def decode_object_attributes(
+    object_json: Path,
+    type_resolver: Callable[[str], str | None] | None = None,
+) -> DecodeResult:
     """Cчитать raw-``header`` из файла объекта метаданных и вернуть
     нормализованную структуру Properties + TabularSections.
+
+    ``type_resolver`` (#88) — опциональная функция ``uuid -> имя типа``.
+    Она получает UUID без префикса ``Ref#``. Если резолвер не передан либо
+    вернул ``None``, значение остаётся ``Ref#<uuid>``.
     """
     object_json = Path(object_json)
 
@@ -100,6 +95,7 @@ def decode_object_attributes(object_json: Path) -> DecodeResult:
     # остаётся fallback для старого и нормализованного формата.
     real_data = _decode_real_header(header, warnings)
     if real_data is not None:
+        _apply_type_resolver(real_data, type_resolver, warnings)
         return DecodeResult(ok=True, data=real_data, warnings=warnings)
 
     properties: list[dict] = []
@@ -112,11 +108,63 @@ def decode_object_attributes(object_json: Path) -> DecodeResult:
     _walk_node(header, properties, tabular_sections, warnings,
                depth=0, props_seen=props_seen, ts_seen=ts_seen)
 
-    return DecodeResult(
-        ok=True,
-        data={"Properties": properties, "TabularSections": tabular_sections},
-        warnings=warnings,
-    )
+    data = {"Properties": properties, "TabularSections": tabular_sections}
+    _apply_type_resolver(data, type_resolver, warnings)
+
+    return DecodeResult(ok=True, data=data, warnings=warnings)
+
+
+# ---------------------------------------------------------------------------
+# Reference type resolution (#88)
+# ---------------------------------------------------------------------------
+
+def _iter_decoded_properties(data: dict):
+    """Все записи реквизитов результата, включая колонки табличных частей."""
+    for prop in data.get("Properties", []):
+        if isinstance(prop, dict):
+            yield prop
+    for section in data.get("TabularSections", []):
+        if not isinstance(section, dict):
+            continue
+        for prop in section.get("Properties", []):
+            if isinstance(prop, dict):
+                yield prop
+
+
+def _apply_type_resolver(
+    data: dict,
+    type_resolver: Callable[[str], str | None] | None,
+    warnings: list[str],
+) -> None:
+    """Заменить ``Ref#<uuid>`` читаемым именем типа, если резолвер его знает.
+
+    Примитивные и уже распознанные значения не изменяются. Неизвестный UUID
+    остаётся безопасным ``Ref#<uuid>`` — тип не угадывается.
+    """
+    if type_resolver is None:
+        return
+
+    for prop in _iter_decoded_properties(data):
+        value_type = prop.get("Type")
+        if not isinstance(value_type, str):
+            continue
+        if not value_type.startswith(_REF_TYPE_PREFIX):
+            continue
+
+        ref_uuid = value_type[len(_REF_TYPE_PREFIX):]
+        if not ref_uuid:
+            continue
+
+        try:
+            resolved = type_resolver(ref_uuid)
+        except Exception as exc:  # noqa: BLE001
+            warnings.append(
+                "object_decoder: REF_RESOLVER_FAILED - %s: %s" % (ref_uuid, exc)
+            )
+            continue
+
+        if isinstance(resolved, str) and resolved:
+            prop["Type"] = resolved
 
 
 # ---------------------------------------------------------------------------
@@ -330,6 +378,7 @@ def _decode_compact_attribute_wrapper(wrapper: object) -> dict | None:
         "Type": None,
         "Synonym": synonym,
     }
+
 
 def _decode_real_tabular_section(
     node: object,

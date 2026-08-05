@@ -1,60 +1,34 @@
 """scan_forms — обобщённый обход *Form-контейнеров и сборка FormScanIndex.
 
-Реализует issues #9, #13, #25, #32, #38, #40, #57.
+Реализует issues #9, #13, #25, #32, #38, #40, #57, #88.
 
 v8unpack формирует несколько layout-ов.
 
 **4-уровневый** (большинство объектов конфигурации)::
 
-    cf_export/<Тип>/<Объект>/Form/<ИмяФормы>/
+    cf_export/<Тип>/<Объект>/<ContainerName>/<ИмяФормы>/
 
 **3-уровневый** (общие формы — нет объекта-владельца)::
 
     cf_export/CommonForm/<ИмяФормы>/
 
-**External** (распакованные внешние обработки/отчёты, mode="external", issues #25/#32)::
+**External** (распакованные внешние обработки/отчёты, mode="external")::
 
     External/<имя обработки>/Form/<ИмяФормы>/Form.obj.bsl
     External/<имя отчёта>/ReportForm/<ИмяФормы>/ReportForm.obj.bsl
 
-Отличия External от конфигурации:
-- контейнер формы — ``Form`` (обработка) либо ``ReportForm`` (отчёт);
-- bsl-файл формы называется ``.obj.bsl`` (v8unpack 1.2.11) либо
-  ``.obj`` (старый вариант без суффикса, issue #32) — берётся первый
-  существующий;
-- верхний уровень — имя конкретной обработки/отчёта, а не ``object_type``;
-- тип объекта определяется так: контейнер ``ReportForm`` ⇒ ``ExternalReport``;
-  контейнер ``Form`` ⇒ по имени модуля объекта обработки
-  (``<Тип>.obj.bsl`` / ``<Тип>.obj``), fallback ``ExternalDataProcessor``.
+**Elem-формы** (issue #57): управляемые формы без ``.obj.bsl`` обнаруживаются
+через :func:`~v8unpack_agent.managed_forms.discover_elem_forms` и попадают в единый
+``FormScanIndex`` с заполненным ``elem_json_path``.
 
-Артефакты формы конфигурации::
-
-    .obj.bsl
-    .json
-
-Артефакты формы внешнего объекта::
-
-    .obj.bsl   # bsl формы; либо .obj (legacy)
-    .json      # метаданные формы; Form.json остаётся fallback для совместимости
-    .elem      # структура формы; Form.elem остаётся fallback для совместимости
-    .id
-
-**Elem-формы** (issue #57):
-
-Управляемые формы не имеют ``.obj.bsl`` в ряде конфигураций, но
-всегда дают ``*.elem.json``. ``scan_forms`` использует
-:func:`~v8unpack_agent.managed_forms.discover_elem_forms` для обнаружения
-этих форм и добавляет их в ``FormScanIndex`` с заполненным ``elem_json_path``.
-Для ordinary/external форм ``elem_json_path`` берётся из той же discovery,
-если ``*.elem.json`` присутствует в каталоге формы.
-
-``FormEntry.elem_json_path`` — всегда relative-to-root (согласованно с
-``ElemFormEntry.elem_json_path`` из discovery #55). Реестр хранит только
-путь; структуру по требованию даёт ``parse_elem_json`` (второй парсер НЕ
-вводится).
+**Ссылочные типы** (issue #88): во время того же обхода конфигурации собирается
+глобальный индекс ``uuid типа -> имя ссылочного типа``
+(``CatalogRef.<Имя>``, ``DocumentRef.<Имя>``). Второй обход дерева не вводится.
+Индекс используется как ``type_resolver`` для
+:func:`~v8unpack_agent.object_decoder.decode_object_attributes`.
 
 OS-нейтральность:
-- Пути строятся через :mod:`pathlib` / :func:`os.path.join`.
+- Пути строятся через :mod:`pathlib`.
 - Текст читается/пишется как UTF-8 явно.
 """
 from __future__ import annotations
@@ -91,12 +65,32 @@ EXTERNAL_OBJECT_MODULE_CANDIDATES: dict[str, tuple[str, ...]] = {
     ),
 }
 
-# Контейнер, который однозначно определяет тип «отчёт» (подтверждено на живых данных).
+# Контейнер, который однозначно определяет тип «отчёт».
 EXTERNAL_REPORT_CONTAINER = "ReportForm"
 EXTERNAL_REPORT_OBJECT_TYPE = "ExternalReport"
 
 # Fallback-тип, если тип не удалось определить (обратная совместимость).
 EXTERNAL_DEFAULT_OBJECT_TYPE = "ExternalDataProcessor"
+
+# --- ссылочные типы (issue #88) ---------------------------------------------
+# Единая таблица соответствия вида метаданных и префикса ссылки.
+# Включены только виды, у которых есть ссылочный тип и которые подтверждены
+# на контрольной выгрузке. Регистры ссылочного типа не имеют и не входят сюда.
+REFERENCE_TYPE_PREFIXES: dict[str, str] = {
+    "Catalog": "CatalogRef",
+    "Document": "DocumentRef",
+    "Enum": "EnumRef",
+    "ChartOfCharacteristicType": "ChartOfCharacteristicTypeRef",
+    "ExchangePlan": "ExchangePlanRef",
+    "BusinessProcess": "BusinessProcessRef",
+    "Task": "TaskRef",
+}
+
+# Слоты блока идентификации ``header[0][1]``, в которых лежат идентификаторы
+# объекта метаданных. У объекта их несколько, и ссылка реквизита адресует
+# не всегда слот 2: на контрольной выгрузке встречаются также слоты 1 и 3.
+# Все они принадлежат одному объекту, поэтому имя типа для них одно и то же.
+_IDENTITY_UUID_SLOTS = (1, 2, 3)
 
 # Структурно значимые поля нормализованного элемента (issue #40).
 # Косметические поля (left, top, width, height, color, font, guid, …)
@@ -123,20 +117,7 @@ def _compute_sha256(path: Path) -> Optional[str]:
 def _compute_elem_sha256(form_dir: Path) -> Optional[str]:
     """Вычислить SHA-256 нормализованного дерева элементов формы (issue #40).
 
-    Алгоритм:
-    1. Найти ``*.elem.json`` в ``form_dir`` (через elem_parser).
-    2. Распарсить нормализованное дерево (``ElemIndexResult.elements``).
-       Если ``elem_index_ok=False`` (файл не найден или не разобран) — вернуть ``None``.
-    3. Из каждого элемента оставить только структурно значимые поля
-       (``_ELEM_STRUCTURAL_KEYS``): name, type, path, parent, parent_path,
-       page, source, data_path, handler. Косметические поля (координаты,
-       цвета, шрифты, GUID) не хэшируются.
-    4. Сериализовать список отфильтрованных элементов в UTF-8 JSON
-       с ``sort_keys=True, ensure_ascii=False`` для детерминизма.
-    5. Вернуть SHA-256 hex-дайджест байтов этой строки.
-
-    Граница достоверности: вложенность групп не реконструируется
-    (``elem_parser`` помечает это предупреждением); хэш строится
+    Граница достоверности: вложенность групп не реконструируется; хэш строится
     по достоверной части дерева.
     """
     try:
@@ -159,69 +140,29 @@ class FormEntry:
     """Одна форма, найденная при сканировании cf_export."""
 
     object_type: str
-    """Тип метаобъекта: ``Catalog``, ``Document``, ``CommonForm`` и т.д.
-    Для внешних объектов — ``ExternalDataProcessor`` либо ``ExternalReport``
-    (не пересекается с типами конфигурации).
-    Для форм, обнаруженных только через discovery (elem-only) — тип берётся
-    из пути файловой системы (container-name) при наличии, иначе пустая строка."""
-
     object_name: str
-    """Имя метаобъекта. Пустая строка для общих форм (CommonForm-layout).
-    Для внешних объектов — имя конкретной обработки/отчёта."""
-
     container_name: str
-    """Имя контейнера: ``CatalogForm``, ``Form``, ``ReportForm``, ``CommonForm``."""
-
     form_name: str
-    """Имя директории формы."""
-
     form_path: Path
-    """Абсолютный путь к директории формы."""
-
     bsl_path: Path
-    """Путь к bsl-файлу формы: ``.obj.bsl`` (config) либо
-    ``.obj.bsl`` / ``.obj`` (external).
-    Для elem-only форм путь может указывать на несуществующий файл
-    (заполняется заглушкой из form_path для сохранения схемы)."""
-
     json_path: Path
-    """Путь к json-файлу формы.
-    Для elem-only форм может указывать на несуществующий файл."""
 
     warnings: list[str] = field(default_factory=list)
 
     bsl_mtime: float = 0.0
-    """mtime bsl-файла на момент сканирования. Legacy-поле; используется как
-    fallback в ``drift_checker.check_drift()`` для старых индексов без hash.
-    0.0 означает «не известно»."""
+    """mtime bsl-файла на момент сканирования (legacy-fallback для drift)."""
 
     form_elem_path: Optional[Path] = None
-    """Путь к ``Form.elem`` (структура формы внешнего объекта). ``None`` —
-    файла нет либо это форма конфигурации (issue #25). Additive-поле:
-    дефолт сохраняет обратную совместимость индекса."""
+    """Путь к ``Form.elem`` внешнего объекта (issue #25)."""
 
     bsl_sha256: Optional[str] = None
-    """SHA-256 hex-дайджест содержимого bsl-файла на момент сканирования.
-    Основной критерий изменения в ``drift_checker.check_drift()`` (issue #38).
-    ``None`` означает «не вычислен» — используется legacy-fallback через
-    ``bsl_mtime``."""
+    """SHA-256 содержимого bsl-файла (issue #38)."""
 
     elem_sha256: Optional[str] = None
-    """SHA-256 hex-дайджест нормализованного дерева элементов формы (issue #40).
-    Хэшируется только структурно значимая часть ``form_elements_index``
-    (name, type, path, parent, parent_path, page, source, data_path, handler).
-    Косметические поля (координаты, цвета, шрифты, GUID) исключены.
-    ``None`` — ``*.elem.json`` не найден, не разобран или элементов нет.
-    Используется ``drift_checker.check_drift()`` как независимый сигнал
-    ``structure_modified`` (отдельно от ``modified``)."""
+    """SHA-256 нормализованного дерева элементов (issue #40)."""
 
     elem_json_path: Optional[Path] = None
-    """Путь к ``*.elem.json`` — источник структуры elem-формы (issue #57).
-    Relative-to-root, согласованно с ``ElemFormEntry.elem_json_path`` из
-    discovery (#55). Для ordinary/external форм заполнен, если ``*.elem.json``
-    присутствует в каталоге формы; иначе ``None``. Для elem-only форм всегда
-    заполнен. Реестр хранит только путь; структуру по требованию даёт
-    ``parse_elem_json`` — второй парсер НЕ вводится."""
+    """Путь к ``*.elem.json``, relative-to-root (issue #57)."""
 
 
 @dataclass
@@ -232,12 +173,23 @@ class FormScanIndex:
     total: int = 0
     scanned_at: str = ""
     scan_warnings: list[str] = field(default_factory=list)
+    reference_types: dict[str, str] = field(default_factory=dict)
+    """Индекс ``uuid типа -> имя ссылочного типа`` (issue #88)."""
+
+    def resolve_reference_type(self, uuid: str) -> Optional[str]:
+        """Вернуть читаемое имя ссылочного типа либо ``None`` (issue #88).
+
+        Подходит как ``type_resolver`` для ``decode_object_attributes``:
+        неизвестный UUID оставляет безопасный fallback ``Ref#<uuid>``.
+        """
+        return self.reference_types.get(uuid)
 
     def to_dict(self) -> dict:
         return {
             "total": self.total,
             "scanned_at": self.scanned_at,
             "scan_warnings": self.scan_warnings,
+            "reference_types": self.reference_types,
             "forms": [
                 {
                     "object_type": e.object_type,
@@ -277,22 +229,9 @@ class FormScanIndex:
     def load(cls, index_path: Path) -> "FormScanIndex":
         """Загрузить :class:`FormScanIndex` из JSON-файла, сохранённого :meth:`save`.
 
-        Если файл отсутствует — возвращает пустой индекс (аналогично
-        :meth:`FormsIndex.load`).
-        Пути (``form_path``, ``bsl_path``, ``json_path``, ``form_elem_path``,
-        ``elem_json_path``) восстанавливаются через :class:`pathlib.Path` —
-        OS-нейтрально.
-
-        Обратная совместимость:
-        - поле ``bsl_sha256`` отсутствующее в старом индексе → ``None``;
-        - поле ``elem_sha256`` отсутствующее в старом индексе → ``None``;
-        - поле ``elem_json_path`` отсутствующее в старом индексе → ``None``;
-        - поле ``form_xml_path`` в старом индексе — игнорируется (не обязательно).
-
-        Parameters
-        ----------
-        index_path:
-            Путь к JSON-файлу (например ``forms_scan_index.json``).
+        Обратная совместимость: отсутствующие ``bsl_sha256`` / ``elem_sha256`` /
+        ``elem_json_path`` → ``None``; отсутствующий ``reference_types`` → ``{}``;
+        старое поле ``form_xml_path`` игнорируется.
         """
         if not Path(index_path).exists():
             return cls()
@@ -314,7 +253,7 @@ class FormScanIndex:
                     else None
                 ),
                 bsl_sha256=row.get("bsl_sha256"),   # None for old indexes
-                elem_sha256=row.get("elem_sha256"), # None for old indexes
+                elem_sha256=row.get("elem_sha256"),  # None for old indexes
                 elem_json_path=(
                     Path(row["elem_json_path"])
                     if row.get("elem_json_path") is not None
@@ -328,6 +267,7 @@ class FormScanIndex:
             total=int(raw.get("total", len(forms))),
             scanned_at=str(raw.get("scanned_at", "")),
             scan_warnings=list(raw.get("scan_warnings", [])),
+            reference_types=dict(raw.get("reference_types", {})),
         )
 
 
@@ -341,18 +281,12 @@ def _first_existing(directory: Path, candidates: tuple[str, ...]) -> Optional[Pa
 
 
 def _external_bsl_candidates(container_name: str) -> tuple[str, ...]:
-    """Кандидаты bsl-файла формы для контейнера: .bsl (v8unpack 1.2.11), затем legacy."""
+    """Кандидаты bsl-файла формы: .bsl (v8unpack 1.2.11), затем legacy."""
     return (f"{container_name}.obj.bsl", f"{container_name}.obj")
 
 
 def _resolve_external_object_type(proc_dir: Path, container_name: str) -> str:
-    """Определить тип внешнего объекта.
-
-    Правило (подтверждено на живых данных, issue #32):
-    - контейнер ``ReportForm`` ⇒ ``ExternalReport``;
-    - контейнер ``Form`` ⇒ по имени модуля объекта (``<Тип>.obj.bsl`` / ``<Тип>.obj``),
-      fallback ``ExternalDataProcessor``.
-    """
+    """Определить тип внешнего объекта (issue #32)."""
     if container_name == EXTERNAL_REPORT_CONTAINER:
         return EXTERNAL_REPORT_OBJECT_TYPE
     for object_type, candidates in EXTERNAL_OBJECT_MODULE_CANDIDATES.items():
@@ -367,15 +301,91 @@ def _is_form_container(directory: Path) -> bool:
 
 
 def _find_elem_json_path(form_dir: Path, root: Path) -> Optional[Path]:
-    """Найти ``*.elem.json`` в каталоге формы и вернуть relative-to-root путь.
-
-    Возвращает ``None``, если ``*.elem.json`` не найден.
-    Не импортирует парсер — только определяет путь (issue #57).
-    """
+    """Найти ``*.elem.json`` и вернуть relative-to-root путь (issue #57)."""
     elem_files = sorted(form_dir.glob("*.elem.json"))
     if not elem_files:
         return None
     return elem_files[0].relative_to(root)
+
+
+# --- индекс ссылочных типов (issue #88) --------------------------------------
+
+def _is_metadata_uuid(value: object) -> bool:
+    """Проверить, что значение — канонический UUID."""
+    if not isinstance(value, str) or len(value) != 36:
+        return False
+    parts = value.split("-")
+    if [len(part) for part in parts] != [8, 4, 4, 4, 12]:
+        return False
+    return all(char in "0123456789abcdefABCDEF" for part in parts for char in part)
+
+
+def _metadata_object_uuids(object_json: Path) -> list[str]:
+    """Вернуть все идентификаторы объекта из блока ``header[0][1]``.
+
+    У объекта метаданных несколько UUID, и ссылка реквизита адресует один из них,
+    а не обязательно слот 2. Порядок слотов фиксирован, дубли убираются —
+    результат детерминирован. Best-effort: ошибка чтения или неполная структура
+    дают пустой список без исключения — тип не угадывается.
+    """
+    try:
+        raw = json.loads(object_json.read_text(encoding="utf-8-sig"))
+        identity = raw["header"][0][1]
+    except (OSError, ValueError, TypeError, KeyError, IndexError):
+        return []
+
+    if not isinstance(identity, list):
+        return []
+
+    found: list[str] = []
+    for slot in _IDENTITY_UUID_SLOTS:
+        if slot >= len(identity):
+            continue
+        candidate = identity[slot]
+        if _is_metadata_uuid(candidate) and candidate not in found:
+            found.append(candidate)
+    return found
+
+
+def _collect_reference_type(
+    obj_dir: Path,
+    object_type: str,
+    object_name: str,
+    reference_types: dict[str, str],
+    scan_warnings: list[str],
+) -> None:
+    """Дополнить индекс UUID → имя типа в точке уже идущего обхода (issue #88).
+
+    Второй обход дерева не выполняется: функция вызывается из :func:`_scan_config`
+    для того же каталога объекта, который уже перебирается ради контейнеров форм.
+    Все идентификаторы одного объекта ведут на одно имя типа; конфликт разных
+    объектов по одному UUID фиксируется предупреждением, первая запись сохраняется.
+    """
+    prefix = REFERENCE_TYPE_PREFIXES.get(object_type)
+    if prefix is None:
+        return
+
+    candidates = (obj_dir / f"{object_type}.json", obj_dir / f"{object_name}.json")
+    object_json = next((path for path in candidates if path.is_file()), None)
+    if object_json is None:
+        return
+
+    uuids = _metadata_object_uuids(object_json)
+    if not uuids:
+        scan_warnings.append(
+            f"reference type metadata is incomplete: {object_json.name}"
+        )
+        return
+
+    type_name = f"{prefix}.{object_name}"
+    for uuid in uuids:
+        previous = reference_types.get(uuid)
+        if previous is None:
+            reference_types[uuid] = type_name
+        elif previous != type_name:
+            scan_warnings.append(
+                f"reference type duplicate UUID {uuid}: kept {previous}, skipped {type_name}"
+            )
 
 
 def _scan_form_dir(
@@ -388,8 +398,6 @@ def _scan_form_dir(
     """Собрать FormEntry из директории формы конфигурации.
 
     Возвращает ``None``, если обязательный артефакт ``.obj.bsl`` отсутствует.
-    Заполняет ``elem_json_path`` (relative-to-root) если ``*.elem.json`` есть
-    в каталоге формы (issue #57).
     """
     bsl_path = form_dir / (container_name + ".obj.bsl")
     json_path = form_dir / (container_name + ".json")
@@ -462,13 +470,7 @@ def _scan_external_form_dir(
     forms: list[FormEntry],
     scan_warnings: list[str],
 ) -> None:
-    """Собрать FormEntry из директории формы внешнего объекта (issues #25, #32).
-
-    Обязательный артефакт — bsl формы: ``.obj.bsl`` (v8unpack 1.2.11)
-    либо ``.obj`` (legacy) — берётся первый существующий. Отсутствие
-    обоих → best-effort skip с предупреждением. ``Form.elem`` опционален.
-    Заполняет ``elem_json_path`` если ``*.elem.json`` присутствует (issue #57).
-    """
+    """Собрать FormEntry из директории формы внешнего объекта (issues #25, #32)."""
     candidates = _external_bsl_candidates(container_name)
     bsl_path = _first_existing(form_dir, candidates)
     if bsl_path is None:
@@ -529,16 +531,7 @@ def _scan_external(
     forms: list[FormEntry],
     scan_warnings: list[str],
 ) -> None:
-    """Обход структуры External/<объект>/<контейнер>/<форма>/ (issues #25, #32).
-
-    Устойчив к обоим вариантам корня: если внутри ``root`` есть каталог
-    ``External/`` — идём от него; иначе ``root`` уже указывает на уровень
-    объектов. Тихого fallback между режимами нет — режим задаётся явно.
-
-    Для каждого объекта перебираются известные контейнеры форм
-    (``Form``, ``ReportForm``). Тип объекта определяется по контейнеру и
-    (для ``Form``) по модулю объекта — см. :func:`_resolve_external_object_type`.
-    """
+    """Обход структуры External/<объект>/<контейнер>/<форма>/ (issues #25, #32)."""
     external_root = root / EXTERNAL_ROOT
     if not external_root.is_dir():
         external_root = root
@@ -578,8 +571,13 @@ def _scan_config(
     root: Path,
     forms: list[FormEntry],
     scan_warnings: list[str],
+    reference_types: Optional[dict[str, str]] = None,
 ) -> None:
-    """Обход структуры конфигурации (4- и 3-уровневый layout). Логика #9/#13."""
+    """Обход структуры конфигурации (4- и 3-уровневый layout). Логика #9/#13.
+
+    Если передан ``reference_types``, тот же обход попутно наполняет индекс
+    ссылочных типов (issue #88) — без второго discovery.
+    """
     for type_dir in sorted(root.iterdir()):
         if not type_dir.is_dir():
             continue
@@ -604,6 +602,11 @@ def _scan_config(
                 continue
             object_name = obj_dir.name
 
+            if reference_types is not None:
+                _collect_reference_type(
+                    obj_dir, object_type, object_name, reference_types, scan_warnings
+                )
+
             for container_dir in sorted(obj_dir.iterdir()):
                 if not _is_form_container(container_dir):
                     continue
@@ -623,15 +626,6 @@ def _infer_elem_only_metadata(
     mode: str,
 ) -> tuple[str, str, str, str]:
     """Infer FormEntry metadata from elem-only form path.
-
-    For config layout::
-
-        <object_type>/<object_name>/<container_name>/<form_name>
-
-    For external layout::
-
-        <object_name>.epf/Form/<form_name>
-        <object_name>.erf/ReportForm/<form_name>
 
     Returns
     -------
@@ -672,21 +666,7 @@ def _collect_elem_only_forms(
     scan_warnings: list[str],
     mode: str = "config",
 ) -> None:
-    """Добавить elem-формы, не попавшие в обычный/external scan (issue #57).
-
-    Использует :func:`~v8unpack_agent.managed_forms.discover_elem_forms`
-    для обнаружения всех ``*.elem.json``. Пропускает формы, уже
-    добавленные через ``_scan_form_dir`` / ``_scan_external_form_dir``
-    (по абсолютному пути директории формы). Добавляет оставшиеся
-    как ``FormEntry`` с заполненным ``elem_json_path`` и ``None``
-    в полях ``bsl_sha256`` / ``bsl_mtime``.
-
-    Метаданные (object_type / object_name / container_name / form_name)
-    восстанавливаются из relative-пути формы через
-    :func:`_infer_elem_only_metadata` — с учётом ``mode``: для external
-    layout корректно разбирается ``<object>.(epf|erf)/(Form|ReportForm)/<form>``
-    (issue #57, фикс метаданных внешних elem-only форм без кода).
-    """
+    """Добавить elem-формы, не попавшие в обычный/external scan (issue #57)."""
     try:
         from v8unpack_agent.managed_forms import discover_elem_forms  # local import
     except ImportError as exc:
@@ -743,35 +723,14 @@ def scan_forms(
 ) -> FormScanIndex:
     """Обойти ``cf_export_root`` и собрать FormScanIndex.
 
-    Параметры
-    ---------
-    cf_export_root:
-        Корень выгрузки. Для ``mode="config"`` — ``Catalog/``, ``Document/``,
-        ``CommonForm/`` и др. Для ``mode="external"`` — каталог с ``External/``
-        либо непосредственно уровень объектов.
-    save_to:
-        Если задан, сохранить JSON-индекс в этот файл.
-    mode:
-        ``"config"`` (по умолчанию) — структура конфигурации; ``"external"`` —
-        структура распакованных внешних обработок/отчётов (issues #25, #32).
-        Режимы не смешиваются: ``object_type`` внешних форм
-        (``ExternalDataProcessor`` / ``ExternalReport``) не пересекается с
-        типами конфигурации.
-    include_elem_only:
-        Если ``True`` (по умолчанию), после основного обхода добавляет
-        elem-формы без ``.obj.bsl``, обнаруженные через ``discover_elem_forms``
-        (issue #57). Управляемые формы в конфигурациях смешанного типа
-        попадают в единый ``FormScanIndex``.
-
-    Возвращает
-    ----------
-    :class:`FormScanIndex` с найденными формами. Ошибка отдельной формы не
-    останавливает обход (best-effort). Единый индекс содержит обычные,
-    внешние и elem-формы.
+    В режиме ``config`` тот же обход попутно строит индекс ссылочных типов
+    (``FormScanIndex.reference_types``, issue #88). Ошибка отдельной формы не
+    останавливает обход (best-effort).
     """
     root = Path(cf_export_root)
     forms: list[FormEntry] = []
     scan_warnings: list[str] = []
+    reference_types: dict[str, str] = {}
 
     if not root.is_dir():
         scan_warnings.append(f"cf_export_root not found or not a directory: {root}")
@@ -785,7 +744,7 @@ def scan_forms(
     if mode == "external":
         _scan_external(root, forms, scan_warnings)
     else:
-        _scan_config(root, forms, scan_warnings)
+        _scan_config(root, forms, scan_warnings, reference_types)
 
     if include_elem_only:
         existing_form_paths: set[Path] = {
@@ -798,6 +757,7 @@ def scan_forms(
         total=len(forms),
         scanned_at=datetime.now(tz=timezone.utc).isoformat(),
         scan_warnings=scan_warnings,
+        reference_types=reference_types,
     )
 
     if save_to is not None:
