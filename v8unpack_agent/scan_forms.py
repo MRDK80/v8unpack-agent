@@ -22,7 +22,7 @@ v8unpack формирует несколько layout-ов.
 ``FormScanIndex`` с заполненным ``elem_json_path``.
 
 **Ссылочные типы** (issue #88): во время того же обхода конфигурации собирается
-глобальный индекс ``uuid объекта метаданных -> имя ссылочного типа``
+глобальный индекс ``uuid типа -> имя ссылочного типа``
 (``CatalogRef.<Имя>``, ``DocumentRef.<Имя>``). Второй обход дерева не вводится.
 Индекс используется как ``type_resolver`` для
 :func:`~v8unpack_agent.object_decoder.decode_object_attributes`.
@@ -74,11 +74,23 @@ EXTERNAL_DEFAULT_OBJECT_TYPE = "ExternalDataProcessor"
 
 # --- ссылочные типы (issue #88) ---------------------------------------------
 # Единая таблица соответствия вида метаданных и префикса ссылки.
-# Расширяется только подтверждёнными видами объектов.
+# Включены только виды, у которых есть ссылочный тип и которые подтверждены
+# на контрольной выгрузке. Регистры ссылочного типа не имеют и не входят сюда.
 REFERENCE_TYPE_PREFIXES: dict[str, str] = {
     "Catalog": "CatalogRef",
     "Document": "DocumentRef",
+    "Enum": "EnumRef",
+    "ChartOfCharacteristicType": "ChartOfCharacteristicTypeRef",
+    "ExchangePlan": "ExchangePlanRef",
+    "BusinessProcess": "BusinessProcessRef",
+    "Task": "TaskRef",
 }
+
+# Слоты блока идентификации ``header[0][1]``, в которых лежат идентификаторы
+# объекта метаданных. У объекта их несколько, и ссылка реквизита адресует
+# не всегда слот 2: на контрольной выгрузке встречаются также слоты 1 и 3.
+# Все они принадлежат одному объекту, поэтому имя типа для них одно и то же.
+_IDENTITY_UUID_SLOTS = (1, 2, 3)
 
 # Структурно значимые поля нормализованного элемента (issue #40).
 # Косметические поля (left, top, width, height, color, font, guid, …)
@@ -162,7 +174,7 @@ class FormScanIndex:
     scanned_at: str = ""
     scan_warnings: list[str] = field(default_factory=list)
     reference_types: dict[str, str] = field(default_factory=dict)
-    """Индекс ``uuid объекта метаданных -> имя ссылочного типа`` (issue #88)."""
+    """Индекс ``uuid типа -> имя ссылочного типа`` (issue #88)."""
 
     def resolve_reference_type(self, uuid: str) -> Optional[str]:
         """Вернуть читаемое имя ссылочного типа либо ``None`` (issue #88).
@@ -299,7 +311,7 @@ def _find_elem_json_path(form_dir: Path, root: Path) -> Optional[Path]:
 # --- индекс ссылочных типов (issue #88) --------------------------------------
 
 def _is_metadata_uuid(value: object) -> bool:
-    """Проверить, что значение — канонический UUID объекта метаданных."""
+    """Проверить, что значение — канонический UUID."""
     if not isinstance(value, str) or len(value) != 36:
         return False
     parts = value.split("-")
@@ -308,18 +320,31 @@ def _is_metadata_uuid(value: object) -> bool:
     return all(char in "0123456789abcdefABCDEF" for part in parts for char in part)
 
 
-def _metadata_object_uuid(object_json: Path) -> Optional[str]:
-    """Прочитать UUID объекта из устойчивого слота ``header[0][1][2]``.
+def _metadata_object_uuids(object_json: Path) -> list[str]:
+    """Вернуть все идентификаторы объекта из блока ``header[0][1]``.
 
-    Best-effort: любая ошибка чтения или неполная структура дают ``None``
-    без исключения — тип не угадывается.
+    У объекта метаданных несколько UUID, и ссылка реквизита адресует один из них,
+    а не обязательно слот 2. Порядок слотов фиксирован, дубли убираются —
+    результат детерминирован. Best-effort: ошибка чтения или неполная структура
+    дают пустой список без исключения — тип не угадывается.
     """
     try:
         raw = json.loads(object_json.read_text(encoding="utf-8-sig"))
-        uuid = raw["header"][0][1][2]
+        identity = raw["header"][0][1]
     except (OSError, ValueError, TypeError, KeyError, IndexError):
-        return None
-    return uuid if _is_metadata_uuid(uuid) else None
+        return []
+
+    if not isinstance(identity, list):
+        return []
+
+    found: list[str] = []
+    for slot in _IDENTITY_UUID_SLOTS:
+        if slot >= len(identity):
+            continue
+        candidate = identity[slot]
+        if _is_metadata_uuid(candidate) and candidate not in found:
+            found.append(candidate)
+    return found
 
 
 def _collect_reference_type(
@@ -333,8 +358,8 @@ def _collect_reference_type(
 
     Второй обход дерева не выполняется: функция вызывается из :func:`_scan_config`
     для того же каталога объекта, который уже перебирается ради контейнеров форм.
-    Первое встреченное имя выигрывает, порядок обхода отсортирован — результат
-    детерминирован.
+    Все идентификаторы одного объекта ведут на одно имя типа; конфликт разных
+    объектов по одному UUID фиксируется предупреждением, первая запись сохраняется.
     """
     prefix = REFERENCE_TYPE_PREFIXES.get(object_type)
     if prefix is None:
@@ -345,21 +370,22 @@ def _collect_reference_type(
     if object_json is None:
         return
 
-    uuid = _metadata_object_uuid(object_json)
-    if uuid is None:
+    uuids = _metadata_object_uuids(object_json)
+    if not uuids:
         scan_warnings.append(
             f"reference type metadata is incomplete: {object_json.name}"
         )
         return
 
     type_name = f"{prefix}.{object_name}"
-    previous = reference_types.get(uuid)
-    if previous is None:
-        reference_types[uuid] = type_name
-    elif previous != type_name:
-        scan_warnings.append(
-            f"reference type duplicate UUID {uuid}: kept {previous}, skipped {type_name}"
-        )
+    for uuid in uuids:
+        previous = reference_types.get(uuid)
+        if previous is None:
+            reference_types[uuid] = type_name
+        elif previous != type_name:
+            scan_warnings.append(
+                f"reference type duplicate UUID {uuid}: kept {previous}, skipped {type_name}"
+            )
 
 
 def _scan_form_dir(

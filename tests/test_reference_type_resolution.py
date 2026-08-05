@@ -1,4 +1,4 @@
-"""Red-stage tests for reference type resolution (issue #88)."""
+"""Tests for reference type resolution (issue #88)."""
 from __future__ import annotations
 
 import json
@@ -14,6 +14,10 @@ NULL_UUID = "00000000-0000-0000-0000-000000000000"
 CATALOG_UUID = "11111111-1111-4111-8111-111111111111"
 DOCUMENT_UUID = "22222222-2222-4222-8222-222222222222"
 UNKNOWN_UUID = "99999999-9999-4999-8999-999999999999"
+SLOT1_UUID = "33333333-3333-4333-8333-333333333333"
+SLOT3_UUID = "44444444-4444-4444-8444-444444444444"
+ENUM_UUID = "55555555-5555-4555-8555-555555555555"
+REGISTER_UUID = "66666666-6666-4666-8666-666666666666"
 
 
 def _name_entry(uuid: str, name: str) -> list:
@@ -58,13 +62,20 @@ def _write_object_with_types(tmp_path: Path, type_nodes: list[list]) -> Path:
     return path
 
 
-def _write_metadata_object(root: Path, object_type: str, name: str, uuid: str) -> None:
+def _write_identity_block(
+    root: Path, object_type: str, name: str, identity: list
+) -> None:
     object_dir = root / object_type / name
-    object_dir.mkdir(parents=True)
-    payload = {"header": [["metadata", ["identity", "object", uuid]]]}
+    object_dir.mkdir(parents=True, exist_ok=True)
+    payload = {"header": [["metadata", identity]]}
     (object_dir / f"{object_type}.json").write_text(
         json.dumps(payload), encoding="utf-8"
     )
+
+
+def _write_metadata_object(root: Path, object_type: str, name: str, uuid: str) -> None:
+    """Object metadata whose identity block carries the UUID in slot 2."""
+    _write_identity_block(root, object_type, name, ["identity", "object", uuid])
 
 
 def test_known_reference_is_resolved_and_callback_receives_bare_uuid(tmp_path: Path) -> None:
@@ -156,3 +167,69 @@ def test_incomplete_metadata_keeps_safe_fallback_and_diagnostic(tmp_path: Path) 
 
     assert index.resolve_reference_type(UNKNOWN_UUID) is None
     assert any("reference type" in warning.lower() for warning in index.scan_warnings)
+
+
+def test_reference_resolved_from_identity_slot_one(tmp_path: Path) -> None:
+    root = tmp_path / "export"
+    _write_identity_block(
+        root, "Catalog", "SlotOneSynthetic", ["identity", SLOT1_UUID, "object", "tail"]
+    )
+
+    index = scan_forms(root)
+
+    assert index.resolve_reference_type(SLOT1_UUID) == "CatalogRef.SlotOneSynthetic"
+
+
+def test_reference_resolved_from_identity_slot_three(tmp_path: Path) -> None:
+    root = tmp_path / "export"
+    _write_identity_block(
+        root, "Document", "SlotThreeSynthetic", ["identity", "x", "object", SLOT3_UUID]
+    )
+
+    index = scan_forms(root)
+
+    assert index.resolve_reference_type(SLOT3_UUID) == "DocumentRef.SlotThreeSynthetic"
+
+
+def test_all_identity_uuids_map_to_the_same_type_name(tmp_path: Path) -> None:
+    root = tmp_path / "export"
+    _write_identity_block(
+        root,
+        "Catalog",
+        "MultiSlotSynthetic",
+        ["identity", SLOT1_UUID, CATALOG_UUID, SLOT3_UUID],
+    )
+
+    index = scan_forms(root)
+
+    expected = "CatalogRef.MultiSlotSynthetic"
+    assert index.resolve_reference_type(SLOT1_UUID) == expected
+    assert index.resolve_reference_type(CATALOG_UUID) == expected
+    assert index.resolve_reference_type(SLOT3_UUID) == expected
+    assert not any("duplicate" in warning.lower() for warning in index.scan_warnings)
+
+
+def test_enum_kind_uses_enum_reference_prefix(tmp_path: Path) -> None:
+    root = tmp_path / "export"
+    _write_identity_block(
+        root, "Enum", "SyntheticEnum", ["identity", ENUM_UUID, "object", "tail"]
+    )
+
+    index = scan_forms(root)
+
+    assert index.resolve_reference_type(ENUM_UUID) == "EnumRef.SyntheticEnum"
+
+
+def test_kind_without_reference_type_is_not_indexed(tmp_path: Path) -> None:
+    root = tmp_path / "export"
+    _write_identity_block(
+        root,
+        "InformationRegister",
+        "SyntheticRegister",
+        ["identity", REGISTER_UUID, "object", "tail"],
+    )
+
+    index = scan_forms(root)
+
+    assert index.resolve_reference_type(REGISTER_UUID) is None
+    assert index.reference_types == {}
