@@ -6,6 +6,33 @@
 ## [Unreleased]
 
 ### Added
+
+- **`form_context.FormContext`** — frozen-датакласс с материализованным
+  содержимым формы: `form_name`, `container_name`, `object_type`,
+  `object_name`, `bsl_text`, `summary`, `metadata`. `FormEntry` остаётся
+  карточкой указателей, `FormContext` открывает то, на что она указывает
+  (issue #77).
+- **`form_context.build_form_context(form_entry, unpacked_root)`** — читает
+  `bsl_path` явно как UTF-8, строит `FormSummary` единственным существующим
+  парсером и отбирает компактные `metadata`. Отсутствие BSL — штатный
+  `None`, пустой файл модуля — `""`; отсутствие `*.elem.json` даёт пустые
+  бакеты и `warnings` парсера. Второй путь разбора не вводится, привязки
+  `data_path` не создаются (issue #77).
+- **`form_context.to_llm_prompt_fragment(context, max_chars=8000)`** —
+  детерминированный фрагмент `# FORM` → `## SUMMARY` → `## BSL`. Обрезка
+  выполняется последним шагом, поэтому `len(result) <= max_chars` при любых
+  входных данных, включая лимит меньше длины заголовков; `max_chars <= 0`
+  даёт пустую строку без исключения (issue #77).
+- **`tests/test_form_context.py`** — 37 тестов: BSL + elem, elem-only, форма
+  без `elem.json`, отсутствующий каталог формы, отбор `metadata` без
+  дублирования `FormEntry`, чтение UTF-8 с кириллицей, детерминизм, порядок
+  summary раньше BSL, границы лимита `0` / отрицательного / меньше
+  заголовков. Все фикстуры синтетические. Всего тестов 708 → 745
+  (issue #77).
+- **`examples/form_context.py`** и **`docs/form_context.md`** — синтетический
+  запускаемый пример и документация: фактический API, поведение без
+  BSL/elem, truncation contract и ограничения (issue #77).
+
 - **`chain_data_path.ZeroBindingReason`** — машиночитаемая причина отсутствия
   `data_path`: `no_bind_slot`, `bind_slot_unbound_marker`,
   `bind_slot_not_a_chain`, `chain_malformed`, `chain_too_short`,
