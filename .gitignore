@@ -6,6 +6,7 @@
 *.epf
 *.erf
 verify_*.py
+verify_*.json
 src/
 *.egg-info/
 *.old
