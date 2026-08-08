@@ -6,6 +6,30 @@
 ## [Unreleased]
 
 ### Added
+- **`chain_data_path.ZeroBindingReason`** — машиночитаемая причина отсутствия
+  `data_path`: `no_bind_slot`, `bind_slot_unbound_marker`,
+  `bind_slot_not_a_chain`, `chain_malformed`, `chain_too_short`,
+  `chain_table_not_declared`, `chain_segment_unresolved`,
+  `chain_name_mismatch`, `mixed`. Общего статуса вроде `unknown` в наборе нет:
+  отдельный диагностический код полезнее молчания и полезнее частичного
+  «успеха» (issue #116, PR #120).
+- **`chain_data_path.classify_element_zero_binding(block, segment_tables,
+  form_attribute_ids, element_name=None)`** — причина по блоку `raw[11]`.
+  Возвращает `None`, если цепочка разбирается и даёт подтверждённый
+  `data_path`. Порядок проверок совпадает с порядком в
+  `decode_chain_data_path`, поэтому первый структурный отказ важнее
+  последующего сравнения имён (issue #116, PR #120).
+- **`chain_data_path.classify_raw_zero_binding(...)`** — причина по целой
+  записи элемента; отсутствие слота `BIND_SLOT` — самостоятельная причина,
+  а не повреждённая цепочка (issue #116, PR #120).
+- **`chain_data_path.aggregate_form_zero_binding(reasons)`** — причина уровня
+  формы: единственная причина возвращается как есть, несколько разных дают
+  `MIXED`, пустой набор — `None`. Результат не зависит от порядка элементов
+  (issue #116, PR #120).
+- **`tests/test_chain_zero_binding_issue116.py`** — 83 теста на девять
+  категорий и регрессии: ни одной выдуманной привязки, подтверждённый путь
+  #89 не меняется, входные структуры не мутируются, результат детерминирован.
+  Все фикстуры синтетические. Всего тестов 675 → 708 (issue #116, PR #120).
 - **`object_decoder.decode_object_attributes(object_json, type_resolver=None)`** —
   опциональный резолвер ссылочных типов. `type_resolver` получает UUID **без**
   префикса `Ref#` и возвращает читаемое имя объекта метаданных
@@ -169,6 +193,24 @@
   реквизиты, ждут #88); `Catalog/Контрагенты`: 45/45 = 100.0% (issue #90, PR #97).
 
 ### Changed
+- Проверка структуры блока привязки вынесена из `_chain_segments` в
+  `_bind_block_items`; `_chain_segments` переиспользует её без изменения
+  поведения. Параллельного декодера не появилось: классификаторы опираются на
+  те же `_chain_segments`, `_segment_parts`, `_known_table_uuids` и
+  `_address_key` (issue #116, PR #120).
+- 42 формы с непустой картой реквизитов и нулевой привязкой больше не молчат.
+  Распределение по формам: `no_bind_slot` 18, `bind_slot_not_a_chain` 12,
+  `mixed` 10, `chain_too_short` 2. По элементам: `bind_slot_not_a_chain` 164,
+  `no_bind_slot` 62, `chain_too_short` 30, `chain_name_mismatch` 1. Форм без
+  конкретной причины 0, элементов без ярлыка 0. Подтверждённых `data_path`
+  13729 — без изменений относительно `main`, прежние пути не тронуты,
+  конфликтов и ложных сопоставлений нет; повторный прогон детерминирован
+  (issue #116, PR #120).
+- Первоначальная категория `chain_malformed` на реальных данных описывала не
+  ту ситуацию: все 164 элемента имели в `raw[11]` скаляр вместо списка, а
+  расхождения счётчика с составом блока не встретилось ни разу. Скаляр выделен
+  в `bind_slot_not_a_chain`; `chain_malformed` остаётся за рассогласованным
+  списком и на этой выгрузке даёт ноль срабатываний (issue #116, PR #120).
 - `FormScanIndex.to_dict()` сериализует `reference_types`;
   `FormScanIndex.load()` восстанавливает его с backward-compat: в старых
   индексах без этого поля возвращается `{}`. Прочие поля индекса и формат
