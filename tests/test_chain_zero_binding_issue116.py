@@ -1,10 +1,5 @@
 """Машиночитаемые причины нулевой привязки data_path (issue #116).
 
-TDD: этот файл написан ДО реализации и обязан упасть на актуальном ``main``.
-Ожидаемый красный результат — ``ImportError`` на ``ZeroBindingReason``,
-``classify_raw_zero_binding``, ``classify_element_zero_binding`` и
-``aggregate_form_zero_binding``: этих имён в ``chain_data_path`` пока нет.
-
 Все фикстуры синтетические. Реальная выгрузка, реальные UUID, реальные имена
 объектов и абсолютные пути здесь не используются и не требуются.
 
@@ -15,6 +10,11 @@ TDD: этот файл написан ДО реализации и обязан 
 
 Проверяемое свойство #116: каждая наблюдаемая структурная ситуация получает
 СВОЮ причину, а ни одна из них не порождает выдуманный ``data_path``.
+
+Категория ``BIND_SLOT_NOT_A_CHAIN`` добавлена по результатам прогона на
+реальных данных: все элементы, ранее получавшие ``CHAIN_MALFORMED``,
+имели в слоте скаляр вместо списка — это другой layout, а не поломка
+структуры. ``CHAIN_MALFORMED`` остаётся за расхождением счётчика.
 """
 from __future__ import annotations
 
@@ -110,6 +110,7 @@ BOUND_BLOCK = _block(SEG_ROOT, ["0", UUID_TYPE], SEG_FIELD)
 EXPECTED_REASONS = {
     "NO_BIND_SLOT": "no_bind_slot",
     "BIND_SLOT_UNBOUND_MARKER": "bind_slot_unbound_marker",
+    "BIND_SLOT_NOT_A_CHAIN": "bind_slot_not_a_chain",
     "CHAIN_MALFORMED": "chain_malformed",
     "CHAIN_TOO_SHORT": "chain_too_short",
     "CHAIN_TABLE_NOT_DECLARED": "chain_table_not_declared",
@@ -123,6 +124,11 @@ EXPECTED_REASONS = {
 def test_reason_member_has_stable_value(member: str, value: str) -> None:
     """Каждая причина — стабильный snake_case-литерал, пригодный для отчётов."""
     assert getattr(ZeroBindingReason, member).value == value
+
+
+def test_reason_members_are_exactly_expected() -> None:
+    """Состав enum зафиксирован: лишних и пропущенных причин нет."""
+    assert {reason.name for reason in ZeroBindingReason} == set(EXPECTED_REASONS)
 
 
 def test_reason_values_are_unique() -> None:
@@ -160,6 +166,42 @@ def test_raw_not_a_list_is_no_bind_slot(
             )
             is ZeroBindingReason.NO_BIND_SLOT
         )
+
+
+# ---------------------------------------------------------------------------
+# Категория: слот содержит скаляр, а не цепочку
+# ---------------------------------------------------------------------------
+
+SCALAR_BLOCKS = ["0", "1", "", "строка", 0, 1, 3.5, True, None, {}, {"a": 1}, ()]
+
+
+@pytest.mark.parametrize("block", SCALAR_BLOCKS)
+def test_bind_slot_not_a_chain(
+    block: object, segment_tables: dict, attribute_ids: dict
+) -> None:
+    """Скаляр в слоте — другой layout, а не повреждённая цепочка."""
+    reason = classify_element_zero_binding(
+        block, segment_tables, attribute_ids, ELEMENT_NAME
+    )
+    assert reason is ZeroBindingReason.BIND_SLOT_NOT_A_CHAIN
+
+
+def test_scalar_slot_through_raw(segment_tables: dict, attribute_ids: dict) -> None:
+    reason = classify_raw_zero_binding(
+        _raw("0"), segment_tables, attribute_ids, ELEMENT_NAME
+    )
+    assert reason is ZeroBindingReason.BIND_SLOT_NOT_A_CHAIN
+
+
+@pytest.mark.parametrize("block", SCALAR_BLOCKS)
+def test_scalar_slot_is_not_malformed(
+    block: object, segment_tables: dict, attribute_ids: dict
+) -> None:
+    """CHAIN_MALFORMED зарезервирован за расхождением счётчика."""
+    reason = classify_element_zero_binding(
+        block, segment_tables, attribute_ids, ELEMENT_NAME
+    )
+    assert reason is not ZeroBindingReason.CHAIN_MALFORMED
 
 
 # ---------------------------------------------------------------------------
@@ -217,6 +259,17 @@ def test_chain_malformed_non_digit_counter(
     assert reason is ZeroBindingReason.CHAIN_MALFORMED
 
 
+def test_chain_malformed_scalar_item_inside_list(
+    segment_tables: dict, attribute_ids: dict
+) -> None:
+    """Блок — список, но среди записей скаляр: структура не согласована."""
+    block = ["2", SEG_ROOT, "0"]
+    reason = classify_element_zero_binding(
+        block, segment_tables, attribute_ids, ELEMENT_NAME
+    )
+    assert reason is ZeroBindingReason.CHAIN_MALFORMED
+
+
 # ---------------------------------------------------------------------------
 # Категория: цепочка короче двух сегментов
 # ---------------------------------------------------------------------------
@@ -236,10 +289,7 @@ def test_type_separator_alone_is_too_short(
     reason = classify_element_zero_binding(
         _block(["0", UUID_TYPE]), segment_tables, attribute_ids, ELEMENT_NAME
     )
-    assert reason in {
-        ZeroBindingReason.CHAIN_TOO_SHORT,
-        ZeroBindingReason.BIND_SLOT_UNBOUND_MARKER,
-    }
+    assert reason is ZeroBindingReason.CHAIN_TOO_SHORT
 
 
 # ---------------------------------------------------------------------------
@@ -350,6 +400,15 @@ def test_aggregate_distinct_reasons_is_mixed() -> None:
     assert aggregate_form_zero_binding(reasons) is ZeroBindingReason.MIXED
 
 
+def test_aggregate_scalar_and_too_short_is_mixed() -> None:
+    """Реальная смесь на выгрузке: скаляр рядом с односегментной цепочкой."""
+    reasons = [
+        ZeroBindingReason.BIND_SLOT_NOT_A_CHAIN,
+        ZeroBindingReason.CHAIN_TOO_SHORT,
+    ]
+    assert aggregate_form_zero_binding(reasons) is ZeroBindingReason.MIXED
+
+
 def test_aggregate_empty_is_none() -> None:
     """Формы без непривязанных элементов в остаток #116 не попадают."""
     assert aggregate_form_zero_binding([]) is None
@@ -372,6 +431,8 @@ def test_aggregate_is_order_independent() -> None:
 # ---------------------------------------------------------------------------
 
 NEGATIVE_BLOCKS = [
+    "0",
+    None,
     ["1", "0"],
     ["5", SEG_ROOT, ["0", UUID_TYPE], SEG_FIELD],
     ["x", SEG_ROOT, SEG_FIELD],
@@ -383,7 +444,7 @@ NEGATIVE_BLOCKS = [
 
 @pytest.mark.parametrize("block", NEGATIVE_BLOCKS)
 def test_no_invented_binding(
-    block: list, segment_tables: dict, attribute_ids: dict
+    block: object, segment_tables: dict, attribute_ids: dict
 ) -> None:
     """Классификация причины не смеет породить data_path."""
     path, _warnings = decode_chain_data_path(
@@ -429,7 +490,7 @@ def test_classification_does_not_mutate_input(
 
 @pytest.mark.parametrize("block", NEGATIVE_BLOCKS)
 def test_classification_is_deterministic(
-    block: list, segment_tables: dict, attribute_ids: dict
+    block: object, segment_tables: dict, attribute_ids: dict
 ) -> None:
     first = classify_element_zero_binding(
         block, segment_tables, attribute_ids, ELEMENT_NAME
@@ -452,4 +513,4 @@ def test_every_negative_block_gets_distinct_diagnosis(
         for block in NEGATIVE_BLOCKS
     ]
     assert all(reason is not None for reason in reasons)
-    assert len(set(reasons)) >= 5
+    assert len(set(reasons)) >= 6
