@@ -36,20 +36,34 @@
 старый формат со ссылкой на реквизит объекта, его разбирает
 ``elem_parser.decode_element_data_path``.
 
+Машиночитаемые причины нулевой привязки (issue #116)
+---------------------------------------------------------------
+
+Отсутствие привязки раньше либо молчало, либо выражалось текстовым
+предупреждением, пригодным для чтения человеком, но не для отчётов.
+:class:`ZeroBindingReason` возвращает ту же структурную диагностику
+стабильным литералом. Нового разбора не появляется: классификаторы
+опираются на те же вспомогательные функции, что и декодер.
+
 Модуль работает best-effort: входные структуры не мутируются, исключения
 наружу не пробрасываются.
 """
 
 from __future__ import annotations
 
+import enum
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 __all__ = [
     "BIND_SLOT",
+    "ZeroBindingReason",
+    "aggregate_form_zero_binding",
     "build_form_attribute_ids",
     "build_form_segment_tables",
+    "classify_element_zero_binding",
+    "classify_raw_zero_binding",
     "decode_chain_data_path",
     "enrich_elements_with_chain_paths",
     "load_form_segment_tables",
@@ -68,6 +82,47 @@ _FIELD_TAG = "5"
 _FIELD_NAME_POS = 3
 _MIN_CHAIN_SEGMENTS = 2
 _CHILD_KEYS = ("child", "Child", "children", "Children", "items", "Items")
+
+# Блок ["1", "0"] встречается у заведомо непривязанных элементов рабочих
+# форм, поэтому это отдельная причина, а не повреждённая структура.
+_UNBOUND_MARKER_COUNTER = "1"
+_UNBOUND_MARKER_VALUE = "0"
+
+
+class ZeroBindingReason(enum.Enum):
+    """Причина отсутствия ``data_path`` у элемента или формы (issue #116).
+
+    Каждое значение следует из наблюдаемой структуры записи элемента
+    и имеет синтетическую тестовую фикстуру. Общего статуса вроде
+    ``unknown`` здесь нет намеренно: отдельный диагностический код
+    полезнее молчания и полезнее частичного «успеха».
+
+    ``NO_BIND_SLOT``
+        В записи элемента нет слота :data:`BIND_SLOT`.
+    ``BIND_SLOT_UNBOUND_MARKER``
+        Слот равен ``["1", "0"]`` — маркер непривязанного элемента.
+    ``CHAIN_MALFORMED``
+        Счётчик не согласован с составом блока.
+    ``CHAIN_TOO_SHORT``
+        Сегментов меньше двух: цепочкой это не является.
+    ``CHAIN_TABLE_NOT_DECLARED``
+        UUID таблицы сегмента не объявлен в определениях формы.
+    ``CHAIN_SEGMENT_UNRESOLVED``
+        Сегмент не найден ни в таблицах, ни среди реквизитов формы.
+    ``CHAIN_NAME_MISMATCH``
+        Склейка имён сегментов не совпала с именем элемента.
+    ``MIXED``
+        Агрегат уровня формы: у элементов разные причины.
+    """
+
+    NO_BIND_SLOT = "no_bind_slot"
+    BIND_SLOT_UNBOUND_MARKER = "bind_slot_unbound_marker"
+    CHAIN_MALFORMED = "chain_malformed"
+    CHAIN_TOO_SHORT = "chain_too_short"
+    CHAIN_TABLE_NOT_DECLARED = "chain_table_not_declared"
+    CHAIN_SEGMENT_UNRESOLVED = "chain_segment_unresolved"
+    CHAIN_NAME_MISMATCH = "chain_name_mismatch"
+    MIXED = "mixed"
 
 
 def _is_uuid(value: object) -> bool:
@@ -224,11 +279,21 @@ def _is_type_separator(item: object) -> bool:
     )
 
 
-def _chain_segments(block: object) -> list | None:
-    """Сегменты пути из блока привязки или ``None``.
+def _is_unbound_marker(block: object) -> bool:
+    """Блок ``["1", "0"]``: элемент заведомо не привязан к данным."""
+    return (
+        isinstance(block, list)
+        and len(block) == 2
+        and block[0] == _UNBOUND_MARKER_COUNTER
+        and block[1] == _UNBOUND_MARKER_VALUE
+    )
 
-    Проверяется счётчик: он обязан совпадать с числом элементов после
-    него. Несовпадение означает повреждённую или чужую структуру.
+
+def _bind_block_items(block: object) -> list | None:
+    """Записи блока привязки, если счётчик и состав согласованы.
+
+    Счётчик обязан совпадать с числом элементов после него.
+    Несовпадение означает повреждённую или чужую структуру.
     """
     if not isinstance(block, list) or len(block) < 2:
         return None
@@ -239,6 +304,14 @@ def _chain_segments(block: object) -> list | None:
     if int(head) != len(items):
         return None
     if not all(isinstance(item, list) for item in items):
+        return None
+    return items
+
+
+def _chain_segments(block: object) -> list | None:
+    """Сегменты пути из блока привязки или ``None``."""
+    items = _bind_block_items(block)
+    if items is None:
         return None
     segments = [item for item in items if not _is_type_separator(item)]
     return segments or None
@@ -311,6 +384,91 @@ def decode_chain_data_path(
 
 def _context(element_name: str | None) -> str:
     return f", элемент={element_name!r}" if element_name else ""
+
+
+def classify_element_zero_binding(
+    block: object,
+    segment_tables: dict[tuple[str, ...], dict[int, str]],
+    form_attribute_ids: dict[tuple[str | None, int], str],
+    element_name: str | None = None,
+) -> ZeroBindingReason | None:
+    """Причина отсутствия привязки по блоку ``raw[BIND_SLOT]`` (issue #116).
+
+    Возвращает ``None``, если цепочка разбирается и даёт подтверждённый
+    ``data_path``. Порядок проверок совпадает с порядком в
+    :func:`decode_chain_data_path`, поэтому первый структурный отказ
+    важнее последующего сравнения имён. Никакая ветка не создаёт
+    привязку и не меняет входные структуры.
+    """
+    if _is_unbound_marker(block):
+        return ZeroBindingReason.BIND_SLOT_UNBOUND_MARKER
+
+    if _bind_block_items(block) is None:
+        return ZeroBindingReason.CHAIN_MALFORMED
+
+    segments = _chain_segments(block)
+    if segments is None or len(segments) < _MIN_CHAIN_SEGMENTS:
+        return ZeroBindingReason.CHAIN_TOO_SHORT
+
+    known_uuids = _known_table_uuids(segment_tables)
+    names: list[str] = []
+
+    for position, segment in enumerate(segments):
+        ident, table_uuid = _segment_parts(segment)
+        if ident is None:
+            return ZeroBindingReason.CHAIN_SEGMENT_UNRESOLVED
+        if table_uuid is not None and table_uuid not in known_uuids:
+            return ZeroBindingReason.CHAIN_TABLE_NOT_DECLARED
+
+        table = segment_tables.get(_address_key(segments[:position]))
+        name = table.get(ident) if table else None
+        if name is None:
+            parent = names[-1] if names else None
+            name = form_attribute_ids.get((parent, ident))
+        if name is None:
+            return ZeroBindingReason.CHAIN_SEGMENT_UNRESOLVED
+        names.append(name)
+
+    if element_name is not None and "".join(names) != element_name:
+        return ZeroBindingReason.CHAIN_NAME_MISMATCH
+
+    return None
+
+
+def classify_raw_zero_binding(
+    raw: object,
+    segment_tables: dict[tuple[str, ...], dict[int, str]],
+    form_attribute_ids: dict[tuple[str | None, int], str],
+    element_name: str | None = None,
+) -> ZeroBindingReason | None:
+    """Причина отсутствия привязки по целой записи элемента.
+
+    Отсутствие слота :data:`BIND_SLOT` — самостоятельная причина,
+    а не повреждённая цепочка.
+    """
+    if not isinstance(raw, list) or len(raw) <= BIND_SLOT:
+        return ZeroBindingReason.NO_BIND_SLOT
+    return classify_element_zero_binding(
+        raw[BIND_SLOT], segment_tables, form_attribute_ids, element_name
+    )
+
+
+def aggregate_form_zero_binding(
+    reasons: Iterable[ZeroBindingReason | None],
+) -> ZeroBindingReason | None:
+    """Причина уровня формы из причин её элементов.
+
+    ``None`` — непривязанных элементов нет, форма в остаток #116 не
+    входит. Единственная причина возвращается как есть; несколько
+    разных дают :data:`ZeroBindingReason.MIXED`. Результат не зависит
+    от порядка элементов.
+    """
+    distinct = {reason for reason in reasons if reason is not None}
+    if not distinct:
+        return None
+    if len(distinct) == 1:
+        return next(iter(distinct))
+    return ZeroBindingReason.MIXED
 
 
 def enrich_elements_with_chain_paths(
