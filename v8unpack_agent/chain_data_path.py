@@ -45,6 +45,12 @@
 стабильным литералом. Нового разбора не появляется: классификаторы
 опираются на те же вспомогательные функции, что и декодер.
 
+Скаляр в слоте и рассогласованный список — разные ситуации и разные
+причины. На контрольной выгрузке встретился только скаляр
+(:data:`ZeroBindingReason.BIND_SLOT_NOT_A_CHAIN`, 164 элемента),
+а :data:`ZeroBindingReason.CHAIN_MALFORMED` не сработал ни разу и остаётся
+защитной категорией.
+
 Модуль работает best-effort: входные структуры не мутируются, исключения
 наружу не пробрасываются.
 """
@@ -101,8 +107,11 @@ class ZeroBindingReason(enum.Enum):
         В записи элемента нет слота :data:`BIND_SLOT`.
     ``BIND_SLOT_UNBOUND_MARKER``
         Слот равен ``["1", "0"]`` — маркер непривязанного элемента.
+    ``BIND_SLOT_NOT_A_CHAIN``
+        Слот содержит скаляр, а не список: другой layout разметки,
+        а не повреждённая цепочка.
     ``CHAIN_MALFORMED``
-        Счётчик не согласован с составом блока.
+        Слот — список, но счётчик не согласован с его составом.
     ``CHAIN_TOO_SHORT``
         Сегментов меньше двух: цепочкой это не является.
     ``CHAIN_TABLE_NOT_DECLARED``
@@ -117,6 +126,7 @@ class ZeroBindingReason(enum.Enum):
 
     NO_BIND_SLOT = "no_bind_slot"
     BIND_SLOT_UNBOUND_MARKER = "bind_slot_unbound_marker"
+    BIND_SLOT_NOT_A_CHAIN = "bind_slot_not_a_chain"
     CHAIN_MALFORMED = "chain_malformed"
     CHAIN_TOO_SHORT = "chain_too_short"
     CHAIN_TABLE_NOT_DECLARED = "chain_table_not_declared"
@@ -400,6 +410,9 @@ def classify_element_zero_binding(
     важнее последующего сравнения имён. Никакая ветка не создаёт
     привязку и не меняет входные структуры.
     """
+    if not isinstance(block, list):
+        return ZeroBindingReason.BIND_SLOT_NOT_A_CHAIN
+
     if _is_unbound_marker(block):
         return ZeroBindingReason.BIND_SLOT_UNBOUND_MARKER
 
