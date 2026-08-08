@@ -12,8 +12,8 @@
 Семантика путей ``FormEntry`` смешанная (issue #57): ``form_path``,
 ``bsl_path`` и ``json_path`` абсолютные, а ``elem_json_path`` —
 relative-to-root и может быть ``None`` (старые индексы). ``unpacked_root``
-резолвит относительные пути и одновременно служит базой для
-обезличенных относительных путей в ``metadata``.
+резолвит относительные пути, служит базой для обезличенных путей в
+``metadata`` и вырезается из текстов предупреждений парсера.
 
 Границы контракта
 ------------------
@@ -28,12 +28,21 @@ relative-to-root и может быть ``None`` (старые индексы). 
 * ``to_llm_prompt_fragment`` физически не может вернуть больше
   ``max_chars`` символов: обрезка выполняется последним шагом.
 
+Обезличенность предупреждений
+--------------------------------
+
+``parse_elem_json`` формирует часть своих предупреждений с абсолютным путём
+каталога формы. Для диагностики локального запуска это полезно, но
+``FormContext`` предназначен для промпта и отчётов, поэтому база
+``unpacked_root`` из текстов вырезается: остаётся относительный путь.
+Содержательная часть предупреждения не меняется и не теряется.
+
 RAG-индексация (#78) и диспетчеризация (#79) в этот модуль не входят.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -65,7 +74,7 @@ class FormContext:
         нет (штатная ситуация для elem-only форм). Пустая строка отличается
         от ``None``: файл есть, но пуст.
     ``summary``
-        Семантическая выжимка структуры формы.
+        Семантическая выжимка структуры формы с обезличенными warnings.
     ``metadata``
         Отобранные поля ``FormEntry`` без дублирования всей карточки;
         пути — только относительные posix-строки.
@@ -93,7 +102,8 @@ def build_form_context(form_entry: Any, unpacked_root: Path) -> FormContext:
         Запись реестра форм (``scan_forms.FormEntry``).
     unpacked_root:
         Корень распакованной выгрузки. Им резолвятся относительные
-        пути и вычисляются обезличенные пути для ``metadata``.
+        пути, вычисляются обезличенные пути для ``metadata`` и
+        вырезается база из текстов предупреждений.
 
     Ни одна ветка не порождает данные, которых нет на диске.
     """
@@ -112,7 +122,10 @@ def build_form_context(form_entry: Any, unpacked_root: Path) -> FormContext:
         "bsl_sha256": getattr(form_entry, "bsl_sha256", None),
         "elem_sha256": getattr(form_entry, "elem_sha256", None),
         "has_bsl": bsl_text is not None,
-        "warnings": list(getattr(form_entry, "warnings", []) or []),
+        "warnings": [
+            _strip_root(str(item), root)
+            for item in (getattr(form_entry, "warnings", []) or [])
+        ],
     }
 
     return FormContext(
@@ -215,7 +228,48 @@ def _build_summary(form_dir: Path | None, root: Path) -> FormSummary:
         return FormSummary(
             warnings=[f"каталог формы не найден: {location}"]
         )
-    return build_form_summary(form_dir)
+    return _anonymize_summary(build_form_summary(form_dir), root)
+
+
+def _anonymize_summary(summary: FormSummary, root: Path) -> FormSummary:
+    """Убрать базу ``root`` из текстов предупреждений выжимки.
+
+    Предупреждения ``parse_elem_json`` могут содержать абсолютный путь
+    каталога формы, а ``FormContext`` идёт в промпт и в отчёты. Парсер не
+    меняется: текст только обезличивается здесь, на границе контекста.
+    Если менять нечего, возвращается тот же объект.
+    """
+    original = list(summary.warnings)
+    cleaned = [_strip_root(str(item), root) for item in original]
+    if cleaned == original:
+        return summary
+    return replace(summary, warnings=cleaned)
+
+
+def _strip_root(text: str, root: Path) -> str:
+    """Вырезать префикс ``root`` из произвольного текста.
+
+    Сначала убирается более длинная форма базы, чтобы символические
+    ссылки не оставляли хвостов. Разделитель после базы тоже убирается,
+    чтобы остался именно относительный путь.
+    """
+    for base in _root_bases(root):
+        if not base:
+            continue
+        for separator in ("/", "\\"):
+            text = text.replace(base + separator, "")
+        text = text.replace(base, "")
+    return text
+
+
+def _root_bases(root: Path) -> tuple[str, ...]:
+    """Формы записи корня, от длинной к короткой."""
+    bases = {str(root)}
+    try:
+        bases.add(str(root.resolve()))
+    except OSError:
+        pass
+    return tuple(sorted(bases, key=len, reverse=True))
 
 
 def _relative_str(value: object, root: Path) -> str | None:
