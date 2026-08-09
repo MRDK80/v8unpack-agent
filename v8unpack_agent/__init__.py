@@ -42,15 +42,6 @@ from v8unpack_agent.skd_extractor import (
     extract_all_skd_queries,
     extract_skd_queries,
 )
-from v8unpack_agent.elem_parser import ElemIndexResult, parse_elem_json
-from v8unpack_agent.pipeline import (
-    ErfUnpacker,
-    FormUnpacker,
-    discover_form_bins,
-    unpack_all_forms,
-    unpack_erf,
-    update_forms_index,
-)
 
 from v8unpack_agent.drift_checker import DriftReport, check_drift
 from v8unpack_agent.form_router import FormRouter, RouteResult
@@ -65,6 +56,38 @@ from v8unpack_agent.form_classifier import (
 
 def __getattr__(name: str):
     """Lazy-load selected exports to keep `python -m v8unpack_agent.scan_forms` clean."""
+    if name in {"ElemIndexResult", "parse_elem_json"}:
+        from v8unpack_agent.elem_parser import ElemIndexResult, parse_elem_json
+
+        values = {
+            "ElemIndexResult": ElemIndexResult,
+            "parse_elem_json": parse_elem_json,
+        }
+        globals().update(values)
+        return values[name]
+
+    if name in {"FormUnpacker", "ErfUnpacker", "discover_form_bins",
+                "unpack_all_forms", "unpack_erf", "update_forms_index"}:
+        from v8unpack_agent.pipeline import (
+            ErfUnpacker,
+            FormUnpacker,
+            discover_form_bins,
+            unpack_all_forms,
+            unpack_erf,
+            update_forms_index,
+        )
+
+        values = {
+            "FormUnpacker": FormUnpacker,
+            "ErfUnpacker": ErfUnpacker,
+            "discover_form_bins": discover_form_bins,
+            "unpack_all_forms": unpack_all_forms,
+            "unpack_erf": unpack_erf,
+            "update_forms_index": update_forms_index,
+        }
+        globals().update(values)
+        return values[name]
+    
     if name in {"scan_forms", "FormEntry", "FormScanIndex"}:
         from v8unpack_agent.scan_forms import FormEntry, FormScanIndex, scan_forms
 
