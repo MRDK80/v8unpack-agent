@@ -3,7 +3,8 @@
 Модуль отделяет **объектные** формы 1С от **сервисных**, чтобы агрегированная
 метрика покрытия `data_path` не занижалась архитектурным паттерном платформы.
 
-Issue [#98](../../issues/98), PR [#99](../../pull/99).
+Issue [#98](https://github.com/MRDK80/v8unpack-agent/issues/98),
+PR [#99](https://github.com/MRDK80/v8unpack-agent/pull/99).
 
 ## Зачем
 
