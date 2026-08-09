@@ -6,10 +6,10 @@ issue и PR, промптах к модели. Абсолютный путь н�
 должен. При этом предупреждение обязано оставаться полезным: по нему
 нужно понять, о какой форме речь.
 
-Модуль решает ровно эту задачу одной функцией :func:`safe_path_ref`.
-Он намеренно не зависит ни от чего внутри пакета, чтобы его могли
-использовать и ``elem_parser``, и ``object_decoder`` без циклических
-импортов.
+Модуль решает эту задачу функциями :func:`safe_path_ref` и
+:func:`safe_error_text`. Он намеренно не зависит ни от чего внутри пакета,
+чтобы его могли использовать ``elem_parser`` и ``object_decoder`` без
+циклических импортов.
 
 Почему не :mod:`pathlib`
 ------------------------
@@ -23,15 +23,14 @@ issue и PR, промптах к модели. Абсолютный путь н�
 Гарантии
 --------
 
-* результат никогда не является абсолютным путём: ни ведущего
-  разделителя, ни диска Windows, ни хоста UNC;
-* у абсолютного входа сохраняются только последние значимые сегменты —
-  для выгрузки 1С это «тип / объект / контейнер / форма»;
-* если абсолютный путь короче хвоста, слоя-ориентира нет, поэтому
-  остаётся только последний сегмент — безопасность важнее контекста;
+* результат ``safe_path_ref`` никогда не является абсолютным путём;
+* у абсолютного входа сохраняются последние значимые сегменты — для
+  выгрузки 1С это «тип / объект / контейнер / форма»;
 * относительный путь не искажается, пока он не длиннее хвоста;
 * в выводе всегда posix-разделитель ``/``;
-* функция детерминирована и не обращается к файловой системе.
+* ``safe_error_text`` сохраняет смысл ошибки, но заменяет переданные
+  связанные пути, включая варианты с ``/`` и ``\\``;
+* функции детерминированы и не обращаются к файловой системе.
 """
 
 from __future__ import annotations
@@ -42,6 +41,7 @@ __all__ = [
     "SAFE_TAIL_SEGMENTS",
     "TRUNCATION_MARKER",
     "UNKNOWN_REF",
+    "safe_error_text",
     "safe_path_ref",
 ]
 
@@ -63,20 +63,9 @@ _ABSOLUTE_RE = re.compile(r"^(?:[\\/]|[A-Za-z]:[\\/])")
 def safe_path_ref(value: object, tail: int = SAFE_TAIL_SEGMENTS) -> str:
     """Вернуть обезличенную ссылку на путь для текста предупреждения.
 
-    Parameters
-    ----------
-    value:
-        Путь в любом виде: ``Path``, ``str`` с ``/`` или ``\\``, ``None``.
-    tail:
-        Сколько хвостовых сегментов сохранять. ``tail <= 0`` оставляет
-        только последний сегмент.
-
-    Examples
-    --------
-    >>> safe_path_ref("/dump/Catalog/Объект/CatalogForm/Форма")
-    '.../Catalog/Объект/CatalogForm/Форма'
-    >>> safe_path_ref("Catalog/Объект/CatalogForm/Форма")
-    'Catalog/Объект/CatalogForm/Форма'
+    ``value`` может быть ``Path``, строкой с ``/`` или ``\\`` либо ``None``.
+    ``tail`` задаёт число сохраняемых хвостовых сегментов; ``tail <= 0``
+    оставляет только последний сегмент.
     """
     if value is None:
         return UNKNOWN_REF
@@ -86,7 +75,6 @@ def safe_path_ref(value: object, tail: int = SAFE_TAIL_SEGMENTS) -> str:
         return UNKNOWN_REF
 
     absolute = bool(_ABSOLUTE_RE.match(text))
-
     segments = [
         segment
         for segment in _SEPARATORS_RE.split(text)
@@ -107,3 +95,26 @@ def safe_path_ref(value: object, tail: int = SAFE_TAIL_SEGMENTS) -> str:
     # хвоста, надёжного слоя-ориентира нет — остаётся только имя.
     kept = segments[-tail:] if len(segments) > tail else segments[-1:]
     return f"{TRUNCATION_MARKER}/" + "/".join(kept)
+
+
+def safe_error_text(error: BaseException | object, *paths: object) -> str:
+    """Вернуть текст ошибки без известных абсолютных путей.
+
+    ``OSError`` и производные часто повторяют имя файла внутри ``str(exc)``.
+    Поэтому очистка только явного ``{path}`` рядом с ``{exc}`` недостаточна.
+    Для каждого связанного пути заменяются исходная запись и варианты с
+    обоими разделителями. Остальной текст исключения сохраняется.
+    """
+    text = str(error)
+    for path in paths:
+        if path is None:
+            continue
+        raw = str(path)
+        if not raw:
+            continue
+        replacement = safe_path_ref(raw)
+        variants = {raw, raw.replace("\\", "/"), raw.replace("/", "\\")}
+        for variant in sorted(variants, key=len, reverse=True):
+            if variant:
+                text = text.replace(variant, replacement)
+    return text
