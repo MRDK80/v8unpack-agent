@@ -105,9 +105,10 @@ def safe_error_text(
     """Вернуть текст ошибки без известных абсолютных путей.
 
     ``OSError`` и производные часто повторяют имя файла внутри ``str(exc)``.
-    Поэтому очистка только явного ``{path}`` рядом с ``{exc}`` недостаточна.
-    Для каждого связанного пути заменяются исходная запись и варианты с
-    обоими разделителями. Остальной текст исключения сохраняется.
+    На Windows это имя может быть записано с удвоенными обратными слешами,
+    поскольку форматируется через строковое представление ``filename``.
+    Для каждого связанного пути заменяются исходная запись, варианты с обоими
+    разделителями и escaped Windows-вариант. Остальной текст сохраняется.
 
     ``tail`` передаётся в :func:`safe_path_ref`: object JSON использует
     три сегмента «тип / объект / файл», пути форм сохраняют default из
@@ -121,7 +122,13 @@ def safe_error_text(
         if not raw:
             continue
         replacement = safe_path_ref(raw, tail=tail)
-        variants = {raw, raw.replace("\\", "/"), raw.replace("/", "\\")}
+        backslash = raw.replace("/", "\\")
+        variants = {
+            raw,
+            raw.replace("\\", "/"),
+            backslash,
+            backslash.replace("\\", "\\\\"),
+        }
         for variant in sorted(variants, key=len, reverse=True):
             if variant:
                 text = text.replace(variant, replacement)

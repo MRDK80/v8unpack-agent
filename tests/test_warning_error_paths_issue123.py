@@ -84,3 +84,19 @@ def test_safe_error_text_handles_synthetic_windows_separator() -> None:
     assert "\\" not in text
     assert "Permission denied" in text
     assert ".../dump/Catalog/Справочник1/Catalog.json" in text
+
+
+def test_safe_error_text_handles_escaped_windows_filename() -> None:
+    from v8unpack_agent._safe_paths import safe_error_text
+
+    path = r"C:\Users\synthetic-user\dump\Catalog\Справочник1\Catalog.json"
+    escaped = path.replace("\\", "\\\\")
+    error = PermissionError(f"[Errno 13] Permission denied: '{escaped}'")
+
+    text = safe_error_text(error, path, tail=3)
+
+    assert "C:" not in text
+    assert "synthetic-user" not in text
+    assert "\\" not in text
+    assert "Permission denied" in text
+    assert text.count(".../Catalog/Справочник1/Catalog.json") == 1
