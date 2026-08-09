@@ -110,6 +110,22 @@ def __getattr__(name: str):
         globals().update(values)
         return values[name]
 
+    if name in {"FormContext", "build_form_context",
+                "to_llm_prompt_fragment"}:
+        from v8unpack_agent.form_context import (
+            FormContext,
+            build_form_context,
+            to_llm_prompt_fragment,
+        )
+
+        values = {
+            "FormContext": FormContext,
+            "build_form_context": build_form_context,
+            "to_llm_prompt_fragment": to_llm_prompt_fragment,
+        }
+        globals().update(values)
+        return values[name]
+
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
@@ -151,6 +167,10 @@ __all__ = [
     "FormSummary",
     "build_form_summary",
     "build_form_summary_from_elem_index",
+    # issue #124 (form_context, issue #77)
+    "FormContext",
+    "build_form_context",
+    "to_llm_prompt_fragment",
     # issue #98
     "FormClass",
     "classify_form",

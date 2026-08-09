@@ -29,10 +29,16 @@ scan_forms(root)                 -> FormScanIndex / FormEntry (указател�
 | `build_form_context(form_entry, unpacked_root)` | Материализует содержимое по карточке `FormEntry`. |
 | `to_llm_prompt_fragment(context, max_chars=8000)` | Компактный детерминированный текст для промпта. |
 
+Символы доступны двумя равнодопустимыми путями: из корня пакета
+(`from v8unpack_agent import FormContext, build_form_context, to_llm_prompt_fragment`)
+и напрямую из подмодуля (`from v8unpack_agent.form_context import ...`).
+Корневой экспорт ленивый: `import v8unpack_agent` не загружает `form_context`,
+модуль импортируется при первом обращении к символу (issue #124).
+
 ```python
 from pathlib import Path
 
-from v8unpack_agent.form_context import build_form_context, to_llm_prompt_fragment
+from v8unpack_agent import build_form_context, to_llm_prompt_fragment
 from v8unpack_agent.scan_forms import scan_forms
 
 root = Path("path/to/cf_export")
@@ -196,5 +202,3 @@ print(len(to_llm_prompt_fragment(context, max_chars=500)) <= 500)  # True
   символов, соответствие числу токенов конкретной модели не гарантируется.
 - Обрезка может разорвать JSON выжимки на границе лимита: фрагмент
   предназначен для чтения моделью, а не для машинного разбора.
-- Экспорт нового API из корня пакета (`v8unpack_agent/__init__.py`) в этой
-  задаче не выполнялся — импорт идёт из `v8unpack_agent.form_context`.

@@ -238,8 +238,10 @@
   `chain_too_short` 2; у `B \ A` резона нет по построению. Два прогона
   неизменённого локального `verify_*` дали идентичный результат,
   production-код не менялся, `pytest` 745 passed (issue #122).
-- Экспорт нового API из `v8unpack_agent/__init__.py` в задаче не выполнялся:
-  импорт идёт из `v8unpack_agent.form_context`.
+- Экспорт из корня пакета выполнен в #124: `from v8unpack_agent import
+  FormContext, build_form_context, to_llm_prompt_fragment` работает через
+  ленивый `__getattr__`, прямой импорт из `v8unpack_agent.form_context`
+  сохранён.
 
 ## Не реализовано / В планах
 - **#89** — closed (PR #115): сегментные цепочки `data_path` управляемых форм.
