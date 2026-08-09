@@ -70,7 +70,7 @@ import json
 import re
 from typing import Any
 
-from v8unpack_agent._safe_paths import safe_path_ref
+from v8unpack_agent._safe_paths import safe_error_text, safe_path_ref
 from v8unpack_agent.object_decoder import decode_object_attributes
 from v8unpack_agent.chain_data_path import (  # noqa: F401  # реэкспорт для #89
     build_form_attribute_ids,
@@ -960,7 +960,8 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
     try:
         data = json.loads(elem_path.read_text(encoding="utf-8-sig"))
     except Exception as exc:
-        return ElemIndexResult(False, [], [f"Не удалось прочитать {safe_path_ref(elem_path)}: {exc}"])
+        return ElemIndexResult(False, [], [f"Не удалось прочитать {safe_path_ref(elem_path)}: "
+                f"{safe_error_text(exc, elem_path)}"])
 
     attribute_map = load_owner_attribute_map(form_root, warnings)
 
@@ -970,13 +971,17 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
             suppress_empty_map_warning=_is_common_form(form_root),
         )
     except Exception as exc:
-        return ElemIndexResult(False, [], [f"Не удалось разобрать {safe_path_ref(elem_path)}: {exc}"])
+        return ElemIndexResult(False, [], [f"Не удалось разобрать {safe_path_ref(elem_path)}: "
+                f"{safe_error_text(exc, elem_path)}"])
 
     if elements:
         try:
             enrich_elements_with_chain_paths(form_root, data, elements, warnings)
         except Exception as exc:  # noqa: BLE001
-            warnings.append(f"chain_data_path: не удалось разобрать цепочки: {exc}")
+            warnings.append(
+                "chain_data_path: не удалось разобрать цепочки: "
+                f"{safe_error_text(exc, form_root)}"
+            )
 
     if not elements:
         legacy_json_path = _find_legacy_form_json(form_root)
@@ -1013,7 +1018,8 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
             except Exception as exc:
                 warnings.append(
                     f"Не удалось разобрать legacy form JSON "
-                    f"{safe_path_ref(legacy_json_path)}: {exc}"
+                    f"{safe_path_ref(legacy_json_path)}: "
+                    f"{safe_error_text(exc, legacy_json_path)}"
                 )
 
     if not elements:
@@ -1031,7 +1037,8 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
             encoding="utf-8",
         )
     except Exception as exc:
-        warnings.append(f"Не удалось записать {safe_path_ref(index_path)}: {exc}")
+        warnings.append(f"Не удалось записать {safe_path_ref(index_path)}: "
+            f"{safe_error_text(exc, index_path)}")
 
     return ElemIndexResult(True, elements, warnings)
 
@@ -1408,7 +1415,8 @@ def _attach_handlers_from_bsl(form_root: Path, elements: list[dict], warnings: l
     try:
         text = bsl_path.read_text(encoding="utf-8-sig")
     except Exception as exc:
-        warnings.append(f"Не удалось прочитать BSL-модуль {safe_path_ref(bsl_path)}: {exc}")
+        warnings.append(f"Не удалось прочитать BSL-модуль {safe_path_ref(bsl_path)}: "
+            f"{safe_error_text(exc, bsl_path)}")
         return
 
     procedures = set(re.findall(r"(?im)^\s*Процедура\s+([А-Яа-яA-Za-z0-9_]+)\s*\(", text))
