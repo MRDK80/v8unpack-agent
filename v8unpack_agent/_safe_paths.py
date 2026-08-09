@@ -97,13 +97,21 @@ def safe_path_ref(value: object, tail: int = SAFE_TAIL_SEGMENTS) -> str:
     return f"{TRUNCATION_MARKER}/" + "/".join(kept)
 
 
-def safe_error_text(error: BaseException | object, *paths: object) -> str:
+def safe_error_text(
+    error: BaseException | object,
+    *paths: object,
+    tail: int = SAFE_TAIL_SEGMENTS,
+) -> str:
     """Вернуть текст ошибки без известных абсолютных путей.
 
     ``OSError`` и производные часто повторяют имя файла внутри ``str(exc)``.
     Поэтому очистка только явного ``{path}`` рядом с ``{exc}`` недостаточна.
     Для каждого связанного пути заменяются исходная запись и варианты с
     обоими разделителями. Остальной текст исключения сохраняется.
+
+    ``tail`` передаётся в :func:`safe_path_ref`: object JSON использует
+    три сегмента «тип / объект / файл», пути форм сохраняют default из
+    четырёх сегментов.
     """
     text = str(error)
     for path in paths:
@@ -112,7 +120,7 @@ def safe_error_text(error: BaseException | object, *paths: object) -> str:
         raw = str(path)
         if not raw:
             continue
-        replacement = safe_path_ref(raw)
+        replacement = safe_path_ref(raw, tail=tail)
         variants = {raw, raw.replace("\\", "/"), raw.replace("/", "\\")}
         for variant in sorted(variants, key=len, reverse=True):
             if variant:
