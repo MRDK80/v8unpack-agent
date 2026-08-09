@@ -34,13 +34,6 @@ pre-step индексации.
 """
 
 from v8unpack_agent.form_paths import all_module_paths, form_paths, form_root, item_modules
-from v8unpack_agent.forms_index import FormsIndex, FormsIndexEntry, is_form_stale
-from v8unpack_agent.skd_extractor import (
-    SkdBatchResult,
-    SkdResult,
-    extract_all_skd_queries,
-    extract_skd_queries,
-)
 
 from v8unpack_agent.form_router import FormRouter, RouteResult
 from v8unpack_agent.form_classifier import (
@@ -54,6 +47,39 @@ from v8unpack_agent.form_classifier import (
 
 def __getattr__(name: str):
     """Lazy-load selected exports to keep `python -m v8unpack_agent.scan_forms` clean."""
+    if name in {"FormsIndex", "FormsIndexEntry", "is_form_stale"}:
+        from v8unpack_agent.forms_index import (
+            FormsIndex,
+            FormsIndexEntry,
+            is_form_stale,
+        )
+
+        values = {
+            "FormsIndex": FormsIndex,
+            "FormsIndexEntry": FormsIndexEntry,
+            "is_form_stale": is_form_stale,
+        }
+        globals().update(values)
+        return values[name]
+
+    if name in {"SkdResult", "SkdBatchResult", "extract_skd_queries",
+                "extract_all_skd_queries"}:
+        from v8unpack_agent.skd_extractor import (
+            SkdBatchResult,
+            SkdResult,
+            extract_all_skd_queries,
+            extract_skd_queries,
+        )
+
+        values = {
+            "SkdResult": SkdResult,
+            "SkdBatchResult": SkdBatchResult,
+            "extract_skd_queries": extract_skd_queries,
+            "extract_all_skd_queries": extract_all_skd_queries,
+        }
+        globals().update(values)
+        return values[name]
+
     if name in {"ElemIndexResult", "parse_elem_json"}:
         from v8unpack_agent.elem_parser import ElemIndexResult, parse_elem_json
 
