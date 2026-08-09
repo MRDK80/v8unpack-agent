@@ -22,6 +22,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
+from v8unpack_agent._safe_paths import safe_path_ref
+
 
 # ---------------------------------------------------------------------------
 # Public API types
@@ -71,13 +73,13 @@ def decode_object_attributes(
 
     if not object_json.exists():
         return _fail(DecodeError.JSON_NOT_FOUND,
-                     f"object_decoder: файл не найден: {object_json}")
+                     f"object_decoder: файл не найден: {safe_path_ref(object_json)}")
 
     try:
         raw = json.loads(object_json.read_text(encoding="utf-8-sig"))
     except Exception as exc:
         return _fail(DecodeError.JSON_PARSE_ERROR,
-                     f"object_decoder: ошибка чтения {object_json}: {exc}")
+                     f"object_decoder: ошибка чтения {safe_path_ref(object_json)}: {exc}")
 
     if not isinstance(raw, dict) or "header" not in raw:
         return _fail(DecodeError.HEADER_MISSING,
