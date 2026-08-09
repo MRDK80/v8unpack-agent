@@ -8,6 +8,10 @@
 from pathlib import Path
 from v8unpack_agent import parse_elem_json
 
+
+> `parse_elem_json` и `ElemIndexResult` доступны из корня пакета через ленивый
+> `__getattr__` (issue #128): модуль `elem_parser` загружается только при первом
+> обращении к символу, а не при `import v8unpack_agent`.
 result = parse_elem_json(Path("unpacked/Form/ФормаЭлемента"))
 
 if result.elem_index_ok:

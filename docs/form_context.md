@@ -35,6 +35,9 @@ scan_forms(root)                 -> FormScanIndex / FormEntry (указател�
 Корневой экспорт ленивый: `import v8unpack_agent` не загружает `form_context`,
 модуль импортируется при первом обращении к символу (issue #124).
 
+
+> С issue #128 гарантия расширена: `import v8unpack_agent` не загружает ни
+> `form_context`, ни `elem_parser`, ни `pipeline`.
 ```python
 from pathlib import Path
 
