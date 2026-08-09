@@ -7,6 +7,12 @@
 
 ### Added
 
+- `tests/test_init_lazy_imports_issue134.py` — 11 тестов в чистом subprocess:
+  после `import v8unpack_agent` в `sys.modules` нет `forms_index` и
+  `skd_extractor`; каждая группа грузит только свой подмодуль и не подтягивает
+  чужой; повторный доступ возвращает тот же объект; корневые и прямые импорты
+  дают идентичные объекты; `__all__`, прежние ленивые группы и `AttributeError`
+  для неизвестного имени сохранены (issue #134, часть B).
 - `v8unpack_agent.drift_checker.form_key` — публичное имя составного ключа формы
   `object_type/object_name/container_name/form_name` с содержательным docstring.
   `_form_key` остаётся тонким алиасом той же функции (`_form_key is form_key`),
@@ -237,6 +243,17 @@
   реквизиты, ждут #88); `Catalog/Контрагенты`: 45/45 = 100.0% (issue #90, PR #97).
 
 ### Changed
+- `v8unpack_agent.__init__` больше не импортирует `forms_index` и
+  `skd_extractor` на уровне модуля: `FormsIndex`, `FormsIndexEntry`,
+  `is_form_stale` и `SkdResult`, `SkdBatchResult`, `extract_skd_queries`,
+  `extract_all_skd_queries` отдаются двумя независимыми ленивыми группами
+  `__getattr__` с кэшированием через `globals().update(...)`. Состав `__all__`
+  и все прежние способы импорта сохранены (issue #134, часть B).
+- Холодный импорт пакета: модулей `v8unpack_agent.*` в `sys.modules` после
+  чистого импорта 7 → 5, медиана 11 965,3 → 10 686,6 µs (−10,7 %) на 9 прогонах
+  в отдельных процессах, Python 3.12.3. `json`, `dataclasses` и `typing`
+  остаются загруженными: их тянут `form_router`, `form_classifier` и
+  `coverage_metric` (issue #134, часть B).
 - `FormRouter.reindex` использует публичное `drift_checker.form_key` вместо
   приватного `_form_key`; отложенный импорт внутри метода сохранён. Поведение
   `reindex`, формат составного ключа и публичный API не изменились
