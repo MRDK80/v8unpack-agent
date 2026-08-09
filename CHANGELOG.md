@@ -7,6 +7,13 @@
 
 ### Added
 
+- **`v8unpack_agent.__all__` и ленивый `__getattr__`** — `FormContext`,
+  `build_form_context` и `to_llm_prompt_fragment` экспортируются из корня
+  пакета по образцу группы `FormSummary`. Загрузка остаётся ленивой:
+  `import v8unpack_agent` не импортирует `form_context`, модуль
+  подгружается при первом обращении к символу. Прямой импорт
+  `from v8unpack_agent.form_context import ...` продолжает работать
+  (issue #124).
 - **`form_context.FormContext`** — frozen-датакласс с материализованным
   содержимым формы: `form_name`, `container_name`, `object_type`,
   `object_name`, `bsl_text`, `summary`, `metadata`. `FormEntry` остаётся
