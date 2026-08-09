@@ -33,7 +33,6 @@ pre-step индексации.
 - :func:`~v8unpack_agent.form_classifier.classify_form_by_bindings` (issue #98)
 """
 
-from v8unpack_agent.form_artifact import FormArtifact
 from v8unpack_agent.form_paths import all_module_paths, form_paths, form_root, item_modules
 from v8unpack_agent.forms_index import FormsIndex, FormsIndexEntry, is_form_stale
 from v8unpack_agent.skd_extractor import (
@@ -43,7 +42,6 @@ from v8unpack_agent.skd_extractor import (
     extract_skd_queries,
 )
 
-from v8unpack_agent.drift_checker import DriftReport, check_drift
 from v8unpack_agent.form_router import FormRouter, RouteResult
 from v8unpack_agent.form_classifier import (
     FormClass,
@@ -88,6 +86,25 @@ def __getattr__(name: str):
         globals().update(values)
         return values[name]
     
+    if name in {"FormArtifact"}:
+        from v8unpack_agent.form_artifact import FormArtifact
+
+        values = {
+            "FormArtifact": FormArtifact,
+        }
+        globals().update(values)
+        return values[name]
+
+    if name in {"check_drift", "DriftReport"}:
+        from v8unpack_agent.drift_checker import DriftReport, check_drift
+
+        values = {
+            "check_drift": check_drift,
+            "DriftReport": DriftReport,
+        }
+        globals().update(values)
+        return values[name]
+
     if name in {"scan_forms", "FormEntry", "FormScanIndex"}:
         from v8unpack_agent.scan_forms import FormEntry, FormScanIndex, scan_forms
 

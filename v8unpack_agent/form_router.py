@@ -12,8 +12,6 @@ from typing import TYPE_CHECKING, List
 if TYPE_CHECKING:
     from v8unpack_agent.scan_forms import FormEntry, FormScanIndex
 
-from v8unpack_agent.drift_checker import _form_key
-
 
 @dataclass
 class RouteResult:
@@ -82,6 +80,7 @@ class FormRouter:
         Метаданные верхнего уровня (scanned_at, scan_warnings) сохраняются.
         """
 
+        from v8unpack_agent.drift_checker import _form_key
         from v8unpack_agent.scan_forms import FormEntry, FormScanIndex
 
         lookup = {
