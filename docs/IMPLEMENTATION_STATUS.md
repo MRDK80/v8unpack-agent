@@ -23,6 +23,15 @@
 - **`check_drift(mode="external")`**: корректная поддержка external-layout
   через делегирование `_disk_snapshot` → `scan_forms(mode=mode)` — issue #73.
   Проверено на 14 реальных внешних формах (ExternalDataProcessor + ExternalReport).
+- Публичный `form_key` — issue #134, PR #136: составной ключ формы собирается
+  публичной функцией `drift_checker.form_key` с содержательным docstring.
+  Приватное имя `_form_key` сохранено тонким алиасом (`_form_key is form_key`);
+  формат ключа и разделитель `/` не менялись. `FormRouter.reindex` использует
+  публичное имя с отложенным импортом внутри метода; в корневой `__all__`
+  функция намеренно не выносится, чтобы не нарушать гарантию ленивости #131.
+  Проверка — `tests/test_form_key_public_issue134.py` (12 тестов), 805 passed
+  локально, CI зелёный на четырёх матрицах. Реальные данные: 2216 форм в режиме
+  config, агрегаты и sha256 отсортированных ключей идентичны `main`.
 
 ### catalog_resolver
 - `resolve_data_path(data_path, object_json)` — best-effort резолюция строки
