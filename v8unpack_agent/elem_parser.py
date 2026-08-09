@@ -70,6 +70,7 @@ import json
 import re
 from typing import Any
 
+from v8unpack_agent._safe_paths import safe_error_text, safe_path_ref
 from v8unpack_agent.object_decoder import decode_object_attributes
 from v8unpack_agent.chain_data_path import (  # noqa: F401  # реэкспорт для #89
     build_form_attribute_ids,
@@ -592,13 +593,13 @@ def load_owner_attribute_map(form_root: Path, warnings: list[str]) -> dict[str, 
     path = _find_owner_metadata_json(form_root)
     if path is None:
         if not _is_common_form(form_root):
-            warnings.append(f"Метаданные владельца не найдены для {form_root}")
+            warnings.append(f"Метаданные владельца не найдены для {safe_path_ref(form_root)}")
         return {}
 
     result = decode_object_attributes(path)
     if not result.ok:
         warnings.append(
-            f"object_decoder: не удалось декодировать {path}: "
+            f"object_decoder: не удалось декодировать {safe_path_ref(path)}: "
             f"{result.error} — {result.warnings}"
         )
         return {}
@@ -954,12 +955,13 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
 
     elem_path = _find_elem_json(form_root)
     if elem_path is None:
-        return ElemIndexResult(False, [], [f"elem.json не найден в {form_root}"])
+        return ElemIndexResult(False, [], [f"elem.json не найден в {safe_path_ref(form_root)}"])
 
     try:
         data = json.loads(elem_path.read_text(encoding="utf-8-sig"))
     except Exception as exc:
-        return ElemIndexResult(False, [], [f"Не удалось прочитать {elem_path}: {exc}"])
+        return ElemIndexResult(False, [], [f"Не удалось прочитать {safe_path_ref(elem_path)}: "
+                f"{safe_error_text(exc, elem_path)}"])
 
     attribute_map = load_owner_attribute_map(form_root, warnings)
 
@@ -969,13 +971,17 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
             suppress_empty_map_warning=_is_common_form(form_root),
         )
     except Exception as exc:
-        return ElemIndexResult(False, [], [f"Не удалось разобрать {elem_path}: {exc}"])
+        return ElemIndexResult(False, [], [f"Не удалось разобрать {safe_path_ref(elem_path)}: "
+                f"{safe_error_text(exc, elem_path)}"])
 
     if elements:
         try:
             enrich_elements_with_chain_paths(form_root, data, elements, warnings)
         except Exception as exc:  # noqa: BLE001
-            warnings.append(f"chain_data_path: не удалось разобрать цепочки: {exc}")
+            warnings.append(
+                "chain_data_path: не удалось разобрать цепочки: "
+                f"{safe_error_text(exc, form_root)}"
+            )
 
     if not elements:
         legacy_json_path = _find_legacy_form_json(form_root)
@@ -1011,11 +1017,13 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
                         elements = legacy_elements
             except Exception as exc:
                 warnings.append(
-                    f"Не удалось разобрать legacy form JSON {legacy_json_path}: {exc}"
+                    f"Не удалось разобрать legacy form JSON "
+                    f"{safe_path_ref(legacy_json_path)}: "
+                    f"{safe_error_text(exc, legacy_json_path)}"
                 )
 
     if not elements:
-        warnings.append(f"Элементы формы не найдены в {elem_path}")
+        warnings.append(f"Элементы формы не найдены в {safe_path_ref(elem_path)}")
         return ElemIndexResult(False, [], warnings)
 
     _normalize_parents(elements, warnings)
@@ -1029,7 +1037,8 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
             encoding="utf-8",
         )
     except Exception as exc:
-        warnings.append(f"Не удалось записать {index_path}: {exc}")
+        warnings.append(f"Не удалось записать {safe_path_ref(index_path)}: "
+            f"{safe_error_text(exc, index_path)}")
 
     return ElemIndexResult(True, elements, warnings)
 
@@ -1406,7 +1415,8 @@ def _attach_handlers_from_bsl(form_root: Path, elements: list[dict], warnings: l
     try:
         text = bsl_path.read_text(encoding="utf-8-sig")
     except Exception as exc:
-        warnings.append(f"Не удалось прочитать BSL-модуль {bsl_path}: {exc}")
+        warnings.append(f"Не удалось прочитать BSL-модуль {safe_path_ref(bsl_path)}: "
+            f"{safe_error_text(exc, bsl_path)}")
         return
 
     procedures = set(re.findall(r"(?im)^\s*Процедура\s+([А-Яа-яA-Za-z0-9_]+)\s*\(", text))
