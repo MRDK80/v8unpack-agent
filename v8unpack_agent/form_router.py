@@ -80,15 +80,15 @@ class FormRouter:
         Метаданные верхнего уровня (scanned_at, scan_warnings) сохраняются.
         """
 
-        from v8unpack_agent.drift_checker import _form_key
+        from v8unpack_agent.drift_checker import form_key
         from v8unpack_agent.scan_forms import FormEntry, FormScanIndex
 
         lookup = {
-            _form_key(e.object_type, e.object_name, e.container_name, e.form_name): e
+            form_key(e.object_type, e.object_name, e.container_name, e.form_name): e
             for e in self._entries
         }
         for form in changed_forms:
-            lookup[_form_key(
+            lookup[form_key(
                 form.object_type,
                 form.object_name,
                 form.container_name,

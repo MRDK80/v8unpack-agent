@@ -65,13 +65,40 @@ logger = logging.getLogger(__name__)
 _KEY_SEP = "/"
 
 
-def _form_key(
+def form_key(
     object_type: str,
     object_name: str,
     container_name: str,
     form_name: str,
 ) -> str:
+    """Собрать составной ключ формы для индексов и drift-отчётов.
+
+    Формат — ``object_type/object_name/container_name/form_name`` с разделителем
+    ``_KEY_SEP``. Ключ участвует в сравнении ``forms_index.json`` со снимком
+    диска и в полях :class:`DriftReport`, поэтому формат стабилен: менять его
+    нельзя без миграции существующих индексов (issue #134).
+
+    Для CommonForm-layout ``container_name`` бывает пустым, и в ключе появляется
+    двойной разделитель — это ожидаемое поведение, а не ошибка. Компоненты
+    подставляются как есть, без нормализации регистра и без замены разделителей
+    файловой системы.
+
+    Parameters
+    ----------
+    object_type, object_name, container_name, form_name:
+        Строковые компоненты ключа в порядке их следования в результате.
+
+    Returns
+    -------
+    str
+        Составной ключ формы.
+    """
     return _KEY_SEP.join([object_type, object_name, container_name, form_name])
+
+
+# Обратная совместимость (issue #134): приватное имя остаётся тонким алиасом
+# публичной функции, второй реализации нет — ``_form_key is form_key``.
+_form_key = form_key
 
 
 def _sha256_file(path: Path) -> Optional[str]:
