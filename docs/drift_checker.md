@@ -178,3 +178,19 @@ print(report.checked_at, report.has_drift)
 
 Это устраняет дублирование логики обхода и автоматически поддерживает
 любые новые layout-ы, реализованные в `scan_forms`.
+
+## Ленивый корневой экспорт (issue #131)
+
+`import v8unpack_agent` не загружает `drift_checker`: символы `check_drift` и
+`DriftReport` отдаются ленивой группой `__getattr__` и подтягивают модуль при
+первом обращении. Оба способа импорта работают и дают один и тот же объект:
+
+```python
+from v8unpack_agent import check_drift, DriftReport          # ленивый путь
+from v8unpack_agent.drift_checker import check_drift          # прямой путь
+```
+
+Приватный хелпер `_form_key` по-прежнему используется `FormRouter.reindex`, но
+импортируется внутри метода, чтобы корневой импорт пакета не тянул `logging`,
+`hashlib` и `datetime`. Публичное имя для этого хелпера ведётся в отдельной
+заявке.

@@ -7,6 +7,7 @@
 
 ### Added
 
+- `tests/test_init_lazy_imports_issue131.py` — 14 тестов в чистом subprocess: после `import v8unpack_agent` в `sys.modules` нет `form_artifact`, `drift_checker`, `logging`, `hashlib` и `datetime`; подмодуль грузится по первому обращению к символу и возвращает тот же объект при повторном; корневой и прямой импорт дают идентичные объекты; `__all__`, существующие ленивые группы и `AttributeError` для неизвестного имени сохранены (issue #131, PR #132).
 - **`v8unpack_agent.__all__` и ленивый `__getattr__`** — `FormContext`,
   `build_form_context` и `to_llm_prompt_fragment` экспортируются из корня
   пакета по образцу группы `FormSummary`. Загрузка остаётся ленивой:
@@ -227,6 +228,9 @@
   реквизиты, ждут #88); `Catalog/Контрагенты`: 45/45 = 100.0% (issue #90, PR #97).
 
 ### Changed
+- `v8unpack_agent.__init__` больше не импортирует `form_artifact` и `drift_checker` на уровне модуля: `FormArtifact`, `check_drift` и `DriftReport` отдаются ленивыми группами `__getattr__` с кэшированием через `globals().update(...)`. Состав `__all__` и все прежние способы импорта сохранены (issue #131, PR #132).
+- `form_router` больше не импортирует `drift_checker._form_key` в шапке модуля: импорт перенесён внутрь `FormRouter.reindex`, единственного потребителя хелпера. Публичный API `FormRouter` / `RouteResult` и поведение `reindex` не изменились (issue #131, PR #132).
+- Холодный импорт пакета: модулей `v8unpack_agent.*` в `sys.modules` после чистого импорта 9 → 7, `logging` / `hashlib` / `datetime` больше не загружаются, медиана 16 801,2 → 10 964,6 µs (−34,7 %) на 9 прогонах в отдельных процессах, Python 3.12.3 (issue #131, PR #132).
 - Проверка структуры блока привязки вынесена из `_chain_segments` в
   `_bind_block_items`; `_chain_segments` переиспользует её без изменения
   поведения. Параллельного декодера не появилось: классификаторы опираются на
