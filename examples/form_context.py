@@ -9,7 +9,8 @@
 1. ``FormEntry`` — карточка указателей, ``FormContext`` — содержимое;
 2. форма с BSL и elem, elem-only форма без кода, форма без ``*.elem.json``;
 3. ``metadata`` содержит только относительные пути;
-4. ``to_llm_prompt_fragment`` ни при каком лимите не превышает ``max_chars``.
+4. ``to_llm_prompt_fragment`` по умолчанию не режет контекст, а положительный
+   ``max_chars`` задаёт жёсткий лимит.
 
 Запуск:
 
@@ -160,15 +161,17 @@ def demo_truncation(root: Path) -> None:
     )
 
     context = build_form_context(entry, root)
-    full = to_llm_prompt_fragment(context, max_chars=1000000)
+    full = to_llm_prompt_fragment(context)
 
     print("\nОбрезка фрагмента")
     print("-" * 72)
     print(f"  полная длина    : {len(full)}")
     print(f"  summary раньше BSL: {full.index('## SUMMARY') < full.index('## BSL')}")
-    for limit in (0, -1, 3, 200, 8000):
+    unlimited = to_llm_prompt_fragment(context, max_chars=-1)
+    print(f"  max_chars=-1      → без обрезки: {unlimited == full}")
+    for limit in (0, 3, 200, 8000):
         fragment = to_llm_prompt_fragment(context, max_chars=limit)
-        print(f"  max_chars={limit:<7} → длина {len(fragment):<5} в лимите: {len(fragment) <= max(limit, 0)}")
+        print(f"  max_chars={limit:<7} → длина {len(fragment):<5} в лимите: {len(fragment) <= limit}")
 
     first = to_llm_prompt_fragment(context, max_chars=4000)
     second = to_llm_prompt_fragment(build_form_context(entry, root), max_chars=4000)

@@ -396,7 +396,7 @@ def test_fragment_limit_smaller_than_headers(
     assert len(fragment) <= 3
 
 
-@pytest.mark.parametrize("max_chars", [0, -1, -8000])
+@pytest.mark.parametrize("max_chars", [0, -2, -8000])
 def test_non_positive_limit_gives_empty_string(
     max_chars: int, bsl_and_elem: tuple[Path, FormEntry]
 ) -> None:
@@ -409,9 +409,25 @@ def test_non_positive_limit_gives_empty_string(
     assert fragment == ""
 
 
-def test_default_limit_is_8000(bsl_and_elem: tuple[Path, FormEntry]) -> None:
-    root, entry = bsl_and_elem
-    assert len(to_llm_prompt_fragment(build_form_context(entry, root))) <= 8000
+def test_default_does_not_truncate_context(tmp_path: Path) -> None:
+    form_dir = _make_form_dir(tmp_path, bsl_text="// длинный модуль\n" * 2000)
+    entry = _make_entry(
+        tmp_path,
+        form_dir,
+        elem_json_path=Path(OBJECT_TYPE)
+        / OBJECT_NAME
+        / CONTAINER
+        / FORM_NAME
+        / f"{CONTAINER}.elem.json",
+    )
+    context = build_form_context(entry, tmp_path)
+
+    default_fragment = to_llm_prompt_fragment(context)
+    explicit_unlimited = to_llm_prompt_fragment(context, max_chars=-1)
+
+    assert default_fragment == explicit_unlimited
+    assert len(default_fragment) > 8000
+    assert default_fragment.endswith("// длинный модуль\n")
 
 
 def test_fragment_without_bsl_still_has_summary(tmp_path: Path) -> None:
