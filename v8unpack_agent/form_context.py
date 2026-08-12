@@ -139,18 +139,19 @@ def build_form_context(form_entry: Any, unpacked_root: Path) -> FormContext:
     )
 
 
-def to_llm_prompt_fragment(context: FormContext, max_chars: int = 8000) -> str:
+def to_llm_prompt_fragment(context: FormContext, max_chars: int = -1) -> str:
     """Компактное текстовое представление для вставки в промпт.
 
     Порядок фиксирован: заголовок формы, затем ``## SUMMARY``, затем
     ``## BSL``. Смысловая выжимка важнее кода, поэтому при жёстком
     лимите обрезается именно хвост BSL.
 
-    ``max_chars`` меньше или равный нулю даёт пустую строку: запрошен
-    нулевой бюджет — выдан нулевой бюджет, исключения нет.
-    Результат детерминирован и всегда не длиннее ``max_chars``.
+    ``max_chars=-1`` отключает обрезку и возвращает полный контекст.
+    Нулевой и остальные отрицательные лимиты дают пустую строку.
+    При положительном лимите результат детерминирован и всегда не длиннее
+    ``max_chars``.
     """
-    if max_chars <= 0:
+    if max_chars == 0 or max_chars < -1:
         return ""
 
     header = "# FORM " + "/".join(
@@ -176,7 +177,7 @@ def to_llm_prompt_fragment(context: FormContext, max_chars: int = 8000) -> str:
         )
     )
 
-    return fragment[:max_chars]
+    return fragment if max_chars == -1 else fragment[:max_chars]
 
 
 def _resolve(value: object, root: Path) -> Path | None:
