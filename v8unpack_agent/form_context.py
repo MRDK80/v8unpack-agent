@@ -3,8 +3,10 @@
 ``FormEntry`` из :mod:`v8unpack_agent.scan_forms` — карточка указателей: она
 знает, где лежат части формы, но не содержит их содержимого.
 :class:`FormContext` материализует содержимое: прочитанный BSL-текст,
-построенный :class:`~v8unpack_agent.form_summary.FormSummary` и компактные
-метаданные, пригодные для вставки в промпт.
+построенный :class:`~v8unpack_agent.form_summary.FormSummary`, компактные
+метаданные, пригодные для вставки в промпт, а также (issue #NEW) реквизиты
+и табличные части объекта метаданных за формой, разрешённые через
+``object_decoder`` и ``catalog_resolver``.
 
 Почему нужен ``unpacked_root``
 ---------------------------------
@@ -25,8 +27,15 @@ relative-to-root и может быть ``None`` (старые индексы). 
   бакеты и ``warnings`` парсера;
 * привязки здесь не создаются и не догадываются: отсутствующий файл
   никогда не превращается в выдуманные данные;
+* то же правило действует и для объекта (issue #NEW): если
+  ``object_json_path`` не находит файл объекта, ``object_attributes``
+  остаётся ``None`` — это фиксируется предупреждением, а не подменяется
+  пустой структурой, похожей на успех;
 * ``to_llm_prompt_fragment`` физически не может вернуть больше
-  ``max_chars`` символов: обрезка выполняется последним шагом.
+  ``max_chars`` символов: обрезка выполняется последним шагом и режет
+  только хвост секции ``## BSL`` — секции ``## SUMMARY`` и
+  ``## OBJECT_ATTRIBUTES`` идут раньше и в обрезку попадают только если
+  сами по себе длиннее лимита.
 
 Обезличенность предупреждений
 --------------------------------
@@ -35,14 +44,16 @@ relative-to-root и может быть ``None`` (старые индексы). 
 каталога формы. Для диагностики локального запуска это полезно, но
 ``FormContext`` предназначен для промпта и отчётов, поэтому база
 ``unpacked_root`` из текстов вырезается: остаётся относительный путь.
-Содержательная часть предупреждения не меняется и не теряется.
+Содержательная часть предупреждения не меняется и не теряется. То же
+правило применяется к предупреждениям ``object_decoder``.
 
 RAG-индексация (#78) и диспетчеризация (#79) в этот модуль не входят.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+import json
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -51,6 +62,8 @@ from v8unpack_agent.form_summary import (
     build_form_summary,
     to_normalized_json,
 )
+from v8unpack_agent.object_decoder import decode_object_attributes
+from v8unpack_agent.catalog_resolver import object_json_path, resolve_data_path
 
 __all__ = [
     "FormContext",
@@ -60,9 +73,12 @@ __all__ = [
 
 #: Маркеры секций фрагмента. Формат стабилен и тестируем.
 SUMMARY_MARKER = "## SUMMARY"
+OBJECT_ATTRIBUTES_MARKER = "## OBJECT_ATTRIBUTES"
 BSL_MARKER = "## BSL"
 #: Замена тела модуля, когда BSL отсутствует (elem-only форма).
 NO_BSL_PLACEHOLDER = "(модуль формы отсутствует)"
+#: Замена секции объекта, когда файл объекта не найден или не декодирован.
+NO_OBJECT_PLACEHOLDER = "(реквизиты объекта не найдены)"
 
 
 @dataclass(frozen=True)
@@ -78,10 +94,20 @@ class FormContext:
     ``metadata``
         Отобранные поля ``FormEntry`` без дублирования всей карточки;
         пути — только относительные posix-строки.
+    ``object_attributes``
+        Реквизиты и табличные части объекта метаданных за формой
+        (issue #NEW), нормализованные ``object_decoder.decode_object_attributes``.
+        ``None`` — файл объекта не найден или не декодирован; это отличается
+        от пустой структуры и не подменяется на неё.
+    ``resolved_relations``
+        Обогащение ``summary.relations`` (только ``kind == "data"``)
+        через ``catalog_resolver.resolve_data_path``: тип и синоним
+        реквизита, если он найден в файле объекта. Элементы, для которых
+        резолюция не удалась, помечаются ``resolved=False`` и не отбрасываются.
 
     Датакласс frozen, как и ``FormSummary``: подмена полей запрещена.
-    Глубокой неизменяемости у ``metadata`` нет — это та же комбинация,
-    что уже принята в ``FormSummary`` со списками.
+    Глубокой неизменяемости у ``metadata``/``object_attributes`` нет — это
+    та же комбинация, что уже принята в ``FormSummary`` со списками.
     """
 
     form_name: str
@@ -91,6 +117,8 @@ class FormContext:
     bsl_text: str | None
     summary: FormSummary
     metadata: dict[str, Any]
+    object_attributes: dict[str, Any] | None = None
+    resolved_relations: list[dict[str, Any]] = field(default_factory=list)
 
 
 def build_form_context(form_entry: Any, unpacked_root: Path) -> FormContext:
@@ -116,16 +144,23 @@ def build_form_context(form_entry: Any, unpacked_root: Path) -> FormContext:
     form_dir = _form_dir(form_entry, elem_json_path, root)
     summary = _build_summary(form_dir, root)
 
+    object_attributes, object_warnings, object_json = _build_object_attributes(
+        form_entry, root
+    )
+    resolved_relations = _resolve_relations(summary, object_json)
+
     metadata: dict[str, Any] = {
         "form_path": _relative_str(getattr(form_entry, "form_path", None), root),
         "elem_json_path": _relative_str(elem_json_path, root),
         "bsl_sha256": getattr(form_entry, "bsl_sha256", None),
         "elem_sha256": getattr(form_entry, "elem_sha256", None),
         "has_bsl": bsl_text is not None,
+        "has_object_attributes": object_attributes is not None,
         "warnings": [
             _strip_root(str(item), root)
             for item in (getattr(form_entry, "warnings", []) or [])
-        ],
+        ]
+        + [_strip_root(item, root) for item in object_warnings],
     }
 
     return FormContext(
@@ -136,15 +171,17 @@ def build_form_context(form_entry: Any, unpacked_root: Path) -> FormContext:
         bsl_text=bsl_text,
         summary=summary,
         metadata=metadata,
+        object_attributes=object_attributes,
+        resolved_relations=resolved_relations,
     )
 
 
 def to_llm_prompt_fragment(context: FormContext, max_chars: int = -1) -> str:
     """Компактное текстовое представление для вставки в промпт.
 
-    Порядок фиксирован: заголовок формы, затем ``## SUMMARY``, затем
-    ``## BSL``. Смысловая выжимка важнее кода, поэтому при жёстком
-    лимите обрезается именно хвост BSL.
+    Порядок фиксирован: заголовок формы, ``## SUMMARY``,
+    ``## OBJECT_ATTRIBUTES``, затем ``## BSL``. Смысловая выжимка важнее
+    кода, поэтому при жёстком лимите обрезается именно хвост BSL.
 
     ``max_chars=-1`` отключает обрезку и возвращает полный контекст.
     Нулевой и остальные отрицательные лимиты дают пустую строку.
@@ -167,17 +204,100 @@ def to_llm_prompt_fragment(context: FormContext, max_chars: int = -1) -> str:
 
     body = context.bsl_text if context.bsl_text is not None else NO_BSL_PLACEHOLDER
 
-    fragment = "\n".join(
-        (
-            header,
-            SUMMARY_MARKER,
-            to_normalized_json(context.summary),
-            BSL_MARKER,
-            body,
+    if context.object_attributes is not None:
+        object_block = _object_attributes_to_json(
+            context.object_attributes, context.resolved_relations
         )
-    )
+    else:
+        object_block = NO_OBJECT_PLACEHOLDER
+
+    fragment = "\n".join((
+        header,
+        SUMMARY_MARKER,
+        to_normalized_json(context.summary),
+        OBJECT_ATTRIBUTES_MARKER,
+        object_block,
+        BSL_MARKER,
+        body,
+    ))
 
     return fragment if max_chars == -1 else fragment[:max_chars]
+
+
+def _object_attributes_to_json(
+    object_attributes: dict[str, Any], resolved_relations: list[dict[str, Any]]
+) -> str:
+    """Детерминированное JSON-представление реквизитов объекта."""
+    payload = {
+        "Properties": object_attributes.get("Properties", []),
+        "TabularSections": object_attributes.get("TabularSections", []),
+        "ResolvedRelations": resolved_relations,
+    }
+    return json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2)
+
+
+def _build_object_attributes(
+    form_entry: Any, root: Path
+) -> tuple[dict[str, Any] | None, list[str], Path | None]:
+    """Найти и декодировать реквизиты объекта метаданных за формой.
+
+    Best-effort, как и остальной модуль: отсутствие файла объекта или
+    ошибка декодирования дают ``(None, [...], None)``, а не выдуманную
+    структуру. ``type_resolver`` не передаётся — ссылки остаются в виде
+    ``Ref#<uuid>``, догадок о типе метаданных модуль не делает (см. #88
+    в ``object_decoder`` — резолвер туда можно добавить отдельно, когда
+    появится источник соответствия UUID -> имя метаданных).
+    """
+    object_json = object_json_path(form_entry)
+    if object_json is None:
+        return None, ["object_context: файл объекта метаданных не найден"], None
+
+    decode_result = decode_object_attributes(object_json)
+    warnings = list(decode_result.warnings)
+    if not decode_result.ok:
+        return None, warnings, object_json
+
+    return decode_result.data, warnings, object_json
+
+
+def _resolve_relations(
+    summary: FormSummary, object_json: Path | None
+) -> list[dict[str, Any]]:
+    """Обогатить ``data``-связи ``summary.relations`` типом/синонимом.
+
+    Только связи ``kind == "data"`` резолвятся через ``catalog_resolver``:
+    это единственные связи с ``data_path``, для которых резолюция по
+    файлу объекта имеет смысл. Связи ``kind == "event"`` не трогаются.
+    Если ``object_json`` не найден, все data-связи возвращаются как
+    нерезолвленные — без обращения к диску.
+    """
+    resolved: list[dict[str, Any]] = []
+    for relation in summary.relations:
+        if relation.get("kind") != "data":
+            continue
+        data_path = str(relation.get("target") or "")
+        if not data_path:
+            continue
+        if object_json is None:
+            resolved.append({
+                "data_path": data_path,
+                "object_type": "",
+                "attribute_name": data_path.rsplit(".", 1)[-1],
+                "value_type": None,
+                "synonym": None,
+                "resolved": False,
+            })
+            continue
+        binding = resolve_data_path(data_path, object_json)
+        resolved.append({
+            "data_path": binding.data_path,
+            "object_type": binding.object_type,
+            "attribute_name": binding.attribute_name,
+            "value_type": binding.value_type,
+            "synonym": binding.synonym,
+            "resolved": binding.resolved,
+        })
+    return resolved
 
 
 def _resolve(value: object, root: Path) -> Path | None:
@@ -229,6 +349,7 @@ def _build_summary(form_dir: Path | None, root: Path) -> FormSummary:
         return FormSummary(
             warnings=[f"каталог формы не найден: {location}"]
         )
+
     return _anonymize_summary(build_form_summary(form_dir), root)
 
 
@@ -274,7 +395,7 @@ def _root_bases(root: Path) -> tuple[str, ...]:
 
 
 def _relative_str(value: object, root: Path) -> str | None:
-    """Обезличенный относительный posix-путь или ``None``.
+    """Обезличенный относительный posix-строка или ``None``.
 
     Абсолютные локальные пути в публичные метаданные не попадают.
     Если путь лежит вне ``root``, остаётся только имя последнего сегмента.
