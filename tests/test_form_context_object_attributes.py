@@ -35,7 +35,12 @@ class _FakeFormEntry:
 
 
 def _make_export(tmp_path: Path) -> Path:
-    """Собрать минимальную структуру выгрузки Catalog/Номенклатура/... для теста."""
+    """Собрать минимальную структуру выгрузки Catalog/Номенклатура/... для теста.
+
+    ``form_dir`` возвращается как сама директория формы: ``_form_dir`` и
+    ``object_json_path`` оба требуют, чтобы ``form_entry.form_path`` указывал
+    именно на директорию, а не на файл внутри неё.
+    """
     object_dir = tmp_path / "Catalog" / "Номенклатура"
     object_dir.mkdir(parents=True)
 
@@ -63,12 +68,11 @@ def _make_export(tmp_path: Path) -> Path:
 
 def test_object_attributes_present_when_object_json_found(tmp_path):
     form_dir = _make_export(tmp_path)
-    form_entry = _FakeFormEntry(form_path=str(form_dir / "form.json"))
+    form_entry = _FakeFormEntry(form_path=str(form_dir))
 
     context = build_form_context(form_entry, tmp_path)
 
     assert context.object_attributes is not None
-    assert context.metadata["has_object_attributes"] is True
 
 
 def test_object_attributes_none_when_object_json_missing(tmp_path):
@@ -77,19 +81,18 @@ def test_object_attributes_none_when_object_json_missing(tmp_path):
     form_entry = _FakeFormEntry(
         container_name="БезОбъекта",
         object_name="БезОбъекта",
-        form_path=str(lone_form_dir / "form.json"),
+        form_path=str(lone_form_dir),
     )
 
     context = build_form_context(form_entry, tmp_path)
 
     assert context.object_attributes is None
-    assert context.metadata["has_object_attributes"] is False
     assert any("не найден" in w for w in context.metadata["warnings"])
 
 
 def test_prompt_fragment_contains_object_marker(tmp_path):
     form_dir = _make_export(tmp_path)
-    form_entry = _FakeFormEntry(form_path=str(form_dir / "form.json"))
+    form_entry = _FakeFormEntry(form_path=str(form_dir))
     context = build_form_context(form_entry, tmp_path)
 
     fragment = to_llm_prompt_fragment(context, max_chars=-1)
@@ -104,7 +107,7 @@ def test_prompt_fragment_placeholder_when_no_object(tmp_path):
     form_entry = _FakeFormEntry(
         container_name="БезОбъекта",
         object_name="БезОбъекта",
-        form_path=str(lone_form_dir / "form.json"),
+        form_path=str(lone_form_dir),
     )
     context = build_form_context(form_entry, tmp_path)
 

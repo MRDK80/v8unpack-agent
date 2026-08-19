@@ -98,7 +98,10 @@ class FormContext:
         Реквизиты и табличные части объекта метаданных за формой
         (issue #NEW), нормализованные ``object_decoder.decode_object_attributes``.
         ``None`` — файл объекта не найден или не декодирован; это отличается
-        от пустой структуры и не подменяется на неё.
+        от пустой структуры и не подменяется на неё. Наличие результата
+        проверяется напрямую через ``is not None`` — отдельный ключ в
+        ``metadata`` для этого не вводится, чтобы не ломать существующий
+        строгий контракт точного набора ключей ``metadata``.
     ``resolved_relations``
         Обогащение ``summary.relations`` (только ``kind == "data"``)
         через ``catalog_resolver.resolve_data_path``: тип и синоним
@@ -131,7 +134,7 @@ def build_form_context(form_entry: Any, unpacked_root: Path) -> FormContext:
     unpacked_root:
         Корень распакованной выгрузки. Им резолвятся относительные
         пути, вычисляются обезличенные пути для ``metadata`` и
-        вырезается база из текстов предупреждений.
+        вырезается база из текстов предупреждения.
 
     Ни одна ветка не порождает данные, которых нет на диске.
     """
@@ -155,7 +158,6 @@ def build_form_context(form_entry: Any, unpacked_root: Path) -> FormContext:
         "bsl_sha256": getattr(form_entry, "bsl_sha256", None),
         "elem_sha256": getattr(form_entry, "elem_sha256", None),
         "has_bsl": bsl_text is not None,
-        "has_object_attributes": object_attributes is not None,
         "warnings": [
             _strip_root(str(item), root)
             for item in (getattr(form_entry, "warnings", []) or [])
@@ -354,7 +356,7 @@ def _build_summary(form_dir: Path | None, root: Path) -> FormSummary:
 
 
 def _anonymize_summary(summary: FormSummary, root: Path) -> FormSummary:
-    """Убрать базу ``root`` из текстов предупреждений выжимки.
+    """Убрать базу ``root`` из текстов предупреждения выжимки.
 
     Предупреждения ``parse_elem_json`` могут содержать абсолютный путь
     каталога формы, а ``FormContext`` идёт в промпт и в отчёты. Парсер не
