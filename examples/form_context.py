@@ -1,4 +1,4 @@
-"""Компактный LLM-контекст формы: FormContext (issue #77).
+"""Компактный LLM-контекст формы: FormContext (issue #77, #NEW).
 
 Пример полностью синтетический: реальная выгрузка, контейнер 1С и установленная
 платформа не требуются. Файлы создаются во временном каталоге и
@@ -10,11 +10,13 @@
 2. форма с BSL и elem, elem-only форма без кода, форма без ``*.elem.json``;
 3. ``metadata`` содержит только относительные пути;
 4. ``to_llm_prompt_fragment`` по умолчанию не режет контекст, а положительный
-   ``max_chars`` задаёт жёсткий лимит.
+``max_chars`` задаёт жёсткий лимит;
+5. ``object_attributes``/``resolved_relations`` (issue #NEW) — реквизиты объекта
+метаданных за формой и их отсутствие как равноправные исходы.
 
 Запуск:
 
-    python examples/form_context.py
+python examples/form_context.py
 """
 from __future__ import annotations
 
@@ -57,6 +59,23 @@ ELEM_PAYLOAD = {
     "props": [{"name": "Реквизит", "type": "String"}],
 }
 
+#: compact-layout raw header, распознаваемый object_decoder._walk_node fallback-путём.
+OBJECT_HEADER_PAYLOAD = {
+    "header": [
+        0,
+        [
+            0,
+            [
+                0,
+                [0, 0, "11111111-1111-1111-1111-111111111111"],
+                '"ОсновнойПоставщик"',
+                '"Ref#22222222-2222-2222-2222-222222222222"',
+                '"Основной поставщик"',
+            ],
+        ],
+    ]
+}
+
 
 def make_form(
     root: Path,
@@ -69,7 +88,9 @@ def make_form(
     """Создать каталог формы и вернуть карточку указателей.
 
     Пути повторяют семантику ``scan_forms`` (issue #57): ``form_path`` и
-    ``bsl_path`` абсолютные, ``elem_json_path`` — relative-to-root.
+    ``bsl_path`` абсолютные, ``elem_json_path`` — relative-to-root. ``form_path``
+    указывает именно на директорию формы (issue #NEW: тот же путь использует
+    ``object_json_path()`` для поиска каталога объекта).
     """
     relative = Path(OBJECT_TYPE) / object_name / CONTAINER / form_name
     form_dir = root / relative
@@ -101,9 +122,24 @@ def make_form(
     )
 
 
+def write_object_json(root: Path, object_name: str) -> None:
+    """Положить ``Catalog.json`` в каталог объекта (issue #NEW).
+
+    ``object_json_path()`` из ``catalog_resolver`` ищет файл либо по имени
+    директории объекта, либо по имени типа метаданных — здесь используется
+    второй вариант: ``Catalog.json`` в каталоге ``<root>/Catalog/<object_name>/``.
+    """
+    object_dir = root / OBJECT_TYPE / object_name
+    object_dir.mkdir(parents=True, exist_ok=True)
+    (object_dir / f"{OBJECT_TYPE}.json").write_text(
+        json.dumps(OBJECT_HEADER_PAYLOAD, ensure_ascii=False), encoding="utf-8"
+    )
+
+
 # ---------------------------------------------------------------------------
 # Сценарии
 # ---------------------------------------------------------------------------
+
 
 def demo_materialization(root: Path) -> None:
     """Карточка указателей превращается в содержимое."""
@@ -112,11 +148,11 @@ def demo_materialization(root: Path) -> None:
 
     print("Форма с BSL и elem")
     print("-" * 72)
-    print(f"  было в карточке : пути и хэши, без содержимого")
-    print(f"  строк кода      : {len(context.bsl_text.splitlines())}")
-    print(f"  реквизитов      : {len(context.summary.attributes)}")
-    print(f"  элементов        : {len(context.summary.elements)}")
-    print(f"  привязок         : {len(context.summary.relations)}")
+    print(f"  было в карточке    : пути и хэши, без содержимого")
+    print(f"  строк кода          : {len(context.bsl_text.splitlines())}")
+    print(f"  реквизитов        : {len(context.summary.attributes)}")
+    print(f"  элементов         : {len(context.summary.elements)}")
+    print(f"  привязок          : {len(context.summary.relations)}")
 
 
 def demo_missing_artifacts(root: Path) -> None:
@@ -149,11 +185,38 @@ def demo_metadata(root: Path) -> None:
     print("-" * 72)
     for key in sorted(metadata):
         print(f"  {key:<16}: {metadata[key]}")
-    print(f"  абсолютных путей : {str(root) in json.dumps(metadata, ensure_ascii=False)}")
+    print(f"  абсолютных путей    : {str(root) in json.dumps(metadata, ensure_ascii=False)}")
+
+
+def demo_object_attributes(root: Path) -> None:
+    """object_attributes/resolved_relations (issue #NEW): найденный и не найденный объект."""
+    with_object = make_form(
+        root, "СОбъектом", "ФормаЭлемента", with_bsl=True, with_elem=True
+    )
+    write_object_json(root, "СОбъектом")
+
+    without_object = make_form(
+        root, "БезОбъектаЗагрузки", "ФормаЭлемента", with_bsl=True, with_elem=True
+    )
+
+    print("\nobject_attributes / resolved_relations (issue #NEW)")
+    print("-" * 72)
+    for title, entry in (("Catalog.json есть", with_object), ("Catalog.json нет", without_object)):
+        context = build_form_context(entry, root)
+        properties = (
+            len(context.object_attributes.get("Properties", []))
+            if context.object_attributes is not None
+            else None
+        )
+        print(
+            f"  {title:<16} → object_attributes={'None' if properties is None else properties} "
+            f"resolved_relations={len(context.resolved_relations)} "
+            f"warnings={context.metadata['warnings']}"
+        )
 
 
 def demo_truncation(root: Path) -> None:
-    """Лимит соблюдается всегда; summary раньше BSL."""
+    """Лимит соблюдается всегда; SUMMARY и OBJECT_ATTRIBUTES раньше BSL."""
     entry = make_form(root, "Большая", "ФормаЭлемента", with_bsl=True, with_elem=True)
     form_dir = root / OBJECT_TYPE / "Большая" / CONTAINER / "ФормаЭлемента"
     (form_dir / f"{CONTAINER}.obj.bsl").write_text(
@@ -165,17 +228,18 @@ def demo_truncation(root: Path) -> None:
 
     print("\nОбрезка фрагмента")
     print("-" * 72)
-    print(f"  полная длина    : {len(full)}")
-    print(f"  summary раньше BSL: {full.index('## SUMMARY') < full.index('## BSL')}")
+    print(f"  полная длина           : {len(full)}")
+    print(f"  SUMMARY раньше OBJECT_ATTRIBUTES: {full.index('## SUMMARY') < full.index('## OBJECT_ATTRIBUTES')}")
+    print(f"  OBJECT_ATTRIBUTES раньше BSL: {full.index('## OBJECT_ATTRIBUTES') < full.index('## BSL')}")
     unlimited = to_llm_prompt_fragment(context, max_chars=-1)
-    print(f"  max_chars=-1      → без обрезки: {unlimited == full}")
+    print(f"  max_chars=-1 → без обрезки: {unlimited == full}")
     for limit in (0, 3, 200, 8000):
         fragment = to_llm_prompt_fragment(context, max_chars=limit)
         print(f"  max_chars={limit:<7} → длина {len(fragment):<5} в лимите: {len(fragment) <= limit}")
 
     first = to_llm_prompt_fragment(context, max_chars=4000)
     second = to_llm_prompt_fragment(build_form_context(entry, root), max_chars=4000)
-    print(f"  детерминизм      : {first == second}")
+    print(f"  детерминизм              : {first == second}")
 
 
 def main() -> None:
@@ -184,12 +248,13 @@ def main() -> None:
         demo_materialization(root)
         demo_missing_artifacts(root)
         demo_metadata(root)
+        demo_object_attributes(root)
         demo_truncation(root)
 
-    print(
-        "\nИтог: контекст открывает то, на что реестр только указывал,"
-        "\nи никогда не заменяет отсутствующий файл догадкой."
-    )
+        print(
+            "\nИтог: контекст открывает то, на что реестр только указывал,"
+            "\nи никогда не заменяет отсутствующий файл догадкой (включая реквизиты объекта)."
+        )
 
 
 if __name__ == "__main__":

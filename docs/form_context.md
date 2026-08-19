@@ -1,25 +1,32 @@
 # Компактный LLM-контекст формы: form_context
 
-Issue #77. Модуль `v8unpack_agent/form_context.py`.
+Issue #77, #NEW. Модуль `v8unpack_agent/form_context.py`.
 
 ## Концепция
 
 `FormEntry` из `scan_forms` — **карточка указателей**: она знает, где лежат
 части формы, но не содержит их содержимого. `FormContext` — **материализованное
-содержимое**: прочитанный BSL-текст, построенный `FormSummary` и компактные
-метаданные, пригодные для вставки в промпт.
+содержимое**: прочитанный BSL-текст, построенный `FormSummary`, компактные
+метаданные, а также (issue #NEW) реквизиты и табличные части объекта
+метаданных за формой.
 
 ```
 scan_forms(root)                 -> FormScanIndex / FormEntry (указатели)
   \_ build_form_context(entry, root) -> FormContext (содержимое)
        \_ build_form_summary(form_dir) -> FormSummary (единственный парсер)
             \_ parse_elem_json(form_dir) -> ElemIndexResult
+       \_ object_json_path(entry) -> Path | None            (catalog_resolver, issue #NEW)
+            \_ decode_object_attributes(object_json) -> DecodeResult   (object_decoder, issue #NEW)
+       \_ resolve_data_path(data_path, object_json) -> ResolvedBinding (catalog_resolver, issue #NEW,
+                                                                        только для relations с kind=="data")
        \_ to_llm_prompt_fragment(context, max_chars) -> текст для промпта
 ```
 
-Второго пути разбора не вводится. Структуру формы даёт только
-`build_form_summary` поверх `parse_elem_json`; `form_context` ничего не парсит
-самостоятельно и не создаёт привязок `data_path`.
+Второго пути разбора формы не вводится. Структуру самой формы даёт только
+`build_form_summary` поверх `parse_elem_json`; `form_context` сам ничего не парсит
+и не создаёт новых привязок `data_path`. Для реквизитов самого объекта
+метаданных (issue #NEW) аналогично используется только уже существующий в репозитории
+`object_decoder` и `catalog_resolver` — без второго пути разбора raw-header.
 
 ## Публичный API
 
@@ -29,15 +36,15 @@ scan_forms(root)                 -> FormScanIndex / FormEntry (указател�
 | `build_form_context(form_entry, unpacked_root)` | Материализует содержимое по карточке `FormEntry`. |
 | `to_llm_prompt_fragment(context, max_chars=-1)` | Детерминированный текст для промпта; по умолчанию без обрезки. |
 
-Символы доступны двумя равнодопустимыми путями: из корня пакета
+Символы доступны двумя равнодопустимыми путями: из корняй пакета
 (`from v8unpack_agent import FormContext, build_form_context, to_llm_prompt_fragment`)
 и напрямую из подмодуля (`from v8unpack_agent.form_context import ...`).
 Корневой экспорт ленивый: `import v8unpack_agent` не загружает `form_context`,
 модуль импортируется при первом обращении к символу (issue #124).
 
-
 > С issue #128 гарантия расширена: `import v8unpack_agent` не загружает ни
 > `form_context`, ни `elem_parser`, ни `pipeline`.
+
 ```python
 from pathlib import Path
 
@@ -63,29 +70,40 @@ class FormContext:
     bsl_text: str | None
     summary: FormSummary
     metadata: dict
+    object_attributes: dict | None = None       # issue #NEW
+    resolved_relations: list[dict] = field(default_factory=list)  # issue #NEW
 ```
 
-`frozen=True` при изменяемом `dict` — та же комбинация, что уже принята в
-`FormSummary` со списками: подмена полей запрещена, глубокой неизменяемости нет.
+`frozen=True` при изменяемых `dict`/`list` — та же комбинация, что уже принята в
+`FormSummary` со списками: подмена самих полей заборошена, глубокой неизменяемости нет.
 
-### Зачем нужен unpacked_root
+### Zachem nuzhen unpacked_root
 
 Семантика путей `FormEntry` смешанная (issue #57):
 
 | Поле | Вид пути |
 |------|----------|
-| `form_path` | абсолютный |
+| `form_path` | абсолютный, указывает на директорию формы (не на файл) |
 | `bsl_path` | абсолютный (у elem-only форм — заглушка на несуществующий файл) |
 | `json_path` | абсолютный |
 | `elem_json_path` | relative-to-root, `Optional` |
 
 `unpacked_root` решает три задачи: резолвит относительный `elem_json_path`,
 служит базой для обезличенных относительных путей в `metadata` и вырезается из
-текстов предупреждений парсера.
+текстов предупреждения парсера.
+
+**Важно (issue #NEW):** `object_json_path()` из `catalog_resolver` ожидает, что `form_entry.form_path`
+указывает именно на директорию формы (тот же путь, что использует `_form_dir` в fallback-ветке):
+он поднимается на два уровня вверх от `form_path`, чтобы найти каталог объекта
+(`.../<тип>/<объект>/Forms/<игра>` -> `.../<тип>/<объект>`). Передача в `form_path` пути до файла
+внутри директории сдвигает расчёт уровней и даёт `object_attributes = None`.
 
 ### Состав metadata
 
-Отбор, а не копия `FormEntry`. Ровно шесть ключей:
+Отбор, а не копия `FormEntry`. Ровно шесть ключей — набор не изменился issue #NEW,
+чтобы сохранить строгий контракт, зафиксированный `test_metadata_keys_are_exactly_expected`.
+Наличие реквизитов объекта проверяется напрямую через `context.object_attributes is not None`,
+отдельного булева в `metadata` для этого нет.
 
 | Ключ | Значение |
 |------|----------|
@@ -94,25 +112,61 @@ class FormContext:
 | `bsl_sha256` | хэш модуля формы из реестра либо `None` |
 | `elem_sha256` | хэш структуры формы из реестра либо `None` |
 | `has_bsl` | прочитан ли модуль формы фактически |
-| `warnings` | предупреждения `FormEntry`, обезличенные |
+| `warnings` | предупреждения `FormEntry` и `object_decoder`, обезличенные |
 
 `json_path`, `bsl_path`, `bsl_mtime` и `form_elem_path` в `metadata` не
 попадают: дублировать всю карточку — вне scope #77.
 
+## object_attributes и resolved_relations (issue #NEW)
+
+### object_attributes
+
+Реквизиты и табличные части объекта метаданных (а не самой формы) за ней. Получается
+двухшагово: `catalog_resolver.object_json_path(form_entry)` находит JSON-файл объекта,
+`object_decoder.decode_object_attributes(object_json)` декодирует его raw `header`.
+
+| Ситуация | Результат |
+|----------|----------|
+| файл объекта найден и декодирован | `{"Properties": [...], "TabularSections": [...]}` |
+| файл объекта не найден | `object_attributes is None`, запись в `metadata["warnings"]` |
+| декодирование не удалось (`DecodeResult.ok is False`) | `object_attributes is None`, предупреждения `object_decoder` в `metadata["warnings"]` |
+
+`None` отличается от пустой структуры `{"Properties": [], "TabularSections": []}` и не подменяется на неё:
+отсутствие файла — это отдельный случай от найденного, но без реквизитов объекта.
+
+`type_resolver` в `decode_object_attributes()` не передаётся: ссылочные типы реквизитов остаются в виде
+`Ref#<uuid>`. Резолвинг UUID -> имя метаданных не реализован в этом выпуске — в
+резолвер нет источника соответствия, догадка о типе не делается.
+
+### resolved_relations
+
+Обогащение `summary.relations` типом и синонимом реквизита через
+`catalog_resolver.resolve_data_path()`. Обрабатываются только связи с `kind == "data"`:
+это единственные связи с `data_path`, для которых резолюция по файлу объекта
+имеет смысл; связи `kind == "event"` не трогаются.
+
+Каждая запись — словарь `{data_path, object_type, attribute_name, value_type, synonym, resolved}`.
+При `object_json is None` или неудачной резолюции запись всё равно возвращается с
+`resolved=False`, а не отбрасывается — потребитель видит весь список data-связей формы,
+даже если часть из них не разрешилась. Новые привязки `data_path` при этом не создаются —
+только обогащаются те, которые уже выдал `elem_parser`.
+
 ## Поведение при отсутствующих артефактах
 
 | Ситуация | Результат |
-|----------|-----------|
+|----------|----------|
 | BSL есть | `bsl_text` — содержимое, прочитанное явно как UTF-8 |
 | BSL отсутствует (elem-only форма) | `bsl_text is None`, `metadata["has_bsl"] is False` |
 | BSL пустой файл | `bsl_text == ""` — отличается от `None` |
 | `*.elem.json` отсутствует | пустые бакеты `FormSummary` и `warnings` парсера |
 | `elem_json_path is None` (старый индекс) | каталог формы берётся из `form_path` |
 | каталога формы нет вовсе | пустая выжимка с предупреждением, без вызова парсера |
+| `object_json_path()` не нашёл файл объекта (issue #NEW) | `object_attributes is None`, `resolved_relations` с `resolved=False`, предупреждение в `metadata["warnings"]` |
+| `decode_object_attributes()` вернул `ok=False` (issue #NEW) | `object_attributes is None`, предупреждения `DecodeResult.warnings` в `metadata["warnings"]` |
 
 Отсутствующий файл никогда не превращается в выдуманные данные. Ошибки чтения
 не подавляются: `best-effort` применяется только там, где он уже следует
-контракту `FormSummary`.
+контракту `FormSummary`/`DecodeResult`.
 
 ## Формат фрагмента и truncation contract
 
@@ -120,18 +174,21 @@ class FormContext:
 # FORM <object_type>/<object_name>/<container_name>/<form_name>
 ## SUMMARY
 <to_normalized_json(summary)>
+## OBJECT_ATTRIBUTES
+<JSON с Properties/TabularSections/ResolvedRelations либо «(реквизиты объекта не найдены)»>
 ## BSL
 <bsl_text либо «(модуль формы отсутствует)»>
 ```
 
 Гарантии:
 
-- порядок фиксирован: summary всегда раньше BSL, потому что смысловая выжимка
-  важнее кода;
+- порядок фиксирован: SUMMARY всегда раньше OBJECT_ATTRIBUTES, а OBJECT_ATTRIBUTES раньше
+  BSL, потому что смысловая выжимка важнее кода;
 - значение по умолчанию `max_chars=-1` возвращает полный контекст без обрезки;
 - обрезка выполняется **последним** шагом по символам, поэтому
   при `max_chars > 0` выполняется `len(result) <= max_chars`, включая лимит
-  меньше длины заголовков;
+  меньше длины заголовков; при типичных размерах резаться будет именно
+  хвост `## BSL`, так как SUMMARY и OBJECT_ATTRIBUTES идут раньше в тексте;
 - `max_chars == 0` и значения меньше `-1` дают пустую строку;
 - результат детерминирован: два вызова на одинаковых данных дают идентичный
   текст.
@@ -147,10 +204,10 @@ class FormContext:
 абсолютный путь внутри собственного сообщения.
 
 `form_context._strip_root` при этом сохранён. Он по-прежнему очищает warnings
-из `FormEntry` и итоговой выжимки относительно `unpacked_root`, то есть остаётся
-вторым эшелоном защиты на границе LLM-контекста. Это намеренный
-defense-in-depth: безопасный источник не отменяет защиту потребителя от старого
-индекса, стороннего warning или будущей регрессии.
+из `FormEntry` и итоговой выжимки относительно `unpacked_root`, а также (issue #NEW)
+предупреждения `object_decoder`, то есть остаётся вторым эшелоном защиты на границе
+  LLM-контекста. Цели защиты не изменились: безопасный источник не отменяет
+защиту потребителя от старого индекса, стороннего warning или будущей регрессии.
 
 ## Синтетический пример
 
@@ -189,20 +246,28 @@ entry = FormEntry(
 
 context = build_form_context(entry, Path("tmp"))
 print(context.metadata["form_path"])          # относительный путь
+print(context.object_attributes)               # None — в примере нет Catalog.json
 print(len(to_llm_prompt_fragment(context, max_chars=500)) <= 500)  # True
 ```
 
-Запускаемый вариант — `examples/form_context.py`.
+Зависимый вариант — `examples/form_context.py`.
 
 ## Ограничения
 
 - `FormContext` не индексирует и не ищет: RAG (`form_rag`, #78) и
   диспетчеризация (`form_dispatcher`, #79) в scope не входят.
-- Привязки `data_path` не создаются и не достраиваются; форма без подтверждённых
-  привязок даёт выжимку без `relations` — это результат, а не дефект.
+- Новые привязки `data_path` не создаются и не достраиваются: `resolved_relations`
+  (issue #NEW) только обогащает типом/синонимом те, привязки, которые уже выдал
+  `elem_parser`; форма без подтверждённых привязок даёт выжимку без `relations` — это
+  результат, а не дефект.
+- `object_attributes` отражает только то, что `object_decoder` смог расшифровать в raw `header`;
+  для production-layout это best-effort с несколькими fallback-слоями
+  (`_decode_real_header`), полнота покрытия всегда безоговорочна.
+- Ссылочные типы (`Ref#<uuid>`) не разрешаются до имени метаданных внутри этого
+  вызова: `type_resolver` в `decode_object_attributes()` не передаётся.
 - CLI-команды у модуля нет.
 - Обрезка выполняется по символам, а не по токенам: `max_chars` — бюджет
   символов; `-1` означает отсутствие бюджета и обрезки. Соответствие числу
   токенов конкретной модели не гарантируется.
-- Обрезка может разорвать JSON выжимки на границе лимита: фрагмент
-  предназначен для чтения моделью, а не для машинного разбора.
+- Обрезка может разорвать JSON выжимки/object_attributes на границе лимита:
+  фрагмент предназначен для чтения моделью, а не для машинного разбора.
