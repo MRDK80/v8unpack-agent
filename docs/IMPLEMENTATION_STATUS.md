@@ -45,6 +45,14 @@
   `Properties` и `TabularSections` поступают из `object_decoder`.
 - После #88 в `value_type` приходит читаемое имя ссылочного типа
   (`CatalogRef.Города`) вместо `Ref#<uuid>`; публичный API не менялся.
+- После #148 файл объекта декодируется исключительно через
+  `object_decoder.decode_object_attributes()`; `resolve_data_path` не содержит
+  собственного `json.loads` и второго парсера raw-header. Верхнеуровневые
+  реквизиты берутся из `data["Properties"]`, реквизиты табличных частей — из
+  `data["TabularSections"]`. Добавлен ограниченный кэш по
+  `(path, mtime_ns, size)` и `clear_object_cache()`. На боевой выгрузке
+  `Catalog/Номенклатура/CatalogForm/ФормаЭлемента`: 40 `resolved=True` из 65 вместо 0;
+  остальные 25 — категории #147 / #143 — issue #148, PR #159.
 
 ### object_decoder — реквизиты объекта из raw `header`
 - `decode_object_attributes(object_json, type_resolver=None)` + `DecodeResult` —

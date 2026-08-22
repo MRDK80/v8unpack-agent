@@ -29,7 +29,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from v8unpack_agent.object_decoder import decode_object_attributes
 
@@ -38,9 +38,9 @@ if TYPE_CHECKING:
 
 __all__ = [
     "ResolvedBinding",
-    "resolve_data_path",
-    "object_json_path",
     "clear_object_cache",
+    "object_json_path",
+    "resolve_data_path",
 ]
 
 
@@ -135,7 +135,7 @@ def resolve_data_path(
     )
 
     # Нужно минимум 2 сегмента: Объект.Реквизит
-    if len(parts) < 2:  # noqa: PLR2004
+    if len(parts) < 2:
         return _unresolved
 
     data = _decoded_object_data(object_json)
@@ -145,10 +145,10 @@ def resolve_data_path(
     try:
         # Формат: Объект.Реквизит        → parts = [obj, attr]
         # Формат: Объект.ТЧ.Реквизит    → parts = [obj, tab_part, attr]
-        if len(parts) == 2:  # noqa: PLR2004
+        if len(parts) == 2:
             attr_key = parts[1]
             section = _top_level_properties(data)
-        elif len(parts) == 3:  # noqa: PLR2004
+        elif len(parts) == 3:
             attr_key = parts[2]
             section = _tabular_properties(data, parts[1])
         else:
