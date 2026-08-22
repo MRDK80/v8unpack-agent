@@ -391,6 +391,20 @@
 
 ### Fixed
 
+- `catalog_resolver.resolve_data_path()` больше не разбирает файл объекта
+  самостоятельно и использует `object_decoder.decode_object_attributes()` как
+  единственную точку декодирования raw-header. До исправления на production
+  выгрузке (`Catalog/Номенклатура/CatalogForm/ФормаЭлемента`) все 65 записей `resolved_relations`
+  возвращались с `resolved=false` и `synonym=null`, потому что верхнеуровневый
+  ключ `header` не распознавался: функция искала нормализованные
+  `Properties` / `Attributes`. После исправления резолвятся как верхнеуровневые
+  реквизиты, так и реквизиты табличных частей; на той же форме
+  40 `resolved=true` из 65, остальные
+  25 — категории #147 / #143. Удалены `_get_attributes_section`
+  и `_get_tabular_attributes_section`; добавлен ограниченный кэш по
+  `(path, mtime_ns, size)` и `clear_object_cache()`. Публичная сигнатура,
+  формат `ResolvedBinding` и `FormContext.resolved_relations` не изменились;
+  best-effort контракт сохранён — issue #148, PR #159.
 - `docs/form_classifier.md` — две относительные ссылки `../../issues/98` и
   `../../pull/99` заменены на абсолютные URL. Прежний вид резолвился только
   при рендере на github.com и был битым в локальном просмотре и в любом

@@ -1,7 +1,7 @@
-"""catalog_resolver — резолюция data_path-привязок через Catalog.json.
+"""catalog_resolver — резолюция data_path-привязок через файл объекта.
 
 Резолвит строки вида ``"Объект.Реквизит"`` или ``"Объект.ТЧ.Реквизит"``
-по файлу ``<ObjectType>/<ObjectName>/<ObjectName>.json`` в выгрузке конфигурации.
+по файлу ``<Тип>/<Имя>/<Тип|Имя>.json`` в выгрузке конфигурации.
 
 Поддерживаемые форматы data_path
 ---------------------------------
@@ -11,19 +11,37 @@
 ``Объект.ТабличнаяЧасть.Реквизит``
     Реквизит внутри табличной части объекта.
 
-Best-effort: если файл отсутствует, путь нераспознан или произошла любая
-ошибка — возвращается :class:`ResolvedBinding` с ``resolved=False``.
-Исключения не пробрасываются.
+Источник данных (issue #148)
+----------------------------
+Модуль не разбирает файл объекта самостоятельно. Единственная точка
+декодирования — :func:`v8unpack_agent.object_decoder.decode_object_attributes`.
+Причина: production-выгрузка v8unpack содержит верхнеуровневый ключ ``header``
+(raw-header), а не готовые списки ``Properties`` / ``Attributes``, и разбирать
+его умеет только ``object_decoder``. Второго парсера raw-header в проекте нет.
+
+Best-effort: если файл отсутствует, JSON повреждён, ``DecodeResult.ok`` равен
+``False``, путь нераспознан или структура неполная — возвращается
+:class:`ResolvedBinding` с ``resolved=False``. Исключения не пробрасываются,
+тип, имя и синоним не достраиваются по догадке.
 """
 from __future__ import annotations
 
-import json
-from dataclasses import dataclass
+import os
+from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+
+from v8unpack_agent.object_decoder import decode_object_attributes
 
 if TYPE_CHECKING:
     from v8unpack_agent.scan_forms import FormEntry
+
+__all__ = [
+    "ResolvedBinding",
+    "clear_object_cache",
+    "object_json_path",
+    "resolve_data_path",
+]
 
 
 @dataclass(frozen=True)
@@ -40,13 +58,37 @@ class ResolvedBinding:
     """Имя реквизита (последний сегмент пути)."""
 
     value_type: str | None
-    """Строковое представление типа реквизита из ``Catalog.json``, или ``None``."""
+    """Строковое представление типа реквизита, или ``None``."""
 
     synonym: str | None
-    """Синоним реквизита из ``Catalog.json``, или ``None``."""
+    """Синоним реквизита, или ``None``."""
 
     resolved: bool
     """``True`` — резолюция успешна; ``False`` — partial/failed (best-effort)."""
+
+
+# ---------------------------------------------------------------------------
+# Кэш декодированных файлов объектов
+# ---------------------------------------------------------------------------
+# ``form_context._resolve_relations()`` вызывает ``resolve_data_path`` отдельно
+# для каждой data-связи, то есть один и тот же файл объекта декодируется
+# многократно. Безусловный ``lru_cache`` только по ``Path`` здесь недопустим:
+# файл может измениться в долгоживущем процессе или внутри теста. Поэтому ключ
+# включает ``stat``: (path, mtime_ns, size). Кэш ограничен по размеру и не
+# влияет на публичный контракт — его можно удалить без изменения поведения.
+
+_DECODE_CACHE_MAXSIZE = 32
+_DECODE_CACHE: dict[tuple[str, int, int], dict[str, Any] | None] = {}
+_MISSING: Any = object()
+
+
+def clear_object_cache() -> None:
+    """Сбросить кэш декодированных файлов объектов.
+
+    Нужен долгоживущим процессам и тестам, которые перезаписывают файл
+    объекта; на результат резолюции не влияет.
+    """
+    _DECODE_CACHE.clear()
 
 
 def resolve_data_path(
@@ -67,8 +109,16 @@ def resolve_data_path(
     -------
     :class:`ResolvedBinding` с заполненными полями при успехе или
     ``resolved=False`` при любой ошибке.
+
+    Notes
+    -----
+    Файл объекта декодируется через
+    ``object_decoder.decode_object_attributes`` (issue #148): верхнеуровневые
+    реквизиты берутся из ``DecodeResult.data["Properties"]``, реквизиты
+    табличных частей — из ``DecodeResult.data["TabularSections"]`` и
+    ``Properties`` найденной секции.
     """
-    parts = data_path.split(".")
+    parts = data_path.split(".") if isinstance(data_path, str) else []
 
     # Определяем attribute_name и object_type по лучшей догадке
     # до чтения файла, чтобы вернуть максимум информации при ошибке.
@@ -85,28 +135,26 @@ def resolve_data_path(
     )
 
     # Нужно минимум 2 сегмента: Объект.Реквизит
-    if len(parts) < 2:  # noqa: PLR2004
+    if len(parts) < 2:
+        return _unresolved
+
+    data = _decoded_object_data(object_json)
+    if data is None:
         return _unresolved
 
     try:
-        if not object_json.exists():
-            return _unresolved
-
-        raw = json.loads(object_json.read_text(encoding="utf-8"))
-    except Exception:  # noqa: BLE001
-        return _unresolved
-
-    try:
-        # Формат: Объект.Реквизит  → parts = [obj, attr]
-        # Формат: Объект.ТЧ.Реквизит → parts = [obj, tab_part, attr]
-        if len(parts) == 2:  # noqa: PLR2004
+        # Формат: Объект.Реквизит        → parts = [obj, attr]
+        # Формат: Объект.ТЧ.Реквизит    → parts = [obj, tab_part, attr]
+        if len(parts) == 2:
             attr_key = parts[1]
-            section = _get_attributes_section(raw)
-        else:
-            # Вложенный путь: ищем табличную часть, затем её реквизиты
-            tab_part_name = parts[1]
+            section = _top_level_properties(data)
+        elif len(parts) == 3:
             attr_key = parts[2]
-            section = _get_tabular_attributes_section(raw, tab_part_name)
+            section = _tabular_properties(data, parts[1])
+        else:
+            # Более глубокие пути не входят в подтверждённые правила
+            # интерпретации data_path и не резолвятся.
+            return _unresolved
 
         if section is None:
             return _unresolved
@@ -115,15 +163,11 @@ def resolve_data_path(
         if attr_record is None:
             return _unresolved
 
-        value_type = _extract_value_type(attr_record)
-        synonym = _extract_synonym(attr_record)
-
-        return ResolvedBinding(
-            data_path=data_path,
-            object_type=object_type,
+        return replace(
+            _unresolved,
             attribute_name=attr_key,
-            value_type=value_type,
-            synonym=synonym,
+            value_type=_extract_value_type(attr_record),
+            synonym=_extract_synonym(attr_record),
             resolved=True,
         )
     except Exception:  # noqa: BLE001
@@ -134,17 +178,17 @@ def object_json_path(form_entry: "FormEntry") -> Path | None:
     """Найти JSON-файл объекта по ``FormEntry``.
 
     Поднимается на 2 уровня вверх от ``form_entry.form_path``
-    (``<ObjectType>/<ObjectName>/<ContainerName>/<FormName>`` → верхушка
-    ``<ObjectType>/<ObjectName>``) и ищет ``.json`` файл с именем, совпадающим
-    с именем директории объекта (например ``Catalog.json`` или ``Банки.json``).
+    (``<Тип>/<Имя>/<Контейнер>/<Форма>`` → ``<Тип>/<Имя>``) и ищет ``.json``
+    файл с именем, совпадающим с именем директории объекта (например
+    ``Catalog.json`` или ``Банки.json``).
 
     Returns
     -------
     :class:`~pathlib.Path` к JSON-файлу объекта или ``None``.
     """
     try:
-        # form_path: .../cf_export/<ObjectType>/<ObjectName>/<ContainerName>/<FormName>
-        # -2 уровня вверх → .../cf_export/<ObjectType>/<ObjectName>
+        # form_path: .../cf_export/<Тип>/<Имя>/<Контейнер>/<Форма>
+        # -2 уровня вверх → .../cf_export/<Тип>/<Имя>
         object_dir = Path(form_entry.form_path).parents[1]
         if not object_dir.is_dir():
             return None
@@ -186,65 +230,102 @@ def _infer_object_type(object_json: Path) -> str:
         return ""
 
 
-def _get_attributes_section(raw: dict) -> list | None:
-    """Вернуть список реквизитов верхнего уровня из ``Catalog.json``.
+def _decode(object_json: Path) -> dict[str, Any] | None:
+    """Декодировать файл объекта через ``object_decoder``.
 
-    v8unpack выгружает реквизиты под ключом ``"Properties"`` или ``"Attributes"``
-    (вариативность по версиям конфигурации).
+    Возвращает ``DecodeResult.data`` при ``ok=True``; во всех остальных
+    случаях (``ok=False``, отсутствующий файл, повреждённый JSON,
+    неожиданная форма результата) — ``None``. Исключения не пробрасываются.
     """
-    for key in ("Properties", "Attributes", "props", "attributes"):
-        section = raw.get(key)
-        if isinstance(section, list):
-            return section
-    return None
+    try:
+        result = decode_object_attributes(object_json)
+    except Exception:  # noqa: BLE001
+        return None
+
+    if result is None or not getattr(result, "ok", False):
+        return None
+
+    data = getattr(result, "data", None)
+    if not isinstance(data, dict):
+        return None
+    return data
 
 
-def _get_tabular_attributes_section(raw: dict, tab_part_name: str) -> list | None:
-    """Вернуть список реквизитов табличной части ``tab_part_name``.
+def _cache_key(object_json: Path) -> tuple[str, int, int] | None:
+    """Ключ кэша по пути и метаданным файла. ``None`` — файл недоступен."""
+    try:
+        stat = object_json.stat()
+    except OSError:
+        return None
+    return (os.fspath(object_json), stat.st_mtime_ns, stat.st_size)
 
-    Ищет табличные части по ключу ``"TabularSections"`` или ``"TableParts"``.
+
+def _decoded_object_data(object_json: Path) -> dict[str, Any] | None:
+    """``_decode`` с ограниченным кэшем по ``(path, mtime_ns, size)``."""
+    key = _cache_key(object_json)
+    if key is None:
+        # Файла нет или он недоступен: результат не кэшируем.
+        return _decode(object_json)
+
+    cached = _DECODE_CACHE.get(key, _MISSING)
+    if cached is not _MISSING:
+        return cached  # type: ignore[return-value]
+
+    data = _decode(object_json)
+    if len(_DECODE_CACHE) >= _DECODE_CACHE_MAXSIZE:
+        _DECODE_CACHE.clear()
+    _DECODE_CACHE[key] = data
+    return data
+
+
+def _top_level_properties(data: dict[str, Any]) -> list | None:
+    """Реквизиты верхнего уровня из ``DecodeResult.data["Properties"]``."""
+    section = data.get("Properties")
+    return section if isinstance(section, list) else None
+
+
+def _tabular_properties(data: dict[str, Any], tab_part_name: str) -> list | None:
+    """Реквизиты табличной части ``tab_part_name``.
+
+    Табличные части приходят в ``DecodeResult.data["TabularSections"]``,
+    их реквизиты — в ``Properties`` соответствующей секции.
     """
-    for key in ("TabularSections", "TableParts", "tabularSections"):
-        sections = raw.get(key)
-        if not isinstance(sections, list):
+    sections = data.get("TabularSections")
+    if not isinstance(sections, list):
+        return None
+
+    for section in sections:
+        if not isinstance(section, dict):
             continue
-        for section in sections:
-            if not isinstance(section, dict):
-                continue
-            # Имя секции может быть в "Name" или "name"
-            name = section.get("Name") or section.get("name") or ""
-            if name == tab_part_name:
-                for attr_key in ("Properties", "Attributes", "props", "attributes"):
-                    attrs = section.get(attr_key)
-                    if isinstance(attrs, list):
-                        return attrs
+        if not _same_name(section.get("Name"), tab_part_name):
+            continue
+        attrs = section.get("Properties")
+        return attrs if isinstance(attrs, list) else None
     return None
+
+
+def _same_name(left: Any, right: Any) -> bool:
+    """Сравнить имена метаданных: имена 1С регистронезависимы."""
+    if not isinstance(left, str) or not isinstance(right, str):
+        return False
+    return left.strip().casefold() == right.strip().casefold()
 
 
 def _find_attribute(section: list, attr_name: str) -> dict | None:
-    """Найти запись реквизита по имени (key ``"Name"`` или ``"name"``).""" 
+    """Найти запись реквизита по имени в нормализованном списке реквизитов."""
     for record in section:
-        if not isinstance(record, dict):
-            continue
-        name = record.get("Name") or record.get("name") or ""
-        if name == attr_name:
+        if isinstance(record, dict) and _same_name(record.get("Name"), attr_name):
             return record
     return None
 
 
 def _extract_value_type(record: dict) -> str | None:
     """Извлечь строковое представление типа из записи реквизита."""
-    for key in ("Type", "type", "ValueType", "valueType"):
-        val = record.get(key)
-        if val is not None:
-            return str(val)
-    return None
+    val = record.get("Type")
+    return str(val) if val is not None else None
 
 
 def _extract_synonym(record: dict) -> str | None:
     """Извлечь синоним из записи реквизита."""
-    for key in ("Synonym", "synonym", "Title", "title"):
-        val = record.get(key)
-        if val is not None:
-            return str(val)
-    return None
+    val = record.get("Synonym")
+    return str(val) if val is not None else None
