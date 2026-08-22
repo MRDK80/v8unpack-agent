@@ -12,15 +12,8 @@ src/
 *.old
 .venv/
 uv.lock
-inspect_forms.py
-inspect_empty.py
-classify_empty.py
-proto_adapter.py
-proto_fallback.py
 /json
 cf_export/
 sys
 *.log
-
-# артефакты диагностических прогонов
 *.csv
