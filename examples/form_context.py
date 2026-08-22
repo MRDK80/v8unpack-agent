@@ -76,6 +76,10 @@ OBJECT_HEADER_PAYLOAD = {
     ]
 }
 
+#: UUID ссылочного типа из OBJECT_HEADER_PAYLOAD и его читаемое имя (issue #147).
+REFERENCE_TYPE_UUID = "22222222-2222-2222-2222-222222222222"
+REFERENCE_TYPES = {REFERENCE_TYPE_UUID: "CatalogRef.Контрагенты"}
+
 
 def make_form(
     root: Path,
@@ -241,6 +245,30 @@ def demo_truncation(root: Path) -> None:
     second = to_llm_prompt_fragment(build_form_context(entry, root), max_chars=4000)
     print(f"  детерминизм              : {first == second}")
 
+def demo_type_resolver(root: Path) -> None:
+    """type_resolver (issue #147): Ref#uuid превращается в имя типа.
+
+    Индекс подменён словарём, чтобы пример оставался запускаемым без реальной
+    выгрузки: контракт тот же, что у FormScanIndex.resolve_reference_type —
+    ``uuid -> имя типа`` либо ``None``.
+    """
+    entry = make_form(root, "СРезолвером", "ФормаЭлемента", with_bsl=True, with_elem=True)
+    write_object_json(root, "СРезолвером")
+
+    without = build_form_context(entry, root)
+    with_resolver = build_form_context(entry, root, type_resolver=REFERENCE_TYPES.get)
+    unknown = build_form_context(entry, root, type_resolver=lambda uuid: None)
+
+    print("\nСсылочные типы (issue #147)")
+    print("-" * 72)
+    for title, context in (
+        ("без резолвера", without),
+        ("с резолвером", with_resolver),
+        ("резолвер вернул None", unknown),
+    ):
+        types = [prop.get("Type") for prop in (context.object_attributes or {}).get("Properties", [])]
+        print(f"  {title:<22} → {types}")
+    print("  индекс не мутирован    :", REFERENCE_TYPES[REFERENCE_TYPE_UUID])
 
 def main() -> None:
     with tempfile.TemporaryDirectory(prefix="form_context_example_") as tmp:
@@ -249,6 +277,7 @@ def main() -> None:
         demo_missing_artifacts(root)
         demo_metadata(root)
         demo_object_attributes(root)
+        demo_type_resolver(root)
         demo_truncation(root)
 
         print(

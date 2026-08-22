@@ -391,6 +391,20 @@
 
 ### Fixed
 
+- **`form_context.build_form_context(..., *, type_resolver=None)`** — контекст
+  формы больше не терял читаемые имена ссылочных типов. Резолвер (обычно
+  `FormScanIndex.resolve_reference_type`, #88) пробрасывается в
+  `object_decoder.decode_object_attributes()`, поэтому
+  `FormContext.object_attributes` содержит `CatalogRef.<Имя>` вместо
+  `Ref#<uuid>` там, где UUID уже известен индексу. Параметр keyword-only:
+  вызовы `build_form_context(entry, root)` работают без изменений, без
+  резолвера поведение идентично прежнему, неизвестный UUID сохраняет
+  безопасный fallback `Ref#<uuid>`, исключение резолвера уходит в
+  `REF_RESOLVER_FAILED` и не прерывает сборку. Второй индекс не создаётся,
+  `decode_object_attributes`, `catalog_resolver.resolve_data_path()` и
+  `FormScanIndex` не менялись, `resolved_relations` не затронуты. Новый модуль
+  `tests/test_form_context_issue147.py` — 11 тестов, фикстуры синтетические;
+  846 -> 857 passed (issue #147, PR #162).
 - `catalog_resolver.resolve_data_path()` больше не разбирает файл объекта
   самостоятельно и использует `object_decoder.decode_object_attributes()` как
   единственную точку декодирования raw-header. До исправления на production
