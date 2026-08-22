@@ -299,25 +299,24 @@ def test_empty_properties_section(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_catalog_resolver_compat(tmp_path):
-    """resolve_data_path работает по файлу, декодируемому decode_object_attributes,
-    без изменения публичного API catalog_resolver."""
+    """resolve_data_path работает по тому же raw-header файлу, который
+    разбирает decode_object_attributes, без изменения публичного API
+    catalog_resolver (issue #148)."""
     catalog_dir = tmp_path / "Catalog" / "Банки"
     catalog_dir.mkdir(parents=True)
-    obj_json = catalog_dir / "Catalog.json"
-    obj_json.write_text(
-        json.dumps({
-            "Properties": [
-                {"Name": "КорСчет", "Type": "String", "Synonym": "Кор. счёт"}
-            ],
-            "TabularSections": []
-        }, ensure_ascii=False),
-        encoding="utf-8",
-    )
+    obj_json = _write_json(catalog_dir, "Catalog.json", MINIMAL_CATALOG_WITH_TS)
+
+    decoded = decode_object_attributes(obj_json)
+    assert decoded.ok
+    prop = decoded.data["Properties"][0]
+
     from v8unpack_agent.catalog_resolver import resolve_data_path
-    rb = resolve_data_path("Объект.КорСчет", obj_json)
+
+    rb = resolve_data_path(f"Объект.{prop['Name']}", obj_json)
     assert rb.resolved
-    assert rb.attribute_name == "КорСчет"
-    assert rb.value_type == "String"
+    assert rb.attribute_name == prop["Name"]
+    assert rb.value_type == prop["Type"]
+    assert rb.synonym == prop["Synonym"]
 
 
 # ---------------------------------------------------------------------------
