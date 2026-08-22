@@ -24,7 +24,7 @@ except ImportError:  # pragma: no cover
     from test_object_decoder import MINIMAL_CATALOG_WITH_TS
 
 OBJECT_TYPE = "Catalog"
-OBJECT_NAME = "Справочнив1"
+OBJECT_NAME = "Справочник1"
 CONTAINER = "CatalogForm"
 FORM_NAME = "ФормаЭлемента"
 
@@ -87,7 +87,9 @@ def _write_raw_object_json(root: Path) -> None:
 
 
 def _top_property(root: Path) -> dict:
-    result = decode_object_attributes(root / OBJECT_TYPE / OBJECT_NAME / f"{OBJECT_TYPE}.json")
+    result = decode_object_attributes(
+        root / OBJECT_TYPE / OBJECT_NAME / f"{OBJECT_TYPE}.json"
+    )
     assert result.ok, "raw-header фикстура должна декодироваться"
     props = result.data.get("Properties") or []
     assert props, "фикстура должна содержать верхнеуровневые реквизиты"

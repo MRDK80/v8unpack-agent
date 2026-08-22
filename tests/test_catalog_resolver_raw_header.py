@@ -3,7 +3,7 @@
 Фикстура raw-header переиспользуется из tests/test_object_decoder.py, чтобы
 в проекте не появилось второго описания структуры ``header``. Ожидаемые
 имя/тип/синоним выводятся из ``decode_object_attributes``, а не хардкодятся:
-тест проверяет согласованность object_decoder → catalog_resolver.
+тест проверяет согласованность object_decoder -> catalog_resolver.
 
 Все данные синтетические: реальная выгрузка, UUID и абсолютные пути не нужны.
 """
@@ -38,7 +38,7 @@ def _reset_cache():
 @pytest.fixture()
 def raw_object_json(tmp_path: Path) -> Path:
     """Production-подобный Catalog.json с верхнеуровневым ключом header."""
-    object_dir = tmp_path / "Catalog" / "Справочнив1"
+    object_dir = tmp_path / "Catalog" / "Справочник1"
     object_dir.mkdir(parents=True)
     path = object_dir / "Catalog.json"
     path.write_text(
@@ -209,7 +209,7 @@ NORMALIZED_OBJECT = {
 def test_normalized_layout_still_supported(tmp_path: Path) -> None:
     """Старые нормализованные fixtures поддержаны в той мере, в какой их
     принимает decode_object_attributes; иначе — fail-safe, а не догадки."""
-    object_dir = tmp_path / "Catalog" / "Справочнив1"
+    object_dir = tmp_path / "Catalog" / "Справочник1"
     object_dir.mkdir(parents=True)
     path = object_dir / "Catalog.json"
     path.write_text(json.dumps(NORMALIZED_OBJECT, ensure_ascii=False), encoding="utf-8")
