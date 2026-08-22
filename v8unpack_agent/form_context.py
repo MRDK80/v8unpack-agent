@@ -53,6 +53,7 @@ RAG-индексация (#78) и диспетчеризация (#79) в это
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
@@ -79,6 +80,11 @@ BSL_MARKER = "## BSL"
 NO_BSL_PLACEHOLDER = "(модуль формы отсутствует)"
 #: Замена секции объекта, когда файл объекта не найден или не декодирован.
 NO_OBJECT_PLACEHOLDER = "(реквизиты объекта не найдены)"
+
+#: Резолвер ссылочных типов ``uuid -> имя типа`` (#88); ``None`` означает, что
+#: тип неизвестен и значение остаётся ``Ref#<uuid>``. Алиас приватный: в
+#: ``object_decoder`` тип задан inline, второй публичный контракт не вводится.
+_TypeResolver = Callable[[str], str | None]
 
 
 @dataclass(frozen=True)
@@ -124,7 +130,12 @@ class FormContext:
     resolved_relations: list[dict[str, Any]] = field(default_factory=list)
 
 
-def build_form_context(form_entry: Any, unpacked_root: Path) -> FormContext:
+def build_form_context(
+    form_entry: Any,
+    unpacked_root: Path,
+    *,
+    type_resolver: _TypeResolver | None = None,
+) -> FormContext:
     """Собрать :class:`FormContext` по карточке ``FormEntry``.
 
     Parameters
@@ -135,6 +146,13 @@ def build_form_context(form_entry: Any, unpacked_root: Path) -> FormContext:
         Корень распакованной выгрузки. Им резолвятся относительные
         пути, вычисляются обезличенные пути для ``metadata`` и
         вырезается база из текстов предупреждения.
+    type_resolver:
+        Опциональный резолвер ссылочных типов ``uuid -> имя типа``
+        (issue #147). Совместим с ``FormScanIndex.resolve_reference_type``
+        (#88) и передаётся в ``object_decoder.decode_object_attributes``.
+        Без него поведение прежнее: ссылка остаётся ``Ref#<uuid>``.
+        Параметр keyword-only, поэтому существующие позиционные вызовы
+        ``build_form_context(entry, root)`` не ломаются.
 
     Ни одна ветка не порождает данные, которых нет на диске.
     """
@@ -148,7 +166,7 @@ def build_form_context(form_entry: Any, unpacked_root: Path) -> FormContext:
     summary = _build_summary(form_dir, root)
 
     object_attributes, object_warnings, object_json = _build_object_attributes(
-        form_entry, root
+        form_entry, root, type_resolver=type_resolver
     )
     resolved_relations = _resolve_relations(summary, object_json)
 
@@ -239,22 +257,30 @@ def _object_attributes_to_json(
 
 
 def _build_object_attributes(
-    form_entry: Any, root: Path
+    form_entry: Any,
+    root: Path,
+    *,
+    type_resolver: _TypeResolver | None = None,
 ) -> tuple[dict[str, Any] | None, list[str], Path | None]:
     """Найти и декодировать реквизиты объекта метаданных за формой.
 
     Best-effort, как и остальной модуль: отсутствие файла объекта или
     ошибка декодирования дают ``(None, [...], None)``, а не выдуманную
-    структуру. ``type_resolver`` не передаётся — ссылки остаются в виде
-    ``Ref#<uuid>``, догадок о типе метаданных модуль не делает (см. #88
-    в ``object_decoder`` — резолвер туда можно добавить отдельно, когда
-    появится источник соответствия UUID -> имя метаданных).
+    структуру. ``type_resolver`` (issue #147) пробрасывается в декодер
+    как есть: известный UUID превращается в читаемое имя типа,
+    неизвестный остаётся безопасным ``Ref#<uuid>``. Догадок о типе
+    метаданных модуль по-прежнему не делает и своего индекса не строит —
+    источником имён служит вызывающий, обычно
+    ``FormScanIndex.resolve_reference_type`` (#88).
     """
     object_json = object_json_path(form_entry)
     if object_json is None:
         return None, ["object_context: файл объекта метаданных не найден"], None
 
-    decode_result = decode_object_attributes(object_json)
+    decode_result = decode_object_attributes(
+        object_json,
+        type_resolver=type_resolver,
+    )
     warnings = list(decode_result.warnings)
     if not decode_result.ok:
         return None, warnings, object_json

@@ -16,7 +16,7 @@ scan_forms(root)                 -> FormScanIndex / FormEntry (указател�
        \_ build_form_summary(form_dir) -> FormSummary (единственный парсер)
             \_ parse_elem_json(form_dir) -> ElemIndexResult
        \_ object_json_path(entry) -> Path | None            (catalog_resolver, issue #NEW)
-            \_ decode_object_attributes(object_json) -> DecodeResult   (object_decoder, issue #NEW)
+            \_ decode_object_attributes(object_json, type_resolver) -> DecodeResult   (object_decoder, issue #NEW)
        \_ resolve_data_path(data_path, object_json) -> ResolvedBinding (catalog_resolver, issue #NEW,
                                                                         только для relations с kind=="data")
        \_ to_llm_prompt_fragment(context, max_chars) -> текст для промпта
@@ -33,7 +33,7 @@ scan_forms(root)                 -> FormScanIndex / FormEntry (указател�
 | Символ | Назначение |
 |--------|------------|
 | `FormContext` | `frozen`-датакласс с содержимым одной формы. |
-| `build_form_context(form_entry, unpacked_root)` | Материализует содержимое по карточке `FormEntry`. |
+| `build_form_context(form_entry, unpacked_root, *, type_resolver=None)` | Материализует содержимое по карточке `FormEntry`; `type_resolver` — опциональный резолвер ссылочных типов `uuid -> имя типа`. |
 | `to_llm_prompt_fragment(context, max_chars=-1)` | Детерминированный текст для промпта; по умолчанию без обрезки. |
 
 Символы доступны двумя равнодопустимыми путями: из корняй пакета
@@ -134,9 +134,10 @@ class FormContext:
 `None` отличается от пустой структуры `{"Properties": [], "TabularSections": []}` и не подменяется на неё:
 отсутствие файла — это отдельный случай от найденного, но без реквизитов объекта.
 
-`type_resolver` в `decode_object_attributes()` не передаётся: ссылочные типы реквизитов остаются в виде
-`Ref#<uuid>`. Резолвинг UUID -> имя метаданных не реализован в этом выпуске — в
-резолвер нет источника соответствия, догадка о типе не делается.
+`type_resolver` передаётся, если его передал вызывающий (issue #147). Без него
+поведение прежнее: ссылочные типы остаются в виде `Ref#<uuid>`, догадка о типе
+метаданных не делается. Источником имён служит готовый индекс #88 —
+`FormScanIndex.resolve_reference_type`.
 
 ### resolved_relations
 
@@ -150,6 +151,42 @@ class FormContext:
 `resolved=False`, а не отбрасывается — потребитель видит весь список data-связей формы,
 даже если часть из них не разрешилась. Новые привязки `data_path` при этом не создаются —
 только обогащаются те, которые уже выдал `elem_parser`.
+
+## Ссылочные типы реквизитов (issue #147)
+
+`object_attributes` заполняется через `object_decoder.decode_object_attributes()`.
+По умолчанию ссылочный тип остаётся в виде `Ref#<uuid>`: модуль не строит
+собственного индекса метаданных и не угадывает тип. Готовый индекс живёт в
+`FormScanIndex` (#88), поэтому резолвер передаётся снаружи:
+
+```python
+from v8unpack_agent import build_form_context
+from v8unpack_agent.scan_forms import scan_forms
+
+index = scan_forms(root)
+context = build_form_context(
+    index.forms[0],
+    root,
+    type_resolver=index.resolve_reference_type,
+)
+```
+
+| Условие | Поведение |
+|---------|-----------|
+| `type_resolver` не передан | `Ref#<uuid>` сохраняется, результат идентичен прежнему |
+| резолвер вернул строку | `Type` заменяется читаемым именем (`CatalogRef.Контрагенты`) |
+| резолвер вернул `None` | остаётся `Ref#<uuid>`, тип не угадывается |
+| резолвер бросил исключение | `REF_RESOLVER_FAILED` в `metadata["warnings"]`, тип остаётся `Ref#<uuid>` |
+
+Контракт:
+
+- параметр keyword-only, вызовы `build_form_context(entry, root)` работают без
+  изменений;
+- резолвер получает UUID **без** префикса `Ref#`;
+- преобразование применяется к `Properties` и к реквизитам `TabularSections`;
+- входные структуры и сам индекс не мутируются;
+- `resolved_relations` этот параметр не затрагивает: их строит
+  `catalog_resolver.resolve_data_path()` своим вызовом декодера (#148).
 
 ## Поведение при отсутствующих артефактах
 
@@ -263,8 +300,9 @@ print(len(to_llm_prompt_fragment(context, max_chars=500)) <= 500)  # True
 - `object_attributes` отражает только то, что `object_decoder` смог расшифровать в raw `header`;
   для production-layout это best-effort с несколькими fallback-слоями
   (`_decode_real_header`), полнота покрытия всегда безоговорочна.
-- Ссылочные типы (`Ref#<uuid>`) не разрешаются до имени метаданных внутри этого
-  вызова: `type_resolver` в `decode_object_attributes()` не передаётся.
+- Ссылочные типы (`Ref#<uuid>`) разрешаются только при переданном
+  `type_resolver` (issue #147) и только для UUID, известных резолверу;
+  неизвестный UUID сохраняет безопасный `Ref#<uuid>`, тип не угадывается.
 - CLI-команды у модуля нет.
 - Обрезка выполняется по символам, а не по токенам: `max_chars` — бюджет
   символов; `-1` означает отсутствие бюджета и обрезки. Соответствие числу

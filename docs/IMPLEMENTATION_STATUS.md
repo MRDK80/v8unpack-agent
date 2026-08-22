@@ -210,7 +210,7 @@
 | Функция | Статус | Issue / PR |
 |---|---|---|
 | `FormContext` | ✅ | #77 |
-| `build_form_context(form_entry, unpacked_root)` | ✅ | #77 |
+| `build_form_context(form_entry, unpacked_root, *, type_resolver=None)` | ✅ | #77, #147 |
 | `to_llm_prompt_fragment(context, max_chars=-1)` | ✅ | #77 |
 
 - `FormContext` материализует содержимое формы поверх `FormEntry` и
