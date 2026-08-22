@@ -31,8 +31,12 @@ def resolve_data_path(data_path: str, object_json: Path) -> ResolvedBinding:
 
 | Формат | Поиск |
 |---|---|
-| `Объект.Реквизит` | `Properties` верхнего уровня |
-| `Объект.ТЧ.Реквизит` | `TabularSections` → `Properties` |
+| `Объект.Реквизит` | `DecodeResult.data["Properties"]` |
+| `Объект.ТЧ.Реквизит` | `DecodeResult.data["TabularSections"]` → `Properties` |
+
+Сопоставление имён регистронезависимое — имена метаданных 1С такими и являются.
+Пути глубже трёх сегментов не резолвятся: подтверждённые правила
+интерпретации `data_path` в #148 не расширялись.
 
 ### `object_json_path`
 
@@ -44,16 +48,32 @@ def object_json_path(form_entry: FormEntry) -> Path | None:
 объекта (сначала по имени объекта, затем fallback по типу — `Catalog.json`).
 Возвращает `None`, если файл не найден.
 
+### `clear_object_cache`
+
+```python
+def clear_object_cache() -> None:
+```
+
+Сбрасывает кэш декодированных файлов объектов (#148). Нужен долгоживущим
+процессам и тестам, которые перезаписывают файл объекта; на результат резолюции
+не влияет.
+
 ## Поведение
 
 | Ситуация | Результат |
 |---|---|
 | Реквизит найден | `resolved=True`, заполнены `value_type`, `synonym` |
 | `Catalog.json` отсутствует | `resolved=False`, без исключений |
-| Реквизит не найден в JSON | `resolved=False` |
+| Повреждённый JSON | `resolved=False`, без исключений |
+| `DecodeResult.ok is False` | `resolved=False`, без исключений |
+| Реквизит не найден в описании объекта | `resolved=False` |
 | Вложенный путь `Объект.ТЧ.Реквизит` | Ищет в `TabularSections` → `Properties` |
+| Табличная часть не найдена | `resolved=False` |
 | Одиночный сегмент без точки | `resolved=False` |
+| Путь глубже трёх сегментов | `resolved=False` |
 | Любая другая ошибка | `resolved=False`, без исключений |
+
+Тип, имя и синоним никогда не достраиваются по догадке.
 
 ## Источник данных
 
@@ -63,11 +83,33 @@ v8unpack. Разбор этой секции выполняет отдельны
 [`object_decoder`](object_decoder.md) (#84, PR #87), который возвращает
 структуру, совместимую с `resolve_data_path` без изменения его публичного API.
 
+Начиная с #148 `resolve_data_path` **не читает файл объекта самостоятельно**:
+единственная точка декодирования — `decode_object_attributes(object_json)`.
+Резолвер проверяет `DecodeResult.ok` и работает только с `DecodeResult.data`.
+Второго парсера raw-header в проекте нет; старые внутренние helpers
+`_get_attributes_section` и `_get_tabular_attributes_section` удалены.
+
+Как следствие, нормализованный layout (готовые списки `Properties` в корне
+JSON) поддерживается ровно в той мере, в какой его принимает сам декодер.
+Синтетические фикстуры тестов переведены на raw-header именно поэтому.
+
 Имя ссылочного типа приходит из того же модуля после #88 (PR #118): резолвер
 `uuid → имя типа` строится в `scan_forms` и передаётся в
 `decode_object_attributes` как `type_resolver`. Публичный API
 `catalog_resolver` при этом не менялся — в `value_type` просто приходит
 читаемое имя вместо `Ref#<uuid>`.
+
+## Кэширование
+
+`form_context._resolve_relations()` вызывает `resolve_data_path()` отдельно для
+каждой data-связи, то есть один и тот же файл объекта декодируется многократно.
+Внутри модуля используется ограниченный кэш с ключом
+`(path, stat.st_mtime_ns, stat.st_size)` и лимитом 32 записи.
+
+Безусловный `lru_cache` только по `Path` неприменим: файл может измениться
+в долгоживущем процессе или внутри теста. Если файл недоступен, результат
+не кэшируется вовсе. Кэш не влияет на публичный контракт и может быть удалён
+без изменения поведения; для тестов доступен `clear_object_cache()`.
 
 ## Известные ограничения
 
@@ -137,6 +179,28 @@ v8unpack. Разбор этой секции выполняет отдельны
 `value_type=None` остаётся у compact-layout и составных типов
 (`CompositeType`) — их разбор в #84 не входил и в #88 не расширялся.
 
+### #148 — raw-header в `resolve_data_path` — закрыто
+
+До #148 `resolve_data_path` читала файл объекта самостоятельно через
+`json.loads` и искала нормализованные ключи `Properties` / `Attributes` в корне
+JSON. Production-выгрузка таких ключей не содержит, поэтому функция была
+неработоспособна на реальных данных независимо от корректности `data_path`.
+
+Прогон на боевой выгрузке, `Catalog/Номенклатура/CatalogForm/ФормаЭлемента`:
+
+| Метрика | до #148 | после #148 |
+|---|---:|---:|
+| `resolved_relations`, всего | 65 | 65 |
+| `resolved=True` | 0 | 40 |
+| `resolved=False` | 65 | 25 |
+
+Обезличенные примеры: `value_type='String', synonym='Полное наименование'`
+и `value_type='String', synonym='Артикул'`.
+
+Оставшиеся 25 записей — отдельные категории путей (стандартные реквизиты
+платформы, реквизиты самой формы, `Ref#uuid` с неизвестным UUID), которые
+разбираются в #147 и #143 и в scope #148 не входили.
+
 ### Итоговая картина
 
 ```text
@@ -148,7 +212,7 @@ v8unpack. Разбор этой секции выполняет отдельны
     управляемые      — через UUID, затем точный структурный fallback
         ↓
   catalog_resolver              ← #76 ✅ реализовано, PR #83
-        ↑ (читаемые Properties)
+        ↑ (единственный источник реквизитов, #148)
   decode_object_attributes      ← #84 ✅ реализовано, PR #87
         ↑ (type_resolver из FormScanIndex)
   индекс ссылочных типов        ← #88 ✅ реализовано, PR #118
@@ -193,6 +257,7 @@ if obj_json:
 | [#90](https://github.com/MRDK80/v8unpack-agent/issues/90) метрика покрытия `data_path` | ✅ реализовано, PR [#97](https://github.com/MRDK80/v8unpack-agent/pull/97) |
 | [#89](https://github.com/MRDK80/v8unpack-agent/issues/89) формы с нулевой привязкой | ✅ реализовано, PR [#115](https://github.com/MRDK80/v8unpack-agent/pull/115) |
 | [#88](https://github.com/MRDK80/v8unpack-agent/issues/88) `Ref#uuid` → имя объекта | ✅ реализовано, PR [#118](https://github.com/MRDK80/v8unpack-agent/pull/118) |
+| [#148](https://github.com/MRDK80/v8unpack-agent/issues/148) raw-header в `resolve_data_path` | ✅ реализовано, PR [#159](https://github.com/MRDK80/v8unpack-agent/pull/159) |
 | [#116](https://github.com/MRDK80/v8unpack-agent/issues/116) 42 формы без блока привязки | 🔲 open |
 | [#77](https://github.com/MRDK80/v8unpack-agent/issues/77) `form_context` | 🔲 open |
 | [#98](https://github.com/MRDK80/v8unpack-agent/issues/98) `form_classifier`: объектные vs. сервисные формы | ✅ реализовано, PR [#99](https://github.com/MRDK80/v8unpack-agent/pull/99) |
