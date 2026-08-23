@@ -7,10 +7,56 @@
 
 ### Added
 
+- **`docs/research/ref_resolver_issue143.md` + `examples/unresolved_refs_report.py`** —
+  отчёт и инструмент воспроизведения исследования #143 (PR #173, squash-мерж
+  `f8cd86f`). Остаток неразрешённых `Ref#uuid` после #147 классифицирован
+  полностью: 48 UUID / 1301 вхождение — `definition_known` 28 (158 вхождений,
+  12.14%), `reference_only` 20 (1143, 87.86%), `definition_unknown_layout` 0,
+  `ambiguous` 0. Решение по всем классам — keep unresolved, прирост coverage
+  0 п.п. RCA: аномалий индекса нет; 10 UUID — нессылочные типовые грани уже
+  проиндексированных объектов, 18 UUID — виды метаданных вне
+  `REFERENCE_TYPE_PREFIXES`. Production-код не изменён (issue #143).
+- **`examples/missing_object_attributes_report.py`** — research-инструмент
+  классификации форм без `FormContext.object_attributes` (issue #163).
+  Разделяет две точки отказа (`object_json_path() is None` против
+  `DecodeResult.ok is False`), раскладывает отказы по `DecodeError`, определяет
+  структурную роль найденного JSON (`owner_object_file`, `export_root_neighbour`,
+  `form_artifact`, `type_container_neighbour`, `unrelated_neighbour`) и назначает
+  класс причины только по структурным признакам, без эвристик по имени формы.
+  Режимы `--runs N` (подпись агрегата sha256/16, расхождение → код возврата 1) и
+  `--controls` (контроли A/B/C). Вывод обезличен: количества, коды отказа, типы и
+  нормализованные ключи путей вида `<root>/<L1>/<candidate>.json`; `--local-names`
+  и `--csv` предназначены только для локального запуска. Production-код не изменён.
+- **`docs/research/missing_object_attributes_issue163.md`** — отчёт исследования
+  #163. На боевой выгрузке 2216 форм: 2054 с `object_attributes`, 162 без (7.3%).
+  Все 162 — `CommonForm`; точка отказа `decode_error:header_missing` 162/162,
+  `object_json_path() is None` 0, `DecodeResult.ok is False` 162. Уровень
+  `ObjectName` отсутствует у 162/162, а `object_json_path()` резолвит все 162
+  формы в один и тот же файл корня выгрузки (`distinct candidates = 1`, роль
+  `export_root_neighbour`), поэтому найденный JSON не является объектом-владельцем
+  и `HEADER_MISSING` не относится к owner-layout. Итог: `no_owner_object` 162
+  (100%), решение `keep as is`; `type_out_of_scope`, `layout_unsupported`,
+  `path_convention_miss`, `broken_json`, `insufficient_evidence` — по 0. Случаев
+  #160: 0, случаев #151: 0. Разрез `form_classifier`: `service` 158 (97.5%),
+  `unknown` 4 (2.5%), `object` 0; все 4 `unknown` — формы с пустой выжимкой
+  (категория #98 / #105). Контроли: A — форма с владельцем даёт `decode.ok=True` и
+  роль `owner_object_file`; B — общая форма даёт `object_name=absent` и класс
+  `no_owner_object`; C — копия реального owner JSON без ключа `header` даёт
+  `header_missing`, роль `owner_object_file` и класс `layout_unsupported`.
+  Детерминированность: два прогона, подпись агрегата `788bd54b0fe931d0`.
+  Полный `pytest` — 857 passed (issue #163).
+- **Конвенция `docs/research/`** — отчёты разовых исследований по данным вынесены
+  из тематических `docs/<module>.md` в отдельный каталог
+  `docs/research/<тема>_issue<N>.md` и получают строку в таблице «Документация»
+  корневого `README.md`. Первым отчётом в каталоге стал
+  `ref_resolver_issue143.md` (#143, PR #173). Ранее такие результаты сводились
+  в `docs/elem_parser.md`,
+  `docs/form_classifier.md` и `docs/IMPLEMENTATION_STATUS.md` (issue #163).
 - `examples/README.md` — классификация примеров по требованиям к входным
   данным: восемь самодостаточных (запускаются без аргументов на синтетике,
-  годятся для регрессионного прогона) и два требующих реальной выгрузки
-  (`extract_skd_queries.py`, `legacy_list_form_bindings.py`). Зафиксировано,
+  годятся для регрессионного прогона) и четыре требующих реальной выгрузки
+  (`extract_skd_queries.py`, `legacy_list_form_bindings.py`,
+  `unresolved_refs_report.py`, `missing_object_attributes_report.py`). Зафиксировано,
   что формулировка «проверены все файлы `examples/`» без явной оговорки
   относится только к первой группе.
 
@@ -251,6 +297,16 @@
   реквизиты, ждут #88); `Catalog/Контрагенты`: 45/45 = 100.0% (issue #90, PR #97).
 
 ### Changed
+- `examples/README.md` — `missing_object_attributes_report.py` добавлен в группу
+  «Требующие реальной выгрузки» с обязательным аргументом `EXPORT_ROOT`;
+  формулировка «эти два файла не входят в автоматический прогон» исправлена на
+  «эти файлы» — в группе стало четыре примера. Добавлен подраздел с режимами запуска
+  и правилом обезличенности вывода. Счётчик группы в записи о `examples/README.md`
+  выше приведён к четырём, чтобы внутри одного релиза не расходились разные числа
+  (issue #163).
+- `README.md` — в таблицу «Документация» добавлена строка на
+  `docs/research/missing_object_attributes_issue163.md`, в список примеров —
+  `examples/missing_object_attributes_report.py` (issue #163).
 - `v8unpack_agent.__init__` больше не импортирует `forms_index` и
   `skd_extractor` на уровне модуля: `FormsIndex`, `FormsIndexEntry`,
   `is_form_stale` и `SkdResult`, `SkdBatchResult`, `extract_skd_queries`,

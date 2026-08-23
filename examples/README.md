@@ -46,6 +46,7 @@ done
 | `extract_skd_queries.py` | `--unpack-dir`, `--output` | распакованный внешний отчёт `.erf` |
 | `legacy_list_form_bindings.py` | `FORM_DIR` | каталог формы из выгрузки v8unpack |
 | `unresolved_refs_report.py` | `CF_EXPORT` | каталог распакованной выгрузки конфигурации |
+| `missing_object_attributes_report.py` | `EXPORT_ROOT` | корень выгрузки `cf_export` конфигурации |
 
 У `unresolved_refs_report.py` по умолчанию печатается только обезличенный
 агрегат: ранги UUID, нормализованные указатели, виды метаданных и
@@ -57,3 +58,32 @@ done
 Формулировка «проверены все файлы `examples/`» в отчётах о задачах относится
 только к первой группе, если явно не указано, что прогон выполнялся на
 выгрузке.
+
+### `missing_object_attributes_report.py` (issue #163)
+
+Классифицирует формы без `FormContext.object_attributes` по доказуемым классам
+причин: `no_owner_object`, `type_out_of_scope`, `layout_unsupported`,
+`path_convention_miss`, `broken_json`, `insufficient_evidence`. Класс
+назначается только по структурным признакам — расположению найденного JSON
+относительно формы, объекта и корня выгрузки, — а не по имени формы.
+Production-код не используется на запись.
+
+```bash
+python examples/missing_object_attributes_report.py /path/to/cf_export --runs 2
+python examples/missing_object_attributes_report.py /path/to/cf_export --controls
+```
+
+| Режим | Назначение |
+|---|---|
+| `--runs N` | N прогонов; агрегат сводится в подпись sha256/16, расхождение даёт код возврата 1 |
+| `--controls` | контроли A (форма с владельцем), B (общая форма), C (реальный owner JSON без `header`) |
+| `--local-names` | **только локально**: печать реальных имён форм |
+| `--csv PATH` | **только локально**: построчная таблица |
+
+Вывод по умолчанию обезличен: печатаются количества, коды `DecodeError`, типы
+метаданных, структурные роли и нормализованные ключи путей вида
+`{root}/{L1}/{candidate}.json`. Имена форм, имена объектов, UUID и абсолютные
+пути не выводятся.
+
+Результаты `--local-names` и `--csv` в PR, issue и коммиты не попадают; `*.csv`
+остаётся под `.gitignore`. Отчёт исследования: `docs/research/missing_object_attributes_issue163.md`.
