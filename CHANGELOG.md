@@ -7,6 +7,15 @@
 
 ### Added
 
+- **`docs/research/ref_resolver_issue143.md` + `examples/unresolved_refs_report.py`** —
+  отчёт и инструмент воспроизведения исследования #143 (PR #173, squash-мерж
+  `f8cd86f`). Остаток неразрешённых `Ref#uuid` после #147 классифицирован
+  полностью: 48 UUID / 1301 вхождение — `definition_known` 28 (158 вхождений,
+  12.14%), `reference_only` 20 (1143, 87.86%), `definition_unknown_layout` 0,
+  `ambiguous` 0. Решение по всем классам — keep unresolved, прирост coverage
+  0 п.п. RCA: аномалий индекса нет; 10 UUID — нессылочные типовые грани уже
+  проиндексированных объектов, 18 UUID — виды метаданных вне
+  `REFERENCE_TYPE_PREFIXES`. Production-код не изменён (issue #143).
 - **`examples/missing_object_attributes_report.py`** — research-инструмент
   классификации форм без `FormContext.object_attributes` (issue #163).
   Разделяет две точки отказа (`object_json_path() is None` против
@@ -39,13 +48,15 @@
 - **Конвенция `docs/research/`** — отчёты разовых исследований по данным вынесены
   из тематических `docs/<module>.md` в отдельный каталог
   `docs/research/<тема>_issue<N>.md` и получают строку в таблице «Документация»
-  корневого `README.md`. Ранее такие результаты сводились в `docs/elem_parser.md`,
+  корневого `README.md`. Первым отчётом в каталоге стал
+  `ref_resolver_issue143.md` (#143, PR #173). Ранее такие результаты сводились
+  в `docs/elem_parser.md`,
   `docs/form_classifier.md` и `docs/IMPLEMENTATION_STATUS.md` (issue #163).
 - `examples/README.md` — классификация примеров по требованиям к входным
   данным: восемь самодостаточных (запускаются без аргументов на синтетике,
-  годятся для регрессионного прогона) и три требующих реальной выгрузки
+  годятся для регрессионного прогона) и четыре требующих реальной выгрузки
   (`extract_skd_queries.py`, `legacy_list_form_bindings.py`,
-  `missing_object_attributes_report.py`). Зафиксировано,
+  `unresolved_refs_report.py`, `missing_object_attributes_report.py`). Зафиксировано,
   что формулировка «проверены все файлы `examples/`» без явной оговорки
   относится только к первой группе.
 
@@ -289,7 +300,7 @@
 - `examples/README.md` — `missing_object_attributes_report.py` добавлен в группу
   «Требующие реальной выгрузки» с обязательным аргументом `EXPORT_ROOT`;
   формулировка «эти два файла не входят в автоматический прогон» исправлена на
-  «эти файлы» — в группе стало три примера. Добавлен подраздел с режимами запуска
+  «эти файлы» — в группе стало четыре примера. Добавлен подраздел с режимами запуска
   и правилом обезличенности вывода. Счётчик группы в записи о `examples/README.md`
   выше приведён к трём, чтобы внутри одного релиза не расходились «два» и «три»
   (issue #163).
