@@ -6,6 +6,18 @@
 ## [Unreleased]
 
 ### Added
+- compare-режим `reference_only` между двумя независимыми выгрузками (#164):
+  `examples/reference_only_compare.py` (`ExportStats`, `from_residual`,
+  `compare_reference_only`, `compare_report`, `anonymity_guard`, `selftest`)
+  и флаги `--compare-root`, `--control-threshold` в
+  `examples/unresolved_refs_report.py`. Сравнивается только класс
+  `reference_only` (20 UUID / 1143 вхождения из #143), классы с известной
+  природой в сравнение не входят. Публикуются агрегаты, покрытие контролей
+  и ранги `P01…`; UUID и локальные имена не выводятся. Коды возврата:
+  2 — контроль ниже 90%, 3 — расхождение прогонов, 4 — утечка обезличенности.
+  Тесты `tests/test_platform_types_cross_config_issue164.py`, 11 контролей на
+  синтетике; полный прогон 868 passed. Production-модули и fallback `Ref#uuid`
+  не изменены (issue #164).
 
 - **`docs/research/ref_resolver_issue143.md` + `examples/unresolved_refs_report.py`** —
   отчёт и инструмент воспроизведения исследования #143 (PR #173, squash-мерж
