@@ -574,6 +574,71 @@ def write_annex(path: Path, evidence, occurrences) -> int:
     return len(occurrences)
 
 
+# --- issue #164: compare-режим reference_only ---
+
+def _load_compare_module():
+    """Загрузить examples/reference_only_compare.py как модуль.
+
+    Регистрация в sys.modules обязательна до exec_module: при
+    `from __future__ import annotations` dataclasses резолвит строковые
+    аннотации через sys.modules[cls.__module__].
+    """
+    import importlib.util
+    import sys as _sys
+
+    path = Path(__file__).resolve().with_name("reference_only_compare.py")
+    if not path.is_file():
+        raise SystemExit("не найден examples/reference_only_compare.py")
+    spec = importlib.util.spec_from_file_location("reference_only_compare", path)
+    module = importlib.util.module_from_spec(spec)
+    _sys.modules[spec.name] = module
+    try:
+        spec.loader.exec_module(module)
+    except BaseException:
+        _sys.modules.pop(spec.name, None)
+        raise
+    return module
+
+
+def _analyze_export(root, label, control_size, runs, cmp_mod):
+    """Агрегат одной выгрузки: остаток, классы, контроль, детерминированность."""
+    digests, stats = [], None
+    for _ in range(max(1, runs)):
+        evidence, _occurrences, baseline, control, index_uuids = collect_residual(
+            root, control_size
+        )
+        control_evidence, walk_stats = preflight(root, evidence, control)
+        metrics = slot_metrics(walk_stats, control_evidence, len(control_evidence))
+        identity = set(pick_slots(metrics, IDENTITY_MIN_COVERAGE))
+        layout = set(pick_slots(metrics, LAYOUT_MIN_COVERAGE, exclude=identity))
+        stats = cmp_mod.from_residual(
+            label, baseline, evidence, control_evidence, identity, layout,
+            classify, index_uuids, True,
+        )
+        digests.append(cmp_mod.aggregate_digest(stats))
+    stats.deterministic = len(set(digests)) == 1
+    return stats
+
+
+def _run_compare(args):
+    """Сравнить класс reference_only двух выгрузок. Публикуются только ранги."""
+    import sys as _sys
+
+    cmp_mod = _load_compare_module()
+    for root in (args.root, args.compare_root):
+        if not Path(root).is_dir():
+            print("каталог выгрузки не найден", file=_sys.stderr)
+            return cmp_mod.EXIT_INPUT
+
+    stats_a = _analyze_export(args.root, "A", args.control, args.runs, cmp_mod)
+    stats_b = _analyze_export(args.compare_root, "B", args.control, args.runs, cmp_mod)
+    result = cmp_mod.compare_reference_only(stats_a, stats_b, args.control_threshold)
+    text = cmp_mod.compare_report(result)
+    cmp_mod.anonymity_guard(text)
+    print(text)
+    return result["exit_code"]
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("root", type=Path, help="каталог распакованной выгрузки cf_export")
@@ -584,7 +649,15 @@ def main() -> None:
                         help="печатать конкретные пути и имена реквизитов (НЕ публиковать вывод)")
     parser.add_argument("--annex", type=Path, default=None,
                         help="CSV со всеми вхождениями: пути, формы, реквизиты (НЕ коммитить файл)")
+    parser.add_argument("--compare-root", type=Path, default=None,
+                        help="корень второй независимой выгрузки: сравнение "
+                             "классов reference_only (#164)")
+    parser.add_argument("--control-threshold", type=float, default=90.0,
+                        help="минимальное покрытие позитивного контроля, %% (порог 90)")
     args = parser.parse_args()
+
+    if args.compare_root is not None:
+        raise SystemExit(_run_compare(args))
 
     digests, text = [], ""
     evidence = occurrences = None
