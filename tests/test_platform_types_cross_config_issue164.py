@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import importlib.util
+import sys
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -23,8 +24,18 @@ def cmp_module():
     spec = importlib.util.spec_from_file_location("reference_only_compare", MODULE_PATH)
     module = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
-    spec.loader.exec_module(module)
-    return module
+    # Модуль обязан попасть в sys.modules до exec_module: при
+    # `from __future__ import annotations` dataclasses резолвит строковые
+    # аннотации через sys.modules[cls.__module__] и иначе падает с
+    # AttributeError на py3.12.
+    sys.modules[spec.name] = module
+    try:
+        spec.loader.exec_module(module)
+    except BaseException:
+        sys.modules.pop(spec.name, None)
+        raise
+    yield module
+    sys.modules.pop(spec.name, None)
 
 
 @dataclass
