@@ -154,10 +154,7 @@ for prop in result.data["Properties"]:
 - [`examples/legacy_list_form_bindings.py`](examples/legacy_list_form_bindings.py) — извлечение подтверждённых привязок колонок legacy `ФормаСписка` / `ФормаВыбора` через fallback `TabularField` (#103).
 - [`examples/unindexed_forms_report.py`](examples/unindexed_forms_report.py) — отчёт по причинам, из-за которых форма осталась с `elem_index_ok=False`: `UnindexedReason` и `classify_unindexed_form()` (#105).
 - [`examples/unresolved_refs_report.py`](examples/unresolved_refs_report.py) — отчёт по неразрешённым `Ref#uuid`: классы `definition_known` / `reference_only`, обезличенный агрегат и контрольная группа (#143). Требует реальной выгрузки, путь к выгрузке — обязательный аргумент.
-- `examples/reference_only_compare.py` — кросс-конфигурационная
-  проверка класса `reference_only`: подключается к отчёту флагом
-  `--compare-root`, публикует только ранги `P01…` без UUID и локальных
-  имён, самопроверка `--selftest` работает без выгрузки (#164).
+- [`examples/reference_only_compare.py`](examples/reference_only_compare.py) — кросс-конфигурационная проверка класса `reference_only`: подключается к отчёту флагом `--compare-root`, публикует только ранги `P01…` без UUID и локальных имён, самопроверка `--selftest` работает без выгрузки (#164).
 - [`examples/missing_object_attributes_report.py`](examples/missing_object_attributes_report.py) — классификация форм без `FormContext.object_attributes`: разделение точки отказа, разрез по `DecodeError`, структурная роль найденного JSON и контроли A/B/C (#163). Требует реальной выгрузки, путь к `cf_export` — обязательный аргумент.
 - [`examples/form_context.py`](examples/form_context.py) — сборка `FormContext` для формы с кодом, elem-only формы и формы без `*.elem.json`; отбор `metadata` и обрезка фрагмента под `max_chars` (#77).
 
