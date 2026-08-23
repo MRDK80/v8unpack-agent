@@ -153,6 +153,7 @@ for prop in result.data["Properties"]:
 - [`examples/extract_skd_queries.py`](examples/extract_skd_queries.py) — извлечение запросов СКД из распакованного внешнего отчёта.
 - [`examples/legacy_list_form_bindings.py`](examples/legacy_list_form_bindings.py) — извлечение подтверждённых привязок колонок legacy `ФормаСписка` / `ФормаВыбора` через fallback `TabularField` (#103).
 - [`examples/unindexed_forms_report.py`](examples/unindexed_forms_report.py) — отчёт по причинам, из-за которых форма осталась с `elem_index_ok=False`: `UnindexedReason` и `classify_unindexed_form()` (#105).
+- [`examples/missing_object_attributes_report.py`](examples/missing_object_attributes_report.py) — классификация форм без `FormContext.object_attributes`: разделение точки отказа, разрез по `DecodeError`, структурная роль найденного JSON и контроли A/B/C (#163). Требует реальной выгрузки, путь к `cf_export` — обязательный аргумент.
 - [`examples/form_context.py`](examples/form_context.py) — сборка `FormContext` для формы с кодом, elem-only формы и формы без `*.elem.json`; отбор `metadata` и обрезка фрагмента под `max_chars` (#77).
 
 ## Классификация форм
@@ -268,6 +269,7 @@ form_class, reason = classify_empty_tree_form("ФормаЗаписи")
 | `catalog_resolver`: резолюция `data_path` через описание объекта | [docs/catalog_resolver.md](docs/catalog_resolver.md) |
 | Реквизиты объекта из raw `header`: типы, UUID, табличные части, ссылочные типы | [docs/object_decoder.md](docs/object_decoder.md) |
 | Классификация форм: объектные vs. сервисные, пустой `tree` | [docs/form_classifier.md](docs/form_classifier.md) |
+| Исследования: классы причин `object_attributes is None`, формы без реквизитов объекта | [docs/research/missing_object_attributes_issue163.md](docs/research/missing_object_attributes_issue163.md) |
 
 ## Установка
 
