@@ -40,7 +40,8 @@
   нераспознанном пути возвращает `resolved=False` без исключений — issue #76,
   PR #83.
 - `object_json_path(form_entry)` — определяет путь к JSON объекта по
-  `form_entry.form_path` (2 уровня вверх).
+  `form_entry.form_path` (2 уровня вверх); для layout без уровня `ObjectName`
+  (`object_name == ""`) возвращает `None` без подъёма к корню выгрузки (#172).
 - После #84 `resolved=True` достижим на реальных выгрузках: читаемые
   `Properties` и `TabularSections` поступают из `object_decoder`.
 - После #88 в `value_type` приходит читаемое имя ссылочного типа

@@ -275,7 +275,14 @@ def _build_object_attributes(
     """
     object_json = object_json_path(form_entry)
     if object_json is None:
-        return None, ["object_context: файл объекта метаданных не найден"], None
+        # issue #172: отличаем «владельца нет по layout» от «файл не найден».
+        # Читаем form_entry: в FormContext object_name нормализуется через
+        # `or ""`, и None там уже не отличим от пустой строки.
+        if getattr(form_entry, "object_name", None) == "":
+            warning = "object_context: объект-владелец отсутствует по layout"
+        else:
+            warning = "object_context: файл объекта метаданных не найден"
+        return None, [warning], None
 
     decode_result = decode_object_attributes(
         object_json,
