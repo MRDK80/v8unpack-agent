@@ -185,7 +185,20 @@ def object_json_path(form_entry: "FormEntry") -> Path | None:
     Returns
     -------
     :class:`~pathlib.Path` к JSON-файлу объекта или ``None``.
+
+    Для layout без уровня ``ObjectName`` (``CommonForm/<Форма>``) объекта-
+    владельца не существует: подъём на 2 уровня дал бы корень выгрузки.
+    В этом случае возвращается ``None`` без поиска (issue #172).
     """
+    # issue #172: layout без уровня ObjectName (например CommonForm/<Форма>).
+    # Канонический FormEntry для такого layout несёт object_name == "".
+    # Объекта-владельца в этом layout нет: подъём на 2 уровня дал бы корень
+    # выгрузки, а fallback выбрал бы посторонний JSON. Сравниваем именно с "",
+    # чтобы не менять поведение записей без атрибута или с None.
+    entry_object_name = getattr(form_entry, "object_name", None)
+    if entry_object_name == "":
+        return None
+
     try:
         # form_path: .../cf_export/<Тип>/<Имя>/<Контейнер>/<Форма>
         # -2 уровня вверх → .../cf_export/<Тип>/<Имя>

@@ -44,6 +44,16 @@ def resolve_data_path(data_path: str, object_json: Path) -> ResolvedBinding:
 def object_json_path(form_entry: FormEntry) -> Path | None:
 ```
 
+`object_json_path()` возвращает `None`, если в `FormEntry` отсутствует уровень
+`ObjectName` (`object_name == ""`). В этом layout объекта-владельца нет;
+функция не поднимается до корня выгрузки и не ищет там fallback JSON (#172).
+
+Признак — структура записи, а не имя типа метаданных: проверка по
+`object_type == "CommonForm"` была бы эвристикой, а абсолютная глубина пути
+зависит от расположения корня выгрузки. Записи, у которых атрибут `object_name`
+отсутствует или равен `None`, поведение не меняют — сравнение выполняется
+строго с пустой строкой.
+
 Поднимается на 2 уровня вверх от `form_entry.form_path`, ищет `.json`-файл
 объекта (сначала по имени объекта, затем fallback по типу — `Catalog.json`).
 Возвращает `None`, если файл не найден.

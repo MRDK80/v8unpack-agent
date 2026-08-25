@@ -240,6 +240,11 @@ def _reason_class(
     того, где расположен корень выгрузки.
     """
     if point == "object_json_not_found":
+        # issue #172: layout без уровня ObjectName — объекта-владельца нет по
+        # конструкции, точка отказа object_json_not_found больше не означает
+        # тип вне охвата. Класс type_out_of_scope сохраняется для #151.
+        if object_name_level == "absent":
+            return "no_owner_object"
         return "type_out_of_scope"
     if point == "unexpected_context_none":
         return "insufficient_evidence"

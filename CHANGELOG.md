@@ -309,6 +309,9 @@
   реквизиты, ждут #88); `Catalog/Контрагенты`: 45/45 = 100.0% (issue #90, PR #97).
 
 ### Changed
+
+- `docs(scan_forms)`: задокументирована граница резолюции ссылочных типов,
+  добавлен guard-тест синхронизации таблицы `REFERENCE_TYPE_PREFIXES` — #168.
 - `examples/README.md` — `missing_object_attributes_report.py` добавлен в группу
   «Требующие реальной выгрузки» с обязательным аргументом `EXPORT_ROOT`;
   формулировка «эти два файла не входят в автоматический прогон» исправлена на
@@ -459,6 +462,16 @@
 
 ### Fixed
 
+- `catalog_resolver.object_json_path()` возвращал `Path` на файл первого уровня
+  выгрузки для layout без уровня `ObjectName` (`CommonForm/<Форма>`,
+  `object_name == ""`): подъём на 2 уровня давал корень выгрузки, а fallback
+  выбирал посторонний JSON. Теперь функция возвращает `None` сразу, без поиска.
+  `form_context` различает «объект-владелец отсутствует по layout» и «файл
+  объекта метаданных не найден» (issue #172). Измерено на выгрузке 2216 форм:
+  `object_json_not_found` 0 → 162, `decode_error:header_missing` 162 → 0,
+  форм с `object_attributes` 2054 → 2054, `unexpected_context_none` 0 → 0.
+  Покрытие не изменилось: исправлена диагностика и устранена возможность
+  прочитать посторонний файл. 4-level layout не затронут.
 - **`form_context.build_form_context(..., *, type_resolver=None)`** — контекст
   формы больше не терял читаемые имена ссылочных типов. Резолвер (обычно
   `FormScanIndex.resolve_reference_type`, #88) пробрасывается в

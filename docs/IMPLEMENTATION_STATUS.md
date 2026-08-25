@@ -40,7 +40,8 @@
   нераспознанном пути возвращает `resolved=False` без исключений — issue #76,
   PR #83.
 - `object_json_path(form_entry)` — определяет путь к JSON объекта по
-  `form_entry.form_path` (2 уровня вверх).
+  `form_entry.form_path` (2 уровня вверх); для layout без уровня `ObjectName`
+  (`object_name == ""`) возвращает `None` без подъёма к корню выгрузки (#172).
 - После #84 `resolved=True` достижим на реальных выгрузках: читаемые
   `Properties` и `TabularSections` поступают из `object_decoder`.
 - После #88 в `value_type` приходит читаемое имя ссылочного типа
@@ -373,3 +374,6 @@
   `bind_slot_not_a_chain` описывает форму слота, а не смысл скаляра —
   расшифровка этого layout в #116 не входила. `mixed` на уровне формы —
   агрегат; точные причины по элементам даёт `classify_raw_zero_binding()`.
+- Граница `reference_types` задокументирована: поддерживаемые виды синхронизированы
+  с `REFERENCE_TYPE_PREFIXES` тестом-охранником; ожидаемые `Ref#uuid` отделены от
+  сигналов RCA — issue #168.
