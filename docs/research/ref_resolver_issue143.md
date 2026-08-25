@@ -284,7 +284,7 @@ git grep -nE '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-
 - [x] UUID, имена объектов, форм и реквизитов, локальные пути не опубликованы.
 - [x] Production-код resolver не изменён.
 - [x] Инструмент воспроизведения добавлен в `examples/` с обезличенным выводом по умолчанию.
-- [ ] Полный `pytest` зелёный (ориентир `main`: 857 passed) — проверить перед PR.
+- [x] Полный `pytest` зелёный: 880 passed после синхронизации ветки #164 с main (38518cd).
 
 ## Follow-up: кросс-конфигурационная проверка (#164)
 
@@ -302,3 +302,10 @@ git grep -nE '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-
 Итог и агрегаты: `docs/research/platform_types_cross_config_issue164.md`.
 Статическая таблица `UUID → имя` (#165) разблокируется только в объёме
 подтверждённого пересечения и только при отдельном доказательстве имени.
+
+Результат: проверка выполнена, итог `partially_confirmed` — 6 UUID из 20
+подтверждены на второй независимой выгрузке, 868 из 1143
+`reference_only`-вхождений (75.94%), 5.52% применимых. 14 UUID —
+`not_confirmed_A_only`, `contradicted_by_definition` 0, `insufficient_evidence` 0.
+Решение «keep unresolved» не меняется, coverage не изменён. Детали:
+`docs/research/platform_types_cross_config_issue164.md`.

@@ -16,8 +16,14 @@
   и ранги `P01…`; UUID и локальные имена не выводятся. Коды возврата:
   2 — контроль ниже 90%, 3 — расхождение прогонов, 4 — утечка обезличенности.
   Тесты `tests/test_platform_types_cross_config_issue164.py`, 11 контролей на
-  синтетике; полный прогон 868 passed. Production-модули и fallback `Ref#uuid`
+  синтетике; полный прогон 880 passed. Production-модули и fallback `Ref#uuid`
   не изменены (issue #164).
+  Результат сравнения (#164): контроли валидны в обеих выгрузках (покрытие
+  100.00% при пороге 90), пересечение `reference_only` 6 UUID при `|A|=20`,
+  `|B|=6`, `|B-A|=0`; покрытие 868 вхождений A (75.94% reference_only, 5.52%
+  применимых). Итог `partially_confirmed`; #165 остаётся заблокированной до
+  доказательства имён, пересчитанный потолок +5.52 п.п. до 97.24%. Отчёт:
+  `docs/research/platform_types_cross_config_issue164.md`.
 
 - **`docs/research/ref_resolver_issue143.md` + `examples/unresolved_refs_report.py`** —
   отчёт и инструмент воспроизведения исследования #143 (PR #173, squash-мерж
