@@ -102,6 +102,55 @@ _ELEM_STRUCTURAL_KEYS = frozenset({
 })
 
 
+SCAN_WARNING_CODE_MARKER = " [code="
+"""Маркер стабильного суффикса машинного кода предупреждения (issue #167)."""
+
+SCAN_WARNING_REFERENCE_METADATA_INCOMPLETE = "REFERENCE_METADATA_INCOMPLETE"
+SCAN_WARNING_REFERENCE_UUID_CONFLICT = "REFERENCE_UUID_CONFLICT"
+SCAN_WARNING_FORM_MODULE_MISSING = "FORM_MODULE_MISSING"
+SCAN_WARNING_FORM_SCAN_ERROR = "FORM_SCAN_ERROR"
+SCAN_WARNING_ELEM_DISCOVERY_UNAVAILABLE = "ELEM_DISCOVERY_UNAVAILABLE"
+SCAN_WARNING_SCAN_ROOT_INVALID = "SCAN_ROOT_INVALID"
+
+SCAN_WARNING_CODES = frozenset(
+    {
+        SCAN_WARNING_ELEM_DISCOVERY_UNAVAILABLE,
+        SCAN_WARNING_FORM_MODULE_MISSING,
+        SCAN_WARNING_FORM_SCAN_ERROR,
+        SCAN_WARNING_REFERENCE_METADATA_INCOMPLETE,
+        SCAN_WARNING_REFERENCE_UUID_CONFLICT,
+        SCAN_WARNING_SCAN_ROOT_INVALID,
+    }
+)
+"""Полный перечень машинных кодов scan_warnings (issue #167)."""
+
+_SCAN_WARNING_CODE_ALPHABET = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_")
+
+
+def _format_scan_warning(code: str, message: str) -> str:
+    """Собрать предупреждение: исходный текст + стабильный суффикс кода.
+
+    Внутренний API: предупреждения формирует scan_forms, а не потребитель.
+    """
+    if code not in SCAN_WARNING_CODES:
+        raise ValueError(f"unknown scan warning code: {code!r}")
+    return f"{message}{SCAN_WARNING_CODE_MARKER}{code}]"
+
+
+def scan_warning_code(warning: str) -> str | None:
+    """Вернуть машинный код предупреждения либо None (issue #167).
+
+    None означает: legacy-запись без кода, повреждённый суффикс либо код вне
+    задокументированного перечня. Исключений не бросает, текст не меняет.
+    """
+    _, marker, tail = warning.rpartition(SCAN_WARNING_CODE_MARKER)
+    if not marker or not tail.endswith("]"):
+        return None
+    code = tail[:-1]
+    if not code or not set(code) <= _SCAN_WARNING_CODE_ALPHABET:
+        return None
+    return code if code in SCAN_WARNING_CODES else None
+
 def _compute_sha256(path: Path) -> Optional[str]:
     """Вернуть hex-дайджест SHA-256 содержимого файла или None при ошибке."""
     try:
@@ -373,7 +422,10 @@ def _collect_reference_type(
     uuids = _metadata_object_uuids(object_json)
     if not uuids:
         scan_warnings.append(
-            f"reference type metadata is incomplete: {object_json.name}"
+            _format_scan_warning(
+                SCAN_WARNING_REFERENCE_METADATA_INCOMPLETE,
+                f"reference type metadata is incomplete: {object_json.name}",
+            )
         )
         return
 
@@ -384,7 +436,11 @@ def _collect_reference_type(
             reference_types[uuid] = type_name
         elif previous != type_name:
             scan_warnings.append(
-                f"reference type duplicate UUID {uuid}: kept {previous}, skipped {type_name}"
+                _format_scan_warning(
+                    SCAN_WARNING_REFERENCE_UUID_CONFLICT,
+                    f"reference type duplicate UUID {uuid}: "
+                    f"kept {previous}, skipped {type_name}",
+                )
             )
 
 
@@ -453,11 +509,15 @@ def _collect_forms_from_container(
                 forms.append(entry)
             else:
                 msg = f"skipped (no .obj.bsl): {form_dir.relative_to(root).as_posix()}"
-                scan_warnings.append(msg)
+                scan_warnings.append(
+                    _format_scan_warning(SCAN_WARNING_FORM_MODULE_MISSING, msg)
+                )
                 logger.debug(msg)
         except Exception as exc:  # noqa: BLE001
             msg = f"error scanning {form_dir}: {exc}"
-            scan_warnings.append(msg)
+            scan_warnings.append(
+                _format_scan_warning(SCAN_WARNING_FORM_SCAN_ERROR, msg)
+            )
             logger.warning(msg)
 
 
@@ -476,7 +536,9 @@ def _scan_external_form_dir(
     if bsl_path is None:
         names = " / ".join(candidates)
         msg = f"skipped (no {names}): {form_dir.relative_to(root).as_posix()}"
-        scan_warnings.append(msg)
+        scan_warnings.append(
+            _format_scan_warning(SCAN_WARNING_FORM_MODULE_MISSING, msg)
+        )
         logger.debug(msg)
         return
 
@@ -563,7 +625,9 @@ def _scan_external(
                     )
                 except Exception as exc:  # noqa: BLE001
                     msg = f"error scanning {form_dir}: {exc}"
-                    scan_warnings.append(msg)
+                    scan_warnings.append(
+                        _format_scan_warning(SCAN_WARNING_FORM_SCAN_ERROR, msg)
+                    )
                     logger.warning(msg)
 
 
@@ -670,7 +734,12 @@ def _collect_elem_only_forms(
     try:
         from v8unpack_agent.managed_forms import discover_elem_forms  # local import
     except ImportError as exc:
-        scan_warnings.append(f"cannot import discover_elem_forms: {exc}")
+        scan_warnings.append(
+            _format_scan_warning(
+                SCAN_WARNING_ELEM_DISCOVERY_UNAVAILABLE,
+                f"cannot import discover_elem_forms: {exc}",
+            )
+        )
         return
 
     for elem_entry in discover_elem_forms(root):
@@ -733,7 +802,12 @@ def scan_forms(
     reference_types: dict[str, str] = {}
 
     if not root.is_dir():
-        scan_warnings.append(f"cf_export_root not found or not a directory: {root}")
+        scan_warnings.append(
+            _format_scan_warning(
+                SCAN_WARNING_SCAN_ROOT_INVALID,
+                f"cf_export_root not found or not a directory: {root}",
+            )
+        )
         return FormScanIndex(
             forms=[],
             total=0,
