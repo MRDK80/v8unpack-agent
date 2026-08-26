@@ -389,3 +389,30 @@ reference_only:
 Подробности и воспроизведение: [`docs/research/ref_resolver_issue143.md`](research/ref_resolver_issue143.md),
 [`examples/unresolved_refs_report.py`](../examples/unresolved_refs_report.py),
 issues #143, #164, #165, #166.
+
+## Машинные коды scan_warnings (issue #167)
+
+Машинный контракт — `code`, а не свободный текст сообщения. Текст предназначен
+для человека и может уточняться без изменения причины.
+
+- Формат записи: `<существующий текст> [code=UPPER_SNAKE]`; тип поля остаётся
+  `list[str]`, JSON-формат не меняется, миграция старых индексов не нужна.
+- Публичный парсер: `v8unpack_agent.scan_forms.scan_warning_code(warning)`.
+- Legacy-запись без суффикса, повреждённый суффикс и код вне перечня дают `None`;
+  строки старых индексов при загрузке не переклассифицируются.
+- Порядок предупреждений детерминирован; стабильность свободного текста не
+  гарантируется, стабильность кода гарантируется.
+- `FormEntry.warnings` (например, `elem-only: no .obj.bsl found`) этим контрактом
+  не покрыт: у пер-форменных предупреждений отдельный контракт.
+- Связь с #143: агрегация остатка выполнялась по подстрокам, теперь возможна по коду.
+
+<!-- scan-warning-codes:start -->
+| Код | Условие |
+|---|---|
+| `ELEM_DISCOVERY_UNAVAILABLE` | не удалось импортировать `discover_elem_forms`; elem-only формы не добавлены |
+| `FORM_MODULE_MISSING` | в каталоге формы нет ожидаемого BSL-файла (config `.obj.bsl` либо external-кандидаты) |
+| `FORM_SCAN_ERROR` | исключение при обходе каталога формы; обход продолжается (best-effort) |
+| `REFERENCE_METADATA_INCOMPLETE` | блок идентификации объекта не содержит UUID |
+| `REFERENCE_UUID_CONFLICT` | один UUID указывает на разные имена типов; сохранена первая запись |
+| `SCAN_ROOT_INVALID` | `cf_export_root` не существует или не является каталогом |
+<!-- scan-warning-codes:end -->
