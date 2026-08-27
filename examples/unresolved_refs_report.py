@@ -236,6 +236,19 @@ class Evidence:
 # --- этап 1: остаток и контроль -------------------------------------------
 
 
+def _warning_code_aggregate(index) -> tuple[int, str]:
+    """Агрегат scan_warnings по машинному коду (#167): (без кода, "CODE=N, ...")."""
+    from collections import Counter
+
+    from v8unpack_agent.scan_forms import scan_warning_code
+
+    warnings = list(getattr(index, "scan_warnings", []) or [])
+    counts = Counter(scan_warning_code(w) for w in warnings)
+    without_code = counts.pop(None, 0)
+    by_code = ", ".join(f"{code}={n}" for code, n in sorted(counts.items()))
+    return without_code, by_code or "-"
+
+
 def collect_residual(root: Path, control_size: int):
     index = scan_forms(root)
     evidence: dict[str, Evidence] = defaultdict(Evidence)
@@ -278,6 +291,7 @@ def collect_residual(root: Path, control_size: int):
     step = max(1, len(known) // control_size) if control_size and known else 1
     control = set(known[::step][:control_size]) if control_size else set()
 
+    _WARN_CACHE = _warning_code_aggregate(index)
     baseline = {
         "forms": forms,
         "forms_with_object_attributes": with_attrs,
@@ -289,6 +303,8 @@ def collect_residual(root: Path, control_size: int):
         "in_index_but_unresolved": sum(1 for u in residual if u in index_uuids),
         "control_group_size": len(control),
         "scan_warnings_total": len(getattr(index, "scan_warnings", []) or []),
+        "scan_warnings_without_code": _WARN_CACHE[0],
+        "scan_warnings_by_code": _WARN_CACHE[1],
     }
     return dict(evidence), occurrences, baseline, control, index_uuids
 
