@@ -6,6 +6,25 @@
 ## [Unreleased]
 
 ### Added
+- исследование нессылочных типовых граней и видов метаданных без ссылочной формы
+  (#166): отчёт `docs/research/non_reference_type_facets_issue166.md` и агрегация
+  `scan_warnings` по машинному коду в `examples/unresolved_refs_report.py`
+  (`scan_warnings_without_code`, `scan_warnings_by_code` через
+  `scan_warning_code()` из #167). Класс `definition_known` разобран по парам
+  «вид метаданных × нормализованный слот»: 9 пар / 28 UUID / 158 вхождений в
+  выгрузке A и 1 пара / 1 UUID / 3 вхождения в независимой выгрузке B.
+  Пересечение пар пусто, имена граней не доказаны ни одним независимым
+  источником: все пары получили статус `single_config_only`,
+  `slot_stable_name_proven` — 0.
+  Итог `keep unresolved`: production-модули не изменены,
+  `REFERENCE_TYPE_PREFIXES` не расширен (DocumentJournal, InformationRegister,
+  Report, DataProcessor остаются вне таблицы), fallback `Ref#uuid` сохранён,
+  существующие 14 422 резолюции и `data_path` не затронуты, подтверждённый
+  потолок 0.00 п.п. вместо теоретических +1.00 п.п. Контроли 120/120 и 78/78 при
+  покрытии 100%, два прогона детерминированы, `scan_warnings` A: 49 записей / 0
+  без кода, B: 18 / 0, только `FORM_MODULE_MISSING`. Полный прогон 917 passed
+  (issue #166, refs #143, #164, #167, #168).
+
 - compare-режим `reference_only` между двумя независимыми выгрузками (#164):
   `examples/reference_only_compare.py` (`ExportStats`, `from_residual`,
   `compare_reference_only`, `compare_report`, `anonymity_guard`, `selftest`)
