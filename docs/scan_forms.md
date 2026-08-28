@@ -439,3 +439,22 @@ issues #143, #164, #165, #166.
 | `REFERENCE_UUID_CONFLICT` | один UUID указывает на разные имена типов; сохранена первая запись |
 | `SCAN_ROOT_INVALID` | `cf_export_root` не существует или не является каталогом |
 <!-- scan-warning-codes:end -->
+
+<!-- issue-180-followup -->
+## Follow-up: диагностика на третьей конфигурации (#180)
+
+Проверка на третьей независимой выгрузке (3 738 форм) подтверждает контракты после #167 и #172.
+
+- `scan_warnings`: 69 всего, `without_code = 0`, единственный код `FORM_MODULE_MISSING`.
+- Формы без `object_attributes`: 113 из 3 738; разрез однороден на 100% —
+  точка отказа `object_json_not_found`, класс причины `no_owner_object`, `object_type = CommonForm`,
+  класс layout `rel_depth=2/object_name:absent`, роль найденного JSON `absent`, `FormClass = service`,
+  `DecodeError` пуст, путей-кандидатов 0.
+- Число 113 совпадает с числом файлов вида `CommonForm` в выгрузке: общие формы не имеют
+  объекта-владельца, остаток объясняется полностью.
+- Регрессии #172 нет: `export_root_neighbour` не воспроизводится, корневой JSON не подставляется.
+- Скрининг непроиндексированных форм: indexed 3 680, `no_tabular_no_widgets` 56,
+  `tabular_field_programmatic_no_defs` 2; `Form.bin` не найден → screening #150 не применим.
+
+Подпись агрегата отчёта по формам `04bdab25052cf9d8`, два прогона идентичны.
+Полный отчёт: `docs/research/third_configuration_validation.md`.

@@ -189,3 +189,36 @@ object_metadata | bare | header/*/*/*   покрытие 100.0%   попадан
 - Инструмент: `examples/unresolved_refs_report.py`, дополненный агрегацией `scan_warnings` по коду; default-режим печатает только агрегаты, локальные имена доступны через opt-in.
 - Production-diff по `v8unpack_agent/scan_forms.py`, `object_decoder.py`, `form_context.py` пуст.
 - Полный `pytest` — 917 passed. Линт: в `examples/unresolved_refs_report.py` остаются два предсуществующих замечания (`EXE001`, `SIM114`), новых не добавлено; долг передан в #161.
+
+<!-- issue-180-followup -->
+## Follow-up: третья независимая конфигурация (#180)
+
+Раздел добавлен по итогам #180. Прежний вывод (`keep_unresolved`, `slot_stable_name_proven = 0`)
+остаётся в силе; ниже — структурные данные выгрузки C.
+
+### Матрица C (класс `definition_known`)
+
+| Вид | Слот | UUID | Вхождений | Слотов в файле | Ссылочных слотов в индексе |
+|---|---|---:|---:|---|---:|
+| ChartOfAccounts | `header/0/1/3` | 1 | 1 037 | 32 | 0 |
+| ChartOfCharacteristicType | `header/0/1/9` | 3 | 552 | 30–31 | 3 |
+| ChartOfCalculationTypes | `header/0/1/4` | 1 | 21 | 36 | 0 |
+| Report | `header/0/1/1` | 1 | 2 | 20 | 0 |
+| InformationRegister | `header/0/1/13` | 1 | 1 | 26 | 0 |
+| **Итого** | | **7** | **1 613** | | |
+
+### Пересечения пар
+
+- `A_pairs ∩ C_pairs = 2`: ChartOfCharacteristicType `header/0/1/9`, Report `header/0/1/1`.
+- `B_pairs ∩ C_pairs = 0`: вида DefinedType в C нет, пара B структурно не воспроизведена.
+- `A_pairs ∩ B_pairs ∩ C_pairs = 0`.
+- `pair_stable_three_configs = 0`, `pair_stable_two_configs = 2`, `single_config_only = 11`,
+  `slot_conflict = 0`, `slot_stable_name_proven = 0`.
+- Пары пересечения покрывают в C 554 вхождения = 34.35% класса `definition_known` = 3.93% применимых.
+
+### Наблюдение и stage gate
+
+InformationRegister встречается в A на слоте `header/0/1/1`, а в C — на `header/0/1/13`: формально это
+не `slot_conflict`, но однозначность «вид → слот» внутри вида не подтверждается. Путь A stage gate
+сохраняется: production-код не меняется, `REFERENCE_TYPE_PREFIXES` не расширяется, решение
+`keep_unresolved` остаётся. Полный отчёт: `docs/research/third_configuration_validation.md`.

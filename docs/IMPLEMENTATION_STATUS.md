@@ -389,3 +389,23 @@
   расширен, coverage остаётся 14 422 / 15 723 (91.72%), подтверждённый потолок
   0.00 п.п. вместо теоретических +1.00 п.п. Отчёт
   `docs/research/non_reference_type_facets_issue166.md` (issue #166).
+
+<!-- issue-180-followup -->
+## Follow-up: валидация на третьей конфигурации (#180)
+
+Исследование выполнено без изменения production-кода; `pytest` — 917 passed.
+
+| Задача | Итог |
+|---|---|
+| #143 | методика воспроизведена на третьей выгрузке; `keep unresolved` подтверждено |
+| #164 | `partially_confirmed`; доказано 14 UUID / 1 107 вхождений / 7.04 п.п. (было 6 / 868 / 5.52) |
+| #165 | остаётся заблокированным; обновлён только объём потолка |
+| #166 | `keep_unresolved`, путь A stage gate; `A_pairs ∩ C_pairs = 2`, `slot_stable_name_proven = 0` |
+| #167 | подтверждено: 69 предупреждений, `without_code = 0` |
+| #168 | подтверждено: `REFERENCE_TYPE_PREFIXES` не расширен |
+| #163 / #172 | подтверждено: 113 форм без `object_attributes`, все `no_owner_object`, регрессии нет |
+| #160 | новых сигналов нет: `DecodeError` на настоящих owner-JSON пуст |
+| #151 | новые виды вне охвата: ChartOfAccounts, ChartOfCalculationTypes; DefinedType отсутствует |
+| #150 | `not applicable for C`: `Form.bin` не найден |
+
+Отчёт: `docs/research/third_configuration_validation.md`.

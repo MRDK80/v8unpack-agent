@@ -309,3 +309,26 @@ git grep -nE '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-
 `not_confirmed_A_only`, `contradicted_by_definition` 0, `insufficient_evidence` 0.
 Решение «keep unresolved» не меняется, coverage не изменён. Детали:
 `docs/research/platform_types_cross_config_issue164.md`.
+
+<!-- issue-180-followup -->
+## Follow-up: методика на третьей конфигурации (#180)
+
+Методика классификации остатка `Ref#uuid` воспроизведена на третьей независимой выгрузке C
+без изменений в production-коде.
+
+| Метрика C | Значение |
+|---|---:|
+| forms / с `object_attributes` | 3 738 / 3 625 |
+| применимых ссылочных вхождений | 14 104 |
+| resolved / unresolved | 11 881 (84.24%) / 2 223 (15.76%) |
+| уникальных UUID остатка | 22 |
+| `definition_known` | 7 UUID / 1 613 вхождений (72.56% остатка) |
+| `reference_only` | 15 UUID / 610 вхождений (27.44% остатка) |
+| `definition_unknown_layout` / `ambiguous` | 0 / 0 |
+| `in_index_but_unresolved` | 0 |
+| позитивный контроль | 120/120, покрытие 100.00%, ложных 0 |
+| детерминированность | два прогона идентичны |
+
+Слот идентичности выведен из контроля: `object_metadata|bare|header/*/*/*`, слотов иного layout нет.
+Решение `keep unresolved` подтверждено на третьей конфигурации, fallback `Ref#uuid` не ослаблен.
+Полный отчёт: `docs/research/third_configuration_validation.md`.
