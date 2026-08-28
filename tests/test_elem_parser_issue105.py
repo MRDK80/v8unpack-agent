@@ -105,6 +105,12 @@ def _write_catalog_json(
     """
     obj_dir = form_dir.parent.parent
     owner_json = obj_dir / name
+    # Намеренно неподдерживаемый layout — см. контракт #160
+    # («Поддерживаемые входные layout» в docs/object_decoder.md):
+    # нормализованный owner JSON без ключа "header" даёт
+    # DecodeError.HEADER_MISSING и, как следствие, attr_map={} — именно
+    # это состояние проверяет тест. Negative fixture выбрана осознанно,
+    # на raw-header её заменять не нужно.
     payload = {
         "Properties": properties or [],
         "TabularSections": [],

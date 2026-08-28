@@ -389,6 +389,11 @@
   расширен, coverage остаётся 14 422 / 15 723 (91.72%), подтверждённый потолок
   0.00 п.п. вместо теоретических +1.00 п.п. Отчёт
   `docs/research/non_reference_type_facets_issue166.md` (issue #166).
+- Входной контракт `object_decoder` закреплён тестом: поддерживается только
+  raw-header layout; нормализованный `Properties` / `TabularSections` без
+  `header` даёт `ok=False` с `HEADER_MISSING` и не принимается passthrough.
+  При наличии и `header`, и плоских ключей авторитетен только `header`.
+  Production-код и публичный API не менялись — #160.
 
 <!-- issue-180-followup -->
 ## Follow-up: валидация на третьей конфигурации (#180)

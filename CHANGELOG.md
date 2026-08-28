@@ -346,6 +346,8 @@
 
 ### Changed
 
+- docs(object_decoder): зафиксирована граница raw-header input / normalized
+  output, добавлен contract-test отказа от normalized passthrough — #160.
 - `docs(scan_forms)`: задокументирована граница резолюции ссылочных типов,
   добавлен guard-тест синхронизации таблицы `REFERENCE_TYPE_PREFIXES` — #168.
 - `examples/README.md` — `missing_object_attributes_report.py` добавлен в группу
