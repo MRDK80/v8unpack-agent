@@ -5,6 +5,17 @@
 
 ## [Unreleased]
 
+<!-- issue-180-followup -->
+- **research:** проверка ссылочных контрактов на третьей независимой конфигурации (issue #180).
+  Пересечения класса `reference_only`: `|A ∩ C| = 14`, `|B ∩ C| = 6`, `|A ∩ B ∩ C| = 6`,
+  `(A ∩ C) − B = 8`, `|C − (A ∪ B)| = 1`. Доказанный объём #164 пересчитан: 14 UUID / 1 107 вхождений /
+  7.04 п.п. вместо 6 / 868 / 5.52; `contradicted_by_definition = 0`. Матрица `(kind, slot)` третьей
+  выгрузки — 5 пар / 7 UUID / 1 613 вхождений, `A_pairs ∩ C_pairs = 2`, `slot_stable_name_proven = 0`,
+  поэтому решение #166 `keep_unresolved` сохранено. Подтверждены гарантии #167 (`without_code = 0`),
+  #168 (`REFERENCE_TYPE_PREFIXES` не расширен) и #172 (нет `export_root_neighbour`). #150 —
+  `not applicable`: `Form.bin` не найден. Production-код не изменён, `pytest` — 917 passed.
+  Отчёт: `docs/research/third_configuration_validation.md`.
+
 ### Added
 - исследование нессылочных типовых граней и видов метаданных без ссылочной формы
   (#166): отчёт `docs/research/non_reference_type_facets_issue166.md` и агрегация
