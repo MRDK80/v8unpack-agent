@@ -18,6 +18,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import os
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -69,12 +70,14 @@ def build_export(root: Path, *, with_elem: bool = True, with_common: bool = Fals
 
 
 def run_script(*args: str) -> subprocess.CompletedProcess[str]:
+    env = {**os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"}
     return subprocess.run(
         [sys.executable, str(SCRIPT), *args],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
         encoding="utf-8",
+        env=env,
         check=False,
     )
 

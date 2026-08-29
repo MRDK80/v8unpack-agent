@@ -72,6 +72,24 @@ def flag(value: object) -> str:
     return "true" if bool(value) else "false"
 
 
+def configure_stdio() -> None:
+    """Не падать на legacy-кодировке консоли Windows.
+
+    Вывод шагов полностью ASCII, но текст `--help` и сообщения об ошибках
+    русскоязычные. На консоли с `cp1251` / `cp866` строгий кодек даёт
+    UnicodeEncodeError; заменяем его на `errors="replace"`, не меняя саму
+    кодировку потока.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is None:
+            continue
+        encoding = (getattr(stream, "encoding", "") or "").lower().replace("-", "")
+        if encoding.startswith("utf8"):
+            continue
+        reconfigure(errors="replace")
+
+
 def absolute_path(root: Path, raw: object) -> Path:
     """Снять смешанную семантику путей FormEntry (#57) без угадывания.
 
@@ -360,6 +378,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    configure_stdio()
     parser = build_parser()
     args = parser.parse_args(argv)
 
