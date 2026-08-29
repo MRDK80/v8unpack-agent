@@ -67,6 +67,7 @@ index_cf(<путь_к_выгрузке>)
 | Модуль | Что даёт |
 |---|---|
 | `scan_forms` | `scan_forms()` + `FormEntry` + `FormScanIndex` — опись всех форм по layout-у выгрузки, включая формы без кода (`elem_json_path`, #57), и индекс ссылочных типов `reference_types` / `resolve_reference_type()` (#88). Нулевой шаг пайплайна. → [подробнее](docs/scan_forms.md) |
+| `common_modules` | `scan_common_modules()` + `CommonModuleEntry` + `CommonModuleIndex` + `build_common_module_context()` — отдельный BSL-only pipeline общих модулей с typed status `ok` / `empty` / `missing` / `read_error`. Прямой импорт из подмодуля, без изменения `FormContext`. → [подробнее](docs/common_modules.md) |
 | `drift_checker` | `check_drift()` + `DriftReport` — added / removed / modified (hash-based) / structure_modified (elem hash) / stale_extractions. → [подробнее](docs/drift_checker.md) |
 | `form_router` | `FormRouter` — маршрутизация LLM-запроса к форме по имени объекта/формы. → [подробнее](docs/form_router.md) |
 | `form_paths` | Фабрика путей по конвенции: `form_paths()`, `item_modules()`, `all_module_paths()`. Чистая арифметика путей. |
@@ -148,6 +149,7 @@ for prop in result.data["Properties"]:
 Полные примеры:
 
 - [`examples/basic_usage.py`](examples/basic_usage.py) — распаковка, реестр форм и drift-контроль.
+- [`examples/common_modules.py`](examples/common_modules.py) — обезличенный агрегат CommonModule: обнаружение, typed read status и проверка детерминированности (#151). Требует путь к реальной выгрузке.
 - [`examples/form_bindings.py`](examples/form_bindings.py) — декодирование `data_path` для обычной формы через `prop` и для управляемой формы через UUID реквизита (issue #85).
 - [`examples/coverage_metric.py`](examples/coverage_metric.py) — расчёт покрытия `data_path` только по элементам данных, классификация объектных и сервисных форм и JSON-отчёт (`CoverageReport`, issues #90, #98).
 - [`examples/extract_skd_queries.py`](examples/extract_skd_queries.py) — извлечение запросов СКД из распакованного внешнего отчёта.
@@ -260,6 +262,7 @@ form_class, reason = classify_empty_tree_form("ФормаЗаписи")
 | Тема | Файл |
 |---|---|
 | Сканер форм: layout, FormEntry, elem-only, CLI, external-режим, индекс ссылочных типов | [docs/scan_forms.md](docs/scan_forms.md) |
+| Общие модули: layout, scanner, BSL-контекст и typed read status | [docs/common_modules.md](docs/common_modules.md) |
 | Контроль дрейфа: DriftReport, алгоритм, сценарии | [docs/drift_checker.md](docs/drift_checker.md) |
 | Маршрутизация агента: FormRouter, приоритеты | [docs/form_router.md](docs/form_router.md) |
 | Внешние отчёты (.erf), СКД, Template.bin | [docs/skd_extractor.md](docs/skd_extractor.md) |

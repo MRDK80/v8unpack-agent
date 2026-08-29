@@ -47,6 +47,7 @@ done
 | `legacy_list_form_bindings.py` | `FORM_DIR` | каталог формы из выгрузки v8unpack |
 | `unresolved_refs_report.py` | `CF_EXPORT` | каталог распакованной выгрузки конфигурации |
 | `missing_object_attributes_report.py` | `EXPORT_ROOT` | корень выгрузки `cf_export` конфигурации |
+| `common_modules.py` | `EXPORT_ROOT` | корень выгрузки `cf_export` конфигурации |
 
 У `unresolved_refs_report.py` по умолчанию печатается только обезличенный
 агрегат: ранги UUID, нормализованные указатели, виды метаданных и
@@ -58,6 +59,19 @@ done
 Формулировка «проверены все файлы `examples/`» в отчётах о задачах относится
 только к первой группе, если явно не указано, что прогон выполнялся на
 выгрузке.
+
+### `common_modules.py` (issue #151)
+
+Обнаруживает общие модули и читает `CommonModule.obj.bsl` строго как UTF-8.
+По умолчанию выполняет два прогона и проверяет детерминированность:
+
+```bash
+python examples/common_modules.py /path/to/cf_export --runs 2
+```
+
+Вывод содержит только количества по typed status `ok`, `empty`, `missing`,
+`read_error`, число дубликатов и проверки относительности путей. Имена
+модулей, BSL-текст и абсолютные пути не печатаются.
 
 ### `missing_object_attributes_report.py` (issue #163)
 
