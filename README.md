@@ -149,6 +149,7 @@ for prop in result.data["Properties"]:
 Полные примеры:
 
 - [`examples/basic_usage.py`](examples/basic_usage.py) — распаковка, реестр форм и drift-контроль.
+- [`examples/full_pipeline_walkthrough.py`](examples/full_pipeline_walkthrough.py) — эталон композиции публичного API: 11 шагов от `scan_forms()` до `build_common_module_context()` на одной форме реальной выгрузки, с отдельной ветвью CommonModule и обезличенным выводом (#175). Требует путь к реальной выгрузке.
 - [`examples/common_modules.py`](examples/common_modules.py) — обезличенный агрегат CommonModule: обнаружение, typed read status и проверка детерминированности (#151). Требует путь к реальной выгрузке.
 - [`examples/form_bindings.py`](examples/form_bindings.py) — декодирование `data_path` для обычной формы через `prop` и для управляемой формы через UUID реквизита (issue #85).
 - [`examples/coverage_metric.py`](examples/coverage_metric.py) — расчёт покрытия `data_path` только по элементам данных, классификация объектных и сервисных форм и JSON-отчёт (`CoverageReport`, issues #90, #98).

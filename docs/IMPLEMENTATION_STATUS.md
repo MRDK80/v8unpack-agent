@@ -21,6 +21,11 @@
 - `CommonModuleEntry.bsl_path` хранится относительно export root.
 - `build_common_module_context()` читает `CommonModule.obj.bsl` как UTF-8 и
   различает `ok`, `empty`, `missing`, `read_error`.
+- Сквозной пример `examples/full_pipeline_walkthrough.py` включает CommonModule
+  pilot #151 отдельной параллельной ветвью метаданных (#175):
+  `scan_common_modules()` → `build_common_module_context()` вызываются по
+  выгрузке целиком, а не по выбранной форме; `FormContext` и form pipeline не
+  затронуты.
 - Object JSON, `elem_parser`, `object_decoder`, `FormContext`,
   `REFERENCE_TYPE_PREFIXES` и `scan_forms.scan_warnings` не изменены.
 - Реальная проверка A/B/C: 651 / 4 / 242 объектов; `read_error` — 0;
