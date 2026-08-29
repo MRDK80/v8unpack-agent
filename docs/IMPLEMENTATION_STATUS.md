@@ -14,6 +14,20 @@
   индекс `uuid → имя ссылочного типа`, собирается в том же обходе
   конфигурации, без второго discovery — issue #88, PR #118
 
+### common_modules — общие модули
+
+- `scan_common_modules(root)` строит отдельный детерминированный индекс
+  непосредственных дочерних каталогов `CommonModule` — issue #151.
+- `CommonModuleEntry.bsl_path` хранится относительно export root.
+- `build_common_module_context()` читает `CommonModule.obj.bsl` как UTF-8 и
+  различает `ok`, `empty`, `missing`, `read_error`.
+- Object JSON, `elem_parser`, `object_decoder`, `FormContext`,
+  `REFERENCE_TYPE_PREFIXES` и `scan_forms.scan_warnings` не изменены.
+- Реальная проверка A/B/C: 651 / 4 / 242 объектов; `read_error` — 0;
+  два прогона детерминированы.
+- Контрактные тесты: `tests/test_common_modules_issue151.py`; полный baseline
+  925 → 937 passed.
+
 ### drift_checker
 - `check_drift()` с `DriftReport`: added / removed / modified /
   stale_extractions / structure_modified — issues #10, #18, #38, #40

@@ -17,6 +17,18 @@
   Отчёт: `docs/research/third_configuration_validation.md`.
 
 ### Added
+- **`v8unpack_agent.common_modules`** — BSL-only pilot общих модулей
+  (#151): `scan_common_modules`, `CommonModuleEntry`, `CommonModuleIndex`,
+  `CommonModuleContext` и typed status `ok` / `empty` / `missing` /
+  `read_error`. Доказанная раскладка A/B/C использует
+  `CommonModule/{ObjectName}/CommonModule.obj.bsl`; object JSON,
+  `FormContext`, `scan_forms`, `object_decoder`, `elem_parser`,
+  `REFERENCE_TYPE_PREFIXES` и корневые импорты не изменены. Реальная
+  проверка: 651 / 4 / 242 объектов, два отсутствующих и один пустой BSL,
+  ошибок чтения UTF-8 нет, повторные прогоны детерминированы. Добавлены
+  `docs/common_modules.md`, `examples/common_modules.py` и 12 синтетических
+  тестов; полный pytest — 937 passed.
+
 - исследование нессылочных типовых граней и видов метаданных без ссылочной формы
   (#166): отчёт `docs/research/non_reference_type_facets_issue166.md` и агрегация
   `scan_warnings` по машинному коду в `examples/unresolved_refs_report.py`
