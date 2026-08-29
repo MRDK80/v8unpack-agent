@@ -48,6 +48,7 @@ done
 | `unresolved_refs_report.py` | `CF_EXPORT` | каталог распакованной выгрузки конфигурации |
 | `missing_object_attributes_report.py` | `EXPORT_ROOT` | корень выгрузки `cf_export` конфигурации |
 | `common_modules.py` | `EXPORT_ROOT` | корень выгрузки `cf_export` конфигурации |
+| `full_pipeline_walkthrough.py` | `EXPORT_ROOT` | корень выгрузки `cf_export` конфигурации |
 
 У `unresolved_refs_report.py` по умолчанию печатается только обезличенный
 агрегат: ранги UUID, нормализованные указатели, виды метаданных и
@@ -72,6 +73,56 @@ python examples/common_modules.py /path/to/cf_export --runs 2
 Вывод содержит только количества по typed status `ok`, `empty`, `missing`,
 `read_error`, число дубликатов и проверки относительности путей. Имена
 модулей, BSL-текст и абсолютные пути не печатаются.
+
+### `full_pipeline_walkthrough.py` (issue #175)
+
+Эталонный сквозной пример композиции публичного API: показывает фактические
+сигнатуры на реальной распакованной выгрузке. Не является
+production-оркестратором и не добавляет нового API.
+
+```bash
+python examples/full_pipeline_walkthrough.py /path/to/cf_export
+python examples/full_pipeline_walkthrough.py /path/to/cf_export --skip-skd
+```
+
+Одиннадцать шагов: `scan_forms()` → сохранение индекса во временный файл →
+`check_drift()` → детерминированный выбор одной `FormEntry` →
+`object_json_path()` + `decode_object_attributes()` → `parse_elem_json()` +
+`calc_coverage_from_elem_index()` → `classify_form()` →
+`build_form_context()` + `to_llm_prompt_fragment()` → `discover_elem_forms()` →
+`extract_all_skd_queries()` → `scan_common_modules()` +
+`build_common_module_context()`.
+
+Шаг 11 — отдельная параллельная ветка метаданных (#151), а не продолжение
+выбранной формы: form pipeline и CommonModule не смешиваются в одном типе
+данных.
+
+| Опция | Назначение |
+|---|---|
+| `--max-prompt-chars N` | лимит длины LLM-фрагмента; `-1` — без обрезки (по умолчанию) |
+| `--skip-skd` | пропустить шаг 10: обход всей выгрузки может быть долгим |
+| `--skip-common-modules` | пропустить шаг 11 |
+
+| Код возврата | Значение |
+|---|---|
+| 0 | pipeline пройден; неприменимые шаги отмечены `not_applicable` |
+| 2 | `EXPORT_ROOT` не существует или не является каталогом |
+| 3 | нарушен ожидаемый публичный контракт |
+
+Поддерживается только config-layout распакованной выгрузки: `--mode` не
+добавлен намеренно, потому что сквозной прогон на external-layout не проверен.
+Флага `--runs` тоже нет: детерминированность структурных статусов закреплена
+тестом `test_repeated_run_is_deterministic`, а не флагом.
+
+Вывод по умолчанию обезличен: количества, флаги, статусы `ok` / `degraded` /
+`not_applicable` / `skipped`, generic `object_type`, длины строк, коды
+`scan_warnings` через `scan_warning_code()` и обезличенный
+`selected_form_index`. Имена объектов, форм и контейнеров, пути, UUID,
+BSL-текст, тексты запросов СКД и полный LLM-промпт не печатаются.
+
+Скрипт не изменяет выгрузку: индекс сохраняется в системный временный каталог
+через `TemporaryDirectory` и удаляется автоматически; шаг 2 печатает
+`saved_inside_export: false` как самопроверку.
 
 ### `missing_object_attributes_report.py` (issue #163)
 

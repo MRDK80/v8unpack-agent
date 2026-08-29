@@ -17,6 +17,17 @@
   Отчёт: `docs/research/third_configuration_validation.md`.
 
 ### Added
+- **`examples/full_pipeline_walkthrough.py`** — обезличенный сквозной пример
+  публичного API, фиксирующий фактические сигнатуры (#175). Одиннадцать шагов
+  от `scan_forms()` до `build_common_module_context()`; CommonModule показан
+  отдельной параллельной ветвью метаданных (#151). Форма выбирается
+  детерминированно, индекс сохраняется в `TemporaryDirectory` и не попадает ни
+  в выгрузку, ни в репозиторий, неприменимые шаги дают `not_applicable` без
+  traceback, blanket `except Exception` отсутствует. Прогон на трёх независимых
+  выгрузках: 2 216 / 76 / 3 738 форм, CommonModule 651 / 4 / 242. Добавлены 16
+  интеграционных тестов; production-код, публичный API и корневые импорты не
+  изменены. Полный pytest — 953 passed.
+
 - **`v8unpack_agent.common_modules`** — BSL-only pilot общих модулей
   (#151): `scan_common_modules`, `CommonModuleEntry`, `CommonModuleIndex`,
   `CommonModuleContext` и typed status `ok` / `empty` / `missing` /
