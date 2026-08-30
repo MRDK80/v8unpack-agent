@@ -6,7 +6,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
 
-
 CommonModuleReadStatus = Literal["ok", "empty", "missing", "read_error"]
 
 _COMMON_MODULE_DIR = "CommonModule"

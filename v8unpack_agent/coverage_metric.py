@@ -61,7 +61,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Iterable
 
-
 # ---------------------------------------------------------------------------
 # Константы типов элементов
 # ---------------------------------------------------------------------------
@@ -276,18 +275,19 @@ def calc_coverage_from_elem_index(
     - form_name не передан → ``"unknown"`` (обратная совместимость).
     """
     # Ленивые импорты: избегаем цикла coverage_metric ↔ form_classifier / elem_parser — #140.
+    import json
+    from pathlib import Path
+
+    from v8unpack_agent.elem_parser import (
+        UnindexedReason,
+        _has_tabular_field,
+        classify_unindexed_form,
+    )
     from v8unpack_agent.form_classifier import (
         FormClass,
         classify_empty_tree_form,
         classify_no_widgets_form,
     )
-    from v8unpack_agent.elem_parser import (
-        UnindexedReason,
-        classify_unindexed_form,
-        _has_tabular_field,
-    )
-    import json
-    from pathlib import Path
 
     elem_index_ok = getattr(result, "elem_index_ok", False)
     elements = getattr(result, "elements", []) or []
@@ -355,6 +355,7 @@ def _find_legacy_json_name(form_root: object) -> str:
     """
     # Локальный импорт: тот же контракт ленивых импортов — #140.
     from pathlib import Path
+
     from v8unpack_agent.elem_parser import _find_legacy_form_json
 
     result = _find_legacy_form_json(Path(form_root))

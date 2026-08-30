@@ -9,12 +9,12 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from v8unpack_agent.elem_parser import ElemIndexResult
 from v8unpack_agent.form_summary import (
     build_form_summary,
     build_form_summary_from_elem_index,
     to_normalized_json,
 )
-from v8unpack_agent.elem_parser import ElemIndexResult
 
 
 def test_summary_builds_data_relations_from_elem_index() -> None:

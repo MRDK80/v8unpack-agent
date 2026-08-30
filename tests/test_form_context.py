@@ -23,14 +23,13 @@ from pathlib import Path
 
 import pytest
 
-from v8unpack_agent.form_summary import FormSummary
-from v8unpack_agent.scan_forms import FormEntry
-
 from v8unpack_agent.form_context import (
     FormContext,
     build_form_context,
     to_llm_prompt_fragment,
 )
+from v8unpack_agent.form_summary import FormSummary
+from v8unpack_agent.scan_forms import FormEntry
 
 # ---------------------------------------------------------------------------
 # Синтетические данные

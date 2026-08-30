@@ -25,7 +25,6 @@ from pathlib import Path
 
 from v8unpack_agent.scan_forms import FormEntry, FormScanIndex, scan_forms
 
-
 # ---------------------------------------------------------------------------
 # helpers
 # ---------------------------------------------------------------------------

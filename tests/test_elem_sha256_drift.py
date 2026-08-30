@@ -21,9 +21,8 @@ from pathlib import Path
 
 import pytest
 
-from v8unpack_agent.scan_forms import FormScanIndex, scan_forms
 from v8unpack_agent.drift_checker import check_drift
-
+from v8unpack_agent.scan_forms import FormScanIndex, scan_forms
 
 # ---------------------------------------------------------------------------
 # Вспомогательные фабрики

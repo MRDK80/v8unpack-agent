@@ -58,13 +58,13 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
+from v8unpack_agent.catalog_resolver import object_json_path, resolve_data_path
 from v8unpack_agent.form_summary import (
     FormSummary,
     build_form_summary,
     to_normalized_json,
 )
 from v8unpack_agent.object_decoder import decode_object_attributes
-from v8unpack_agent.catalog_resolver import object_json_path, resolve_data_path
 
 __all__ = [
     "FormContext",

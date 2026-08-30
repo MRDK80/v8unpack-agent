@@ -7,11 +7,11 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from v8unpack_agent.form_context import (
+    NO_OBJECT_PLACEHOLDER,
+    OBJECT_ATTRIBUTES_MARKER,
     FormContext,
     build_form_context,
     to_llm_prompt_fragment,
-    OBJECT_ATTRIBUTES_MARKER,
-    NO_OBJECT_PLACEHOLDER,
 )
 from v8unpack_agent.form_summary import FormSummary
 

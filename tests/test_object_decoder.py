@@ -15,11 +15,10 @@ import pathlib
 import pytest
 
 from v8unpack_agent.object_decoder import (
-    decode_object_attributes,
-    DecodeResult,
     DecodeError,
+    DecodeResult,
+    decode_object_attributes,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers

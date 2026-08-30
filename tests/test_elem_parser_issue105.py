@@ -40,10 +40,9 @@ from uuid import uuid4
 import pytest
 
 from v8unpack_agent.elem_parser import (
-    ElemIndexResult,
     _TABULAR_FIELD_UUID,
+    ElemIndexResult,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers — строители минимальных fixture-деревьев
@@ -196,7 +195,6 @@ from v8unpack_agent.elem_parser import (
     UnindexedResult,
     classify_unindexed_form,
 )
-
 
 # ===========================================================================
 # Категория C — нет TabularField, нет InputField/ComboBox

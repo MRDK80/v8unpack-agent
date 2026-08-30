@@ -24,7 +24,6 @@ from typing import Any, Callable
 
 from v8unpack_agent._safe_paths import safe_error_text, safe_path_ref
 
-
 # ---------------------------------------------------------------------------
 # Public API types
 # ---------------------------------------------------------------------------

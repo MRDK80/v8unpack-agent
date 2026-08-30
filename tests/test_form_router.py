@@ -5,9 +5,9 @@ from pathlib import Path
 
 import pytest
 
-from v8unpack_agent.scan_forms import FormEntry, FormScanIndex
-from v8unpack_agent.form_router import FormRouter, RouteResult
 from v8unpack_agent.drift_checker import check_drift
+from v8unpack_agent.form_router import FormRouter, RouteResult
+from v8unpack_agent.scan_forms import FormEntry, FormScanIndex
 
 
 def _entry(object_type: str, object_name: str, form_name: str, bsl_mtime: float = 0.0) -> FormEntry:

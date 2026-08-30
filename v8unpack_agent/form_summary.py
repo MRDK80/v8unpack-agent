@@ -9,9 +9,9 @@ ordinary or managed.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from pathlib import Path
-import json
 from typing import Any
 
 from v8unpack_agent.elem_parser import ElemIndexResult, parse_elem_json

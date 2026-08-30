@@ -227,7 +227,7 @@ class TestFormClassifierWithLegacyElements:
     """FormClass для ФормаЗаписи с legacy-элементами должен быть OBJECT."""
 
     def test_form_with_object_data_paths_classified_as_object(self):
-        from v8unpack_agent.form_classifier import classify_form_by_bindings, FormClass
+        from v8unpack_agent.form_classifier import FormClass, classify_form_by_bindings
 
         # type быть в DATA_ELEMENT_TYPES (из coverage_metric) — иначе classify_form_by_bindings
         # игнорирует элемент и возвращает SERVICE
@@ -244,7 +244,7 @@ class TestFormClassifierWithLegacyElements:
 
     def test_classify_empty_tree_form_returns_unknown_not_service(self):
         """classify_empty_tree_form для 'ФормаЗаписи' → UNKNOWN, reason='platform_object_name_unparsed'."""
-        from v8unpack_agent.form_classifier import classify_empty_tree_form, FormClass
+        from v8unpack_agent.form_classifier import FormClass, classify_empty_tree_form
 
         form_class, reason = classify_empty_tree_form("ФормаЗаписи")
         assert form_class == FormClass.UNKNOWN

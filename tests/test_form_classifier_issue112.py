@@ -34,7 +34,6 @@ import pytest
 from v8unpack_agent.elem_parser import UnindexedReason
 from v8unpack_agent.form_classifier import FormClass, classify_no_widgets_form
 
-
 # ---------------------------------------------------------------------------
 # 1. has_data_widgets=False — двойное подтверждение → SERVICE
 # ---------------------------------------------------------------------------

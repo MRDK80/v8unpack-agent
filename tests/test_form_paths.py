@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from v8unpack_agent import form_paths, item_modules, all_module_paths
+from v8unpack_agent import all_module_paths, form_paths, item_modules
 
 
 def test_form_paths_convention(tmp_path):

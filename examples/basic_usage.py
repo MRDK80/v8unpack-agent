@@ -21,8 +21,8 @@ from v8unpack_agent import (
     unpack_all_forms,
     update_forms_index,
 )
-from v8unpack_agent.scan_forms import scan_forms
 from v8unpack_agent.drift_checker import check_drift
+from v8unpack_agent.scan_forms import scan_forms
 
 
 def make_demo_dump(dump_root: Path, *form_names: str) -> None:

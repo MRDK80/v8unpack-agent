@@ -15,13 +15,12 @@ import pytest
 
 from v8unpack_agent.coverage_metric import (
     DATA_ELEMENT_TYPES,
-    SERVICE_ELEMENT_TYPES,
     PLATFORM_STANDARD_ATTRIBUTES,
+    SERVICE_ELEMENT_TYPES,
     CoverageReport,
-    calc_data_path_coverage,
     calc_coverage_from_elem_index,
+    calc_data_path_coverage,
 )
-
 
 # ---------------------------------------------------------------------------
 # Константы

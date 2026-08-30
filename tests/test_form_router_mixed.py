@@ -10,7 +10,6 @@ import pytest
 from v8unpack_agent.form_router import FormRouter
 from v8unpack_agent.scan_forms import FormEntry, FormScanIndex
 
-
 # ---------------------------------------------------------------------------
 # Вспомогательные фабрики
 # ---------------------------------------------------------------------------

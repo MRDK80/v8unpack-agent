@@ -64,20 +64,21 @@ UUID-ами внутри паттерн-блока.
 from __future__ import annotations
 
 import enum
-from dataclasses import dataclass, field
-from pathlib import Path
 import json
 import re
+from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 from v8unpack_agent._safe_paths import safe_error_text, safe_path_ref
-from v8unpack_agent.object_decoder import decode_object_attributes
 from v8unpack_agent.chain_data_path import (  # noqa: F401  # реэкспорт для #89
     build_form_attribute_ids,
     build_form_segment_tables,
     decode_chain_data_path,
     enrich_elements_with_chain_paths,
 )
+from v8unpack_agent.object_decoder import decode_object_attributes
+
 
 @dataclass
 class ElemIndexResult:

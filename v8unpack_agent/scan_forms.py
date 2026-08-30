@@ -170,7 +170,9 @@ def _compute_elem_sha256(form_dir: Path) -> Optional[str]:
     по достоверной части дерева.
     """
     try:
-        from v8unpack_agent.elem_parser import parse_elem_json  # local import — избегаем цикл
+        from v8unpack_agent.elem_parser import (
+            parse_elem_json,  # local import — избегаем цикл
+        )
         result = parse_elem_json(form_dir)
         if not result.elem_index_ok or not result.elements:
             return None

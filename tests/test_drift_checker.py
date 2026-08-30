@@ -10,10 +10,9 @@ from pathlib import Path
 
 from v8unpack_agent.drift_checker import (
     DriftReport,
-    check_drift,
     _form_key,
+    check_drift,
 )
-
 
 # ---------------------------------------------------------------------------
 # Хелперы для построения синтетических фикстур

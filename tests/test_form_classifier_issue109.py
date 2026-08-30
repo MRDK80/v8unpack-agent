@@ -35,11 +35,10 @@ import pytest
 from v8unpack_agent.elem_parser import UnindexedReason
 from v8unpack_agent.form_classifier import (
     FormClass,
+    classify_empty_tree_form,
     classify_form,
     classify_form_by_name,
-    classify_empty_tree_form,
 )
-
 
 # ---------------------------------------------------------------------------
 # Импорт целевой функции (ещё не существует → RED)
