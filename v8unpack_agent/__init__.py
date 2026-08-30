@@ -33,16 +33,20 @@ pre-step индексации.
 - :func:`~v8unpack_agent.form_classifier.classify_form_by_bindings` (issue #98)
 """
 
-from v8unpack_agent.form_paths import all_module_paths, form_paths, form_root, item_modules
-
-from v8unpack_agent.form_router import FormRouter, RouteResult
 from v8unpack_agent.form_classifier import (
+    SERVICE_FORM_NAME_PATTERNS,
     FormClass,
     classify_form,
-    classify_form_by_name,
     classify_form_by_bindings,
-    SERVICE_FORM_NAME_PATTERNS,
+    classify_form_by_name,
 )
+from v8unpack_agent.form_paths import (
+    all_module_paths,
+    form_paths,
+    form_root,
+    item_modules,
+)
+from v8unpack_agent.form_router import FormRouter, RouteResult
 
 
 def __getattr__(name: str):
@@ -146,8 +150,8 @@ def __getattr__(name: str):
                 "discover_managed_forms", "ManagedFormEntry"}:
         from v8unpack_agent.managed_forms import (
             ElemFormEntry,
-            discover_elem_forms,
             ManagedFormEntry,
+            discover_elem_forms,
             discover_managed_forms,
         )
 
