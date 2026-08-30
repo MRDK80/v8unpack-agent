@@ -21,7 +21,6 @@ import json
 from pathlib import Path
 from uuid import uuid4
 
-
 from v8unpack_agent.elem_parser import (
     _TABULAR_FIELD_UUID,
     ElemIndexResult,

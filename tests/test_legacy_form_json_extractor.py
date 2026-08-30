@@ -19,7 +19,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-
 # ---------------------------------------------------------------------------
 # Минимальные фикстуры — синтетические данные, воспроизводящие структуру
 # реального InformationRegisterForm.json (АдресныйКлассификатор)

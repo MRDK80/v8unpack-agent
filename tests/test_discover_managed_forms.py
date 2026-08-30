@@ -17,7 +17,6 @@ from __future__ import annotations
 import sys
 from pathlib import Path, PurePosixPath
 
-
 sys.path.insert(0, str(Path(__file__).parent))
 from _managed_fixtures import (
     make_managed_form_elem_json,

@@ -15,7 +15,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-
 from v8unpack_agent.scan_forms import FormScanIndex, scan_forms
 
 # ---------------------------------------------------------------------------

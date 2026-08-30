@@ -16,7 +16,6 @@ import json
 import time
 from pathlib import Path
 
-
 from v8unpack_agent.drift_checker import (
     _form_key,
     check_drift,
