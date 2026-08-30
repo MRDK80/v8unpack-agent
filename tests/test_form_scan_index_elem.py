@@ -227,7 +227,7 @@ class TestMixedIndex:
         idx = scan_forms(tmp_path, include_elem_only=True)
         form_dirs = [e.form_path for e in idx.forms]
         # каждый form_path уникален
-        assert len(form_dirs) == len(set(str(p) for p in form_dirs))
+        assert len(form_dirs) == len({str(p) for p in form_dirs})
 
 
 # ---------------------------------------------------------------------------

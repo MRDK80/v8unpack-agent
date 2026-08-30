@@ -184,7 +184,8 @@ class FormClass(str):
     SERVICE: FormClass
     UNKNOWN: FormClass
 
-    def __new__(cls, value: str) -> FormClass:
+    # typing.Self доступен с 3.11, минимум проекта — 3.10 (requires-python)
+    def __new__(cls, value: str) -> FormClass:  # noqa: PYI034
         return super().__new__(cls, value)
 
 

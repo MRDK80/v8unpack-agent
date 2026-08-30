@@ -194,7 +194,10 @@ class TestClassifyNoWidgetsFormPurity:
     def test_deterministic_repeated_calls(self):
         """Повторные вызовы с теми же аргументами дают одинаковый результат."""
         classify_no_widgets_form = _import_classify_no_widgets()
-        args = dict(form_name="ФормаНастройки", reason=UnindexedReason.NO_TABULAR_NO_WIDGETS)
+        args = {
+            "form_name": "ФормаНастройки",
+            "reason": UnindexedReason.NO_TABULAR_NO_WIDGETS,
+        }
         results = {classify_no_widgets_form(**args) for _ in range(5)}
         assert len(results) == 1
 

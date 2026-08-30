@@ -77,7 +77,7 @@ def decode_object_attributes(
 
     try:
         raw = json.loads(object_json.read_text(encoding="utf-8-sig"))
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 — best-effort контракт: сбой превращается в диагностику
         return _fail(DecodeError.JSON_PARSE_ERROR,
                      f"object_decoder: ошибка чтения {safe_path_ref(object_json, tail=3)}: "
                      f"{safe_error_text(exc, object_json, tail=3)}")

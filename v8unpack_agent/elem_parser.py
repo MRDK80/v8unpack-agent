@@ -312,7 +312,7 @@ def _classify_unindexed_form_impl(form_root: Path) -> UnindexedResult:
     # --- шаг 2: читаем и ищем TabularField ---
     try:
         legacy_data = json.loads(legacy_path.read_text(encoding="utf-8-sig"))
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 — best-effort контракт: сбой превращается в диагностику
         return UnindexedResult(
             reason=UnindexedReason.UNKNOWN,
             detail=f"Не удалось прочитать {legacy_path}: {exc}",
@@ -962,7 +962,7 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
 
     try:
         data = json.loads(elem_path.read_text(encoding="utf-8-sig"))
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 — best-effort контракт: сбой превращается в диагностику
         elem_error = (
             f"Не удалось прочитать {safe_path_ref(elem_path)}: "
             f"{safe_error_text(exc, elem_path)}"
@@ -976,7 +976,7 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
             data, warnings, attribute_map,
             suppress_empty_map_warning=_is_common_form(form_root),
         )
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 — best-effort контракт: сбой превращается в диагностику
         elem_error = (
             f"Не удалось разобрать {safe_path_ref(elem_path)}: "
             f"{safe_error_text(exc, elem_path)}"
@@ -1024,7 +1024,7 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
                             f"(legacy form JSON, issue #100): {len(legacy_elements)} эл."
                         )
                         elements = legacy_elements
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001 — best-effort контракт: сбой превращается в диагностику
                 warnings.append(
                     f"Не удалось разобрать legacy form JSON "
                     f"{safe_path_ref(legacy_json_path)}: "
@@ -1045,7 +1045,7 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
             json.dumps({"form": form_root.name, "elements": elements}, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 — best-effort контракт: сбой превращается в диагностику
         warnings.append(f"Не удалось записать {safe_path_ref(index_path)}: "
             f"{safe_error_text(exc, index_path)}")
 
@@ -1305,7 +1305,7 @@ def _walk_json(value: Any, parent_name: str | None, out: list, source: str) -> N
             out.append((value, parent_name, source))
             if name:
                 current_parent = str(name)
-        for key, child in value.items():
+        for child in value.values():
             if isinstance(child, (dict, list)):
                 _walk_json(child, current_parent, out, source)
     elif isinstance(value, list):
@@ -1421,7 +1421,7 @@ def _attach_handlers_from_bsl(form_root: Path, elements: list[dict], warnings: l
         return
     try:
         text = bsl_path.read_text(encoding="utf-8-sig")
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 — best-effort контракт: сбой превращается в диагностику
         warnings.append(f"Не удалось прочитать BSL-модуль {safe_path_ref(bsl_path)}: "
             f"{safe_error_text(exc, bsl_path)}")
         return
