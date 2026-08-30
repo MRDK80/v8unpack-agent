@@ -58,8 +58,8 @@ OS-нейтральность, кодировка UTF-8.
 """
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Iterable
 
 # ---------------------------------------------------------------------------
 # Константы типов элементов

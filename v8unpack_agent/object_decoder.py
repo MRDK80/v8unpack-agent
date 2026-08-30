@@ -18,9 +18,10 @@ from __future__ import annotations
 
 import enum
 import json
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from v8unpack_agent._safe_paths import safe_error_text, safe_path_ref
 

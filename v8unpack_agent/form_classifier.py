@@ -75,7 +75,7 @@ OS-нейтральность, кодировка UTF-8.
 """
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 from v8unpack_agent.coverage_metric import DATA_ELEMENT_TYPES
 

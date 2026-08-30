@@ -27,9 +27,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Iterable
 from dataclasses import replace
 from pathlib import Path
-from typing import Callable, Iterable
 
 from v8unpack_agent.elem_parser import ElemIndexResult, parse_elem_json
 from v8unpack_agent.form_artifact import FormArtifact

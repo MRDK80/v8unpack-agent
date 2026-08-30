@@ -59,8 +59,9 @@ from __future__ import annotations
 
 import enum
 import json
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 __all__ = [
     "BIND_SLOT",
