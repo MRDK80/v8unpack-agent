@@ -25,3 +25,27 @@
  1	SIM114 	[*] if-with-same-arms
 Found 147 errors.
 [*] 107 fixable with the `--fix` option (29 hidden fixes can be enabled with the `--unsafe-fixes` option).
+
+## Итог #161
+
+Baseline обнулён. Финальное состояние ветки chore/161-ruff-mypy-ci:
+
+    ruff check .        All checks passed!
+    mypy v8unpack_agent Success: no issues found in 21 source files
+    pytest              953 passed
+
+Версии инструментов: ruff 0.16.4, mypy 2.3.1. Обе запинены в
+[project.optional-dependencies] dev, поэтому обновление линтера не может
+покрасить CI без явного изменения pyproject.toml.
+
+Коммиты:
+
+    66cd112  test: доассертить проверки, найденные через F841/RUF059
+    18630b9  chore(lint): часть C — вердикты по содержательным правилам
+    cdce309  chore(lint): слить вложенные if в фолбэке TabularField (SIM102)
+    6e90544  fix(types): сузить занижённые аннотации вместо type: ignore
+
+Принятые исключения зафиксированы в pyproject.toml, а не подавлены в коде:
+F822 для PEP 562-шима managed_form_summary и EXE001 для examples/.
+
+С момента мержа этого PR job `lint` блокирует PR: continue-on-error снят.

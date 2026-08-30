@@ -32,8 +32,12 @@ jobs:
         run: pytest --tb=short
 
   lint:
-    name: lint / ruff + mypy
-    runs-on: ubuntu-latest
+    name: lint / ruff + mypy / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -46,12 +50,11 @@ jobs:
       - name: Install dependencies
         run: pip install -e ".[dev]"
 
-      # Режим наблюдения: линтеры пока не блокируют CI. Поле continue-on-error
-      # снимается отдельным коммитом после согласованного нулевого baseline — #161.
+      # Линтеры блокируют CI с #161: baseline обнулён (ruff 0, mypy 0).
+      # Версии запинены в dev-зависимостях, поэтому обновление линтера —
+      # осознанный шаг с отдельным разбором нового долга.
       - name: Ruff
-        continue-on-error: true
         run: ruff check .
 
       - name: Mypy
-        continue-on-error: true
         run: mypy v8unpack_agent
