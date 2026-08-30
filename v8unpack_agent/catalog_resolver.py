@@ -174,7 +174,7 @@ def resolve_data_path(
         return _unresolved
 
 
-def object_json_path(form_entry: "FormEntry") -> Path | None:
+def object_json_path(form_entry: FormEntry) -> Path | None:
     """Найти JSON-файл объекта по ``FormEntry``.
 
     Поднимается на 2 уровня вверх от ``form_entry.form_path``

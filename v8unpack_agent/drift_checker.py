@@ -140,7 +140,7 @@ class DriftReport:
         return p
 
     @classmethod
-    def load_from(cls, path: Path) -> "DriftReport":
+    def load_from(cls, path: Path) -> DriftReport:
         """Загрузить отчёт из JSON."""
         data = json.loads(Path(path).read_text(encoding="utf-8"))
         # Обратная совместимость: старые отчёты без structure_modified

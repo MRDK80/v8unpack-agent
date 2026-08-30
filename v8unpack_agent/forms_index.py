@@ -90,7 +90,7 @@ class FormsIndex:
         return index_path
 
     @classmethod
-    def load(cls, index_path: Path) -> "FormsIndex":
+    def load(cls, index_path: Path) -> FormsIndex:
         """Загрузить индекс; отсутствующий файл — пустой индекс."""
         if not index_path.exists():
             return cls()

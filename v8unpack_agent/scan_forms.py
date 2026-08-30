@@ -277,7 +277,7 @@ class FormScanIndex:
         return out_path
 
     @classmethod
-    def load(cls, index_path: Path) -> "FormScanIndex":
+    def load(cls, index_path: Path) -> FormScanIndex:
         """Загрузить :class:`FormScanIndex` из JSON-файла, сохранённого :meth:`save`.
 
         Обратная совместимость: отсутствующие ``bsl_sha256`` / ``elem_sha256`` /
@@ -452,7 +452,7 @@ def _scan_form_dir(
     object_name: str,
     container_name: str,
     root: Path,
-) -> Optional["FormEntry"]:
+) -> Optional[FormEntry]:
     """Собрать FormEntry из директории формы конфигурации.
 
     Возвращает ``None``, если обязательный артефакт ``.obj.bsl`` отсутствует.

@@ -180,11 +180,11 @@ class FormClass(str):
     через FormClass.OBJECT, FormClass.SERVICE и FormClass.UNKNOWN.
     """
 
-    OBJECT: "FormClass"
-    SERVICE: "FormClass"
-    UNKNOWN: "FormClass"
+    OBJECT: FormClass
+    SERVICE: FormClass
+    UNKNOWN: FormClass
 
-    def __new__(cls, value: str) -> "FormClass":
+    def __new__(cls, value: str) -> FormClass:
         return super().__new__(cls, value)
 
 
