@@ -72,7 +72,7 @@ class FormArtifact:
         extraction_warnings: list[str] | None = None,
         skd_extracted: bool = False,
         elem_index_ok: bool = False,
-    ) -> "FormArtifact":
+    ) -> FormArtifact:
         """Собрать артефакт по конвенции путей для формы ``form_name``."""
         return cls(
             name=form_name,

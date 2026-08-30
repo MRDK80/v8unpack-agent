@@ -9,11 +9,8 @@ import hashlib
 import json
 from pathlib import Path
 
-import pytest
-
-from v8unpack_agent.scan_forms import FormEntry, FormScanIndex, scan_forms
 from v8unpack_agent.drift_checker import check_drift
-
+from v8unpack_agent.scan_forms import FormScanIndex, scan_forms
 
 # ---------------------------------------------------------------------------
 # Helpers

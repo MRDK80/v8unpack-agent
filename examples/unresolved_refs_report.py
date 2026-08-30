@@ -146,9 +146,7 @@ def normalize_pointer(pointer, depth: int) -> str:
 def raw_index_pointer(pointer) -> str:
     tokens = []
     for token in pointer[:RAW_INDEX_DEPTH]:
-        if isinstance(token, int):
-            tokens.append(str(token))
-        elif str(token) in KNOWN_TAGS:
+        if isinstance(token, int) or str(token) in KNOWN_TAGS:
             tokens.append(str(token))
         else:
             tokens.append("<key>")

@@ -13,16 +13,16 @@ Synthetic root собирается существующими хелперам�
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
 
 import pytest
-import os
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from _managed_fixtures import (  # noqa: E402 - bootstrap sys.path выше
+from _managed_fixtures import (  # bootstrap sys.path выполнен выше
     make_managed_form_elem_json,
     write_managed_form_elem,
 )

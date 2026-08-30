@@ -58,7 +58,7 @@ def fake_classify(record, identity, layout, has_identity):
 
 
 def uuid_at(index: int) -> str:
-    return "{:08x}-0000-4000-8000-000000000000".format(index)
+    return f"{index:08x}-0000-4000-8000-000000000000"
 
 
 def test_self_comparison_is_total(cmp_module):
@@ -177,7 +177,7 @@ def test_from_residual_matches_report_model(cmp_module):
         if i < 9:
             record.slots[identity_slot] += 1
             record.slot_files[identity_slot].add(i)
-        control["c{:07x}-0000-4000-8000-000000000000".format(i)] = record
+        control[f"c{i:07x}-0000-4000-8000-000000000000"] = record
 
     ref_only = FakeEvidence(occurrences=57, positions=3)
     ref_only.slots["form_file|Ref#|form/data"] += 3

@@ -1,3 +1,4 @@
+from dataclasses import FrozenInstanceError
 from pathlib import Path
 
 import pytest
@@ -30,7 +31,7 @@ def test_partial_with_warnings_is_allowed():
 
 def test_artifact_is_frozen():
     art = FormArtifact.for_form(Path("/dump"), "ФормаЭлемента")
-    with pytest.raises(Exception):
+    with pytest.raises(FrozenInstanceError):
         art.extraction_ok = False  # type: ignore[misc]
 
 

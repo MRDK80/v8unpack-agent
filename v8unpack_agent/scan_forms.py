@@ -39,7 +39,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal
 
 logger = logging.getLogger(__name__)
 
@@ -151,7 +151,7 @@ def scan_warning_code(warning: str) -> str | None:
         return None
     return code if code in SCAN_WARNING_CODES else None
 
-def _compute_sha256(path: Path) -> Optional[str]:
+def _compute_sha256(path: Path) -> str | None:
     """Вернуть hex-дайджест SHA-256 содержимого файла или None при ошибке."""
     try:
         h = hashlib.sha256()
@@ -163,14 +163,16 @@ def _compute_sha256(path: Path) -> Optional[str]:
         return None
 
 
-def _compute_elem_sha256(form_dir: Path) -> Optional[str]:
+def _compute_elem_sha256(form_dir: Path) -> str | None:
     """Вычислить SHA-256 нормализованного дерева элементов формы (issue #40).
 
     Граница достоверности: вложенность групп не реконструируется; хэш строится
     по достоверной части дерева.
     """
     try:
-        from v8unpack_agent.elem_parser import parse_elem_json  # local import — избегаем цикл
+        from v8unpack_agent.elem_parser import (
+            parse_elem_json,  # local import — избегаем цикл
+        )
         result = parse_elem_json(form_dir)
         if not result.elem_index_ok or not result.elements:
             return None
@@ -201,16 +203,16 @@ class FormEntry:
     bsl_mtime: float = 0.0
     """mtime bsl-файла на момент сканирования (legacy-fallback для drift)."""
 
-    form_elem_path: Optional[Path] = None
+    form_elem_path: Path | None = None
     """Путь к ``Form.elem`` внешнего объекта (issue #25)."""
 
-    bsl_sha256: Optional[str] = None
+    bsl_sha256: str | None = None
     """SHA-256 содержимого bsl-файла (issue #38)."""
 
-    elem_sha256: Optional[str] = None
+    elem_sha256: str | None = None
     """SHA-256 нормализованного дерева элементов (issue #40)."""
 
-    elem_json_path: Optional[Path] = None
+    elem_json_path: Path | None = None
     """Путь к ``*.elem.json``, relative-to-root (issue #57)."""
 
 
@@ -225,7 +227,7 @@ class FormScanIndex:
     reference_types: dict[str, str] = field(default_factory=dict)
     """Индекс ``uuid типа -> имя ссылочного типа`` (issue #88)."""
 
-    def resolve_reference_type(self, uuid: str) -> Optional[str]:
+    def resolve_reference_type(self, uuid: str) -> str | None:
         """Вернуть читаемое имя ссылочного типа либо ``None`` (issue #88).
 
         Подходит как ``type_resolver`` для ``decode_object_attributes``:
@@ -275,7 +277,7 @@ class FormScanIndex:
         return out_path
 
     @classmethod
-    def load(cls, index_path: Path) -> "FormScanIndex":
+    def load(cls, index_path: Path) -> FormScanIndex:
         """Загрузить :class:`FormScanIndex` из JSON-файла, сохранённого :meth:`save`.
 
         Обратная совместимость: отсутствующие ``bsl_sha256`` / ``elem_sha256`` /
@@ -320,7 +322,7 @@ class FormScanIndex:
         )
 
 
-def _first_existing(directory: Path, candidates: tuple[str, ...]) -> Optional[Path]:
+def _first_existing(directory: Path, candidates: tuple[str, ...]) -> Path | None:
     """Вернуть первый существующий файл из candidates (по приоритету) или None."""
     for name in candidates:
         candidate = directory / name
@@ -349,7 +351,7 @@ def _is_form_container(directory: Path) -> bool:
     return directory.is_dir() and directory.name.endswith("Form")
 
 
-def _find_elem_json_path(form_dir: Path, root: Path) -> Optional[Path]:
+def _find_elem_json_path(form_dir: Path, root: Path) -> Path | None:
     """Найти ``*.elem.json`` и вернуть relative-to-root путь (issue #57)."""
     elem_files = sorted(form_dir.glob("*.elem.json"))
     if not elem_files:
@@ -450,7 +452,7 @@ def _scan_form_dir(
     object_name: str,
     container_name: str,
     root: Path,
-) -> Optional["FormEntry"]:
+) -> FormEntry | None:
     """Собрать FormEntry из директории формы конфигурации.
 
     Возвращает ``None``, если обязательный артефакт ``.obj.bsl`` отсутствует.
@@ -635,7 +637,7 @@ def _scan_config(
     root: Path,
     forms: list[FormEntry],
     scan_warnings: list[str],
-    reference_types: Optional[dict[str, str]] = None,
+    reference_types: dict[str, str] | None = None,
 ) -> None:
     """Обход структуры конфигурации (4- и 3-уровневый layout). Логика #9/#13.
 
@@ -786,7 +788,7 @@ def _collect_elem_only_forms(
 
 def scan_forms(
     cf_export_root: Path,
-    save_to: Optional[Path] = None,
+    save_to: Path | None = None,
     mode: Literal["config", "external"] = "config",
     include_elem_only: bool = True,
 ) -> FormScanIndex:

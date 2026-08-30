@@ -64,20 +64,21 @@ UUID-ами внутри паттерн-блока.
 from __future__ import annotations
 
 import enum
-from dataclasses import dataclass, field
-from pathlib import Path
 import json
 import re
+from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 from v8unpack_agent._safe_paths import safe_error_text, safe_path_ref
-from v8unpack_agent.object_decoder import decode_object_attributes
 from v8unpack_agent.chain_data_path import (  # noqa: F401  # реэкспорт для #89
     build_form_attribute_ids,
     build_form_segment_tables,
     decode_chain_data_path,
     enrich_elements_with_chain_paths,
 )
+from v8unpack_agent.object_decoder import decode_object_attributes
+
 
 @dataclass
 class ElemIndexResult:
@@ -311,7 +312,7 @@ def _classify_unindexed_form_impl(form_root: Path) -> UnindexedResult:
     # --- шаг 2: читаем и ищем TabularField ---
     try:
         legacy_data = json.loads(legacy_path.read_text(encoding="utf-8-sig"))
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 — best-effort контракт: сбой превращается в диагностику
         return UnindexedResult(
             reason=UnindexedReason.UNKNOWN,
             detail=f"Не удалось прочитать {legacy_path}: {exc}",
@@ -815,8 +816,10 @@ def decode_element_data_path(
             return f"{object_prefix}.{exact[0]}", []
         context = f", элемент={element_name!r}" if element_name else ""
         return None, [
-            f"decode_element_data_path: неоднозначная привязка{context}, "
-            f"кандидаты={matched!r}"
+            (
+                f"decode_element_data_path: неоднозначная привязка{context}, "
+                f"кандидаты={matched!r}"
+            )
         ]
     return None, []
 
@@ -959,9 +962,12 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
 
     try:
         data = json.loads(elem_path.read_text(encoding="utf-8-sig"))
-    except Exception as exc:
-        return ElemIndexResult(False, [], [f"Не удалось прочитать {safe_path_ref(elem_path)}: "
-                f"{safe_error_text(exc, elem_path)}"])
+    except Exception as exc:  # noqa: BLE001 — best-effort контракт: сбой превращается в диагностику
+        elem_error = (
+            f"Не удалось прочитать {safe_path_ref(elem_path)}: "
+            f"{safe_error_text(exc, elem_path)}"
+        )
+        return ElemIndexResult(False, [], [elem_error])
 
     attribute_map = load_owner_attribute_map(form_root, warnings)
 
@@ -970,9 +976,12 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
             data, warnings, attribute_map,
             suppress_empty_map_warning=_is_common_form(form_root),
         )
-    except Exception as exc:
-        return ElemIndexResult(False, [], [f"Не удалось разобрать {safe_path_ref(elem_path)}: "
-                f"{safe_error_text(exc, elem_path)}"])
+    except Exception as exc:  # noqa: BLE001 — best-effort контракт: сбой превращается в диагностику
+        elem_error = (
+            f"Не удалось разобрать {safe_path_ref(elem_path)}: "
+            f"{safe_error_text(exc, elem_path)}"
+        )
+        return ElemIndexResult(False, [], [elem_error])
 
     if elements:
         try:
@@ -992,19 +1001,18 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
                 )
 
                 # --- Фолбэк #103/#107: TabularField ---
-                if _has_tabular_field(legacy_data):
-                    if attribute_map:
-                        # issue #107: передаём form_root для BSL-fallback
-                        list_elements = extract_legacy_list_form_elements(
-                            legacy_data, {"attr_map": attribute_map}, form_root
+                if _has_tabular_field(legacy_data) and attribute_map:
+                    # issue #107: передаём form_root для BSL-fallback
+                    list_elements = extract_legacy_list_form_elements(
+                        legacy_data, {"attr_map": attribute_map}, form_root
+                    )
+                    if list_elements:
+                        warnings.append(
+                            f"elem.json пуст, колонки TabularField извлечены из "
+                            f"{legacy_json_path.name} (issue #103/#107): "
+                            f"{len(list_elements)} эл."
                         )
-                        if list_elements:
-                            warnings.append(
-                                f"elem.json пуст, колонки TabularField извлечены из "
-                                f"{legacy_json_path.name} (issue #103/#107): "
-                                f"{len(list_elements)} эл."
-                            )
-                            elements = list_elements
+                        elements = list_elements
 
                 # --- Фолбэк #100: InputField / ComboBox ---
                 if not elements:
@@ -1015,7 +1023,7 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
                             f"(legacy form JSON, issue #100): {len(legacy_elements)} эл."
                         )
                         elements = legacy_elements
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001 — best-effort контракт: сбой превращается в диагностику
                 warnings.append(
                     f"Не удалось разобрать legacy form JSON "
                     f"{safe_path_ref(legacy_json_path)}: "
@@ -1036,7 +1044,7 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
             json.dumps({"form": form_root.name, "elements": elements}, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 — best-effort контракт: сбой превращается в диагностику
         warnings.append(f"Не удалось записать {safe_path_ref(index_path)}: "
             f"{safe_error_text(exc, index_path)}")
 
@@ -1146,9 +1154,7 @@ def _managed_structural_data_path(
         return None
 
     column = (
-        element_name[len(owner):]
-        if element_name.startswith(owner)
-        else element_name
+        element_name.removeprefix(owner)
     )
     if not column:
         return None
@@ -1298,7 +1304,7 @@ def _walk_json(value: Any, parent_name: str | None, out: list, source: str) -> N
             out.append((value, parent_name, source))
             if name:
                 current_parent = str(name)
-        for key, child in value.items():
+        for child in value.values():
             if isinstance(child, (dict, list)):
                 _walk_json(child, current_parent, out, source)
     elif isinstance(value, list):
@@ -1317,7 +1323,7 @@ def _first_value(node: dict, keys: tuple[str, ...]) -> Any:
 
 def _detect_parent(node: dict, fallback_parent: str | None) -> str | None:
     for key in ("parent", "Parent", "Родитель", "parent_name", "parentName"):
-        if key in node and node[key]:
+        if node.get(key):
             return str(node[key])
     return fallback_parent
 
@@ -1414,7 +1420,7 @@ def _attach_handlers_from_bsl(form_root: Path, elements: list[dict], warnings: l
         return
     try:
         text = bsl_path.read_text(encoding="utf-8-sig")
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 — best-effort контракт: сбой превращается в диагностику
         warnings.append(f"Не удалось прочитать BSL-модуль {safe_path_ref(bsl_path)}: "
             f"{safe_error_text(exc, bsl_path)}")
         return

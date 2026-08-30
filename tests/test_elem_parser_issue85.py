@@ -22,9 +22,9 @@ from v8unpack_agent.elem_parser import (
     _is_element_record,
     _legacy_attribute_name,
     _merge_source_duplicates,
+    decode_element_data_path,
     decode_legacy_data_path,
     is_legacy_form_data,
-    decode_element_data_path,
     load_owner_attribute_map,
     parse_elem_json,
 )

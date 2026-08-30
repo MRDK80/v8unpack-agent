@@ -34,7 +34,6 @@ import pytest
 from v8unpack_agent.elem_parser import UnindexedReason
 from v8unpack_agent.form_classifier import FormClass, classify_no_widgets_form
 
-
 # ---------------------------------------------------------------------------
 # 1. has_data_widgets=False — двойное подтверждение → SERVICE
 # ---------------------------------------------------------------------------
@@ -253,19 +252,19 @@ class TestPurity:
         assert reason == UnindexedReason.NO_TABULAR_NO_WIDGETS
 
     def test_deterministic_false_widgets(self):
-        args = dict(
-            form_name="ФормаНастройки",
-            reason=UnindexedReason.NO_TABULAR_NO_WIDGETS,
-            has_data_widgets=False,
-        )
+        args = {
+            "form_name": "ФормаНастройки",
+            "reason": UnindexedReason.NO_TABULAR_NO_WIDGETS,
+            "has_data_widgets": False,
+        }
         results = {classify_no_widgets_form(**args) for _ in range(5)}
         assert len(results) == 1
 
     def test_deterministic_true_widgets(self):
-        args = dict(
-            form_name="ФормаНастройки",
-            reason=UnindexedReason.NO_TABULAR_NO_WIDGETS,
-            has_data_widgets=True,
-        )
+        args = {
+            "form_name": "ФормаНастройки",
+            "reason": UnindexedReason.NO_TABULAR_NO_WIDGETS,
+            "has_data_widgets": True,
+        }
         results = {classify_no_widgets_form(**args) for _ in range(5)}
         assert len(results) == 1

@@ -17,8 +17,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from v8unpack_agent.scan_forms import FormEntry, FormScanIndex, scan_forms
-
+from v8unpack_agent.scan_forms import scan_forms
 
 # ---------------------------------------------------------------------------
 # helpers
@@ -282,6 +281,8 @@ def test_json_serialization(tmp_path: Path) -> None:
     assert len(data["forms"]) == 1
     assert data["forms"][0]["container_name"] == "CatalogForm"
     assert data["forms"][0]["form_name"] == "ФормаЭлемента"
+    assert index.total == data["total"]
+    assert len(index.forms) == len(data["forms"])
 
 
 # ---------------------------------------------------------------------------

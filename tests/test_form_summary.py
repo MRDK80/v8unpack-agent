@@ -13,14 +13,13 @@ import json
 import warnings
 from pathlib import Path
 
+from v8unpack_agent.elem_parser import ElemIndexResult
 from v8unpack_agent.form_summary import (
     FormSummary,
     build_form_summary,
     build_form_summary_from_elem_index,
     to_normalized_json,
 )
-from v8unpack_agent.elem_parser import ElemIndexResult
-
 
 # ---------------------------------------------------------------------------
 # Основные тесты (новые имена)
@@ -226,7 +225,9 @@ def test_backward_compat_build_managed_form_summary() -> None:
     """build_managed_form_summary — deprecated alias, выдаёт DeprecationWarning."""
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
-        from v8unpack_agent.managed_form_summary import build_managed_form_summary  # noqa: F401
+        from v8unpack_agent.managed_form_summary import (
+            build_managed_form_summary,  # noqa: F401
+        )
 
     assert any(
         issubclass(w.category, DeprecationWarning)
@@ -251,7 +252,9 @@ def test_backward_compat_build_managed_form_summary_returns_form_summary(
 
     with warnings.catch_warnings(record=True):
         warnings.simplefilter("always")
-        from v8unpack_agent.managed_form_summary import build_managed_form_summary as bms
+        from v8unpack_agent.managed_form_summary import (
+            build_managed_form_summary as bms,
+        )
 
     result = bms(tmp_path)
     assert isinstance(result, FormSummary)

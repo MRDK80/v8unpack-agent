@@ -19,11 +19,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
-from v8unpack_agent.scan_forms import FormScanIndex, scan_forms
 from v8unpack_agent.drift_checker import check_drift
-
+from v8unpack_agent.scan_forms import FormScanIndex, scan_forms
 
 # ---------------------------------------------------------------------------
 # Вспомогательные фабрики
@@ -613,4 +610,8 @@ class TestRegressionSmoke:
         introduced = forbidden_fields & set(serialized.keys())
         assert not introduced, (
             f"Запрещённые поля сырого хэша найдены в FormEntry: {introduced}"
+        )
+        assert entry.elem_sha256 is not None, "elem-only форма без elem_sha256"
+        assert serialized["form_name"] == entry.form_name, (
+            "сериализуется не та запись, которую нашли по elem_json_path"
         )

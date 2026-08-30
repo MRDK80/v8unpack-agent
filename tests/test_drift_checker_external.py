@@ -16,15 +16,11 @@ import json
 import time
 from pathlib import Path
 
-import pytest
-
 from v8unpack_agent.drift_checker import (
-    DriftReport,
-    check_drift,
     _form_key,
+    check_drift,
 )
 from v8unpack_agent.scan_forms import scan_forms
-
 
 # ---------------------------------------------------------------------------
 # Хелперы для построения синтетических external-фикстур

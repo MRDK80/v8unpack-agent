@@ -17,23 +17,21 @@ from __future__ import annotations
 import sys
 from pathlib import Path, PurePosixPath
 
-import pytest
-
 sys.path.insert(0, str(Path(__file__).parent))
 from _managed_fixtures import (
     make_managed_form_elem_json,
-    write_managed_form_elem,
     write_aux_artifacts,
-)
-
-from v8unpack_agent.managed_forms import (
-    DescentArtifacts,
-    ElemFormEntry,
-    discover_elem_forms,
+    write_managed_form_elem,
 )
 
 # Обратная совместимость: старые имена остаются рабочими (deprecated aliases)
-from v8unpack_agent.managed_forms import ManagedFormEntry, discover_managed_forms  # noqa: F401
+from v8unpack_agent.managed_forms import (  # noqa: F401
+    DescentArtifacts,
+    ElemFormEntry,
+    ManagedFormEntry,
+    discover_elem_forms,
+    discover_managed_forms,
+)
 
 # ---------------------------------------------------------------------------
 # Вспомогательные утилиты

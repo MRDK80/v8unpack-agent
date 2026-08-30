@@ -30,3 +30,31 @@ jobs:
 
       - name: Run tests
         run: pytest --tb=short
+
+  lint:
+    name: lint / ruff + mypy / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+
+      # Линтеры блокируют CI с #161: baseline обнулён (ruff 0, mypy 0).
+      # Версии запинены в dev-зависимостях, поэтому обновление линтера —
+      # осознанный шаг с отдельным разбором нового долга.
+      - name: Ruff
+        run: ruff check .
+
+      - name: Mypy
+        run: mypy v8unpack_agent

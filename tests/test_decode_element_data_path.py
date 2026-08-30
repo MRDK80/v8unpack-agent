@@ -15,12 +15,12 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
-from v8unpack_agent.elem_parser import decode_element_data_path, parse_elem_json
+from v8unpack_agent.elem_parser import (
+    ElemIndexResult,
+    decode_element_data_path,
+    parse_elem_json,
+)
 from v8unpack_agent.form_summary import build_form_summary_from_elem_index
-from v8unpack_agent.elem_parser import ElemIndexResult
-
 
 # ---------------------------------------------------------------------------
 # Обезличенный минимальный raw-фрагмент реальной формы

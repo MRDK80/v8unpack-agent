@@ -164,7 +164,7 @@ def aggregate_digest(stats: ExportStats) -> str:
 
 def assign_ranks(uuids) -> dict:
     """Детерминированные публичные ранги: ``sorted(uuid) -> P01..Pnn``."""
-    return {uuid: "P{:02d}".format(i) for i, uuid in enumerate(sorted(uuids), start=1)}
+    return {uuid: f"P{i:02d}" for i, uuid in enumerate(sorted(uuids), start=1)}
 
 
 def compare_reference_only(a: ExportStats, b: ExportStats,
@@ -252,12 +252,12 @@ def compare_report(result: dict) -> str:
     lines = ["# сравнение reference_only между независимыми выгрузками (#164)", ""]
     for stats in (result["a"], result["b"]):
         counts = stats.class_counts()
-        lines.append("== baseline {} ==".format(stats.label))
+        lines.append(f"== baseline {stats.label} ==")
         for key in BASELINE_KEYS:
             if key in stats.baseline:
-                lines.append("{:34}: {}".format(key, stats.baseline[key]))
+                lines.append(f"{key:34}: {stats.baseline[key]}")
         lines.append("классы остатка: " + " ".join(
-            "{}={}/{}".format(cls, counts[cls][0], counts[cls][1])
+            f"{cls}={counts[cls][0]}/{counts[cls][1]}"
             for cls in RESIDUAL_CLASSES
         ))
         lines.append(
@@ -300,7 +300,7 @@ def compare_report(result: dict) -> str:
     )
     tally = Counter(result["verdicts"].values())
     lines.append("вердикты: " + " ".join(
-        "{}={}".format(key, value) for key, value in sorted(tally.items())
+        f"{key}={value}" for key, value in sorted(tally.items())
     ))
     ranks = sorted(result["ranks"].values())
     lines.append("подтверждённые ранги: " + (" ".join(ranks) if ranks else "(нет)"))
@@ -352,7 +352,7 @@ def synthetic_stats(label, reference_only, control=(120, 120, 0), extra=None,
 
 def selftest() -> int:
     """Пять контролей компаратора плюс проверка недетерминированности."""
-    uuids = ["{:08x}-0000-4000-8000-000000000000".format(i) for i in range(1, 6)]
+    uuids = [f"{i:08x}-0000-4000-8000-000000000000" for i in range(1, 6)]
     failures = []
 
     same = {uuids[0]: 100, uuids[1]: 43}

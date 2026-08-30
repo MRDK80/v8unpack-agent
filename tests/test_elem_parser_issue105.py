@@ -37,13 +37,10 @@ import json
 from pathlib import Path
 from uuid import uuid4
 
-import pytest
-
 from v8unpack_agent.elem_parser import (
-    ElemIndexResult,
     _TABULAR_FIELD_UUID,
+    ElemIndexResult,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers — строители минимальных fixture-деревьев
@@ -191,12 +188,11 @@ def _write_catalog_json_with_header(
 # Импортируем то, что ещё НЕ существует → тесты красные
 # ---------------------------------------------------------------------------
 
-from v8unpack_agent.elem_parser import (  # noqa: E402
+from v8unpack_agent.elem_parser import (
     UnindexedReason,
     UnindexedResult,
     classify_unindexed_form,
 )
-
 
 # ===========================================================================
 # Категория C — нет TabularField, нет InputField/ComboBox

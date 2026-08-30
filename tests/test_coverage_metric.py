@@ -15,13 +15,11 @@ import pytest
 
 from v8unpack_agent.coverage_metric import (
     DATA_ELEMENT_TYPES,
-    SERVICE_ELEMENT_TYPES,
     PLATFORM_STANDARD_ATTRIBUTES,
-    CoverageReport,
-    calc_data_path_coverage,
+    SERVICE_ELEMENT_TYPES,
     calc_coverage_from_elem_index,
+    calc_data_path_coverage,
 )
-
 
 # ---------------------------------------------------------------------------
 # Константы
@@ -257,7 +255,6 @@ class TestCalcCoverageFromElemIndex:
         """Mock-объект с нужными атрибутами."""
         class MockResult:
             elem_index_ok = ok
-            pass
         r = MockResult()
         r.elements = elements  # type: ignore[attr-defined]
         return r

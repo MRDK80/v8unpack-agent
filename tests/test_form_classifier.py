@@ -31,16 +31,13 @@ UNKNOWN — только если элементов нет вовсе (спис
 """
 from __future__ import annotations
 
-import pytest
-
 from v8unpack_agent.form_classifier import (
-    FormClass,
-    classify_form_by_name,
-    classify_form_by_bindings,
-    classify_form,
     SERVICE_FORM_NAME_PATTERNS,
+    FormClass,
+    classify_form,
+    classify_form_by_bindings,
+    classify_form_by_name,
 )
-
 
 # ---------------------------------------------------------------------------
 # Константа SERVICE_FORM_NAME_PATTERNS

@@ -9,13 +9,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 from tests._managed_fixtures import (
     make_managed_form_elem_json,
     write_managed_form_elem,
 )
-
 
 # ---------------------------------------------------------------------------
 # make_managed_form_elem_json: структура dict

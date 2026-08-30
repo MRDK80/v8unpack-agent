@@ -35,11 +35,9 @@ import pytest
 from v8unpack_agent.elem_parser import UnindexedReason
 from v8unpack_agent.form_classifier import (
     FormClass,
-    classify_form,
-    classify_form_by_name,
     classify_empty_tree_form,
+    classify_form,
 )
-
 
 # ---------------------------------------------------------------------------
 # Импорт целевой функции (ещё не существует → RED)
@@ -47,7 +45,7 @@ from v8unpack_agent.form_classifier import (
 
 def _import_classify_no_widgets():
     """Отложенный импорт: функция появится только после реализации."""
-    from v8unpack_agent.form_classifier import classify_no_widgets_form  # noqa: PLC0415
+    from v8unpack_agent.form_classifier import classify_no_widgets_form
     return classify_no_widgets_form
 
 
@@ -196,7 +194,10 @@ class TestClassifyNoWidgetsFormPurity:
     def test_deterministic_repeated_calls(self):
         """Повторные вызовы с теми же аргументами дают одинаковый результат."""
         classify_no_widgets_form = _import_classify_no_widgets()
-        args = dict(form_name="ФормаНастройки", reason=UnindexedReason.NO_TABULAR_NO_WIDGETS)
+        args = {
+            "form_name": "ФормаНастройки",
+            "reason": UnindexedReason.NO_TABULAR_NO_WIDGETS,
+        }
         results = {classify_no_widgets_form(**args) for _ in range(5)}
         assert len(results) == 1
 

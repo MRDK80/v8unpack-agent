@@ -23,8 +23,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from v8unpack_agent.scan_forms import FormEntry, FormScanIndex, scan_forms
-
+from v8unpack_agent.scan_forms import scan_forms
 
 # ---------------------------------------------------------------------------
 # helpers
@@ -203,6 +202,8 @@ def test_external_json_roundtrip(tmp_path: Path) -> None:
     data = json.loads(out.read_text(encoding="utf-8"))
     assert data["total"] == 1
     assert data["forms"][0]["form_elem_path"].endswith("Form.elem")
+    assert index.total == data["total"]
+    assert len(index.forms) == len(data["forms"])
 
 
 # ---------------------------------------------------------------------------

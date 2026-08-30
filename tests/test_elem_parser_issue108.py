@@ -21,18 +21,15 @@ import json
 from pathlib import Path
 from uuid import uuid4
 
-import pytest
-
 from v8unpack_agent.elem_parser import (
+    _TABULAR_FIELD_UUID,
     ElemIndexResult,
     UnindexedReason,
     UnindexedResult,
     classify_unindexed_form,
     load_owner_attribute_map,
-    _TABULAR_FIELD_UUID,
 )
 from v8unpack_agent.object_decoder import decode_object_attributes
-
 
 # ---------------------------------------------------------------------------
 # Helpers

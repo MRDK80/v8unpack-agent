@@ -4,11 +4,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 from v8unpack_agent.object_decoder import decode_object_attributes
 from v8unpack_agent.scan_forms import scan_forms
-
 
 NULL_UUID = "00000000-0000-0000-0000-000000000000"
 CATALOG_UUID = "11111111-1111-4111-8111-111111111111"

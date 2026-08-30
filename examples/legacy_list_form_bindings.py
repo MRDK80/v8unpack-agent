@@ -29,8 +29,9 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 from v8unpack_agent.elem_parser import classify_unindexed_form, parse_elem_json
 

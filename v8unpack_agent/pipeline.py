@@ -27,16 +27,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Iterable
 from dataclasses import replace
 from pathlib import Path
-from typing import Callable, Iterable
 
+from v8unpack_agent.elem_parser import ElemIndexResult, parse_elem_json
 from v8unpack_agent.form_artifact import FormArtifact
 from v8unpack_agent.form_paths import form_root
 from v8unpack_agent.forms_index import FormsIndex, FormsIndexEntry
-
 from v8unpack_agent.skd_extractor import SkdResult, extract_skd_queries
-from v8unpack_agent.elem_parser import ElemIndexResult, parse_elem_json
 
 # Функция распаковки одной формы: (bin_path, unpacked_root, form_name) -> артефакт.
 # Конкретную реализацию (через v8unpack) инжектирует вызывающий код — модуль

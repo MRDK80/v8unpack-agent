@@ -13,13 +13,9 @@
 from __future__ import annotations
 
 import json
-import tempfile
 from pathlib import Path
 
-import pytest
-
-from v8unpack_agent.scan_forms import FormEntry, FormScanIndex, scan_forms
-
+from v8unpack_agent.scan_forms import FormScanIndex, scan_forms
 
 # ---------------------------------------------------------------------------
 # Вспомогательные фабрики файловой структуры
@@ -111,6 +107,9 @@ class TestOrdinaryForm:
         # должен указывать именно на *.elem.json внутри каталога формы
         assert entry.elem_json_path.name.endswith(".elem.json")
         assert entry.elem_json_path.parts[0] == "Catalog"
+        resolved = tmp_path / entry.elem_json_path
+        assert resolved.exists(), "относительный путь должен разрешаться в файл"
+        assert resolved.parent == form_dir, "файл должен лежать в каталоге формы"
 
 
 # ---------------------------------------------------------------------------
@@ -228,7 +227,7 @@ class TestMixedIndex:
         idx = scan_forms(tmp_path, include_elem_only=True)
         form_dirs = [e.form_path for e in idx.forms]
         # каждый form_path уникален
-        assert len(form_dirs) == len(set(str(p) for p in form_dirs))
+        assert len(form_dirs) == len({str(p) for p in form_dirs})
 
 
 # ---------------------------------------------------------------------------

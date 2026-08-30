@@ -10,7 +10,6 @@ from v8unpack_agent.common_modules import (
     scan_common_modules,
 )
 
-
 BSL_NAME = "CommonModule.obj.bsl"
 
 

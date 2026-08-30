@@ -75,10 +75,9 @@ OS-нейтральность, кодировка UTF-8.
 """
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 from v8unpack_agent.coverage_metric import DATA_ELEMENT_TYPES
-
 
 # ---------------------------------------------------------------------------
 # Константы
@@ -181,11 +180,12 @@ class FormClass(str):
     через FormClass.OBJECT, FormClass.SERVICE и FormClass.UNKNOWN.
     """
 
-    OBJECT: "FormClass"
-    SERVICE: "FormClass"
-    UNKNOWN: "FormClass"
+    OBJECT: FormClass
+    SERVICE: FormClass
+    UNKNOWN: FormClass
 
-    def __new__(cls, value: str) -> "FormClass":
+    # typing.Self доступен с 3.11, минимум проекта — 3.10 (requires-python)
+    def __new__(cls, value: str) -> FormClass:  # noqa: PYI034
         return super().__new__(cls, value)
 
 
@@ -343,7 +343,7 @@ def classify_no_widgets_form(
     # Импорт здесь для избежания циклической зависимости на уровне модулей.
     # elem_parser импортирует form_classifier, поэтому form_classifier
     # не должен импортировать elem_parser на верхнем уровне.
-    from v8unpack_agent.elem_parser import UnindexedReason  # noqa: PLC0415
+    from v8unpack_agent.elem_parser import UnindexedReason
 
     # Конфликт сигналов: виджеты есть, но reason говорит «нет» — не угадываем.
     if has_data_widgets is True:

@@ -51,10 +51,10 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +101,7 @@ def form_key(
 _form_key = form_key
 
 
-def _sha256_file(path: Path) -> Optional[str]:
+def _sha256_file(path: Path) -> str | None:
     """Вернуть hex-дайджест SHA-256 содержимого файла или None при ошибке."""
     try:
         h = hashlib.sha256()
@@ -140,7 +140,7 @@ class DriftReport:
         return p
 
     @classmethod
-    def load_from(cls, path: Path) -> "DriftReport":
+    def load_from(cls, path: Path) -> DriftReport:
         """Загрузить отчёт из JSON."""
         data = json.loads(Path(path).read_text(encoding="utf-8"))
         # Обратная совместимость: старые отчёты без structure_modified
@@ -166,8 +166,8 @@ def _index_snapshot(
     index_path: Path,
 ) -> tuple[
     dict[str, float],
-    dict[str, Optional[str]],
-    dict[str, Optional[str]],
+    dict[str, str | None],
+    dict[str, str | None],
     set[str],
 ]:
     """Построить структуры из index_path.
@@ -191,8 +191,8 @@ def _index_snapshot(
     - Если ``bsl_path`` отсутствует на диске — mtime = -1.0.
     """
     mtime_map: dict[str, float] = {}
-    hash_map: dict[str, Optional[str]] = {}
-    elem_map: dict[str, Optional[str]] = {}
+    hash_map: dict[str, str | None] = {}
+    elem_map: dict[str, str | None] = {}
     elem_only_keys: set[str] = set()
 
     entries = _load_index_dict(index_path)
@@ -240,7 +240,7 @@ def _index_snapshot(
 def _disk_snapshot(
     cf_export_root: Path,
     mode: Literal["config", "external"] = "config",
-) -> dict[str, tuple[float, Optional[str]]]:
+) -> dict[str, tuple[float, str | None]]:
     """Обойти cf_export_root и вернуть dict[form_key -> (bsl_mtime, bsl_sha256)].
 
     Делегирует обход в ``scan_forms(mode=mode, include_elem_only=False)``.
@@ -295,7 +295,7 @@ def _stale_keys(index_path: Path, elem_only_keys: set[str]) -> list[str]:
 def check_drift(
     cf_export_root: Path,
     index_path: Path,
-    save_to: Optional[Path] = None,
+    save_to: Path | None = None,
     mode: Literal["config", "external"] = "config",
 ) -> DriftReport:
     """Сравнить cf_export_root с сохранённым FormScanIndex.
