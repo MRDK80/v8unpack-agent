@@ -195,52 +195,69 @@ def __getattr__(name: str):
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
+# Публичная поверхность пакета. Порядок — isort-style (требование RUF022):
+# SCREAMING_SNAKE_CASE → CamelCase → snake_case. Порядок не является
+# контрактом: тесты #124/#128/#131/#134 проверяют состав через set()/in,
+# а не последовательность. Ленивые имена разрешаются через PEP 562
+# __getattr__, сортировка не делает импорты eager.
+#
+# Происхождение экспортов (карта сохранена при сортировке):
+#   issue #55                                   — discover_elem_forms
+#                                                 ElemFormEntry
+#   deprecated aliases (обратная совместимость) — discover_managed_forms
+#                                                 ManagedFormEntry
+#   issue #69                                   — FormSummary
+#                                                 build_form_summary
+#                                                 build_form_summary_from_elem_index
+#   issue #124 (form_context, issue #77)        — FormContext
+#                                                 build_form_context
+#                                                 to_llm_prompt_fragment
+#   issue #98                                   — FormClass
+#                                                 classify_form
+#                                                 classify_form_by_name
+#                                                 classify_form_by_bindings
+#                                                 SERVICE_FORM_NAME_PATTERNS
 __all__ = [
-    "form_paths",
-    "form_root",
-    "item_modules",
-    "all_module_paths",
+    "SERVICE_FORM_NAME_PATTERNS",
+    "DriftReport",
+    "ElemFormEntry",
+    "ElemIndexResult",
+    "ErfUnpacker",
     "FormArtifact",
+    "FormClass",
+    "FormContext",
+    "FormEntry",
+    "FormRouter",
+    "FormScanIndex",
+    "FormSummary",
+    "FormUnpacker",
     "FormsIndex",
     "FormsIndexEntry",
-    "is_form_stale",
-    "FormUnpacker",
-    "ErfUnpacker",
+    "ManagedFormEntry",
+    "RouteResult",
+    "SkdBatchResult",
+    "SkdResult",
+    "all_module_paths",
+    "build_form_context",
+    "build_form_summary",
+    "build_form_summary_from_elem_index",
+    "check_drift",
+    "classify_form",
+    "classify_form_by_bindings",
+    "classify_form_by_name",
+    "discover_elem_forms",
     "discover_form_bins",
+    "discover_managed_forms",
+    "extract_all_skd_queries",
+    "extract_skd_queries",
+    "form_paths",
+    "form_root",
+    "is_form_stale",
+    "item_modules",
+    "parse_elem_json",
+    "scan_forms",
+    "to_llm_prompt_fragment",
     "unpack_all_forms",
     "unpack_erf",
     "update_forms_index",
-    "SkdResult",
-    "extract_skd_queries",
-    "ElemIndexResult",
-    "parse_elem_json",
-    "SkdBatchResult",
-    "extract_all_skd_queries",
-    "scan_forms",
-    "FormEntry",
-    "FormScanIndex",
-    "check_drift",
-    "DriftReport",
-    "FormRouter",
-    "RouteResult",
-    # issue #55
-    "discover_elem_forms",
-    "ElemFormEntry",
-    # deprecated aliases (обратная совместимость)
-    "discover_managed_forms",
-    "ManagedFormEntry",
-    # issue #69
-    "FormSummary",
-    "build_form_summary",
-    "build_form_summary_from_elem_index",
-    # issue #124 (form_context, issue #77)
-    "FormContext",
-    "build_form_context",
-    "to_llm_prompt_fragment",
-    # issue #98
-    "FormClass",
-    "classify_form",
-    "classify_form_by_name",
-    "classify_form_by_bindings",
-    "SERVICE_FORM_NAME_PATTERNS",
 ]
