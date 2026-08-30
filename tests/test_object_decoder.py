@@ -570,7 +570,7 @@ def _doc_with_type_node(type_node: list) -> dict:
     ("T", "Null"),
 ])
 def test_production_type_primitive_resolved(tmp_path, code, expected):
-    payload = _doc_with_type_node(['"%s"' % code])
+    payload = _doc_with_type_node([f'"{code}"'])
     result = decode_object_attributes(_write_json(tmp_path, "Document.json", payload))
 
     assert result.ok

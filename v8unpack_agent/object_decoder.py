@@ -161,7 +161,7 @@ def _apply_type_resolver(
             resolved = type_resolver(ref_uuid)
         except Exception as exc:  # noqa: BLE001
             warnings.append(
-                "object_decoder: REF_RESOLVER_FAILED - %s: %s" % (ref_uuid, exc)
+                f"object_decoder: REF_RESOLVER_FAILED - {ref_uuid}: {exc}"
             )
             continue
 
@@ -305,9 +305,9 @@ def _resolve_type_from_descriptor(
                 return _REF_TYPE_PREFIX + ref_uuid
         return None
 
-    context = " rekvizit=%r" % prop_name if prop_name else ""
+    context = f" rekvizit={prop_name!r}" if prop_name else ""
     warnings.append(
-        "object_decoder: TYPE_UNKNOWN - neizvestnyy kod tipa %r%s" % (code, context)
+        f"object_decoder: TYPE_UNKNOWN - neizvestnyy kod tipa {code!r}{context}"
     )
     return None
 
@@ -513,8 +513,7 @@ def _try_decode_prop_entry(entry: Any, warnings: list[str]) -> dict | None:
     if not isinstance(entry, list) or len(entry) < 3:
         if _has_valid_uuid_block(entry):
             warnings.append(
-                "object_decoder: povrezhdyonnyy uzel rekvizita: UUID=%s, len=%d"
-                % (entry[1][2], len(entry))
+                f"object_decoder: povrezhdyonnyy uzel rekvizita: UUID={entry[1][2]}, len={len(entry)}"
             )
         return None
 
@@ -529,8 +528,7 @@ def _try_decode_prop_entry(entry: Any, warnings: list[str]) -> dict | None:
     if not name:
         if uuid:
             warnings.append(
-                "object_decoder: povrezhdyonnyy uzel rekvizita: UUID=%s, imya otsutstvuet"
-                % uuid
+                f"object_decoder: povrezhdyonnyy uzel rekvizita: UUID={uuid}, imya otsutstvuet"
             )
         return None
 
