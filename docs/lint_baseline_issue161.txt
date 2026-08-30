@@ -1,0 +1,29 @@
+58	I001   	[*] unsorted-imports
+36	F401   	[*] unused-import
+33	UP045  	[*] non-pep604-annotation-optional
+10	UP037  	[*] quoted-annotation
+ 8	UP032  	[*] f-string
+ 8	UP035  	[-] deprecated-import
+ 7	BLE001 	[ ] blind-except
+ 7	ISC004 	[ ] implicit-string-concatenation-in-collection-literal
+ 6	RUF059 	[ ] unused-unpacked-variable
+ 6	UP006  	[*] non-pep585-annotation
+ 6	UP031  	[ ] printf-string-formatting
+ 4	F841   	[ ] unused-variable
+ 3	C408   	[ ] unnecessary-collection-call
+ 2	UP007  	[*] non-pep604-annotation-union
+ 1	B017   	[ ] assert-raises-exception
+ 1	C401   	[ ] unnecessary-generator-set
+ 1	EXE001 	[ ] shebang-not-executable
+ 1	F541   	[*] f-string-missing-placeholders
+ 1	FURB188	[*] slice-to-remove-prefix-or-suffix
+ 1	PERF102	[ ] incorrect-dict-iterator
+ 1	PIE790 	[*] unnecessary-placeholder
+ 1	PIE808 	[*] unnecessary-range-start
+ 1	PLW1510	[ ] subprocess-run-without-check
+ 1	PYI034 	[ ] non-self-return-type
+ 1	RUF019 	[*] unnecessary-key-check
+ 1	SIM102 	[ ] collapsible-if
+ 1	SIM114 	[*] if-with-same-arms
+Found 207 errors.
+[*] 166 fixable with the `--fix` option (29 hidden fixes can be enabled with the `--unsafe-fixes` option).
