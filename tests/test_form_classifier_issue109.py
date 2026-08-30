@@ -47,7 +47,7 @@ from v8unpack_agent.form_classifier import (
 
 def _import_classify_no_widgets():
     """Отложенный импорт: функция появится только после реализации."""
-    from v8unpack_agent.form_classifier import classify_no_widgets_form  # noqa: PLC0415
+    from v8unpack_agent.form_classifier import classify_no_widgets_form
     return classify_no_widgets_form
 
 

@@ -343,7 +343,7 @@ def classify_no_widgets_form(
     # Импорт здесь для избежания циклической зависимости на уровне модулей.
     # elem_parser импортирует form_classifier, поэтому form_classifier
     # не должен импортировать elem_parser на верхнем уровне.
-    from v8unpack_agent.elem_parser import UnindexedReason  # noqa: PLC0415
+    from v8unpack_agent.elem_parser import UnindexedReason
 
     # Конфликт сигналов: виджеты есть, но reason говорит «нет» — не угадываем.
     if has_data_widgets is True:

@@ -201,7 +201,7 @@ def calc_data_path_coverage(
     считаются отсутствием привязки.
     """
     # Ленивый импорт внутри функции — избегаем циклический импорт на уровне модуля.
-    from v8unpack_agent.form_classifier import classify_form  # noqa: PLC0415
+    from v8unpack_agent.form_classifier import classify_form
 
     elements = list(elements)
     total = 0
@@ -275,18 +275,19 @@ def calc_coverage_from_elem_index(
       (поведение PR #111).
     - form_name не передан → ``"unknown"`` (обратная совместимость).
     """
-    from v8unpack_agent.form_classifier import (  # noqa: PLC0415
+    # Ленивые импорты: избегаем цикла coverage_metric ↔ form_classifier / elem_parser — #140.
+    from v8unpack_agent.form_classifier import (
         FormClass,
         classify_empty_tree_form,
         classify_no_widgets_form,
     )
-    from v8unpack_agent.elem_parser import (  # noqa: PLC0415
+    from v8unpack_agent.elem_parser import (
         UnindexedReason,
         classify_unindexed_form,
         _has_tabular_field,
     )
-    import json  # noqa: PLC0415
-    from pathlib import Path  # noqa: PLC0415
+    import json
+    from pathlib import Path
 
     elem_index_ok = getattr(result, "elem_index_ok", False)
     elements = getattr(result, "elements", []) or []
@@ -298,7 +299,7 @@ def calc_coverage_from_elem_index(
         if form_root is not None and form_name:
             try:
                 _form_root = Path(form_root)
-                _dummy_result = type("_R", (), {"elem_index_ok": False, "elements": []})()  # noqa: UP012
+                _dummy_result = type("_R", (), {"elem_index_ok": False, "elements": []})()
                 unindexed = classify_unindexed_form(_form_root, _dummy_result)
 
                 if unindexed.reason is UnindexedReason.NO_TABULAR_NO_WIDGETS:
@@ -352,8 +353,9 @@ def _find_legacy_json_name(form_root: object) -> str:
     но возвращает только имя файла (не Path) для безопасного join.
     Если файл не найден — возвращает пустую строку (exists() вернёт False).
     """
-    from pathlib import Path  # noqa: PLC0415
-    from v8unpack_agent.elem_parser import _find_legacy_form_json  # noqa: PLC0415
+    # Локальный импорт: тот же контракт ленивых импортов — #140.
+    from pathlib import Path
+    from v8unpack_agent.elem_parser import _find_legacy_form_json
 
     result = _find_legacy_form_json(Path(form_root))
     return result.name if result is not None else ""

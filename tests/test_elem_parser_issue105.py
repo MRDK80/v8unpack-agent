@@ -191,7 +191,7 @@ def _write_catalog_json_with_header(
 # Импортируем то, что ещё НЕ существует → тесты красные
 # ---------------------------------------------------------------------------
 
-from v8unpack_agent.elem_parser import (  # noqa: E402
+from v8unpack_agent.elem_parser import (
     UnindexedReason,
     UnindexedResult,
     classify_unindexed_form,
