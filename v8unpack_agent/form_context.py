@@ -335,7 +335,7 @@ def _resolve_relations(
     return resolved
 
 
-def _resolve(value: object, root: Path) -> Path | None:
+def _resolve(value: str | Path | None, root: Path) -> Path | None:
     """Привести путь к абсолютному виду относительно ``root``.
 
     ``FormEntry`` содержит и абсолютные (``form_path``, ``bsl_path``), и
@@ -358,7 +358,9 @@ def _read_bsl(bsl_path: Path | None) -> str | None:
     return bsl_path.read_text(encoding="utf-8")
 
 
-def _form_dir(form_entry: Any, elem_json_path: object, root: Path) -> Path | None:
+def _form_dir(
+    form_entry: Any, elem_json_path: str | Path | None, root: Path
+) -> Path | None:
     """Каталог формы для ``build_form_summary``.
 
     Приоритет у ``elem_json_path``: это подтверждённый реестром источник
@@ -429,7 +431,7 @@ def _root_bases(root: Path) -> tuple[str, ...]:
     return tuple(sorted(bases, key=len, reverse=True))
 
 
-def _relative_str(value: object, root: Path) -> str | None:
+def _relative_str(value: str | Path | None, root: Path) -> str | None:
     """Обезличенный относительный posix-строка или ``None``.
 
     Абсолютные локальные пути в публичные метаданные не попадают.

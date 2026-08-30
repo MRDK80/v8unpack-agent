@@ -60,6 +60,10 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ---------------------------------------------------------------------------
 # Константы типов элементов
@@ -242,7 +246,7 @@ def calc_data_path_coverage(
 def calc_coverage_from_elem_index(
     result: object,
     form_name: str | None = None,
-    form_root: object = None,
+    form_root: str | Path | None = None,
 ) -> CoverageReport:
     """Удобная обёртка: принимает ``ElemIndexResult`` из elem_parser.
 
@@ -346,7 +350,7 @@ def calc_coverage_from_elem_index(
     return calc_data_path_coverage(elements, form_name=form_name)
 
 
-def _find_legacy_json_name(form_root: object) -> str:
+def _find_legacy_json_name(form_root: Path) -> str:
     """Найти имя legacy JSON-файла в директории формы (best-effort).
 
     Дублирует логику ``_find_legacy_form_json`` из elem_parser,
@@ -354,9 +358,7 @@ def _find_legacy_json_name(form_root: object) -> str:
     Если файл не найден — возвращает пустую строку (exists() вернёт False).
     """
     # Локальный импорт: тот же контракт ленивых импортов — #140.
-    from pathlib import Path
-
     from v8unpack_agent.elem_parser import _find_legacy_form_json
 
-    result = _find_legacy_form_json(Path(form_root))
+    result = _find_legacy_form_json(form_root)
     return result.name if result is not None else ""
