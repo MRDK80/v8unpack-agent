@@ -611,3 +611,7 @@ class TestRegressionSmoke:
         assert not introduced, (
             f"Запрещённые поля сырого хэша найдены в FormEntry: {introduced}"
         )
+        assert entry.elem_sha256 is not None, "elem-only форма без elem_sha256"
+        assert serialized["form_name"] == entry.form_name, (
+            "сериализуется не та запись, которую нашли по elem_json_path"
+        )

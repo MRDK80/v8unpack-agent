@@ -202,6 +202,8 @@ def test_external_json_roundtrip(tmp_path: Path) -> None:
     data = json.loads(out.read_text(encoding="utf-8"))
     assert data["total"] == 1
     assert data["forms"][0]["form_elem_path"].endswith("Form.elem")
+    assert index.total == data["total"]
+    assert len(index.forms) == len(data["forms"])
 
 
 # ---------------------------------------------------------------------------

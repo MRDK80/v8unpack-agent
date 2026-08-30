@@ -67,7 +67,7 @@ def test_cli_with_save_creates_index(cf_export_root: Path) -> None:
     index_path = cf_export_root / "forms_scan_index.json"
     assert not index_path.exists(), "файл не должен существовать до запуска"
 
-    rc, stdout, stderr = _run_cli(str(cf_export_root), "--save")
+    rc, _stdout, stderr = _run_cli(str(cf_export_root), "--save")
 
     assert rc == 0, f"ожидали returncode=0, получили {rc}\nstderr: {stderr}"
     assert index_path.exists(), "forms_scan_index.json должен быть создан"
@@ -87,6 +87,9 @@ def test_cli_without_save_no_file(cf_export_root: Path) -> None:
 
     assert rc == 0, f"ожидали returncode=0, получили {rc}\nstderr: {stderr}"
     assert not index_path.exists(), "forms_scan_index.json не должен создаваться без --save"
+    assert "Индекс сохранён:" not in stdout, (
+        f"без --save не должно быть сообщения о сохранении, получили: {stdout!r}"
+    )
 
 
 def test_cli_prints_form_count(cf_export_root: Path) -> None:
@@ -116,6 +119,10 @@ def test_cli_no_args_returns_error() -> None:
     assert rc != 0, (
         "ожидали ненулевой returncode при отсутствии обязательного аргумента"
     )
+    assert stderr.strip(), "argparse должен объяснить ошибку в stderr"
+    assert not stdout.strip(), (
+        f"stdout при ошибке должен быть пуст, получили: {stdout!r}"
+    )
 
 
 def test_cli_nonexistent_root(tmp_path: Path) -> None:
@@ -135,7 +142,7 @@ def test_cli_no_runtime_warning(cf_export_root: Path) -> None:
 
     issue #31: двойной импорт через __init__ устранён через __main__.py.
     """
-    rc, stdout, stderr = _run_cli(str(cf_export_root))
+    rc, _stdout, stderr = _run_cli(str(cf_export_root))
 
     assert rc == 0, f"returncode={rc}\nstderr: {stderr}"
     assert "RuntimeWarning" not in stderr, (
@@ -148,7 +155,7 @@ def test_cli_artifact_name_is_forms_scan_index(cf_export_root: Path) -> None:
     correct_name = cf_export_root / "forms_scan_index.json"
     wrong_name = cf_export_root / "forms_index.json"
 
-    rc, stdout, stderr = _run_cli(str(cf_export_root), "--save")
+    rc, _stdout, stderr = _run_cli(str(cf_export_root), "--save")
 
     assert rc == 0, f"returncode={rc}\nstderr: {stderr}"
     assert correct_name.exists(), "forms_scan_index.json должен существовать"

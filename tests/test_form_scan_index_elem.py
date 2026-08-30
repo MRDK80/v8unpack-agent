@@ -107,6 +107,9 @@ class TestOrdinaryForm:
         # должен указывать именно на *.elem.json внутри каталога формы
         assert entry.elem_json_path.name.endswith(".elem.json")
         assert entry.elem_json_path.parts[0] == "Catalog"
+        resolved = tmp_path / entry.elem_json_path
+        assert resolved.exists(), "относительный путь должен разрешаться в файл"
+        assert resolved.parent == form_dir, "файл должен лежать в каталоге формы"
 
 
 # ---------------------------------------------------------------------------
