@@ -7,7 +7,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from v8unpack_agent.scan_forms import FormEntry, FormScanIndex
@@ -15,9 +15,9 @@ if TYPE_CHECKING:
 
 @dataclass
 class RouteResult:
-    matched: List[FormEntry]
+    matched: list[FormEntry]
     confidence: float          # 0.0–1.0
-    warnings: List[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
 
 class FormRouter:
@@ -26,7 +26,7 @@ class FormRouter:
     def __init__(self, index_path: Path) -> None:
         self._index_path = index_path
         self._index: FormScanIndex = self._load_index(index_path)
-        self._entries: List[FormEntry] = self._index.forms
+        self._entries: list[FormEntry] = self._index.forms
 
     # ------------------------------------------------------------------
     # Public API
@@ -72,7 +72,7 @@ class FormRouter:
         return RouteResult(matched=[], confidence=0.0,
                            warnings=[f"No match for query: {q!r}"])
 
-    def reindex(self, changed_forms: List[FormEntry]) -> None:
+    def reindex(self, changed_forms: list[FormEntry]) -> None:
         """Обновить записи без полного пересканирования.
 
         Составной ключ: (object_type, object_name, container_name, form_name).
@@ -146,11 +146,11 @@ class FormRouter:
         )
 
     @staticmethod
-    def _load(index_path: Path) -> List[FormEntry]:
+    def _load(index_path: Path) -> list[FormEntry]:
         return FormRouter._load_index(index_path).forms
 
     @staticmethod
-    def _save(index_path: Path, entries: List[FormEntry]) -> None:
+    def _save(index_path: Path, entries: list[FormEntry]) -> None:
         """Сохранить список записей как FormScanIndex без метаданных (устар.)."""
 
         from v8unpack_agent.scan_forms import FormScanIndex

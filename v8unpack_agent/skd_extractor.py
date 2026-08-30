@@ -18,7 +18,6 @@ import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Union
 
 # ---------------------------------------------------------------------------
 # Константы
@@ -76,7 +75,7 @@ class SkdBatchResult:
     warnings: list[str] = field(default_factory=list)
 
 
-def extract_all_skd_queries(unpacked_root: Union[str, Path]) -> SkdBatchResult:
+def extract_all_skd_queries(unpacked_root: str | Path) -> SkdBatchResult:
     unpacked_root = Path(unpacked_root)
     warnings: list[str] = []
     results: list[SkdResult] = []
@@ -120,7 +119,7 @@ def _guess_report_root(template_path: Path) -> Path:
     return template_path.parent
 
 
-def extract_skd_queries(unpacked_root: Union[str, Path]) -> SkdResult:
+def extract_skd_queries(unpacked_root: str | Path) -> SkdResult:
     """Извлечь запросы СКД из распакованного .erf.
 
     Parameters
