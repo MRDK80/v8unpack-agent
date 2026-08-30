@@ -19,11 +19,11 @@ sys
 *.csv
 
 # одноразовые скрипты уборки линта (#161)
-/apply_commit_b*.py
+/apply_commit_*.py
 /baseline_scan_forms_issue161*.py
 /verify_lazy_surface_issue161*.py
 
 # одноразовые скрипты уборки линта (#161)
-/apply_commit_b*.py
+/apply_commit_*.py
 /baseline_scan_forms_issue161*.py
 /verify_lazy_surface_issue161*.py
