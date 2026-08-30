@@ -140,7 +140,7 @@ def _rel_depth(root: Path, form_path: Path) -> int:
 def _levels_up(form_path: Path, candidate: Path) -> int | None:
     target = candidate.resolve().parent
     current = form_path.resolve()
-    for depth in range(0, 6):
+    for depth in range(6):
         if current == target:
             return depth
         if current.parent == current:

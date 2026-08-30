@@ -255,7 +255,6 @@ class TestCalcCoverageFromElemIndex:
         """Mock-объект с нужными атрибутами."""
         class MockResult:
             elem_index_ok = ok
-            pass
         r = MockResult()
         r.elements = elements  # type: ignore[attr-defined]
         return r

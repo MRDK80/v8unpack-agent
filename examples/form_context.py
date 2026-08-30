@@ -152,7 +152,7 @@ def demo_materialization(root: Path) -> None:
 
     print("Форма с BSL и elem")
     print("-" * 72)
-    print(f"  было в карточке    : пути и хэши, без содержимого")
+    print("  было в карточке    : пути и хэши, без содержимого")
     print(f"  строк кода          : {len(context.bsl_text.splitlines())}")
     print(f"  реквизитов        : {len(context.summary.attributes)}")
     print(f"  элементов         : {len(context.summary.elements)}")

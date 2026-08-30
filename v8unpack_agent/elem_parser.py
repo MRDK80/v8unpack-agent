@@ -1147,9 +1147,7 @@ def _managed_structural_data_path(
         return None
 
     column = (
-        element_name[len(owner):]
-        if element_name.startswith(owner)
-        else element_name
+        element_name.removeprefix(owner)
     )
     if not column:
         return None
@@ -1318,7 +1316,7 @@ def _first_value(node: dict, keys: tuple[str, ...]) -> Any:
 
 def _detect_parent(node: dict, fallback_parent: str | None) -> str | None:
     for key in ("parent", "Parent", "Родитель", "parent_name", "parentName"):
-        if key in node and node[key]:
+        if node.get(key):
             return str(node[key])
     return fallback_parent
 
