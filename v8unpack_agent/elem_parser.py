@@ -816,8 +816,10 @@ def decode_element_data_path(
             return f"{object_prefix}.{exact[0]}", []
         context = f", элемент={element_name!r}" if element_name else ""
         return None, [
-            f"decode_element_data_path: неоднозначная привязка{context}, "
-            f"кандидаты={matched!r}"
+            (
+                f"decode_element_data_path: неоднозначная привязка{context}, "
+                f"кандидаты={matched!r}"
+            )
         ]
     return None, []
 
@@ -961,8 +963,11 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
     try:
         data = json.loads(elem_path.read_text(encoding="utf-8-sig"))
     except Exception as exc:
-        return ElemIndexResult(False, [], [f"Не удалось прочитать {safe_path_ref(elem_path)}: "
-                f"{safe_error_text(exc, elem_path)}"])
+        elem_error = (
+            f"Не удалось прочитать {safe_path_ref(elem_path)}: "
+            f"{safe_error_text(exc, elem_path)}"
+        )
+        return ElemIndexResult(False, [], [elem_error])
 
     attribute_map = load_owner_attribute_map(form_root, warnings)
 
@@ -972,8 +977,11 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
             suppress_empty_map_warning=_is_common_form(form_root),
         )
     except Exception as exc:
-        return ElemIndexResult(False, [], [f"Не удалось разобрать {safe_path_ref(elem_path)}: "
-                f"{safe_error_text(exc, elem_path)}"])
+        elem_error = (
+            f"Не удалось разобрать {safe_path_ref(elem_path)}: "
+            f"{safe_error_text(exc, elem_path)}"
+        )
+        return ElemIndexResult(False, [], [elem_error])
 
     if elements:
         try:

@@ -362,13 +362,17 @@ def decode_chain_data_path(
         ident, table_uuid = _segment_parts(segment)
         if ident is None:
             return None, [
-                f"decode_chain_data_path: сегмент {position} без числового id"
-                f"{_context(element_name)}"
+                (
+                    f"decode_chain_data_path: сегмент {position} без числового id"
+                    f"{_context(element_name)}"
+                )
             ]
         if table_uuid is not None and table_uuid not in known_uuids:
             return None, [
-                f"decode_chain_data_path: таблица сегмента {position} не объявлена "
-                f"в определениях формы{_context(element_name)}"
+                (
+                    f"decode_chain_data_path: таблица сегмента {position} не объявлена "
+                    f"в определениях формы{_context(element_name)}"
+                )
             ]
 
         table = segment_tables.get(_address_key(segments[:position]))
@@ -378,16 +382,20 @@ def decode_chain_data_path(
             name = form_attribute_ids.get((parent, ident))
         if name is None:
             return None, [
-                f"decode_chain_data_path: сегмент {position} (id={ident}) не найден "
-                f"ни в таблицах определений, ни среди реквизитов формы"
-                f"{_context(element_name)}"
+                (
+                    f"decode_chain_data_path: сегмент {position} (id={ident}) не найден "
+                    f"ни в таблицах определений, ни среди реквизитов формы"
+                    f"{_context(element_name)}"
+                )
             ]
         names.append(name)
 
     if element_name is not None and "".join(names) != element_name:
         return None, [
-            f"decode_chain_data_path: склейка сегментов не совпала с именем "
-            f"элемента{_context(element_name)}"
+            (
+                f"decode_chain_data_path: склейка сегментов не совпала с именем "
+                f"элемента{_context(element_name)}"
+            )
         ]
 
     return ".".join(names), []
