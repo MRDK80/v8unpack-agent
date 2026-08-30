@@ -1,0 +1,20 @@
+{
+  "filled": {
+    "bsl_sha256": 58,
+    "elem_json_path": 76,
+    "elem_sha256": 76,
+    "form_elem_path": 0
+  },
+  "form_keys_sha256": "58f760c813bda0f1f62073f48cb20e9fd7e34135a5b9a3192224ae9d47fb435c",
+  "forms": 76,
+  "mode": "config",
+  "reference_types_count": 78,
+  "reference_types_sha256": "371a8429247d35d84b242ff3711665d75c353f4129af7706f9d489f6ddfc72ac",
+  "scan_warning_codes": {
+    "FORM_MODULE_MISSING": 18
+  },
+  "scan_warnings_total": 18,
+  "schema": "scan_forms_baseline/2",
+  "total": 76,
+  "unique_form_keys": 76
+}
