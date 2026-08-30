@@ -46,7 +46,6 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 # ---------------------------------------------------------------------------
 # Распознавание descent-суффикса
@@ -61,7 +60,7 @@ _DESCENT_RE = re.compile(r"^\d{1,3}(?:\.\d{1,3}){0,3}$")
 _FORM_BSL_MARKER = ".obj."
 
 
-def _extract_descent(candidate: str) -> Optional[str]:
+def _extract_descent(candidate: str) -> str | None:
     """Вернуть числовой descent-суффикс либо ``None``.
 
     Литерал ``id`` намеренно НЕ распознаётся как descent.
@@ -87,8 +86,8 @@ class DescentArtifacts:
     """
 
     descent: str
-    aux_json_path: Optional[Path] = None
-    bsl_path: Optional[Path] = None
+    aux_json_path: Path | None = None
+    bsl_path: Path | None = None
 
 
 @dataclass
@@ -102,13 +101,13 @@ class ElemFormEntry:
     elem_json_path: Path
     """Путь к ``*.elem.json`` — основной артефакт формы. Относительный."""
 
-    meta_json_path: Optional[Path] = None
+    meta_json_path: Path | None = None
     """``<stem>.json`` — метаданные формы (или ``None``). Относительный."""
 
-    id_json_path: Optional[Path] = None
+    id_json_path: Path | None = None
     """``<stem>.id.json`` — UUID формы (или ``None``). Относительный."""
 
-    bsl_path: Optional[Path] = None
+    bsl_path: Path | None = None
     """``<stem>.obj.bsl`` — BSL-модуль формы (или ``None``). Относительный.
 
     На распаковках с ``--descent`` тут первый непустой BSL из
@@ -125,7 +124,7 @@ class ElemFormEntry:
     # ---- deprecated-совместимость с прежним API ----
 
     @property
-    def aux_json_path(self) -> Optional[Path]:
+    def aux_json_path(self) -> Path | None:
         """DEPRECATED: используйте :attr:`meta_json_path`.
 
         Возвращает метаданные формы (``<stem>.json``), а при их отсутствии —
@@ -200,7 +199,7 @@ discover_managed_forms = discover_elem_forms
 # ---------------------------------------------------------------------------
 
 
-def _bsl_descent(name: str) -> Optional[str]:
+def _bsl_descent(name: str) -> str | None:
     """descent из ``<stem>.obj.<descent>.bsl`` (числовой) либо ``None``."""
     core = name[: -len(".bsl")]
     idx = core.rfind(_FORM_BSL_MARKER)
@@ -210,7 +209,7 @@ def _bsl_descent(name: str) -> Optional[str]:
     return _extract_descent(candidate)
 
 
-def _json_descent(name: str) -> Optional[str]:
+def _json_descent(name: str) -> str | None:
     """descent из ``<stem>.<descent>.json`` (числовой) либо ``None``.
 
     Составной descent (``3.0.75.100``) содержит точки, поэтому берётся
@@ -230,7 +229,7 @@ def _json_descent(name: str) -> Optional[str]:
 def _scan_elem_form_dir(
     form_dir: Path,
     root: Path,
-) -> Optional[ElemFormEntry]:
+) -> ElemFormEntry | None:
     """Собрать :class:`ElemFormEntry` из одного каталога формы.
 
     Возвращает ``None``, если нет ``*.elem.json``. Классификация файлов
@@ -257,11 +256,11 @@ def _scan_elem_form_dir(
             f"using {elem_path.name!r}"
         )
 
-    meta_json: Optional[Path] = None
-    id_json: Optional[Path] = None
-    plain_bsl: Optional[Path] = None
+    meta_json: Path | None = None
+    id_json: Path | None = None
+    plain_bsl: Path | None = None
     # descent -> {"json": Path|None, "bsl": Path|None}
-    by_descent: dict[str, dict[str, Optional[Path]]] = {}
+    by_descent: dict[str, dict[str, Path | None]] = {}
 
     for path in sorted(form_dir.iterdir()):
         if not path.is_file():
