@@ -20,6 +20,10 @@ dependencies = [
 test = [
     "pytest>=7",
 ]
+dev = [
+    "mypy==2.3.1",
+    "ruff==0.16.4",
+]
 
 [project.urls]
 Homepage = "https://github.com/MRDK80/v8unpack-agent"
@@ -29,3 +33,25 @@ packages = ["v8unpack_agent"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
+
+[tool.ruff]
+target-version = "py310"
+
+# Набор правил не сужается: используется дефолт запиненного ruff 0.16.4.
+# Явный select отключил бы уже обнаруженный долг (ISC004, PLW1510) без разбора,
+# что противоречит scope #161.
+
+[tool.ruff.lint.per-file-ignores]
+# Deprecated-шим с PEP 562: имена выдаются модульным __getattr__, а __dir__()
+# возвращает sorted(__all__). Статически ruff этого не видит; удалять имена
+# из __all__ нельзя — сломается контракт устаревших алиасов.
+"v8unpack_agent/managed_form_summary.py" = ["F822"]
+# Примеры запускаются как `python examples/...`; shebang декоративен.
+# Единая смена git-mode каталога в scope #161 не входит.
+"examples/**/*.py" = ["EXE001"]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["v8unpack_agent"]
+show_error_codes = true
+warn_unused_configs = true
