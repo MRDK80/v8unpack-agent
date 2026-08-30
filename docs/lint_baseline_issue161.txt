@@ -1,5 +1,4 @@
-58	I001   	[*] unsorted-imports
-36	F401   	[*] unused-import
+35	F401   	[*] unused-import
 33	UP045  	[*] non-pep604-annotation-optional
 10	UP037  	[*] quoted-annotation
  8	UP032  	[*] f-string
@@ -14,7 +13,6 @@
  2	UP007  	[*] non-pep604-annotation-union
  1	B017   	[ ] assert-raises-exception
  1	C401   	[ ] unnecessary-generator-set
- 1	EXE001 	[ ] shebang-not-executable
  1	F541   	[*] f-string-missing-placeholders
  1	FURB188	[*] slice-to-remove-prefix-or-suffix
  1	PERF102	[ ] incorrect-dict-iterator
@@ -25,5 +23,5 @@
  1	RUF019 	[*] unnecessary-key-check
  1	SIM102 	[ ] collapsible-if
  1	SIM114 	[*] if-with-same-arms
-Found 207 errors.
-[*] 166 fixable with the `--fix` option (29 hidden fixes can be enabled with the `--unsafe-fixes` option).
+Found 147 errors.
+[*] 107 fixable with the `--fix` option (29 hidden fixes can be enabled with the `--unsafe-fixes` option).
