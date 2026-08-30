@@ -16,10 +16,9 @@ from __future__ import annotations
 
 import json
 import re
-import warnings as _warnings_module
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterator, Union
+from typing import Union
 
 # ---------------------------------------------------------------------------
 # Константы

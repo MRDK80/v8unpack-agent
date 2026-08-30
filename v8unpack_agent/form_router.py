@@ -81,7 +81,7 @@ class FormRouter:
         """
 
         from v8unpack_agent.drift_checker import form_key
-        from v8unpack_agent.scan_forms import FormEntry, FormScanIndex
+        from v8unpack_agent.scan_forms import FormScanIndex
 
         lookup = {
             form_key(e.object_type, e.object_name, e.container_name, e.form_name): e
@@ -153,7 +153,7 @@ class FormRouter:
     def _save(index_path: Path, entries: List[FormEntry]) -> None:
         """Сохранить список записей как FormScanIndex без метаданных (устар.)."""
 
-        from v8unpack_agent.scan_forms import FormEntry, FormScanIndex
+        from v8unpack_agent.scan_forms import FormScanIndex
 
         idx = FormScanIndex(forms=entries, total=len(entries))
         idx.save(index_path)
