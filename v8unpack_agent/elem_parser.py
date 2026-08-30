@@ -1001,19 +1001,18 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
                 )
 
                 # --- Фолбэк #103/#107: TabularField ---
-                if _has_tabular_field(legacy_data):
-                    if attribute_map:
-                        # issue #107: передаём form_root для BSL-fallback
-                        list_elements = extract_legacy_list_form_elements(
-                            legacy_data, {"attr_map": attribute_map}, form_root
+                if _has_tabular_field(legacy_data) and attribute_map:
+                    # issue #107: передаём form_root для BSL-fallback
+                    list_elements = extract_legacy_list_form_elements(
+                        legacy_data, {"attr_map": attribute_map}, form_root
+                    )
+                    if list_elements:
+                        warnings.append(
+                            f"elem.json пуст, колонки TabularField извлечены из "
+                            f"{legacy_json_path.name} (issue #103/#107): "
+                            f"{len(list_elements)} эл."
                         )
-                        if list_elements:
-                            warnings.append(
-                                f"elem.json пуст, колонки TabularField извлечены из "
-                                f"{legacy_json_path.name} (issue #103/#107): "
-                                f"{len(list_elements)} эл."
-                            )
-                            elements = list_elements
+                        elements = list_elements
 
                 # --- Фолбэк #100: InputField / ComboBox ---
                 if not elements:
