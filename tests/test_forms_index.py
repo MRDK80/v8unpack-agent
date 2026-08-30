@@ -1,4 +1,3 @@
-from pathlib import Path
 
 from v8unpack_agent import FormsIndex, FormsIndexEntry, is_form_stale
 

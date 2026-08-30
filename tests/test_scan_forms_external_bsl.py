@@ -12,7 +12,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
 
 from v8unpack_agent.scan_forms import scan_forms
 

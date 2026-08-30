@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from v8unpack_agent.drift_checker import check_drift
-from v8unpack_agent.form_router import FormRouter, RouteResult
+from v8unpack_agent.form_router import FormRouter
 from v8unpack_agent.scan_forms import FormEntry, FormScanIndex
 
 

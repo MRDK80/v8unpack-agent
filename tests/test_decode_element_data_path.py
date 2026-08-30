@@ -15,7 +15,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
 
 from v8unpack_agent.elem_parser import (
     ElemIndexResult,

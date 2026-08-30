@@ -13,12 +13,10 @@
 from __future__ import annotations
 
 import json
-import tempfile
 from pathlib import Path
 
-import pytest
 
-from v8unpack_agent.scan_forms import FormEntry, FormScanIndex, scan_forms
+from v8unpack_agent.scan_forms import FormScanIndex, scan_forms
 
 # ---------------------------------------------------------------------------
 # Вспомогательные фабрики файловой структуры

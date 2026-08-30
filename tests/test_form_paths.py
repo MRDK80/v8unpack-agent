@@ -1,4 +1,3 @@
-from pathlib import Path
 
 from v8unpack_agent import all_module_paths, form_paths, item_modules
 

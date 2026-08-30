@@ -37,7 +37,6 @@ from v8unpack_agent.form_classifier import (
     FormClass,
     classify_empty_tree_form,
     classify_form,
-    classify_form_by_name,
 )
 
 # ---------------------------------------------------------------------------

@@ -23,7 +23,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from v8unpack_agent.scan_forms import FormEntry, FormScanIndex, scan_forms
+from v8unpack_agent.scan_forms import scan_forms
 
 # ---------------------------------------------------------------------------
 # helpers
