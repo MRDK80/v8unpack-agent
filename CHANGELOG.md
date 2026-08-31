@@ -5,6 +5,10 @@
 
 ## [Unreleased]
 
+- tests: три issue-scoped модуля переименованы по конвенции `_issueNNN`
+  (`test_discover_managed_forms_issue55.py`, `test_form_summary_issue69.py`,
+  `test_form_classifier_issue98.py`), конвенция зафиксирована в `CONTRIBUTING.md`,
+  в докстринг `form_classifier.py` добавлена ссылка на задачу #98 — #188.
 - CI: добавлены pinned `ruff` 0.16.4 и `mypy` 2.3.1, конфигурация линтеров в `pyproject.toml`
   и отдельный lint job в режиме наблюдения — #161.
 <!-- issue-180-followup -->
