@@ -2,7 +2,7 @@
 
 Модуль исторически назывался managed_form_summary; после issue #69 публичные
 символы живут в v8unpack_agent.form_summary. Обратная совместимость (старые
-имена + DeprecationWarning) проверяется отдельно в tests/test_form_summary.py.
+имена + DeprecationWarning) проверяется отдельно в tests/test_form_summary_issue69.py.
 """
 from __future__ import annotations
 
