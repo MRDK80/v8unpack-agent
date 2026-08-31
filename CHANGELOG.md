@@ -374,6 +374,27 @@
   реквизиты, ждут #88); `Catalog/Контрагенты`: 45/45 = 100.0% (issue #90, PR #97).
 
 ### Changed
+- **`form_context.build_form_context()` / `catalog_resolver.object_json_path()`** —
+  `form_entry: Any` заменён структурными протоколами: приватный
+  `_FormEntryProtocol` в `form_context` (9 read-only полей: `form_name`,
+  `container_name`, `object_type`, `object_name`, `form_path`, `bsl_path`,
+  `bsl_sha256`, `elem_sha256`, `warnings`) и `_FormEntryLike` в
+  `catalog_resolver` (единственное поле `form_path`). Обязательные поля
+  читаются напрямую — 11 обращений `getattr` убрано, опечатка в имени поля
+  стала ошибкой `mypy` вместо молчаливого default. Толерантный
+  `getattr(form_entry, "elem_json_path", None)` сохранён: старые индексы без
+  этого поля — задокументированный контракт #57, а не долг.
+  `@runtime_checkable` и runtime-`isinstance` не вводятся, `scan_forms` в
+  рантайме не импортируется, ненужный `TYPE_CHECKING`-импорт `FormEntry` в
+  `catalog_resolver` удалён. Публичный API, имена и порядок параметров, формат
+  `FormContext` и шесть ключей `metadata` не изменились; ленивая поверхность
+  прежняя — `__all__` 42, `dir()` 25, 5 eager-модулей, 4/4 ленивых групп.
+  Добавлен `tests/test_form_entry_protocol_issue191.py` — 11 тестов: реальный
+  `FormEntry`, структурный test double без наследования, запись без
+  `container_name` как ошибка, legacy-запись без `elem_json_path`, контракт
+  #172 (`object_name == ""`), отсутствие BSL и пустой BSL, неизменность
+  подписи и отсутствие runtime-импорта `scan_forms`. Полный `pytest`
+  953 → 964 passed (issue #191, refs #161, #140, #147, #172).
 
 - docs(object_decoder): зафиксирована граница raw-header input / normalized
   output, добавлен contract-test отказа от normalized passthrough — #160.

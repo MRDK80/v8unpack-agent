@@ -56,7 +56,7 @@ import json
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
 from v8unpack_agent.catalog_resolver import object_json_path, resolve_data_path
 from v8unpack_agent.form_summary import (
@@ -85,6 +85,44 @@ NO_OBJECT_PLACEHOLDER = "(реквизиты объекта не найдены)
 #: тип неизвестен и значение остаётся ``Ref#<uuid>``. Алиас приватный: в
 #: ``object_decoder`` тип задан inline, второй публичный контракт не вводится.
 _TypeResolver = Callable[[str], str | None]
+
+
+class _FormEntryProtocol(Protocol):
+    """Структурный контракт записи реестра форм (см. #191).
+
+    Описывает только те поля, которые действительно читает этот модуль.
+    Наследование не требуется: ``scan_forms.FormEntry`` и структурно
+    совместимые test doubles подходят автоматически. Протокол проверяется
+    только статически — runtime-валидации и импорта ``scan_forms`` здесь
+    нет, поэтому контракт ленивых импортов (#140) не нарушается.
+    """
+
+    @property
+    def bsl_path(self) -> Path: ...
+
+    @property
+    def bsl_sha256(self) -> str | None: ...
+
+    @property
+    def container_name(self) -> str: ...
+
+    @property
+    def elem_sha256(self) -> str | None: ...
+
+    @property
+    def form_name(self) -> str: ...
+
+    @property
+    def form_path(self) -> Path: ...
+
+    @property
+    def object_name(self) -> str: ...
+
+    @property
+    def object_type(self) -> str: ...
+
+    @property
+    def warnings(self) -> list[str]: ...
 
 
 @dataclass(frozen=True)
@@ -131,7 +169,7 @@ class FormContext:
 
 
 def build_form_context(
-    form_entry: Any,
+    form_entry: _FormEntryProtocol,
     unpacked_root: Path,
     *,
     type_resolver: _TypeResolver | None = None,
@@ -158,9 +196,10 @@ def build_form_context(
     """
     root = Path(unpacked_root)
 
-    bsl_path = _resolve(getattr(form_entry, "bsl_path", None), root)
+    bsl_path = _resolve(form_entry.bsl_path, root)
     bsl_text = _read_bsl(bsl_path)
 
+    # Старые индексы форм могут не содержать это поле: толерантный доступ — часть контракта, а не долг.
     elem_json_path = getattr(form_entry, "elem_json_path", None)
     form_dir = _form_dir(form_entry, elem_json_path, root)
     summary = _build_summary(form_dir, root)
@@ -171,23 +210,23 @@ def build_form_context(
     resolved_relations = _resolve_relations(summary, object_json)
 
     metadata: dict[str, Any] = {
-        "form_path": _relative_str(getattr(form_entry, "form_path", None), root),
+        "form_path": _relative_str(form_entry.form_path, root),
         "elem_json_path": _relative_str(elem_json_path, root),
-        "bsl_sha256": getattr(form_entry, "bsl_sha256", None),
-        "elem_sha256": getattr(form_entry, "elem_sha256", None),
+        "bsl_sha256": form_entry.bsl_sha256,
+        "elem_sha256": form_entry.elem_sha256,
         "has_bsl": bsl_text is not None,
         "warnings": [
             _strip_root(str(item), root)
-            for item in (getattr(form_entry, "warnings", []) or [])
+            for item in (form_entry.warnings or [])
         ]
         + [_strip_root(item, root) for item in object_warnings],
     }
 
     return FormContext(
-        form_name=str(getattr(form_entry, "form_name", "") or ""),
-        container_name=str(getattr(form_entry, "container_name", "") or ""),
-        object_type=str(getattr(form_entry, "object_type", "") or ""),
-        object_name=str(getattr(form_entry, "object_name", "") or ""),
+        form_name=str(form_entry.form_name or ""),
+        container_name=str(form_entry.container_name or ""),
+        object_type=str(form_entry.object_type or ""),
+        object_name=str(form_entry.object_name or ""),
         bsl_text=bsl_text,
         summary=summary,
         metadata=metadata,
@@ -257,7 +296,7 @@ def _object_attributes_to_json(
 
 
 def _build_object_attributes(
-    form_entry: Any,
+    form_entry: _FormEntryProtocol,
     root: Path,
     *,
     type_resolver: _TypeResolver | None = None,
@@ -278,7 +317,7 @@ def _build_object_attributes(
         # issue #172: отличаем «владельца нет по layout» от «файл не найден».
         # Читаем form_entry: в FormContext object_name нормализуется через
         # `or ""`, и None там уже не отличим от пустой строки.
-        if getattr(form_entry, "object_name", None) == "":
+        if form_entry.object_name == "":
             warning = "object_context: объект-владелец отсутствует по layout"
         else:
             warning = "object_context: файл объекта метаданных не найден"
@@ -359,7 +398,7 @@ def _read_bsl(bsl_path: Path | None) -> str | None:
 
 
 def _form_dir(
-    form_entry: Any, elem_json_path: str | Path | None, root: Path
+    form_entry: _FormEntryProtocol, elem_json_path: str | Path | None, root: Path
 ) -> Path | None:
     """Каталог формы для ``build_form_summary``.
 
@@ -370,7 +409,7 @@ def _form_dir(
     elem_abs = _resolve(elem_json_path, root)
     if elem_abs is not None:
         return elem_abs.parent
-    return _resolve(getattr(form_entry, "form_path", None), root)
+    return _resolve(form_entry.form_path, root)
 
 
 def _build_summary(form_dir: Path | None, root: Path) -> FormSummary:

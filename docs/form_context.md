@@ -328,3 +328,25 @@ print(len(to_llm_prompt_fragment(context, max_chars=500)) <= 500)  # True
 
 Публичный формат `FormContext`, ключ `metadata["warnings"]` и возвращаемый
 tuple приватного хелпера не изменились.
+
+## Типизация `form_entry` (issue #191)
+--------------------
+
+`build_form_context()` принимает любую запись, структурно совместимую с приватным
+протоколом `_FormEntryProtocol` из `form_context`. Наследование от
+`scan_forms.FormEntry` не требуется: подходит и сам `FormEntry`, и test double.
+
+Обязательные поля читаются напрямую: `form_name`, `container_name`, `object_type`,
+`object_name`, `form_path`, `bsl_path`, `bsl_sha256`, `elem_sha256`, `warnings`.
+Опечатка в имени поля теперь ошибка типизации, а не молчаливый default.
+
+`elem_json_path` остаётся на толерантном `getattr`: старые индексы без этого поля —
+поддерживаемый контракт (#57), а не долг.
+
+Протокол проверяется только статически. Runtime-валидации и `isinstance` нет,
+`@runtime_checkable` не используется, `scan_forms` в рантайме не импортируется —
+контракт ленивых импортов (#140) сохранён. Та же схема применена к
+`catalog_resolver.object_json_path()`, где параметр типизирован протоколом
+`_FormEntryLike` с единственным полем `form_path`.
+
+Проверки: `tests/test_form_entry_protocol_issue191.py`.

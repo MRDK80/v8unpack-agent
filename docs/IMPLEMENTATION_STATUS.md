@@ -61,6 +61,13 @@
 - `object_json_path(form_entry)` — определяет путь к JSON объекта по
   `form_entry.form_path` (2 уровня вверх); для layout без уровня `ObjectName`
   (`object_name == ""`) возвращает `None` без подъёма к корню выгрузки (#172).
+- `object_json_path()` типизирована структурным протоколом `_FormEntryLike`
+  (единственное поле `form_path`), а `build_form_context()` — приватным
+  `_FormEntryProtocol` в `form_context`: `form_entry: Any` устранён,
+  обязательные поля читаются напрямую, толерантный `getattr` остался только у
+  `elem_json_path` для старых индексов (#57). Протокол проверяется только
+  статически: runtime-валидации нет, `scan_forms` в рантайме не импортируется,
+  ленивая поверхность не изменилась (#191, refs #161).
 - После #84 `resolved=True` достижим на реальных выгрузках: читаемые
   `Properties` и `TabularSections` поступают из `object_decoder`.
 - После #88 в `value_type` приходит читаемое имя ссылочного типа

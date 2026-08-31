@@ -29,12 +29,9 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any, Protocol
 
 from v8unpack_agent.object_decoder import decode_object_attributes
-
-if TYPE_CHECKING:
-    from v8unpack_agent.scan_forms import FormEntry
 
 __all__ = [
     "ResolvedBinding",
@@ -174,7 +171,20 @@ def resolve_data_path(
         return _unresolved
 
 
-def object_json_path(form_entry: FormEntry) -> Path | None:
+class _FormEntryLike(Protocol):
+    """Минимальный структурный контракт записи формы (см. #191).
+
+    ``object_json_path`` читает только эти поля, поэтому номинальная
+    привязка к ``scan_forms.FormEntry`` не нужна: подходит и сам
+    ``FormEntry``, и структурно совместимый test double. Проверка
+    только статическая, runtime-валидации нет.
+    """
+
+    @property
+    def form_path(self) -> Path: ...
+
+
+def object_json_path(form_entry: _FormEntryLike) -> Path | None:
     """Найти JSON-файл объекта по ``FormEntry``.
 
     Поднимается на 2 уровня вверх от ``form_entry.form_path``
