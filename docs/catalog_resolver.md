@@ -41,8 +41,14 @@ def resolve_data_path(data_path: str, object_json: Path) -> ResolvedBinding:
 ### `object_json_path`
 
 ```python
-def object_json_path(form_entry: FormEntry) -> Path | None:
+def object_json_path(form_entry: _FormEntryLike) -> Path | None:
 ```
+
+Параметр типизирован структурным протоколом `_FormEntryLike` (#191): достаточно
+объекта с полем `form_path`, наследование от `scan_forms.FormEntry` не требуется.
+Протокол проверяется только статически, runtime-валидации записи нет, поэтому
+`catalog_resolver` не импортирует `scan_forms` (контракт ленивых импортов #140).
+
 
 `object_json_path()` возвращает `None`, если в `FormEntry` отсутствует уровень
 `ObjectName` (`object_name == ""`). В этом layout объекта-владельца нет;
