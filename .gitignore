@@ -27,3 +27,6 @@ sys
 /apply_commit_*.py
 /baseline_scan_forms_issue161*.py
 /verify_lazy_surface_issue161*.py
+
+# Packaging artifacts (issue #194)
+build/
