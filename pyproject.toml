@@ -24,6 +24,11 @@ dev = [
     "ruff==0.16.4",
 ]
 
+[project.scripts]
+# Production entry point (#198). Альтернативный вызов без установки пакета:
+# python -m v8unpack_agent.cli
+v8unpack-agent-run = "v8unpack_agent.cli:main"
+
 [project.urls]
 Homepage = "https://github.com/MRDK80/v8unpack-agent"
 
