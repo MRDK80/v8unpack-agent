@@ -354,13 +354,24 @@ def test_safe_message_is_single_line_and_bounded() -> None:
 
 
 def test_error_type_is_machine_code() -> None:
-    """Имя класса исключения превращается в машинный код."""
+    """Имя класса исключения превращается в машинный код.
+
+    Граница слов вставляется только после строчной буквы или цифры,
+    поэтому акроним в начале имени остаётся слитным: ``OSError``
+    даёт ``oserror``. Для отчёта важна стабильность и соответствие
+    машинному формату, а не читаемость акронимов.
+    """
     assert runner._error_type(ValueError("x")) == "value_error"
-    assert runner._error_type(OSError("x")) == "os_error"
-    assert re.fullmatch(
-        MACHINE_CODE_PATTERN,
-        runner._error_type(NotADirectoryError("x")),
-    )
+    assert runner._error_type(RuntimeError("x")) == "runtime_error"
+    assert runner._error_type(OSError("x")) == "oserror"
+
+    for error in (
+        OSError("x"),
+        NotADirectoryError("x"),
+        FileNotFoundError("x"),
+        UnicodeDecodeError("utf-8", b"", 0, 1, "invalid"),
+    ):
+        assert re.fullmatch(MACHINE_CODE_PATTERN, runner._error_type(error))
 
 
 def test_cli_success_writes_report(tmp_path: Path) -> None:
