@@ -115,8 +115,8 @@ class ObjectRunResult:
         if self.message is not None:
             _validate_safe_text(self.message, "message")
 
-    def to_dict(self) -> dict[str, object]:
-        result: dict[str, object] = {
+    def to_dict(self) -> dict[str, str]:
+        result: dict[str, str] = {
             "object": self.object,
             "object_kind": self.object_kind.value,
             "status": self.status.value,
