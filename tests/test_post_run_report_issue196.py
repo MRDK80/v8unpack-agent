@@ -1,7 +1,6 @@
 """Контракт post-run report для issue #196."""
 
 import json
-from enum import Enum
 
 import pytest
 
@@ -16,6 +15,7 @@ from v8unpack_agent.run_report import (
     RunSummary,
     common_module_status,
     decode_error_reason_code,
+    scan_warning_reason_code,
     skd_status,
     unindexed_reason_code,
     write_post_run_report,
@@ -76,6 +76,36 @@ def test_degraded_result_requires_stage_and_reason(status):
             object_kind=RunObjectKind.FORM,
             status=status,
         )
+
+
+def test_partial_and_failed_serialize_required_details():
+    report = _report(
+        ObjectRunResult(
+            object="Document/Example/Form/Partial",
+            object_kind=RunObjectKind.FORM,
+            status=RunObjectStatus.PARTIAL,
+            stage="elem_parse",
+            reason_code="invalid_elem_json",
+            message="Часть данных формы недоступна",
+        ),
+        ObjectRunResult(
+            object="Document/Example/Form/Failed",
+            object_kind=RunObjectKind.FORM,
+            status=RunObjectStatus.FAILED,
+            stage="context",
+            reason_code="unsupported_structure",
+            message="Результат объекта не сформирован",
+        ),
+    )
+
+    payload = report.to_dict()
+
+    assert report.summary.partial == 1
+    assert report.summary.failed == 1
+    assert {item["status"] for item in payload["objects"]} == {
+        "partial",
+        "failed",
+    }
 
 
 def test_complete_rejects_degradation_details():
@@ -151,6 +181,22 @@ def test_report_rejects_absolute_path_and_traceback():
         )
 
 
+@pytest.mark.parametrize(
+    "message",
+    [
+        "Ошибка чтения /private/example.json",
+        "Ошибка чтения C:/private/example.json",
+    ],
+)
+def test_fatal_error_rejects_embedded_absolute_path(message):
+    with pytest.raises(RunReportValidationError, match="absolute path"):
+        RunFatalError(
+            reason_code="pipeline_error",
+            error_type="runtime_error",
+            message=message,
+        )
+
+
 def test_writer_round_trips_utf8(tmp_path):
     target = tmp_path / "post-run.json"
     report = _report(_complete("Документ/Пример/Форма/Основная"))
@@ -183,13 +229,24 @@ def test_writer_requires_existing_parent(tmp_path):
         write_post_run_report(_report(_complete()), target)
 
 
-class _SyntheticReason(str, Enum):
-    VALUE = "existing_reason"
-
-
 def test_existing_enum_values_are_reused():
-    assert unindexed_reason_code(_SyntheticReason.VALUE) == "existing_reason"
-    assert decode_error_reason_code(_SyntheticReason.VALUE) == "existing_reason"
+    from v8unpack_agent.elem_parser import UnindexedReason
+    from v8unpack_agent.object_decoder import DecodeError
+
+    unindexed_reason = next(iter(UnindexedReason))
+    decode_error = next(iter(DecodeError))
+
+    assert unindexed_reason_code(unindexed_reason) == unindexed_reason.value
+    assert decode_error_reason_code(decode_error) == decode_error.value
+
+
+def test_scan_warning_mapping_delegates_to_canonical_parser(monkeypatch):
+    monkeypatch.setattr(
+        "v8unpack_agent.scan_forms.scan_warning_code",
+        lambda warning: "synthetic_warning",
+    )
+
+    assert scan_warning_reason_code("synthetic warning") == "synthetic_warning"
 
 
 @pytest.mark.parametrize(

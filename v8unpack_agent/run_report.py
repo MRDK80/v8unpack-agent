@@ -18,7 +18,8 @@ if TYPE_CHECKING:
     from v8unpack_agent.object_decoder import DecodeError
 
 _MACHINE_CODE_RE = re.compile(r"^[a-z][a-z0-9_]*$")
-_WINDOWS_DRIVE_RE = re.compile(r"(?:^|\s)[A-Za-z]:[\\/]")
+_POSIX_ABSOLUTE_PATH_RE = re.compile(r"(?:^|\s)/\S+")
+_WINDOWS_DRIVE_RE = re.compile(r"(?<![A-Za-z0-9_])[A-Za-z]:[\\/]")
 _TRACEBACK_MARKERS = ("Traceback (most recent call last)", "File \"")
 
 
@@ -61,7 +62,11 @@ def _validate_safe_text(value: str, field_name: str) -> None:
         raise RunReportValidationError(f"{field_name} contains traceback data")
     if PurePosixPath(value).is_absolute() or PureWindowsPath(value).is_absolute():
         raise RunReportValidationError(f"{field_name} contains an absolute path")
-    if _WINDOWS_DRIVE_RE.search(value) or "\\\\" in value:
+    if (
+        _POSIX_ABSOLUTE_PATH_RE.search(value)
+        or _WINDOWS_DRIVE_RE.search(value)
+        or "\\\\" in value
+    ):
         raise RunReportValidationError(f"{field_name} contains an absolute path")
 
 
