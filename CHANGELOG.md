@@ -3,6 +3,30 @@
 Все значимые изменения фиксируются здесь.
 Формат следует [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/).
 
+## Production runner и CLI (#198)
+
+### Добавлено
+
+- `v8unpack_agent/runner.py`: `RunOptions`, `RunOutcome`, `run_pipeline()`.
+  Чистая библиотека без записи файлов и без завершения процесса.
+- `v8unpack_agent/cli.py`: `main(argv) -> int`, обязательный
+  `--report-path`, явная политика exit code `0/2/3/4/5/6`.
+- `[project.scripts]`: console script `v8unpack-agent-run`.
+- `docs/runner.md`: стадии обработки, таксономия причин, exit codes.
+- `tests/test_production_runner_issue198.py`: 26 сценариев, включая
+  degraded, managed fatal, отказ записи и двойную ошибку.
+
+### Особенности реализации
+
+- `build_form_context()` используется как единственная композитная
+  обработка формы; повторный вызов декодирования атрибутов исключён.
+- Коды предупреждений сканера нормализуются на стороне runner с
+  whitelist-проверкой и fallback-кодом `scan_warning_unclassified`.
+- Идентификатор формы берётся из `FormContext.metadata['form_path']`,
+  поэтому абсолютные пути в отчёт не попадают.
+- Сообщения об ошибках сводятся к одной строке; при отказе валидации
+  результат записывается без сообщения.
+
 ## [Unreleased]
 
 - tests: три issue-scoped модуля переименованы по конвенции `_issueNNN`
