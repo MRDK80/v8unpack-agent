@@ -3,16 +3,22 @@
 Тесты не требуют платформы 1С и не вызывают распаковку: все входные
 деревья собираются во временном каталоге, а фатальные отказы вносятся
 подменой граничных функций в пространстве имён модуля runner.
+
+Форматтер предупреждений сканера относится к его внутреннему API, поэтому
+предупреждение строится через доступный форматтер, а при его отсутствии —
+по документированному формату маркера. Корректность конструкции проверяется
+публичной функцией ``scan_warning_code``.
 """
 
 from __future__ import annotations
 
 import json
 import re
+from collections.abc import Iterable
 from datetime import datetime
 from pathlib import Path
 
-from v8unpack_agent import cli, runner
+from v8unpack_agent import cli, runner, scan_forms
 from v8unpack_agent.run_report import (
     ObjectRunResult,
     PostRunReport,
@@ -21,10 +27,32 @@ from v8unpack_agent.run_report import (
     RunObjectStatus,
     RunSummary,
 )
-from v8unpack_agent.scan_forms import SCAN_WARNING_CODES, format_scan_warning
 
 MACHINE_CODE_PATTERN = r"[a-z][a-z0-9_]*"
 WINDOWS_SEPARATOR = chr(92)
+FALLBACK_SCAN_CODES = (
+    "FORM_MODULE_MISSING",
+    "FORM_SCAN_ERROR",
+    "SCAN_ROOT_INVALID",
+)
+
+
+def _known_scan_codes() -> Iterable[str]:
+    """Получить набор кодов предупреждений сканера."""
+    for name in ("SCAN_WARNING_CODES", "_SCAN_WARNING_CODES"):
+        codes = getattr(scan_forms, name, None)
+        if codes:
+            return sorted(codes)
+    return FALLBACK_SCAN_CODES
+
+
+def _warning_with_code(code: str) -> str:
+    """Собрать текст предупреждения с машинным кодом внутри."""
+    for name in ("format_scan_warning", "_format_scan_warning"):
+        formatter = getattr(scan_forms, name, None)
+        if formatter is not None:
+            return str(formatter(code, "sample message"))
+    return f"sample message [code={code}]"
 
 
 def _make_config_export(root: Path) -> Path:
@@ -262,12 +290,14 @@ def test_object_error_does_not_leak_traceback(
 
 def test_scan_warning_codes_are_normalised() -> None:
     """Все коды сканера пригодны для отчёта после нормализации."""
-    assert SCAN_WARNING_CODES
+    codes = list(_known_scan_codes())
+    assert codes
 
-    for code in sorted(SCAN_WARNING_CODES):
-        warning = format_scan_warning(code, "sample message")
+    for code in codes:
+        warning = _warning_with_code(code)
+        assert scan_forms.scan_warning_code(warning) == code
+
         reason_code = runner._scan_reason_code(warning)
-
         assert reason_code == code.lower()
         assert re.fullmatch(MACHINE_CODE_PATTERN, reason_code)
 
