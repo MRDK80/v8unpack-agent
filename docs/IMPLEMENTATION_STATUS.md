@@ -440,3 +440,24 @@
 | #150 | `not applicable for C`: `Form.bin` не найден |
 
 Отчёт: `docs/research/third_configuration_validation.md`.
+
+## Production runner и CLI (#198)
+
+| Компонент | Состояние |
+| --- | --- |
+| `runner.run_pipeline()` | готово; исключений пайплайна не бросает |
+| `cli.main(argv)` | готово; владеет exit code, не вызывает `sys.exit` |
+| `[project.scripts]` | зарегистрирован `v8unpack-agent-run` |
+| `docs/runner.md` | готово |
+| Тесты | `tests/test_production_runner_issue198.py`, 26 сценариев |
+
+Границы задачи: распаковка не входит в scope, на вход подаётся уже
+распакованная выгрузка. Модель и writer отчёта остаются за #196 и не
+изменялись.
+
+Классификация формы детерминирована: исключение `build_form_context` даёт
+`failed`/`build_context`, непостроенный elem-индекс — `partial`/`parse_elem`,
+непустые предупреждения сканера — `partial`/`scan`, иначе `complete`.
+
+Пропуск группы объектов через `--skip-common-modules` или `--skip-skd` не
+создаёт результатов со статусом `excluded`: обнаружение не выполняется.
