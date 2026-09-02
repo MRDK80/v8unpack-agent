@@ -1,5 +1,6 @@
 """Контракт post-run report для issue #196."""
 
+import importlib
 import json
 
 import pytest
@@ -241,9 +242,11 @@ def test_existing_enum_values_are_reused():
 
 
 def test_scan_warning_mapping_delegates_to_canonical_parser(monkeypatch):
+    scan_forms_module = importlib.import_module("v8unpack_agent.scan_forms")
     monkeypatch.setattr(
-        "v8unpack_agent.scan_forms.scan_warning_code",
-        lambda warning: "synthetic_warning",
+        scan_forms_module,
+        "scan_warning_code",
+        lambda _: "synthetic_warning",
     )
 
     assert scan_warning_reason_code("synthetic warning") == "synthetic_warning"
