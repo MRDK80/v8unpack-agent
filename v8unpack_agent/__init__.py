@@ -33,24 +33,54 @@ pre-step индексации.
 - :func:`~v8unpack_agent.form_classifier.classify_form_by_bindings` (issue #98)
 """
 
-from v8unpack_agent.form_classifier import (
-    SERVICE_FORM_NAME_PATTERNS,
-    FormClass,
-    classify_form,
-    classify_form_by_bindings,
-    classify_form_by_name,
-)
 from v8unpack_agent.form_paths import (
     all_module_paths,
     form_paths,
     form_root,
     item_modules,
 )
-from v8unpack_agent.form_router import FormRouter, RouteResult
 
 
 def __getattr__(name: str):
     """Lazy-load selected exports to keep `python -m v8unpack_agent.scan_forms` clean."""
+    if name in {
+        "SERVICE_FORM_NAME_PATTERNS",
+        "FormClass",
+        "classify_form",
+        "classify_form_by_bindings",
+        "classify_form_by_name",
+    }:
+        # Ленивая группа form_classifier (issue #140, часть A). Вместе с ней
+        # перестаёт загружаться транзитивный coverage_metric: его тянет
+        # form_classifier ради DATA_ELEMENT_TYPES.
+        from v8unpack_agent.form_classifier import (
+            SERVICE_FORM_NAME_PATTERNS,
+            FormClass,
+            classify_form,
+            classify_form_by_bindings,
+            classify_form_by_name,
+        )
+
+        values = {
+            "SERVICE_FORM_NAME_PATTERNS": SERVICE_FORM_NAME_PATTERNS,
+            "FormClass": FormClass,
+            "classify_form": classify_form,
+            "classify_form_by_bindings": classify_form_by_bindings,
+            "classify_form_by_name": classify_form_by_name,
+        }
+        globals().update(values)
+        return values[name]
+    if name in {"FormRouter", "RouteResult"}:
+        # Ленивая группа form_router (issue #140, часть B). Публичные имена
+        # FormRouter и RouteResult остаются в __all__ и доступны как раньше.
+        from v8unpack_agent.form_router import FormRouter, RouteResult
+
+        values = {
+            "FormRouter": FormRouter,
+            "RouteResult": RouteResult,
+        }
+        globals().update(values)
+        return values[name]
     if name in {"FormsIndex", "FormsIndexEntry", "is_form_stale"}:
         from v8unpack_agent.forms_index import (
             FormsIndex,
