@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import re
 import subprocess
 import sys
-import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -11,29 +11,33 @@ RELEASE_WORKFLOW = ROOT / ".github" / "workflows" / "release.yml"
 VALIDATOR = ROOT / "scripts" / "validate_release.py"
 
 
-def _project() -> dict[str, object]:
-    with PYPROJECT.open("rb") as stream:
-        return tomllib.load(stream)["project"]
+def _pyproject_text() -> str:
+    return PYPROJECT.read_text(encoding="utf-8")
+
+
+def _quoted_value(text: str, key: str) -> str:
+    match = re.search(
+        rf'(?m)^{re.escape(key)}\s*=\s*"([^"]+)"\s*$',
+        text,
+    )
+    assert match is not None, key
+    return match.group(1)
 
 
 def test_packaging_metadata_contract() -> None:
-    project = _project()
-    assert project["name"] == "v8unpack-agent"
-    assert project["version"] == "0.1.0"
-    assert project["requires-python"] == ">=3.10"
-    assert project["scripts"] == {
-        "v8unpack-agent-run": "v8unpack_agent.cli:main"
-    }
+    text = _pyproject_text()
+    assert _quoted_value(text, "name") == "v8unpack-agent"
+    assert _quoted_value(text, "version") == "0.1.0"
+    assert _quoted_value(text, "requires-python") == ">=3.10"
+    assert (
+        _quoted_value(text, "v8unpack-agent-run")
+        == "v8unpack_agent.cli:main"
+    )
 
 
 def test_vcs_dependency_is_an_explicit_release_blocker() -> None:
-    dependencies = _project()["dependencies"]
-    assert isinstance(dependencies, list)
-    has_direct = any(
-        isinstance(item, str)
-        and (" @ " in item or "git+" in item.casefold() or "file:" in item.casefold())
-        for item in dependencies
-    )
+    text = _pyproject_text()
+    has_direct = "git+" in text or " @ " in text or "file:" in text.casefold()
 
     completed = subprocess.run(
         [sys.executable, str(VALIDATOR)],
