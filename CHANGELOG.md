@@ -29,6 +29,15 @@
 
 ## [Unreleased]
 
+- `docs/research/missing_object_attributes_issue163.md`: заполнены все 17
+  полей `<заполнить>` доказанными агрегатами исследования: подпись агрегата
+  `788bd54b0fe931d0`, `levels_up` 2, distinct candidates 1, контроли A/B/C
+  без провалов, `FormClass` 158 / 0 / 4, `no_owner_object` 162 (100.0%),
+  `path_convention_miss` и `insufficient_evidence` 0 (0.0%), случаев #160 и
+  #151 — 0, исторический `pytest` 857 passed. Добавлен датированный addendum
+  с указанием источника каждого числа. Исторические выводы и решение
+  `keep as is` не пересматриваются, production-код и метрики coverage не
+  затронуты (issue #183).
 - `v8unpack_agent.__init__` больше не импортирует `form_classifier` и
   `form_router` на уровне модуля: `SERVICE_FORM_NAME_PATTERNS`, `FormClass`,
   `classify_form`, `classify_form_by_name`, `classify_form_by_bindings`,
