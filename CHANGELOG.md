@@ -29,6 +29,8 @@
 
 ## [Unreleased]
 
+- chore: локальные виртуальные окружения (`.venv/`, `.venv-*/`, `venv/`, `env/`)
+  исключены из git; production-код и публичный API не менялись (issue #223)
 - `docs/research/missing_object_attributes_issue163.md`: заполнены все 17
   полей `<заполнить>` доказанными агрегатами исследования: подпись агрегата
   `788bd54b0fe931d0`, `levels_up` 2, distinct candidates 1, контроли A/B/C
