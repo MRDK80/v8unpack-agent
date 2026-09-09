@@ -51,7 +51,15 @@ def is_form_stale(idx_entry: FormsIndexEntry | dict) -> bool:
     """Форма устарела, если исходный ``Form.bin`` новее его распаковки.
 
     Принимает как :class:`FormsIndexEntry`, так и словарь (запись из JSON).
+
+    Запись обязана существовать. ``None`` — например, результат
+    :meth:`FormsIndex.get` по отсутствующему ключу — в контракт не входит:
+    отсутствие записи не равнозначно устаревшей распаковке (issue #230).
+
+    :raises ValueError: если запись реестра не передана.
     """
+    if idx_entry is None:
+        raise ValueError("forms index entry is required")
     if isinstance(idx_entry, FormsIndexEntry):
         return idx_entry.bin_mtime > idx_entry.unpacked_mtime
     return float(idx_entry["bin_mtime"]) > float(idx_entry["unpacked_mtime"])
