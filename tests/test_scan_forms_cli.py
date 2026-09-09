@@ -127,15 +127,13 @@ def test_cli_no_args_returns_error() -> None:
 
 
 def test_cli_nonexistent_root(tmp_path: Path) -> None:
-    """Несуществующий root → returncode == 0 (best-effort), 0 форм, нет краша."""
+    """Несуществующий root завершается явной ошибкой входных данных."""
     nonexistent = tmp_path / "no_such_dir"
 
-    rc, stdout, stderr = _run_cli(str(nonexistent))
+    rc, _stdout, stderr = _run_cli(str(nonexistent))
 
-    assert rc == 0, f"returncode={rc}\nstderr: {stderr}"
-    assert "Найдено форм: 0" in stdout, (
-        f"должно быть 'Найдено форм: 0', получили: {stdout!r}"
-    )
+    assert rc == 2
+    assert "cf_export_root must be an existing directory" in stderr
 
 
 def test_cli_no_runtime_warning(cf_export_root: Path) -> None:

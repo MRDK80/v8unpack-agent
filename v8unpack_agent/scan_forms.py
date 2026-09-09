@@ -797,8 +797,15 @@ def scan_forms(
     В режиме ``config`` тот же обход попутно строит индекс ссылочных типов
     (``FormScanIndex.reference_types``, issue #88). Ошибка отдельной формы не
     останавливает обход (best-effort).
+
+    ``cf_export_root`` должен существовать и быть директорией; иначе
+    выбрасывается ``NotADirectoryError``.
     """
     root = Path(cf_export_root)
+    if not root.is_dir():
+        raise NotADirectoryError(
+            f"cf_export_root must be an existing directory: {root}"
+        )
     forms: list[FormEntry] = []
     scan_warnings: list[str] = []
     reference_types: dict[str, str] = {}
@@ -884,12 +891,15 @@ def main() -> None:
     args = parser.parse_args()
 
     save_to = args.root / "forms_scan_index.json" if args.save else None
-    index = scan_forms(
-        args.root,
-        save_to=save_to,
-        mode=args.mode,
-        include_elem_only=not args.no_elem_only,
-    )
+    try:
+        index = scan_forms(
+            args.root,
+            save_to=save_to,
+            mode=args.mode,
+            include_elem_only=not args.no_elem_only,
+        )
+    except NotADirectoryError as exc:
+        parser.error(str(exc))
 
     print(f"Найдено форм: {len(index.forms)}")
     if save_to is not None:
