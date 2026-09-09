@@ -170,3 +170,21 @@ FormArtifact]`, вызов `unpacker(bin_path, unpacked_root, name)` в `unpack_
 Утверждение о влиянии обычных форм на долю `unknown` остаётся недоказанным и требует
 отдельного прогона индексации по распакованному `.cf`. Implementation issue по
 обнаружению создаётся отдельно; upstream-обращение не требуется.
+
+## Addendum: состояние после #226 и #228
+
+Зафиксировано 9 сентября 2026. Раздел описывает текущий контракт и не
+отменяет наблюдений, сделанных на момент исследования #150.
+
+- Историческое наблюдение выше — «документация упоминает функцию
+  `index_cf()`, которой в `pipeline` нет» — было верным на момент #150.
+  В рамках #228 ложное упоминание убрано из `README.md` и module docstring
+  `v8unpack_agent/pipeline.py`; текст исследования сохранён как evidence.
+- Исторический контракт `FormUnpacker = Callable[[Path, Path, str],
+  FormArtifact]` после #226 заменён каноническим
+  `FormUnpacker = Callable[[FormBinSource, Path], FormArtifact]`.
+  Старый callable сохранён как `LegacyFormUnpacker` и подключается через
+  `adapt_legacy_unpacker()`.
+- `discover_form_bins()` остаётся legacy shim и не является каноническим
+  API обнаружения. Канон — `discover_form_sources()`, идентичность —
+  `form_id`, реестр — `FormsIndex` schema version 2 с ключом `form_id`.
