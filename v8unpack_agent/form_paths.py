@@ -15,12 +15,22 @@
 """
 from __future__ import annotations
 
-from pathlib import Path
+from pathlib import Path, PurePosixPath
+
+from v8unpack_agent.form_identity import validate_form_id
 
 
 def form_root(unpacked_root: Path, form_name: str) -> Path:
-    """Каталог распакованной формы ``<unpacked_root>/Form/<имя>/``."""
-    return unpacked_root / "Form" / form_name
+    """Каталог распакованной формы ``/Form/<ключ>/``.
+
+    Ключом может быть как имя формы, так и канонический ``form_id`` —
+    относительный POSIX-путь каталога формы (issue #226). Ключ проверяется:
+    абсолютный путь, переход по дереву и разделитель Windows отклоняются
+    исключением :class:`~v8unpack_agent.form_identity.FormIdentityError`.
+    """
+    validate_form_id(form_name)
+    base = Path(unpacked_root) / "Form"
+    return base.joinpath(*PurePosixPath(form_name).parts)
 
 
 def form_paths(unpacked_root: Path, form_name: str) -> dict[str, Path]:

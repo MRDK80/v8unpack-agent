@@ -12,8 +12,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from v8unpack_agent.form_paths import form_paths
+
+if TYPE_CHECKING:  # pragma: no cover - только для аннотаций
+    from v8unpack_agent.form_identity import FormBinSource
 
 
 @dataclass(frozen=True)
@@ -53,6 +57,8 @@ class FormArtifact:
     extraction_warnings: list[str] = field(default_factory=list)
     skd_extracted: bool = False
     elem_index_ok: bool = False
+    form_id: str = ""
+    source: FormBinSource | None = None
 
     def __post_init__(self) -> None:
         if not self.extraction_ok and not self.extraction_warnings:
@@ -81,4 +87,32 @@ class FormArtifact:
             extraction_warnings=list(extraction_warnings or []),
             skd_extracted=skd_extracted,
             elem_index_ok=elem_index_ok,
+        )
+
+    @classmethod
+    def for_source(
+        cls,
+        unpacked_root: Path,
+        source: FormBinSource,
+        *,
+        extraction_ok: bool = True,
+        extraction_warnings: list[str] | None = None,
+        skd_extracted: bool = False,
+        elem_index_ok: bool = False,
+    ) -> FormArtifact:
+        """Собрать артефакт по каноническому источнику формы (issue #226).
+
+        В отличие от :meth:`for_form`, каталог результата строится по
+        ``source.form_id``, поэтому одноимённые формы разных владельцев
+        не пишут в один и тот же каталог.
+        """
+        return cls(
+            name=source.form_name,
+            paths=form_paths(unpacked_root, source.form_id),
+            extraction_ok=extraction_ok,
+            extraction_warnings=list(extraction_warnings or []),
+            skd_extracted=skd_extracted,
+            elem_index_ok=elem_index_ok,
+            form_id=source.form_id,
+            source=source,
         )

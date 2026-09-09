@@ -14,7 +14,7 @@
 | Без `object_attributes` | 162 (7.3%) |
 | Прогонов | 2, подпись агрегата совпала |
 
-Подпись агрегата (sha256/16): `<заполнить>`
+Подпись агрегата (sha256/16): `788bd54b0fe931d0`
 
 ## 2. Метод определения точки отказа
 
@@ -56,10 +56,10 @@ else:                       point = f"decode_error:{decode.error.value}"
 3-level layout: CommonForm/<Form>
 object_name level : absent
 owner object file : absent by layout
-levels_up         : <заполнить>
+levels_up         : 2
 selected candidate: <root>/<candidate>.json
 candidate role    : <export_root_neighbour | form_artifact | ...>
-distinct candidates for 162 forms: <заполнить>
+distinct candidates for 162 forms: 1
 ```
 
 Проверяемое предсказание: если кандидат — сосед на уровне корня, то у всех 162
@@ -73,9 +73,9 @@ distinct candidates for 162 forms: <заполнить>
 
 | Контроль | Layout | Ожидание | Факт |
 |---|---|---|---|
-| A — объект-владелец есть | 4-level Catalog/Document | `ok == True`, `object_attributes is not None` | `<заполнить>` |
-| B — CommonForm | 3-level, `ObjectName` отсутствует | владельца нет; кандидат не является доказательством владельца | `<заполнить>` |
-| C — повреждённый owner JSON | 4-level, владелец существует | `HEADER_MISSING` на настоящем owner JSON | `<заполнить>` |
+| A — объект-владелец есть | 4-level Catalog/Document | `ok == True`, `object_attributes is not None` | `role=owner_object_file`, `decode.ok=True` — ожидание подтверждено, провалов 0 |
+| B — CommonForm | 3-level, `ObjectName` отсутствует | владельца нет; кандидат не является доказательством владельца | `object_name=absent`, `role=export_root_neighbour`, класс `no_owner_object` — ожидание подтверждено |
+| C — повреждённый owner JSON | 4-level, владелец существует | `HEADER_MISSING` на настоящем owner JSON | `error=header_missing`, `role=owner_object_file`, класс `layout_unsupported` — ожидание подтверждено |
 
 Контроль C отличает подлинный `layout_unsupported` от ожидаемого отсутствия
 владельца у CommonForm.
@@ -84,12 +84,12 @@ distinct candidates for 162 forms: <заполнить>
 
 | FormClass | Форм | Доля |
 |---|---:|---:|
-| `service` | `<заполнить>` | |
-| `object` | `<заполнить>` | |
-| `unknown` | `<заполнить>` | |
+| `service` | 158 | 97.5% |
+| `object` | 0 | 0.0% |
+| `unknown` | 4 | 2.5% |
 
 Сопоставление с существующими причинами: `NO_OWNER_OBJECT` (#108),
-`NO_TABULAR_NO_WIDGETS` (#109) — `<заполнить>`.
+`NO_TABULAR_NO_WIDGETS` (#109) — `NO_OWNER_OBJECT` согласуется: для `CommonForm` он закреплён by design в `classify_unindexed_form`; соответствие `NO_TABULAR_NO_WIDGETS` в прогоне #163 не измерялось.
 
 `service` поддерживает решение `keep as is`, но не заменяет структурного
 доказательства отсутствия владельца.
@@ -98,22 +98,22 @@ distinct candidates for 162 forms: <заполнить>
 
 | Класс | Форм | Доля | #160 | #151 | Решение |
 |---|---:|---:|---|---|---|
-| `no_owner_object` | `<заполнить>` | | нет | нет | keep as is |
+| `no_owner_object` | 162 | 100.0% | нет | нет | keep as is |
 | `type_out_of_scope` | 0 | 0.0% | нет | да | follow-up |
 | `layout_unsupported` | 0 | 0.0% | да | возможно | follow-up |
-| `path_convention_miss` | `<заполнить>` | | нет | возможно | implementation issue |
+| `path_convention_miss` | 0 | 0.0% | нет | возможно | implementation issue |
 | `broken_json` | 0 | 0.0% | нет | нет | RCA/upstream |
-| `insufficient_evidence` | `<заполнить>` | | неизвестно | неизвестно | keep as is |
+| `insufficient_evidence` | 0 | 0.0% | неизвестно | неизвестно | keep as is |
 
 Каждая из 162 форм учтена ровно в одном классе.
 
 ## 7. Разграничение с #160 и #151
 
-- случаев #160: `<заполнить>` — привязка требует одновременно: найденный JSON
+- случаев #160: 0 — привязка требует одновременно: найденный JSON
   является объектом-владельцем, структура нормализована, есть объектные
   `Properties`/`TabularSections`, отсутствие `header` — единственная причина отказа.
-- случаев #151: `<заполнить>` — требует существующего владельца с типом вне охвата.
-- `no_owner_object` by design: `<заполнить>`.
+- случаев #151: 0 — требует существующего владельца с типом вне охвата.
+- `no_owner_object` by design: 162 из 162 (100.0%).
 
 Если файл относится к самой CommonForm либо к корню выгрузки, passthrough
 нормализованного layout из #160 был бы ложным исправлением: форма или корень
@@ -125,7 +125,7 @@ distinct candidates for 162 forms: <заполнить>
 - Реальные имена, UUID, абсолютные пути и CSV в git не попадают; `*.csv` в `.gitignore`.
 - Режимы `--local-names` и `--csv` — только локально, результаты в PR и issue не вставляются.
 - Два прогона дают совпадающую подпись агрегата.
-- `pytest -q`: `<заполнить>` (ориентир 857 passed).
+- `pytest -q`: 857 passed (прогон исследования #163, PR #169).
 
 ## 9. Открытый вопрос для follow-up
 
@@ -143,3 +143,31 @@ distinct candidates for 162 forms: <заполнить>
 `no_owner_object` остаётся 162, решение `keep as is` в силе. Роль кандидата
 `export_root_neighbour` исчезает из распределения: посторонний файл первого
 уровня выгрузки больше не выбирается.
+
+## Addendum от 6 сентября 2026 — источники агрегатов
+
+Historical observation: разделы 1–9 отражают состояние на 23 августа 2026 и
+не переписываются задним числом. Ниже — только привязка ранее пустых полей к
+опубликованным источникам (issue #183).
+
+Current interpretation:
+
+| Поле | Значение | Источник |
+|---|---|---|
+| подпись агрегата (sha256/16) | `788bd54b0fe931d0` | итоги #163, два прогона |
+| `levels_up` | 2 | итоги #163, разбор `object_json_path()` |
+| distinct candidates на 162 формы | 1 | итоги #163 |
+| контроли A/B/C | ожидания подтверждены, провалов 0 | итоги #163, `--controls` |
+| `FormClass`: `service` / `object` / `unknown` | 158 / 0 / 4 | приёмка #163 |
+| `no_owner_object` | 162 (100.0%) | итоги и приёмка #163 |
+| `path_convention_miss`, `insufficient_evidence` | 0 (0.0%) | итоги #163 |
+| случаев #160 и #151 | 0 | итоги #163, подтверждено после #172 и в #180 |
+| `pytest -q` на момент исследования | 857 passed | PR #169 |
+
+Нули означают измеренное отсутствие случаев в опубликованном прогоне #163, а не
+отсутствие измерения. Соответствие причине `NO_TABULAR_NO_WIDGETS` (#109) в
+прогоне #163 не измерялось и здесь не выводится.
+
+Агрегаты выгрузки A не смешиваются с данными третьей конфигурации из
+`docs/research/third_configuration_validation.md`. Решение `keep as is` не
+пересматривается.

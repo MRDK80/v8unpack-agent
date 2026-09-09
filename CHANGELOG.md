@@ -29,6 +29,42 @@
 
 ## [Unreleased]
 
+- chore: локальные виртуальные окружения (`.venv/`, `.venv-*/`, `venv/`, `env/`)
+  исключены из git; production-код и публичный API не менялись (issue #223)
+- `docs/research/missing_object_attributes_issue163.md`: заполнены все 17
+  полей `<заполнить>` доказанными агрегатами исследования: подпись агрегата
+  `788bd54b0fe931d0`, `levels_up` 2, distinct candidates 1, контроли A/B/C
+  без провалов, `FormClass` 158 / 0 / 4, `no_owner_object` 162 (100.0%),
+  `path_convention_miss` и `insufficient_evidence` 0 (0.0%), случаев #160 и
+  #151 — 0, исторический `pytest` 857 passed. Добавлен датированный addendum
+  с указанием источника каждого числа. Исторические выводы и решение
+  `keep as is` не пересматриваются, production-код и метрики coverage не
+  затронуты (issue #183).
+- `v8unpack_agent.__init__` больше не импортирует `form_classifier` и
+  `form_router` на уровне модуля: `SERVICE_FORM_NAME_PATTERNS`, `FormClass`,
+  `classify_form`, `classify_form_by_name`, `classify_form_by_bindings`,
+  `FormRouter` и `RouteResult` отдаются двумя ленивыми группами `__getattr__`
+  с кэшированием через `globals().update(...)`. Вместе с `form_classifier`
+  перестаёт загружаться транзитивный `coverage_metric`: его тянул
+  `DATA_ELEMENT_TYPES`. Состав `__all__` (42 имени), deprecated-шимы и все
+  прежние способы импорта сохранены (issue #140, части A и B).
+- `form_paths` осознанно остаётся единственным eager-импортом корневого
+  пакета. Имя `form_paths` — одновременно подмодуль и публичная функция:
+  при ленивом разрешении прямой `import v8unpack_agent.form_paths` выставил бы
+  атрибут пакета в модуль, и `from v8unpack_agent import form_paths` молча
+  вернул бы модуль вместо функции. Выигрыш отсутствует — модуль тянет только
+  `pathlib`. Контракт закреплён тестами (issue #140, часть C).
+- Холодный импорт пакета: модулей `v8unpack_agent.*` в `sys.modules` после
+  чистого импорта 5 → 2 (остаются `v8unpack_agent` и `form_paths`), медиана
+  10 679,1 → 278,1 µs (−97,4 %) на 9 прогонах в отдельных процессах,
+  Python 3.12.3, Linux. `json`, `dataclasses` и `typing` больше не приходят
+  в холодный путь (issue #140).
+- tests: добавлен `tests/test_init_lazy_imports_issue140.py` — 26 проверок в
+  отдельных процессах: состав `sys.modules`, гарантии #124 / #128 / #131 /
+  #134, идентичность объектов при повторном обращении, разрешимость всех имён
+  `__all__`, star-import, работоспособность `cli` и `runner` и коллизия имени
+  `form_paths` (issue #140).
+
 - tests: три issue-scoped модуля переименованы по конвенции `_issueNNN`
   (`test_discover_managed_forms_issue55.py`, `test_form_summary_issue69.py`,
   `test_form_classifier_issue98.py`), конвенция зафиксирована в `CONTRIBUTING.md`,
