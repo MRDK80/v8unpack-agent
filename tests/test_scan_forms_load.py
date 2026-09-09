@@ -30,8 +30,14 @@ def _make_entry(
     bsl_mtime: float = 1718450000.0,
     form_elem_path: Path | None = None,
 ) -> FormEntry:
-    """Создать синтетический FormEntry с корректными Path-значениями."""
-    base = root / object_type / object_name / container_name / form_name
+    """Создать синтетический FormEntry с относительными Path-значениями.
+
+    Пути относительны ``root`` (issue #239): портируемый payload не содержит
+    абсолютных путей, поэтому фикстура строится от корня.
+    """
+    base = (
+        root / object_type / object_name / container_name / form_name
+    ).relative_to(root)
     return FormEntry(
         object_type=object_type,
         object_name=object_name,
@@ -120,7 +126,7 @@ def test_load_form_elem_path_none(tmp_path: Path) -> None:
 
 def test_load_form_elem_path_not_none(tmp_path: Path) -> None:
     """form_elem_path не-None сохраняется и восстанавливается как Path."""
-    elem = tmp_path / "Ext" / "Form.elem"
+    elem = Path("Ext") / "Form.elem"
     entry = _make_entry(tmp_path, form_elem_path=elem)
     out = tmp_path / "index.json"
     _make_index([entry]).save(out)

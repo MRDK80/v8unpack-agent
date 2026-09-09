@@ -385,7 +385,7 @@ def test_form_router_reindex_keeps_warnings(tmp_path: Path) -> None:
     index = scan_forms(root)
     index.save(index_path)
 
-    router = FormRouter(index_path)
+    router = FormRouter(index_path, scan_root=root)
     router.reindex(index.forms)
 
     data = json.loads(index_path.read_text(encoding="utf-8"))

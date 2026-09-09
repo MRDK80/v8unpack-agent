@@ -166,11 +166,16 @@ def test_check_drift_detects_modified_after_reindex(tmp_path: Path) -> None:
         json_path=form_dir / "CatalogForm.json",
         bsl_mtime=t0,
     )
-    idx = FormScanIndex(forms=[entry], total=1, scanned_at="2026-01-01T00:00:00+00:00")
+    idx = FormScanIndex(
+        forms=[entry],
+        total=1,
+        scanned_at="2026-01-01T00:00:00+00:00",
+        scan_root=cf_root,
+    )
     idx.save(index_path)
 
     # --- router.reindex() ---
-    router = FormRouter(index_path=index_path)
+    router = FormRouter(index_path=index_path, scan_root=cf_root)
     router.reindex([entry])
 
     # Убеждаемся, что bsl_mtime не потерялся после reindex
@@ -220,6 +225,7 @@ def test_reindex_distinguishes_same_form_name_in_different_containers(tmp_path: 
         forms=[form_entry, document_form_entry],
         total=2,
         scanned_at="2026-01-01T00:00:00+00:00",
+        scan_root=tmp_path / "cf_export",
     ).save(index_path)
 
     updated_document_form = FormEntry(
@@ -234,7 +240,10 @@ def test_reindex_distinguishes_same_form_name_in_different_containers(tmp_path: 
         bsl_mtime=1_700_000_030.0,
     )
 
-    router = FormRouter(index_path=index_path)
+    router = FormRouter(
+        index_path=index_path,
+        scan_root=tmp_path / "cf_export",
+    )
     router.reindex([updated_document_form])
 
     raw = json.loads(index_path.read_text(encoding="utf-8"))
