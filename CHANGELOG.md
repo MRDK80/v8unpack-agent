@@ -29,6 +29,9 @@
 
 ## [Unreleased]
 
+- fix: `is_form_stale()` при отсутствующей записи реестра поднимает явный
+  `ValueError` вместо невнятного `TypeError`; сигнатура и поведение для
+  `FormsIndexEntry` и словаря не изменились (issue #230)
 - chore: локальные виртуальные окружения (`.venv/`, `.venv-*/`, `venv/`, `env/`)
   исключены из git; production-код и публичный API не менялись (issue #223)
 - `docs/research/missing_object_attributes_issue163.md`: заполнены все 17
