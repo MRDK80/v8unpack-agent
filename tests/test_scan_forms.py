@@ -93,6 +93,9 @@ def test_scan_nonexistent_root(tmp_path: Path) -> None:
         scan_forms(tmp_path / "no_such_dir")
 
 
+# ---------------------------------------------------------------------------
+# Form (DataProcessor)
+# ---------------------------------------------------------------------------
 def test_scan_form_container(tmp_path: Path) -> None:
     """Контейнер Form → object_type=DataProcessor, container_name=Form."""
     root = tmp_path / "cf_export"

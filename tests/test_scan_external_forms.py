@@ -91,6 +91,9 @@ def test_external_nonexistent_root(tmp_path: Path) -> None:
         scan_forms(tmp_path / "no_such_dir", mode="external")
 
 
+# ---------------------------------------------------------------------------
+# happy path: одна форма одной обработки
+# ---------------------------------------------------------------------------
 def test_external_single_form(tmp_path: Path) -> None:
     root = tmp_path / "cf_export"
     _make_external_processor(root, "ЗагрузкаЦен")
