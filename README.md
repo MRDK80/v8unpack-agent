@@ -49,20 +49,21 @@ python -m v8unpack_agent.cli <корень_выгрузки> --report-path <пу
 ## Пайплайн
 
 ```
-index_cf(<путь_к_выгрузке>)
-  ├─► 0) scan_forms()               # опись всех форм по layout-у (вкл. формы без кода, #57)
+подготовленное дерево выгрузки (dump_root)
+  ├─► scan_forms()                  # опись всех форм по layout-у (вкл. формы без кода, #57)
   │       └─► reference_types        # uuid → имя ссылочного типа, тот же обход (#88)
-  ├─► 1) unpack_all_forms()         # Form.bin → текстовый слой (BSL виден)
+  ├─► discover_form_sources()       # dump_root → FormBinSource с каноническим form_id (#226)
+  ├─► unpack_all_forms(..., unpacker)  # Form.bin → текстовый слой (BSL виден)
   │       └─► parse_elem_json()      # elem.json → form_elements_index (best-effort)
   │             ├─► object_decoder    # header → Properties, TabularSections (#84)
   │             │      └─► type_resolver  # Ref#uuid → CatalogRef.Имя (#88)
   │             ├─► catalog_resolver # data_path → ResolvedBinding (best-effort, #76)
   │             └─► form_classifier  # object / service / unknown (#98)
-  ├─► 1') unpack_erf()              # внешний отчёт (.erf): текстовый слой
+  ├─► unpack_erf(..., unpacker)     # внешний отчёт (.erf): текстовый слой
   │       └─► extract_skd_queries()  # СКД → skd_queries.json (best-effort)
-  ├─► 2) update_forms_index()       # JSON-карта актуальности
-  ├─► 3) check_drift()              # сравнение выгрузки с forms_scan_index
-  └─► 4) rag.rebuild()              # code_context() видит формы + структуру + СКД
+  ├─► update_forms_index(..., artifacts)  # JSON-карта актуальности, ключ form_id
+  ├─► check_drift()                 # сравнение выгрузки с forms_scan_index
+  └─► внешняя индексация / RAG      # вне scope пакета, вызывающая сторона
 ```
 
 - **Идемпотентность.** Повторный прогон не перекладывает формы без изменений.
@@ -88,6 +89,8 @@ index_cf(<путь_к_выгрузке>)
 - **Полнота описи.** `scan_forms` учитывает и управляемые формы без кода модуля
   (без `.obj.bsl`) — они попадают в индекс через `*.elem.json` (issue #57).
 - **Прозрачность для агента.** Со стороны индексации это просто ещё один источник текстов.
+- **Композиция вызывающей стороной.** Шаги схемы — независимые функции; единой точки входа, которая вызывает их все, пакет не предоставляет. Фактический входной контракт и ответственность распаковщика — в [docs/pipeline.md](docs/pipeline.md).
+- **Граница пакета.** Внешняя индексация и RAG вне scope `v8unpack-agent`: пакет отдаёт `FormArtifact` и `FormsIndex`, передача их индексатору — ответственность вызывающей стороны.
 
 ## Публичная поверхность
 
@@ -101,7 +104,7 @@ index_cf(<путь_к_выгрузке>)
 | `form_artifact` | `FormArtifact` — результат распаковки одной формы с явным флагом полноты. |
 | `forms_index` | `FormsIndex` / `FormsIndexEntry` + `is_form_stale()` — реестр актуальности. |
 | `managed_forms` | `discover_elem_forms()` + `ElemFormEntry` — обнаружение форм по `*.elem.json`. → [подробнее](docs/managed_forms_structure.md) |
-| `pipeline` | `unpack_all_forms()`, `update_forms_index()`, `unpack_erf()`, `FormUnpacker`, `ErfUnpacker`; `discover_form_bins()` — устаревшая карта имён. |
+| `pipeline` | `unpack_all_forms()`, `update_forms_index()`, `unpack_erf()`, `FormUnpacker = Callable[[FormBinSource, Path], FormArtifact]` (#226), `ErfUnpacker`; `discover_form_bins()` — legacy shim, не каноническое обнаружение. → [подробнее](docs/pipeline.md) |
 | `form_identity` | `FormBinSource`, `discover_form_sources()`, `select_sources()`, `adapt_legacy_unpacker()`, `FormIdentityError` — каноническая идентичность формы (#226). |
 | `skd_extractor` | `extract_skd_queries()` + `extract_all_skd_queries()` — СКД из `.erf`. → [подробнее](docs/skd_extractor.md) |
 | `elem_parser` | `parse_elem_json()` + `ElemIndexResult` — структура формы из `elem.json`; `data_path` обычных форм через `prop`, управляемых — через UUID и структурный fallback, legacy `ФормаСписка` / `ФормаВыбора` — через подтверждённые UUID-привязки `TabularField` (#103). → [подробнее](docs/elem_parser.md) |

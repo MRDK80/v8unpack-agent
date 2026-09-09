@@ -29,6 +29,17 @@
 
 ## [Unreleased]
 
+- docs: из `README.md` и module docstring `v8unpack_agent/pipeline.py`
+  убраны несуществующие `index_cf()` и `rag.rebuild()`; схема пайплайна
+  показывает композицию фактических функций вызывающей стороной. Добавлен
+  `docs/pipeline.md`: ожидаемый вход (подготовленный `dump_root`), граница
+  подготовки контейнера и библиотечной обработки, контракт
+  `FormUnpacker = Callable[[FormBinSource, Path], FormArtifact]`,
+  legacy-путь через `adapt_legacy_unpacker()`, семантика частичного
+  результата по реальным полям `FormArtifact` и граница внешней
+  индексации. В `docs/research/form_bin_issue150.md` добавлен dated
+  addendum без переписывания исторического наблюдения. Исполняемый код,
+  публичные сигнатуры и `__all__` не менялись (issue #228)
 - fix: `is_form_stale()` при отсутствующей записи реестра поднимает явный
   `ValueError` вместо невнятного `TypeError`; сигнатура и поведение для
   `FormsIndexEntry` и словаря не изменились (issue #230)
