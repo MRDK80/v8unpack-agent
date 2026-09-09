@@ -510,3 +510,22 @@
 принадлежит вызывающей стороне. Заглушки `rag` в пакете не создавались.
 Распаковщики из примера и тестов остаются заглушками и не являются
 production-адаптерами.
+
+## Issue #229 — доля `elem_index_ok=False` по распакованному `.cf` (2026-09-09)
+
+Замер выполнен на корпусе `D`: 2216 кандидатов `*.elem.json`, 2174 формы
+проиндексированы, 42 нет — 1.8953%. Два прогона дали одинаковую подпись
+агрегата `8be7db3be301b7b6`. Инвариант `forms_total == ok + failed + excluded`
+выполняется.
+
+Распределение `FormClass`: `service` 1994, `object` 197, `unknown` 25.
+Причины: `no_tabular_no_widgets` 17, `tabular_field_bsl_source_mismatch` 11,
+`tabular_field_platform_dynamic` 7, `tabular_field_programmatic_no_defs` 5,
+`no_owner_object` 2. Остальные значения enum — 0.
+
+Решения: `keep unknown` для четырёх классов, `insufficient evidence` для
+`tabular_field_programmatic_no_defs`. Классов на `implement` и на upstream issue
+нет. Отчёт: [research/unindexed_share_issue229.md](research/unindexed_share_issue229.md).
+
+Расширение отчётного примера: `--json`, `--runs N`, счётчики `FormClass`,
+матрица причин и подпись агрегата. Production-код не изменялся.

@@ -97,6 +97,14 @@
   Отчёт: `docs/research/third_configuration_validation.md`.
 
 ### Added
+
+- `examples/unindexed_forms_report.py`: обезличенный детерминированный агрегат
+  (`--json`), повторный замер со сверкой подписи (`--runs N`), распределение
+  `FormClass`, матрица `FormClass` x `UnindexedReason` и инвариант баланса
+  `forms_total == ok + failed + excluded` (issue #229).
+- `docs/research/unindexed_share_issue229.md`: замер доли `elem_index_ok=False`
+  по штатно распакованному `.cf` — 42 формы из 2216 (1.8953%), подпись агрегата
+  `8be7db3be301b7b6`, решение по каждому `UnindexedReason` (issue #229).
 - **`examples/full_pipeline_walkthrough.py`** — обезличенный сквозной пример
   публичного API, фиксирующий фактические сигнатуры (#175). Одиннадцать шагов
   от `scan_forms()` до `build_common_module_context()`; CommonModule показан
