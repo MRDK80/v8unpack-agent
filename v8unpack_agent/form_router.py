@@ -23,8 +23,16 @@ class RouteResult:
 class FormRouter:
     """Маршрутизирует строковый запрос агента к FormEntry из FormScanIndex."""
 
-    def __init__(self, index_path: Path) -> None:
+    def __init__(
+        self,
+        index_path: Path,
+        scan_root: Path | None = None,
+    ) -> None:
+        """``scan_root`` — корень выгрузки для портируемой записи (#239)."""
         self._index_path = index_path
+        self._scan_root = (
+            Path(scan_root).resolve() if scan_root is not None else None
+        )
         self._index: FormScanIndex = self._load_index(index_path)
         self._entries: list[FormEntry] = self._index.forms
 
@@ -100,6 +108,7 @@ class FormRouter:
             total=len(self._entries),
             scanned_at=self._index.scanned_at,
             scan_warnings=self._index.scan_warnings,
+            scan_root=self._scan_root,
         )
         self._index.save(self._index_path)
 

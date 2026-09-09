@@ -38,7 +38,7 @@ import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Literal
 
 logger = logging.getLogger(__name__)
@@ -100,6 +100,13 @@ _ELEM_STRUCTURAL_KEYS = frozenset({
     "name", "type", "path", "parent", "parent_path",
     "page", "source", "data_path", "handler",
 })
+
+
+INDEX_SCHEMA_VERSION = 2
+"""Версия схемы сериализованного индекса: относительные пути (issue #239)."""
+
+LEGACY_INDEX_SCHEMA_VERSION = 1
+"""Схема без ключа ``schema_version``: абсолютные пути (до issue #239)."""
 
 
 SCAN_WARNING_CODE_MARKER = " [code="
@@ -186,6 +193,64 @@ def _compute_elem_sha256(form_dir: Path) -> str | None:
         return None
 
 
+def _rel_for_message(path: Path, root: Path) -> str:
+    """Путь для текста предупреждения: относительный, без утечки корня."""
+    try:
+        return path.relative_to(root).as_posix()
+    except ValueError:
+        return path.name
+
+
+def _is_serialized_absolute(value: str) -> bool:
+    """True, если строка пути абсолютна для POSIX либо содержит диск NT."""
+    return Path(value).is_absolute() or bool(PureWindowsPath(value).drive)
+
+
+def _serialize_path(
+    value: Path | None,
+    scan_root: Path | None,
+    field_name: str,
+) -> str | None:
+    """Вернуть портируемый относительный POSIX-путь (issue #239).
+
+    Абсолютный путь требует ``scan_root``. Путь вне корня — явная ошибка:
+    эвристика ``commonpath`` и обрезка префикса строками не применяются.
+    """
+    if value is None:
+        return None
+    if not value.is_absolute():
+        return PurePosixPath(*value.parts).as_posix()
+    if scan_root is None:
+        raise ValueError(
+            f"scan_root is required to serialize absolute {field_name}"
+        )
+    try:
+        relative = value.relative_to(scan_root)
+    except ValueError as exc:
+        raise ValueError(
+            f"{field_name} is outside scan_root: {value.name}"
+        ) from exc
+    return PurePosixPath(*relative.parts).as_posix()
+
+
+def _restore_path(value: str, scan_root: Path | None) -> Path:
+    """Восстановить путь записи индекса относительно нового корня."""
+    candidate = Path(value)
+    if scan_root is None or _is_serialized_absolute(value):
+        return candidate
+    return scan_root / candidate
+
+
+def _restore_optional_path(value: str | None, scan_root: Path | None) -> Path | None:
+    """Вариант :func:`_restore_path` для необязательного поля."""
+    return None if value is None else _restore_path(value, scan_root)
+
+
+def _keep_relative_path(value: str | None) -> Path | None:
+    """``elem_json_path`` остаётся relative-to-root (контракт issue #57)."""
+    return None if value is None else Path(value)
+
+
 @dataclass
 class FormEntry:
     """Одна форма, найденная при сканировании cf_export."""
@@ -227,6 +292,9 @@ class FormScanIndex:
     reference_types: dict[str, str] = field(default_factory=dict)
     """Индекс ``uuid типа -> имя ссылочного типа`` (issue #88)."""
 
+    scan_root: Path | None = None
+    """Корень сканирования. Runtime-only: в сериализацию не попадает (#239)."""
+
     def resolve_reference_type(self, uuid: str) -> str | None:
         """Вернуть читаемое имя ссылочного типа либо ``None`` (issue #88).
 
@@ -236,7 +304,14 @@ class FormScanIndex:
         return self.reference_types.get(uuid)
 
     def to_dict(self) -> dict:
+        """Сериализовать индекс портируемым payload (issue #239).
+
+        Все path-поля записываются относительно ``scan_root`` через прямой
+        слэш. Абсолютные пути и разделители NT в payload не попадают.
+        """
+        root = self.scan_root
         return {
+            "schema_version": INDEX_SCHEMA_VERSION,
             "total": self.total,
             "scanned_at": self.scanned_at,
             "scan_warnings": self.scan_warnings,
@@ -247,20 +322,18 @@ class FormScanIndex:
                     "object_name": e.object_name,
                     "container_name": e.container_name,
                     "form_name": e.form_name,
-                    "form_path": e.form_path.as_posix(),
-                    "bsl_path": e.bsl_path.as_posix(),
-                    "json_path": e.json_path.as_posix(),
+                    "form_path": _serialize_path(e.form_path, root, "form_path"),
+                    "bsl_path": _serialize_path(e.bsl_path, root, "bsl_path"),
+                    "json_path": _serialize_path(e.json_path, root, "json_path"),
                     "warnings": e.warnings,
                     "bsl_mtime": e.bsl_mtime,
-                    "form_elem_path": (
-                        e.form_elem_path.as_posix()
-                        if e.form_elem_path is not None else None
+                    "form_elem_path": _serialize_path(
+                        e.form_elem_path, root, "form_elem_path"
                     ),
                     "bsl_sha256": e.bsl_sha256,
                     "elem_sha256": e.elem_sha256,
-                    "elem_json_path": (
-                        e.elem_json_path.as_posix()
-                        if e.elem_json_path is not None else None
+                    "elem_json_path": _serialize_path(
+                        e.elem_json_path, root, "elem_json_path"
                     ),
                 }
                 for e in self.forms
@@ -277,39 +350,50 @@ class FormScanIndex:
         return out_path
 
     @classmethod
-    def load(cls, index_path: Path) -> FormScanIndex:
-        """Загрузить :class:`FormScanIndex` из JSON-файла, сохранённого :meth:`save`.
+    def load(
+        cls,
+        index_path: Path,
+        root: Path | None = None,
+    ) -> FormScanIndex:
+        """Загрузить индекс, сохранённый :meth:`save` (issues #36, #239).
 
-        Обратная совместимость: отсутствующие ``bsl_sha256`` / ``elem_sha256`` /
-        ``elem_json_path`` → ``None``; отсутствующий ``reference_types`` → ``{}``;
-        старое поле ``form_xml_path`` игнорируется.
+        ``root`` задаёт корень выгрузки, относительно которого разрешаются
+        относительные пути схемы 2. Без ``root`` пути остаются относительными.
+        Payload без ключа ``schema_version`` считается legacy-схемой 1
+        с абсолютными путями и читается без их изменения. Неизвестная версия
+        отклоняется ``ValueError``.
+
+        Обратная совместимость полей: отсутствующие ``bsl_sha256`` /
+        ``elem_sha256`` / ``elem_json_path`` → ``None``; отсутствующий
+        ``reference_types`` → ``{}``; старое ``form_xml_path`` игнорируется.
         """
-        if not Path(index_path).exists():
-            return cls()
-        raw = json.loads(Path(index_path).read_text(encoding="utf-8"))
+        path = Path(index_path)
+        scan_root = Path(root).resolve() if root is not None else None
+        if not path.exists():
+            return cls(scan_root=scan_root)
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        version = raw.get("schema_version", LEGACY_INDEX_SCHEMA_VERSION)
+        if version not in (LEGACY_INDEX_SCHEMA_VERSION, INDEX_SCHEMA_VERSION):
+            raise ValueError(
+                f"unsupported FormScanIndex schema version: {version!r}"
+            )
         forms: list[FormEntry] = [
             FormEntry(
                 object_type=row["object_type"],
                 object_name=row["object_name"],
                 container_name=row["container_name"],
                 form_name=row["form_name"],
-                form_path=Path(row["form_path"]),
-                bsl_path=Path(row["bsl_path"]),
-                json_path=Path(row["json_path"]),
+                form_path=_restore_path(row["form_path"], scan_root),
+                bsl_path=_restore_path(row["bsl_path"], scan_root),
+                json_path=_restore_path(row["json_path"], scan_root),
                 warnings=list(row.get("warnings", [])),
                 bsl_mtime=float(row.get("bsl_mtime", 0.0)),
-                form_elem_path=(
-                    Path(row["form_elem_path"])
-                    if row.get("form_elem_path") is not None
-                    else None
+                form_elem_path=_restore_optional_path(
+                    row.get("form_elem_path"), scan_root
                 ),
                 bsl_sha256=row.get("bsl_sha256"),   # None for old indexes
                 elem_sha256=row.get("elem_sha256"),  # None for old indexes
-                elem_json_path=(
-                    Path(row["elem_json_path"])
-                    if row.get("elem_json_path") is not None
-                    else None
-                ),  # None for old indexes; form_xml_path silently ignored
+                elem_json_path=_keep_relative_path(row.get("elem_json_path")),
             )
             for row in raw.get("forms", [])
         ]
@@ -319,6 +403,7 @@ class FormScanIndex:
             scanned_at=str(raw.get("scanned_at", "")),
             scan_warnings=list(raw.get("scan_warnings", [])),
             reference_types=dict(raw.get("reference_types", {})),
+            scan_root=scan_root,
         )
 
 
@@ -516,7 +601,7 @@ def _collect_forms_from_container(
                 )
                 logger.debug(msg)
         except Exception as exc:  # noqa: BLE001
-            msg = f"error scanning {form_dir}: {exc}"
+            msg = f"error scanning {_rel_for_message(form_dir, root)}: {exc}"
             scan_warnings.append(
                 _format_scan_warning(SCAN_WARNING_FORM_SCAN_ERROR, msg)
             )
@@ -626,7 +711,9 @@ def _scan_external(
                         scan_warnings,
                     )
                 except Exception as exc:  # noqa: BLE001
-                    msg = f"error scanning {form_dir}: {exc}"
+                    msg = (
+                        f"error scanning {_rel_for_message(form_dir, root)}: {exc}"
+                    )
                     scan_warnings.append(
                         _format_scan_warning(SCAN_WARNING_FORM_SCAN_ERROR, msg)
                     )
@@ -841,6 +928,7 @@ def scan_forms(
         scanned_at=datetime.now(tz=timezone.utc).isoformat(),
         scan_warnings=scan_warnings,
         reference_types=reference_types,
+        scan_root=root.resolve(),
     )
 
     if save_to is not None:
