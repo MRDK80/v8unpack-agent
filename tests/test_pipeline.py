@@ -1,8 +1,16 @@
+"""Тесты пайплайна распаковки форм.
+
+После issue #226 распаковщик получает канонический источник формы
+(``FormBinSource``), а ключом реестра служит ``form_id`` — относительный
+POSIX-путь каталога формы от корня выгрузки. Имя формы остаётся
+неуникальным атрибутом.
+"""
 from pathlib import Path
 
 from v8unpack_agent import (
     FormArtifact,
     discover_form_bins,
+    discover_form_sources,
     is_form_stale,
     unpack_all_forms,
     update_forms_index,
@@ -20,18 +28,20 @@ def _make_dump(tmp_path: Path, *form_names: str) -> Path:
 
 
 def _fake_unpacker(unpacked_root: Path):
-    """Распаковщик-заглушка: пишет Form.obj.bsl и отдаёт FormArtifact."""
+    """Распаковщик-заглушка нового протокола: (source, unpacked_root)."""
 
-    def _unpack(bin_path: Path, root: Path, form_name: str) -> FormArtifact:
-        form_dir = root / "Form" / form_name
+    def _unpack(source, root: Path) -> FormArtifact:
+        artifact = FormArtifact.for_source(root, source)
+        form_dir = artifact.paths["object_module"].parent
         form_dir.mkdir(parents=True, exist_ok=True)
         (form_dir / "Form.obj.bsl").write_text("// форма", encoding="utf-8")
-        return FormArtifact.for_form(root, form_name)
+        return artifact
 
     return _unpack
 
 
 def test_discover_form_bins_extracts_names(tmp_path):
+    """Устаревшая карта «имя → путь» сохранена для совместимости."""
     dump = _make_dump(tmp_path, "ФормаЭлемента", "ФормаСписка")
     bins = discover_form_bins(dump)
     assert set(bins) == {"ФормаЭлемента", "ФормаСписка"}
@@ -44,10 +54,12 @@ def test_unpack_all_forms_returns_artifacts(tmp_path):
     arts = unpack_all_forms(dump, unpacked, _fake_unpacker(unpacked))
     assert {a.name for a in arts} == {"ФормаЭлемента", "ФормаСписка"}
     assert all(a.extraction_ok for a in arts)
-    assert (unpacked / "Form" / "ФормаЭлемента" / "Form.obj.bsl").is_file()
+    assert all(a.form_id.endswith(a.name) for a in arts)
+    assert all(a.paths["object_module"].is_file() for a in arts)
 
 
-def test_unpack_all_forms_selection(tmp_path):
+def test_unpack_all_forms_selection_by_name(tmp_path):
+    """Отбор по уникальному имени формы остаётся рабочим."""
     dump = _make_dump(tmp_path, "ФормаЭлемента", "ФормаСписка")
     unpacked = tmp_path / "unpacked"
     arts = unpack_all_forms(
@@ -56,15 +68,29 @@ def test_unpack_all_forms_selection(tmp_path):
     assert [a.name for a in arts] == ["ФормаСписка"]
 
 
+def test_unpack_all_forms_selection_by_form_id(tmp_path):
+    """Канонический отбор идёт по form_id."""
+    dump = _make_dump(tmp_path, "ФормаЭлемента", "ФормаСписка")
+    unpacked = tmp_path / "unpacked"
+    wanted = min(source.form_id for source in discover_form_sources(dump))
+    arts = unpack_all_forms(
+        dump, unpacked, _fake_unpacker(unpacked), form_ids=[wanted]
+    )
+    assert [a.form_id for a in arts] == [wanted]
+
+
 def test_update_forms_index_records_mtimes(tmp_path):
     dump = _make_dump(tmp_path, "ФормаЭлемента")
     unpacked = tmp_path / "unpacked"
     arts = unpack_all_forms(dump, unpacked, _fake_unpacker(unpacked))
     idx = update_forms_index(dump, unpacked, arts)
-    entry = idx.get("ФормаЭлемента")
+    (artifact,) = arts
+    entry = idx.get(artifact.form_id)
     assert entry is not None
-    import os
-    assert entry.bin_path.endswith(os.path.join("Forms", "ФормаЭлемента", "Ext", "Form.bin"))
+    assert entry.form_name == "ФормаЭлемента"
+    assert entry.bin_path.endswith("Forms/ФормаЭлемента/Ext/Form.bin")
+    assert not Path(entry.bin_path).is_absolute()
+    assert not Path(entry.unpacked_root).is_absolute()
     assert entry.extraction_ok is True
 
 
@@ -73,21 +99,23 @@ def test_pipeline_is_fault_tolerant_on_partial(tmp_path):
     dump = _make_dump(tmp_path, "ФормаСписка")
     unpacked = tmp_path / "unpacked"
 
-    def partial_unpacker(bin_path: Path, root: Path, form_name: str) -> FormArtifact:
-        form_dir = root / "Form" / form_name
-        form_dir.mkdir(parents=True, exist_ok=True)
-        return FormArtifact.for_form(
+    def partial_unpacker(source, root: Path) -> FormArtifact:
+        artifact = FormArtifact.for_source(
             root,
-            form_name,
+            source,
             extraction_ok=False,
             extraction_warnings=["вложенная панель не распакована"],
         )
+        artifact.paths["object_module"].parent.mkdir(parents=True, exist_ok=True)
+        return artifact
 
     arts = unpack_all_forms(dump, unpacked, partial_unpacker)
     idx = update_forms_index(dump, unpacked, arts)
-    entry = idx.get("ФормаСписка")
+    (artifact,) = arts
+    entry = idx.get(artifact.form_id)
     assert entry.extraction_ok is False
     assert "вложенная панель не распакована" in entry.warnings
+
 
 def test_idempotent_rerun_keeps_fresh(tmp_path):
     """Повторный прогон без изменений Form.bin не делает форму устаревшей."""
@@ -95,5 +123,5 @@ def test_idempotent_rerun_keeps_fresh(tmp_path):
     unpacked = tmp_path / "unpacked"
     arts = unpack_all_forms(dump, unpacked, _fake_unpacker(unpacked))
     idx = update_forms_index(dump, unpacked, arts)
-    entry = idx.get("ФормаЭлемента")
-    assert is_form_stale(entry) is False
+    (artifact,) = arts
+    assert is_form_stale(idx.get(artifact.form_id)) is False

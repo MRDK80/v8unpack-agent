@@ -45,4 +45,6 @@ def test_fields_match_article():
         "extraction_warnings",
         "skd_extracted",
         "elem_index_ok",
+        "form_id",
+        "source",
     }

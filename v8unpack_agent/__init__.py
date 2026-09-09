@@ -165,6 +165,31 @@ def __getattr__(name: str):
         globals().update(values)
         return values[name]
 
+    if name in {
+        "AmbiguousFormNameError",
+        "FormBinSource",
+        "FormIdentityError",
+        "adapt_legacy_unpacker",
+        "discover_form_sources",
+    }:
+        from v8unpack_agent.form_identity import (
+            AmbiguousFormNameError,
+            FormBinSource,
+            FormIdentityError,
+            adapt_legacy_unpacker,
+            discover_form_sources,
+        )
+
+        _identity_exports = {
+            "AmbiguousFormNameError": AmbiguousFormNameError,
+            "FormBinSource": FormBinSource,
+            "FormIdentityError": FormIdentityError,
+            "adapt_legacy_unpacker": adapt_legacy_unpacker,
+            "discover_form_sources": discover_form_sources,
+        }
+        globals().update(_identity_exports)
+        return _identity_exports[name]
+
     if name in {"scan_forms", "FormEntry", "FormScanIndex"}:
         from v8unpack_agent.scan_forms import FormEntry, FormScanIndex, scan_forms
 
