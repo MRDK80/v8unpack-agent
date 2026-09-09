@@ -17,6 +17,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from v8unpack_agent.scan_forms import scan_forms
 
 # ---------------------------------------------------------------------------
@@ -87,14 +89,9 @@ def test_scan_empty_root(tmp_path: Path) -> None:
 
 
 def test_scan_nonexistent_root(tmp_path: Path) -> None:
-    index = scan_forms(tmp_path / "no_such_dir")
-    assert index.total == 0
-    assert len(index.scan_warnings) >= 1
+    with pytest.raises(NotADirectoryError, match="existing directory"):
+        scan_forms(tmp_path / "no_such_dir")
 
-
-# ---------------------------------------------------------------------------
-# Form (DataProcessor)
-# ---------------------------------------------------------------------------
 
 def test_scan_form_container(tmp_path: Path) -> None:
     """Контейнер Form → object_type=DataProcessor, container_name=Form."""

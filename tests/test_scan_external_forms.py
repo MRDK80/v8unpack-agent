@@ -23,6 +23,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from v8unpack_agent.scan_forms import scan_forms
 
 # ---------------------------------------------------------------------------
@@ -85,14 +87,9 @@ def test_external_empty_root(tmp_path: Path) -> None:
 
 
 def test_external_nonexistent_root(tmp_path: Path) -> None:
-    index = scan_forms(tmp_path / "no_such_dir", mode="external")
-    assert index.total == 0
-    assert len(index.scan_warnings) >= 1
+    with pytest.raises(NotADirectoryError, match="existing directory"):
+        scan_forms(tmp_path / "no_such_dir", mode="external")
 
-
-# ---------------------------------------------------------------------------
-# happy path: одна форма одной обработки
-# ---------------------------------------------------------------------------
 
 def test_external_single_form(tmp_path: Path) -> None:
     root = tmp_path / "cf_export"

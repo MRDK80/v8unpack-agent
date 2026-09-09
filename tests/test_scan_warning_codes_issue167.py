@@ -277,14 +277,8 @@ def test_elem_discovery_unavailable(tmp_path: Path, monkeypatch: pytest.MonkeyPa
 
 
 def test_scan_root_invalid(tmp_path: Path) -> None:
-    index = scan_forms(tmp_path / "does-not-exist")
-
-    assert index.total == 0
-    assert index.forms == []
-    assert len(index.scan_warnings) == 1
-    warning = index.scan_warnings[0]
-    assert warning.startswith("cf_export_root not found or not a directory")
-    assert scan_warning_code(warning) == SCAN_WARNING_SCAN_ROOT_INVALID
+    with pytest.raises(NotADirectoryError, match="existing directory"):
+        scan_forms(tmp_path / "does-not-exist")
 
 
 def test_every_documented_code_has_a_branch_test() -> None:
