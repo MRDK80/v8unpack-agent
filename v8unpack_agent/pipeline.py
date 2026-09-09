@@ -33,14 +33,25 @@ from pathlib import Path
 
 from v8unpack_agent.elem_parser import ElemIndexResult, parse_elem_json
 from v8unpack_agent.form_artifact import FormArtifact
+from v8unpack_agent.form_identity import (
+    FormBinSource,
+    discover_form_sources,
+    select_sources,
+)
 from v8unpack_agent.form_paths import form_root
 from v8unpack_agent.forms_index import FormsIndex, FormsIndexEntry
 from v8unpack_agent.skd_extractor import SkdResult, extract_skd_queries
 
-# Функция распаковки одной формы: (bin_path, unpacked_root, form_name) -> артефакт.
+# Функция распаковки одной формы: (source, unpacked_root) -> артефакт.
+# Источник несёт канонический ``form_id``, имя формы и путь к ``Form.bin``
+# (issue #226), поэтому одноимённые формы разных владельцев различимы.
 # Конкретную реализацию (через v8unpack) инжектирует вызывающий код — модуль
 # остаётся domain-neutral и тестируемым без платформы 1С.
-FormUnpacker = Callable[[Path, Path, str], FormArtifact]
+FormUnpacker = Callable[[FormBinSource, Path], FormArtifact]
+
+#: Устаревший протокол: (bin_path, unpacked_root, form_name) -> артефакт.
+#: Используйте :func:`~v8unpack_agent.form_identity.adapt_legacy_unpacker`.
+LegacyFormUnpacker = Callable[[Path, Path, str], FormArtifact]
 
 # Функция распаковки .erf-файла: (erf_path, unpacked_root) -> FormArtifact.
 ErfUnpacker = Callable[[Path, Path], FormArtifact]
@@ -68,30 +79,43 @@ def unpack_all_forms(
     unpacked_root: Path,
     unpacker: FormUnpacker,
     *,
+    form_ids: Iterable[str] | None = None,
     form_names: Iterable[str] | None = None,
 ) -> list[FormArtifact]:
     """Распаковать все (или указанные) формы выгрузки в текстовый слой.
 
+    Распаковщик получает канонический источник формы, поэтому одноимённые
+    формы разных владельцев не затирают друг друга (issue #226). Отбор по
+    ``form_ids`` каноничен; ``form_names`` оставлен для совместимости и при
+    неоднозначном имени поднимает ``AmbiguousFormNameError``.
+
     Распаковщик не падает на частичных формах — он отдаёт ``FormArtifact`` с
     ``extraction_ok=False`` и предупреждениями, а пайплайн продолжает работу.
     """
-    bins = discover_form_bins(dump_root)
-    selected = (
-        {n: bins[n] for n in form_names if n in bins}
-        if form_names is not None
-        else bins
+    sources = select_sources(
+        discover_form_sources(dump_root),
+        form_ids=form_ids,
+        form_names=form_names,
     )
     artifacts: list[FormArtifact] = []
-    for name, bin_path in sorted(selected.items()):
-        artifact = unpacker(bin_path, unpacked_root, name)
+    for source in sources:
+        artifact = unpacker(source, unpacked_root)
 
-        elem_result: ElemIndexResult = parse_elem_json(form_root(unpacked_root, name))
+        if not artifact.form_id or artifact.source is None:
+            artifact = replace(artifact, form_id=source.form_id, source=source)
+
+        elem_result: ElemIndexResult = parse_elem_json(
+            form_root(unpacked_root, artifact.form_id)
+        )
 
         if elem_result.elem_index_ok or elem_result.warnings:
             artifact = replace(
                 artifact,
                 elem_index_ok=elem_result.elem_index_ok,
-                extraction_warnings=[*artifact.extraction_warnings, *elem_result.warnings],
+                extraction_warnings=[
+                    *artifact.extraction_warnings,
+                    *elem_result.warnings,
+                ],
             )
 
         artifacts.append(artifact)
@@ -131,27 +155,41 @@ def update_forms_index(
 ) -> FormsIndex:
     """Обновить JSON-карту актуальности по результатам распаковки.
 
-    ``bin_mtime`` берётся из исходного ``Form.bin``, ``unpacked_mtime`` — из
-    каталога распакованной формы. Если ``bin_mtime > unpacked_mtime``, форма
-    считается устаревшей (см. :func:`is_form_stale`).
+    Источник берётся из самого артефакта, поэтому повторное обнаружение форм
+    не выполняется и потеря по имени невозможна (issue #226). Ключ записи —
+    ``form_id``. В индекс пишутся только относительные POSIX-пути: файл
+    остаётся обезличенным и одинаковым на POSIX и NT.
     """
     idx = index or FormsIndex()
-    bins = discover_form_bins(dump_root)
     for art in artifacts:
-        bin_path = bins.get(art.name)
-        if bin_path is None or not bin_path.exists():
+        source = art.source
+        if source is None:
             continue
-        froot = form_root(unpacked_root, art.name)
+        bin_path = source.bin_path
+        if not bin_path.exists():
+            continue
+        key = art.form_id or source.form_id
+        froot = form_root(unpacked_root, key)
         unpacked_mtime = froot.stat().st_mtime if froot.exists() else 0.0
+        try:
+            rel_bin = bin_path.relative_to(dump_root).as_posix()
+        except ValueError:
+            rel_bin = bin_path.name
+        try:
+            rel_root = froot.relative_to(unpacked_root).as_posix()
+        except ValueError:
+            rel_root = key
         idx.upsert(
-            art.name,
+            key,
             FormsIndexEntry(
-                bin_path=str(bin_path.relative_to(dump_root)),
-                unpacked_root=str(froot),
+                bin_path=rel_bin,
+                unpacked_root=rel_root,
                 bin_mtime=bin_path.stat().st_mtime,
                 unpacked_mtime=unpacked_mtime,
                 extraction_ok=art.extraction_ok,
                 warnings=list(art.extraction_warnings),
+                form_id=key,
+                form_name=art.name,
             ),
         )
     return idx

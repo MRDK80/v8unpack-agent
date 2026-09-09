@@ -101,7 +101,8 @@ index_cf(<путь_к_выгрузке>)
 | `form_artifact` | `FormArtifact` — результат распаковки одной формы с явным флагом полноты. |
 | `forms_index` | `FormsIndex` / `FormsIndexEntry` + `is_form_stale()` — реестр актуальности. |
 | `managed_forms` | `discover_elem_forms()` + `ElemFormEntry` — обнаружение форм по `*.elem.json`. → [подробнее](docs/managed_forms_structure.md) |
-| `pipeline` | `discover_form_bins()`, `unpack_all_forms()`, `update_forms_index()`, `unpack_erf()`, `ErfUnpacker`. |
+| `pipeline` | `unpack_all_forms()`, `update_forms_index()`, `unpack_erf()`, `FormUnpacker`, `ErfUnpacker`; `discover_form_bins()` — устаревшая карта имён. |
+| `form_identity` | `FormBinSource`, `discover_form_sources()`, `select_sources()`, `adapt_legacy_unpacker()`, `FormIdentityError` — каноническая идентичность формы (#226). |
 | `skd_extractor` | `extract_skd_queries()` + `extract_all_skd_queries()` — СКД из `.erf`. → [подробнее](docs/skd_extractor.md) |
 | `elem_parser` | `parse_elem_json()` + `ElemIndexResult` — структура формы из `elem.json`; `data_path` обычных форм через `prop`, управляемых — через UUID и структурный fallback, legacy `ФормаСписка` / `ФормаВыбора` — через подтверждённые UUID-привязки `TabularField` (#103). → [подробнее](docs/elem_parser.md) |
 | `form_summary` | `build_form_summary(form_dir)` + `to_normalized_json()` — детерминированная семантическая выжимка любой elem-формы (обычной и управляемой): attributes / commands / elements / events / relations поверх `parse_elem_json`. → [подробнее](docs/form_summary.md) |

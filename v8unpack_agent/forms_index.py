@@ -29,6 +29,9 @@ import json
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
+#: Версия схемы JSON-индекса (issue #226).
+SCHEMA_VERSION = 2
+
 
 @dataclass
 class FormsIndexEntry:
@@ -40,6 +43,8 @@ class FormsIndexEntry:
     unpacked_mtime: float
     extraction_ok: bool = True
     warnings: list[str] = field(default_factory=list)
+    form_id: str = ""
+    form_name: str = ""
 
 
 def is_form_stale(idx_entry: FormsIndexEntry | dict) -> bool:
@@ -75,11 +80,19 @@ class FormsIndex:
         )
 
     def to_dict(self) -> dict:
-        return {
-            name: asdict(entry)
-            for name, entry in sorted(self._entries.items())
-        }
+        """Сериализовать индекс с явной версией схемы (issue #226).
 
+        Схема 2 отличается от плоской карты «имя → запись»: записи лежат в
+        секции ``forms`` и ключом служит ``form_id``. Версия нужна, чтобы
+        :meth:`load` мог отличить новый файл от legacy без догадок.
+        """
+        return {
+            "schema_version": SCHEMA_VERSION,
+            "forms": {
+                key: asdict(entry)
+                for key, entry in sorted(self._entries.items())
+            },
+        }
     def save(self, index_path: Path) -> Path:
         """Записать индекс как UTF-8 JSON (отсортированный, читаемый в diff)."""
         index_path.parent.mkdir(parents=True, exist_ok=True)
@@ -91,19 +104,34 @@ class FormsIndex:
 
     @classmethod
     def load(cls, index_path: Path) -> FormsIndex:
-        """Загрузить индекс; отсутствующий файл — пустой индекс."""
+        """Загрузить индекс; отсутствующий файл — пустой индекс.
+
+        Поддерживаются обе схемы. В схеме 2 поля читаются как есть, поэтому
+        ``save`` → ``load`` не меняет содержимое записи. Плоский legacy-файл
+        без ``schema_version`` мигрируется: ключ становится и ``form_id``,
+        и ``form_name``, чтобы ни одна запись не потерялась (issue #226).
+        """
         if not index_path.exists():
             return cls()
         raw = json.loads(index_path.read_text(encoding="utf-8"))
-        entries = {
-            name: FormsIndexEntry(
+        legacy = not isinstance(raw.get("forms"), dict)
+        rows = raw if legacy else raw["forms"]
+        entries = {}
+        for key, row in rows.items():
+            if legacy:
+                form_id = str(row.get("form_id") or key)
+                form_name = str(row.get("form_name") or Path(key).name)
+            else:
+                form_id = str(row.get("form_id", ""))
+                form_name = str(row.get("form_name", ""))
+            entries[key] = FormsIndexEntry(
                 bin_path=row["bin_path"],
                 unpacked_root=row["unpacked_root"],
                 bin_mtime=float(row["bin_mtime"]),
                 unpacked_mtime=float(row["unpacked_mtime"]),
                 extraction_ok=bool(row.get("extraction_ok", True)),
                 warnings=list(row.get("warnings", [])),
+                form_id=form_id,
+                form_name=form_name,
             )
-            for name, row in raw.items()
-        }
         return cls(entries)

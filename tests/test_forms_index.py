@@ -25,6 +25,8 @@ def test_is_form_stale_accepts_dict():
 def test_entry_fields_match_article():
     e = _entry(1.0, 1.0)
     assert set(e.__dataclass_fields__) == {
+        "form_id",
+        "form_name",
         "bin_path",
         "unpacked_root",
         "bin_mtime",

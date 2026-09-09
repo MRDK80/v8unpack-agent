@@ -16,6 +16,7 @@ from pathlib import Path
 
 from v8unpack_agent import (
     FormArtifact,
+    FormBinSource,
     form_paths,
     is_form_stale,
     unpack_all_forms,
@@ -33,24 +34,29 @@ def make_demo_dump(dump_root: Path, *form_names: str) -> None:
         (ext / "Form.bin").write_bytes(b"\x00demo-binary\x00")
 
 
-def demo_unpacker(bin_path: Path, unpacked_root: Path, form_name: str) -> FormArtifact:
+def demo_unpacker(source: FormBinSource, unpacked_root: Path) -> FormArtifact:
     """Распаковщик-заглушка вместо v8unpack.extract(...).
 
-    Пишет Form.obj.bsl по конвенции и возвращает FormArtifact. Форму с именем
-    «ФормаСписка» намеренно делаем частичной, чтобы показать обработку
-    extraction_ok=False без падения пайплайна.
+    Получает канонический источник формы (issue #226): каталог результата
+    строится по ``form_id``, поэтому одноимённые формы разных владельцев не
+    затирают друг друга. Форму с именем «ФормаСписка» намеренно делаем
+    частичной, чтобы показать обработку extraction_ok=False без падения
+    пайплайна.
     """
-    target = unpacked_root / "Form" / form_name
-    target.mkdir(parents=True, exist_ok=True)
-    (target / "Form.obj.bsl").write_text("// демо-код формы", encoding="utf-8")
-
-    if form_name == "ФормаСписка":
-        return FormArtifact.for_form(
-            unpacked_root, form_name,
+    if source.form_name == "ФормаСписка":
+        artifact = FormArtifact.for_source(
+            unpacked_root,
+            source,
             extraction_ok=False,
             extraction_warnings=["вложенная панель не распакована"],
         )
-    return FormArtifact.for_form(unpacked_root, form_name)
+    else:
+        artifact = FormArtifact.for_source(unpacked_root, source)
+
+    target = artifact.paths["object_module"].parent
+    target.mkdir(parents=True, exist_ok=True)
+    (target / "Form.obj.bsl").write_text("// демо-код формы", encoding="utf-8")
+    return artifact
 
 
 def make_demo_external(external_root: Path) -> None:
@@ -177,11 +183,14 @@ def main() -> None:
 
         # 3) проверяем свежесть
         print("Устаревшие формы:", index.stale_forms() or "нет")
-        entry = index.get("ФормаЭлемента")
+        element_form = next(
+            art for art in artifacts if art.name == "ФормаЭлемента"
+        )
+        entry = index.get(element_form.form_id)
         print("ФормаЭлемента устарела?", is_form_stale(entry))
 
         # ручной разбор путей одной формы
-        paths = form_paths(unpacked_root, "ФормаЭлемента")
+        paths = form_paths(unpacked_root, element_form.form_id)
         print("\nКонвенция путей для ФормаЭлемента:")
         for key, value in paths.items():
             print(f"  {key}: {value}")
