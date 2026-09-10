@@ -33,3 +33,6 @@ build/
 .venv-*/
 venv/
 env/
+
+# байткод примеров: examples/ создаёт __pycache__ при импорте
+__pycache__/
