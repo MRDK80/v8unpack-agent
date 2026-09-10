@@ -37,6 +37,18 @@
     python examples/unresolved_refs_report.py /path/to/cf_export --runs 2 --top 10
     python examples/unresolved_refs_report.py /path/to/cf_export --local-names
     python examples/unresolved_refs_report.py /path/to/cf_export --annex ~/annex.csv
+
+Категория: пример на реальной выгрузке.
+Входные данные: CF_EXPORT — каталог распакованной выгрузки конфигурации.
+Ожидаемый результат: обезличенный агрегат в stdout, RC=0;
+локальные имена и CSV не публикуются и не коммитятся.
+Поведение без данных: штатная ошибка argparse (RC=2) —
+это ожидаемое поведение, а не дефект; в автоматический
+прогон файл не входит.
+Зависимость: compare-режим (--compare-root) загружает
+examples/reference_only_compare.py через importlib — каталог examples/
+не является пакетом, поэтому модуль подключается по пути, а регистрация
+в sys.modules выполняется до exec_module.
 """
 
 from __future__ import annotations

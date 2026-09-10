@@ -47,12 +47,21 @@
 Режим --json печатает только агрегированные счётчики: путей, имён форм,
 UUID и содержимого файлов в нём нет. Cohort строится по кандидатам
 *.elem.json, как и в историческом screening.
+
+Категория: самодостаточный синтетический пример
+(отчёт по неиндексируемым формам).
+Входные данные: не требуются; синтетическая выгрузка создаётся
+во временном каталоге и удаляется за собой. Опциональные
+аргументы позволяют прогнать тот же разбор на реальной выгрузке.
+Ожидаемый результат: запуск без аргументов даёт RC=0 и разбор
+шести форм с различными причинами неиндексируемости.
+Поведение без данных: установленная платформа 1С и реальная
+выгрузка не нужны.
 """
 from __future__ import annotations
 
 import argparse
 import hashlib
-import inspect
 import json
 import sys
 import tempfile
@@ -233,11 +242,7 @@ def build_demo_export(root: Path) -> list[Path]:
 def _form_class_for_indexed(form_dir: Path, elements: list) -> str:
     """FormClass проиндексированной формы через канонический coverage-API."""
     try:
-        params = inspect.signature(calc_data_path_coverage).parameters
-        if "form_name" in params:
-            report = calc_data_path_coverage(elements, form_name=form_dir.name)
-        else:
-            report = calc_data_path_coverage(elements)
+        report = calc_data_path_coverage(elements, form_name=form_dir.name)
         return str(report.form_class)
     except Exception:  # noqa: BLE001
         return str(FormClass.UNKNOWN)

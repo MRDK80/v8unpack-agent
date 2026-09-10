@@ -30,6 +30,15 @@ v8unpack распаковывает контейнер .erf так же, как 
 ``.erf`` и требует обязательных ``--unpack-dir`` и ``--output``. Без выгрузки
 запуск невозможен: ``python examples/extract_skd_queries.py`` без аргументов
 штатно завершается ошибкой argparse. Это ожидаемое поведение, а не дефект.
+
+Категория: пример на реальной выгрузке.
+Входные данные: --unpack-dir, --output — распакованный внешний
+отчёт .erf.
+Ожидаемый результат: обезличенный агрегат в stdout, RC=0;
+локальные имена и CSV не публикуются и не коммитятся.
+Поведение без данных: штатная ошибка argparse (RC=2) —
+это ожидаемое поведение, а не дефект; в автоматический
+прогон файл не входит.
 """
 from __future__ import annotations
 
@@ -72,7 +81,8 @@ def find_metadata_file(unpack_dir: Path) -> Path | None:
         if candidate.exists():
             return candidate
     # Рекурсивный fallback: первый файл с именем metadata
-    found = next(unpack_dir.rglob("metadata"), None)
+    metadata_dirs = sorted(unpack_dir.rglob("metadata"))
+    found = metadata_dirs[0] if metadata_dirs else None
     return found
 
 
