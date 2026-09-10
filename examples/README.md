@@ -49,7 +49,7 @@ done
 | Файл | Обязательные аргументы | Источник данных |
 |---|---|---|
 | `extract_skd_queries.py` | `--unpack-dir`, `--output` | распакованный внешний отчёт `.erf` |
-| `legacy_list_form_bindings.py` | `FORM_DIR` | каталог формы из выгрузки v8unpack |
+| `legacy_list_form_bindings.py` (historical, #252) | `FORM_DIR` | каталог формы из выгрузки v8unpack; для диагностики неиндексируемых форм используйте `unindexed_forms_report.py` |
 | `unresolved_refs_report.py` | `CF_EXPORT` | каталог распакованной выгрузки конфигурации |
 | `missing_object_attributes_report.py` | `EXPORT_ROOT` | корень выгрузки `cf_export` конфигурации |
 | `common_modules.py` | `EXPORT_ROOT` | корень выгрузки `cf_export` конфигурации |
