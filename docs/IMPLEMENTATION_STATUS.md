@@ -582,3 +582,60 @@ Synthetic example использует публичный `PLATFORM_DYNAMIC_SOUR
 UUID-заглушки. Категории `TABULAR_FIELD_EMPTY_ATTR_MAP` и
 `TABULAR_FIELD_PLATFORM_DYNAMIC` представлены по одному разу; production
 семантика `classify_unindexed_form()` не изменена.
+
+## Issue #245 — README и профильная документация
+
+Дата: 10 сентября 2026. Ветка `docs/245-readme-docs-refactor`, база `main`
+`c06e9f5df0b2ce6142b1f1916a95a17a6b20d5be`.
+
+Задача выделена из #210 вместе с #246 и охватывает только документацию:
+production-код, `examples/*.py`, workflow и `pyproject.toml` не изменялись.
+
+### Результат
+
+| Метрика | До | После |
+|---|---|---|
+| `README.md` | 30123 bytes | 14830 bytes |
+| битые относительные ссылки | не измерялось | 0 |
+| `ruff check .` | RC=0 | RC=0 |
+| `mypy v8unpack_agent` | RC=0, 25 source files | RC=0, 25 source files |
+| `python -m pytest -q` | 1087 passed | 1087 passed |
+
+Порог по README — не более 20 000 bytes UTF-8; фактическое сокращение
+15 293 bytes, запас до порога 5 170 bytes.
+
+### Вердикты документов
+
+Все 28 Markdown-файлов в scope перечислены в
+[`documentation_audit_issue245.md`](documentation_audit_issue245.md): 5
+`updated`, 15 `current`, 8 `historical`. Четыре документа переведены из
+предварительного `updated` в `current`, поскольку чтение показало, что
+`runner.md`, `run_report.md`, `object_decoder.md` и `elem_parser.md` уже
+полны, а дублировал их README.
+
+### Исправленные расхождения с кодом
+
+- Python quick start использовал распаковщик с тремя аргументами, тогда как
+  `unpack_all_forms()` вызывает `unpacker(source, unpacked_root)` и передаёт
+  `FormBinSource`; legacy-функция допустима только через
+  `adapt_legacy_unpacker()`.
+- `discover_form_sources()` отсутствовал в описании как канонический
+  discovery API, а `discover_form_bins()` не был помечен legacy shim.
+- Не было сказано, что отбор по `form_ids` каноничен, а `form_names` при
+  неоднозначном имени поднимает `AmbiguousFormNameError`.
+- Три версии схем не были разведены между собой.
+- `docs/run_report.md` не имел входящих ссылок.
+- Корпусные числа приводились как текущие вместо ссылки на датированное
+  исследование по #229.
+- `docs/scan_forms.md` раскрывал существование внутреннего репозитория.
+
+Метрика покрытия `data_path` не сериализуется в post-run report: совпадений
+`CoverageReport` и `calc_data_path_coverage` в `runner.py` и `run_report.py`
+нет. Каноническое место метрики — `docs/form_classifier.md`; отдельный
+документ не создавался.
+
+### Граница со смежными задачами
+
+`examples/*.py` не рефакторились — это #246; проверены только ссылки.
+Установка описана без утверждения о публикации пакета, публикация
+отслеживается в #149. Финальная интеграция — #210.
