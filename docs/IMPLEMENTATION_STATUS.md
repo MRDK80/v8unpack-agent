@@ -639,3 +639,36 @@ production-код, `examples/*.py`, workflow и `pyproject.toml` не измен
 `examples/*.py` не рефакторились — это #246; проверены только ссылки.
 Установка описана без утверждения о публикации пакета, публикация
 отслеживается в #149. Финальная интеграция — #210.
+
+## Issue #248 — layout сериализованного post-run report
+
+`docs/run_report.md` описывал только контракт Python-модели: конструктор
+`PostRunReport` принимает `completed`, `started_at` и `finished_at` плоским
+списком аргументов. Сериализованный файл группирует эти поля в объект `run`,
+поэтому внешний потребитель, обращавшийся к `payload["completed"]`, получал
+`KeyError`.
+
+Что сделано:
+
+- добавлен раздел «Сериализованный JSON-файл» с явным разведением Python-модели
+  и layout готового файла;
+- зафиксированы ключи верхнего уровня `schema_version`, `run`, `summary`,
+  `objects`, `fatal_error`;
+- описан объект `run` и оговорено, что `run.completed` означает управляемое
+  завершение runner, а не код возврата 0;
+- инварианты `found = complete + partial + failed` и
+  `discovered = found + excluded` связаны с полями файла, `discovered`
+  помечен как вычисляемое property, а не поле конструктора `RunSummary`;
+- degraded-завершение с кодом 3 отделено от managed fatal с кодом 4;
+- пример чтения приведён к `payload["run"]["completed"]`.
+
+Проверка контракта: `tests/test_run_report_docs_issue248.py` парсит JSON-блок
+из документа, сравнивает его с `PostRunReport.to_dict()` и с фактическим
+выводом `write_post_run_report()` во временном каталоге, проверяет набор
+ключей, вложенность `run`, инварианты summary и обезличенность примера.
+
+Production-код, схема, `examples/*.py`, workflow и `pyproject.toml` не
+изменялись, реальные отчёты не коммитились.
+
+Результаты: Ruff RC=0, Mypy RC=0 на 25 файлах, pytest 1118 passed
+(1111 baseline и 7 новых проверок).

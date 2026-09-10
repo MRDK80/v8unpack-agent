@@ -79,3 +79,122 @@ write_post_run_report(report, Path("post-run.json"))
 Коды предупреждений сканера публикуются в верхнем регистре, а модель требует нижний. `scan_warning_reason_code()` регистр не меняет: нормализация и fallback-код для legacy-предупреждений без маркера выполняются на стороне runner (#198).
 
 Корневой `v8unpack_agent.__init__` намеренно не расширяется: модуль импортируется напрямую, чтобы не менять контракт ленивых импортов до завершения #140.
+
+## Сериализованный JSON-файл
+
+Конструктор `PostRunReport` и layout готового файла — два разных уровня.
+
+Форма конструктора Python и layout JSON-файла не идентичны по вложенности.
+
+Это намеренный контракт сериализатора, а не расхождение модели: `to_dict()`
+группирует метаданные запуска в объект `run`, тогда как конструктор принимает
+`completed`, `started_at` и `finished_at` плоским списком аргументов.
+
+### Python model
+
+```python
+report = PostRunReport(
+    schema_version=1,
+    completed=True,
+    started_at="2026-01-01T00:00:00Z",
+    finished_at="2026-01-01T00:00:01Z",
+    summary=summary,
+    objects=(),
+)
+```
+
+### Пример сериализованного файла
+
+`write_post_run_report()` пишет детерминированный JSON: `ensure_ascii=False`,
+`indent=2`, `sort_keys=True` и завершающий перевод строки. Порядок ключей
+алфавитный и стабилен между запусками.
+
+```json
+{
+  "fatal_error": null,
+  "objects": [],
+  "run": {
+    "completed": true,
+    "finished_at": "2026-01-01T00:00:01Z",
+    "started_at": "2026-01-01T00:00:00Z"
+  },
+  "schema_version": 1,
+  "summary": {
+    "complete": 0,
+    "discovered": 0,
+    "excluded": 0,
+    "failed": 0,
+    "found": 0,
+    "partial": 0
+  }
+}
+```
+
+### Ключи верхнего уровня
+
+| Ключ | Назначение |
+|------|------------|
+| `schema_version` | Версия схемы файла отчёта. |
+| `run` | Состояние и времена управляемого запуска. |
+| `summary` | Счётчики результата прогона. |
+| `objects` | Детализированные результаты по объектам. |
+| `fatal_error` | Санитизированная run-level ошибка либо `null`. |
+
+### Объект run
+
+| Поле | Значение |
+|------|----------|
+| `run.completed` | Runner завершился управляемо. |
+| `run.started_at` | Время старта прогона. |
+| `run.finished_at` | Время завершения прогона. |
+
+`run.completed` равно `true` при управляемом завершении runner. Это не
+синоним кода возврата 0 и не утверждение об отсутствии `partial` или
+`failed` объектов.
+
+### Инварианты summary
+
+```text
+found = complete + partial + failed
+discovered = found + excluded
+```
+
+Для пустого success-отчёта обе суммы равны нулю.
+
+Поля конструктора `RunSummary` — `found`, `complete`, `partial`, `failed` и `excluded`. Ключ `discovered` в файле вычисляется моделью как `found + excluded` и не передаётся в конструктор.
+
+### Degraded-завершение
+
+При degraded-прогоне отчёт остаётся полным:
+
+```text
+код возврата CLI: 3
+run.completed: true
+fatal_error: null
+summary.partial > 0 либо summary.failed > 0
+```
+
+Код 3 означает пригодный, но неполный результат, а не управляемый fatal.
+
+### Managed fatal
+
+```text
+run.completed: false
+fatal_error: объект
+код возврата CLI: 4
+```
+
+Политика кодов возврата описана в [runner.md](runner.md).
+
+### Чтение файла
+
+```python
+import json
+from pathlib import Path
+
+payload = json.loads(Path("post-run.json").read_text(encoding="utf-8"))
+completed = payload["run"]["completed"]
+```
+
+Обращение к `completed` на верхнем уровне приводит к `KeyError`: поле
+находится внутри объекта `run`.
