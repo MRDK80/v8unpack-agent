@@ -45,6 +45,10 @@
 Поведение без данных: штатная ошибка argparse (RC=2) —
 это ожидаемое поведение, а не дефект; в автоматический
 прогон файл не входит.
+Зависимость: compare-режим (--compare-root) загружает
+examples/reference_only_compare.py через importlib — каталог examples/
+не является пакетом, поэтому модуль подключается по пути, а регистрация
+в sys.modules выполняется до exec_module.
 """
 
 from __future__ import annotations

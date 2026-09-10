@@ -29,6 +29,16 @@
 
 ## [Unreleased]
 
+### Changed
+
+- `examples/`: в module docstring каждого примера зафиксированы категория,
+  входные данные, ожидаемый результат и поведение без данных (#246).
+- `examples/extract_skd_queries.py`: детерминированный выбор каталога
+  `metadata` через `sorted()` вместо `next(rglob(...))` (#246).
+- `examples/unindexed_forms_report.py`: прямой вызов
+  `calc_data_path_coverage(..., form_name=...)` вместо проверки сигнатуры
+  через `inspect` (#246).
+
 - docs(run_report): описан layout сериализованного post-run report с объектом `run`, ключами верхнего уровня и примером чтения (#248).
 - **Документация: README сведён к landing page** (issue #245): справочники и
   датированные агрегаты перенесены в канонические документы, каждый крупный
