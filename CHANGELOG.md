@@ -29,6 +29,14 @@
 
 ## [Unreleased]
 
+- **`scan_forms`: удалена недостижимая ветка `SCAN_ROOT_INVALID`**
+  (issue #242): после #234 невалидный корень выгрузки всегда приводит к
+  `NotADirectoryError`, поэтому вторая проверка `root.is_dir()` с
+  предупреждением и пустым индексом была недостижима и удалена. Код
+  `SCAN_ROOT_INVALID` сохранён в `SCAN_WARNING_CODES` как зарезервированный
+  legacy: `scan_warning_code()` по-прежнему разбирает ранее сохранённые
+  предупреждения. Публичная сигнатура `scan_forms()` и контракт #234
+  не изменились.
 - **`FormScanIndex` сериализует только относительные пути** (issue #239):
   `to_dict()` записывает `form_path`, `bsl_path`, `json_path`,
   `form_elem_path` и `elem_json_path` относительно нового runtime-поля

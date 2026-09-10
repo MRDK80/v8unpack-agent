@@ -437,7 +437,7 @@ issues #143, #164, #165, #166.
 | `FORM_SCAN_ERROR` | исключение при обходе каталога формы; обход продолжается (best-effort) |
 | `REFERENCE_METADATA_INCOMPLETE` | блок идентификации объекта не содержит UUID |
 | `REFERENCE_UUID_CONFLICT` | один UUID указывает на разные имена типов; сохранена первая запись |
-| `SCAN_ROOT_INVALID` | `cf_export_root` не существует или не является каталогом |
+| `SCAN_ROOT_INVALID` | зарезервированный legacy-код; `scan_forms()` не эмитирует его после #234, невалидный корень приводит к `NotADirectoryError` |
 <!-- scan-warning-codes:end -->
 
 <!-- issue-180-followup -->
