@@ -3,6 +3,27 @@
 Все значимые изменения фиксируются здесь.
 Формат следует [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/).
 
+## Детерминизм вывода примеров (#251)
+
+### Исправлено
+
+- `examples/basic_usage.py`: пути `object_module`, `ext_module`, `metadata`,
+  `forms_index` и baseline drift-проверки печатаются относительно корня
+  синтетической выгрузки в POSIX-виде. Имя временного каталога больше не
+  попадает в stdout, повторный запуск даёт побайтово тот же вывод.
+- `examples/unindexed_forms_report.py`: путь формы и текст детали причины
+  печатаются относительно корня выгрузки. Абсолютный путь, приходящий из
+  `classify_unindexed_form()`, вычищается на стороне примера.
+
+### Добавлено
+
+- `tests/test_examples_determinism_issue251.py`: двойной прогон восьми
+  самодостаточных примеров и `reference_only_compare.py --selftest`,
+  побайтовое сравнение stdout, запрет имён временных каталогов, абсолютных
+  путей и литеральных Windows-разделителей в выводе.
+
+Production-код `v8unpack_agent/` и публичный API не изменялись.
+
 ## Production runner и CLI (#198)
 
 ### Добавлено
