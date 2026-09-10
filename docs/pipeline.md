@@ -57,12 +57,54 @@ update_forms_index(
 
 Отбор по `form_ids` каноничен. Параметр `form_names` оставлен для
 совместимости и не является надёжной идентичностью: одноимённые формы разных
-владельцев различаются только по `form_id`.
+владельцев различаются только по `form_id`. При неоднозначном имени отбор
+поднимает `AmbiguousFormNameError`.
 
 `update_forms_index()` берёт источник из самого артефакта, поэтому повторное
 обнаружение форм не выполняется и потеря записи по имени невозможна (#226).
 Ключ записи — `form_id`. В индекс пишутся только относительные POSIX-пути,
 поэтому файл остаётся обезличенным и одинаковым на POSIX и NT.
+
+## Канонический вызов
+
+Цепочка всегда одна: обнаружение источников, распаковка по `FormBinSource`,
+обновление индекса по артефактам.
+
+```python
+from pathlib import Path
+
+from v8unpack_agent import unpack_all_forms, update_forms_index
+from v8unpack_agent.form_artifact import FormArtifact
+from v8unpack_agent.form_identity import FormBinSource, discover_form_sources
+from v8unpack_agent.form_router import form_paths
+
+dump_root = Path("unpacked_cf")
+unpacked_root = Path("text_layer")
+
+
+def unpack_one(source: FormBinSource, root: Path) -> FormArtifact:
+    """Минимальный распаковщик под канонический контракт."""
+    # Здесь вызывается реальное извлечение текстов из source.bin_path.
+    paths = form_paths(root, source.form_id)
+    if paths["object_module"].exists():
+        return FormArtifact.for_form(root, source.name)
+    return FormArtifact.for_form(
+        root,
+        source.name,
+        extraction_ok=False,
+        extraction_warnings=["модуль формы не извлечён"],
+    )
+
+
+sources = discover_form_sources(dump_root)
+artifacts = unpack_all_forms(dump_root, unpacked_root, unpack_one)
+index = update_forms_index(dump_root, unpacked_root, artifacts)
+index.save(Path("forms_index.json"))
+```
+
+Вызывать `discover_form_sources()` вручную нужно только тогда, когда требуется
+собственный отбор или диагностика источников: `unpack_all_forms()` выполняет
+обнаружение самостоятельно.
 
 ## Контракт FormUnpacker
 
@@ -94,6 +136,40 @@ Legacy-функция `discover_form_bins()` возвращает карту `di
 имени формы и остаётся совместимым shim, а не каноническим API обнаружения:
 неоднозначные имена не должны использоваться как идентичность. Срок удаления
 legacy-слоя не объявлен.
+
+Подключение существующего legacy-распаковщика:
+
+```python
+from v8unpack_agent.form_identity import adapt_legacy_unpacker
+
+
+def legacy_unpack(bin_path: Path, root: Path, form_name: str) -> FormArtifact:
+    ...
+
+
+artifacts = unpack_all_forms(
+    dump_root,
+    unpacked_root,
+    adapt_legacy_unpacker(legacy_unpack),
+)
+```
+
+Передавать трёхаргументную функцию напрямую в `unpack_all_forms()` нельзя:
+пайплайн вызывает распаковщик как `unpacker(source, unpacked_root)`.
+
+## Версии схем
+
+В пакете три независимые версии схем. Они не связаны между собой и не должны
+сравниваться друг с другом.
+
+| Артефакт | Версия | Каноническое описание |
+|---|---:|---|
+| карта актуальности `FormsIndex` | 2 | этот документ |
+| индекс сканирования `FormScanIndex` | 2 | [`scan_forms`](scan_forms.md) |
+| post-run report | 1 | [`run_report`](run_report.md) |
+
+Индекс сканирования дополнительно принимает legacy-версию `1` при чтении;
+запись всегда ведётся в текущей версии.
 
 ## Полный и частичный результат
 
