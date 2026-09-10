@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 import sys
@@ -31,6 +32,7 @@ EXPECTED_JSON_COUNTS = {
 
 
 def _run_example(*args: str) -> str:
+    env = {**os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"}
     completed = subprocess.run(
         [sys.executable, str(EXAMPLE), *args],
         cwd=PROJECT_ROOT,
@@ -38,6 +40,7 @@ def _run_example(*args: str) -> str:
         capture_output=True,
         text=True,
         encoding="utf-8",
+        env=env,
     )
     return completed.stdout
 
