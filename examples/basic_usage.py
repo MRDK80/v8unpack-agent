@@ -34,6 +34,16 @@ from v8unpack_agent.drift_checker import check_drift
 from v8unpack_agent.scan_forms import scan_forms
 
 
+def rel_posix(path: Path, root: Path) -> str:
+    """Путь относительно корня синтетической выгрузки в POSIX-виде.
+
+    Абсолютные пути временного каталога не должны попадать в stdout:
+    вывод примера обязан быть детерминированным и одинаковым на всех
+    платформах (issue #251).
+    """
+    return path.relative_to(root).as_posix()
+
+
 def make_demo_dump(dump_root: Path, *form_names: str) -> None:
     """Создать синтетическую выгрузку с .../Forms/<имя>/Ext/Form.bin."""
     for name in form_names:
@@ -128,7 +138,10 @@ def demo_drift(config_root: Path) -> None:
     baseline = scan_forms(config_root, mode="config")
     baseline_path = config_root.parent / "forms_scan_index_baseline.json"
     baseline.save(baseline_path)
-    print("\n[drift] baseline сохранён:", baseline_path)
+    print(
+        "\n[drift] baseline сохранён:",
+        rel_posix(baseline_path, config_root.parent),
+    )
     for e in baseline.forms:
         print(f"  {e.form_name}: bsl_sha256={e.bsl_sha256!r}, "
               f"elem_sha256={e.elem_sha256!r}")
@@ -181,13 +194,13 @@ def main() -> None:
         for art in artifacts:
             flag = "ok" if art.extraction_ok else f"частично: {art.extraction_warnings}"
             print(f"  - {art.name}: {flag}")
-            print(f"    object_module = {art.paths['object_module']}")
+            print(f"    object_module = {rel_posix(art.paths['object_module'], base)}")
 
         # 2) строим карту актуальности
         index = update_forms_index(dump_root, unpacked_root, artifacts)
         index_path = unpacked_root / "forms_index.json"
         index.save(index_path)
-        print("\nforms_index сохранён:", index_path)
+        print("\nforms_index сохранён:", rel_posix(index_path, base))
 
         # 3) проверяем свежесть
         print("Устаревшие формы:", index.stale_forms() or "нет")
@@ -201,7 +214,7 @@ def main() -> None:
         paths = form_paths(unpacked_root, element_form.form_id)
         print("\nКонвенция путей для ФормаЭлемента:")
         for key, value in paths.items():
-            print(f"  {key}: {value}")
+            print(f"  {key}: {rel_posix(value, base)}")
 
         # 4) external-режим: опись форм внешних обработок и отчётов (issue #32)
         external_root = base / "External"

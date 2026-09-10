@@ -258,21 +258,49 @@ def _form_class_for_unindexed(form_dir: Path, reason: UnindexedReason) -> str:
     return str(FormClass.UNKNOWN)
 
 
-def report_for_form(form_dir: Path) -> dict:
+def _form_ref(form_dir: Path, root: Path | None) -> str:
+    """Ссылка на форму для печати.
+
+    Если корень выгрузки известен, печатается относительный POSIX-путь:
+    абсолютные пути и имена временных каталогов в stdout недопустимы
+    (issue #251).
+    """
+    if root is None:
+        return str(form_dir)
+    try:
+        return form_dir.relative_to(root).as_posix()
+    except ValueError:
+        return form_dir.name
+
+
+def _sanitize_detail(detail: str, form_dir: Path, form_ref: str) -> str:
+    """Заменить абсолютный путь формы в тексте детали на относительный.
+
+    Текст детали формирует ``classify_unindexed_form()`` из production-кода,
+    поэтому подстановка выполняется здесь и только по известному
+    ``form_dir`` — без регулярных выражений по произвольному тексту.
+    """
+    for variant in (str(form_dir), form_dir.as_posix()):
+        detail = detail.replace(variant, form_ref)
+    return detail
+
+
+def report_for_form(form_dir: Path, root: Path | None = None) -> dict:
+    form_ref = _form_ref(form_dir, root)
     result = parse_elem_json(form_dir)
     if result.elem_index_ok:
         return {
-            "form": str(form_dir),
+            "form": form_ref,
             "indexed": True,
             "form_class": _form_class_for_indexed(form_dir, result.elements),
         }
 
     info = classify_unindexed_form(form_dir, result)
     return {
-        "form": str(form_dir),
+        "form": form_ref,
         "indexed": False,
         "reason": info.reason.value,
-        "detail": info.detail,
+        "detail": _sanitize_detail(info.detail, form_dir, form_ref),
         "form_class": _form_class_for_unindexed(form_dir, info.reason),
     }
 
@@ -376,7 +404,7 @@ def report_for_export(root: Path) -> tuple[Counter, list[dict]]:
     counter: Counter = Counter()
     rows: list[dict] = []
     for elem_json in sorted(root.rglob("*.elem.json")):
-        row = report_for_form(elem_json.parent)
+        row = report_for_form(elem_json.parent, root)
         rows.append(row)
         counter["indexed" if row["indexed"] else row["reason"]] += 1
     return counter, rows
