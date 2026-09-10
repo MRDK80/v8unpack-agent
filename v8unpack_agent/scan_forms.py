@@ -117,6 +117,9 @@ SCAN_WARNING_REFERENCE_UUID_CONFLICT = "REFERENCE_UUID_CONFLICT"
 SCAN_WARNING_FORM_MODULE_MISSING = "FORM_MODULE_MISSING"
 SCAN_WARNING_FORM_SCAN_ERROR = "FORM_SCAN_ERROR"
 SCAN_WARNING_ELEM_DISCOVERY_UNAVAILABLE = "ELEM_DISCOVERY_UNAVAILABLE"
+# Зарезервированный legacy-код: scan_forms() не эмитирует его после #234,
+# невалидный корень приводит к NotADirectoryError. Оставлен в
+# SCAN_WARNING_CODES ради чтения ранее сохранённых предупреждений (#242).
 SCAN_WARNING_SCAN_ROOT_INVALID = "SCAN_ROOT_INVALID"
 
 SCAN_WARNING_CODES = frozenset(
@@ -896,20 +899,6 @@ def scan_forms(
     forms: list[FormEntry] = []
     scan_warnings: list[str] = []
     reference_types: dict[str, str] = {}
-
-    if not root.is_dir():
-        scan_warnings.append(
-            _format_scan_warning(
-                SCAN_WARNING_SCAN_ROOT_INVALID,
-                f"cf_export_root not found or not a directory: {root}",
-            )
-        )
-        return FormScanIndex(
-            forms=[],
-            total=0,
-            scanned_at=datetime.now(tz=timezone.utc).isoformat(),
-            scan_warnings=scan_warnings,
-        )
 
     if mode == "external":
         _scan_external(root, forms, scan_warnings)
