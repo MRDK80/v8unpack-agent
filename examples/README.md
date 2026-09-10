@@ -196,3 +196,9 @@ python examples/reference_only_compare.py --selftest
 5.52% применимых), B 45 (100.00% / 17.72%). Итог: `partially_confirmed`, exit code 0.
 
 Отчёт исследования: `docs/research/platform_types_cross_config_issue164.md`.
+
+## Динамический источник в synthetic report
+
+Синтетический режим `unindexed_forms_report.py` использует публичный
+`PLATFORM_DYNAMIC_SOURCE_MARKER` пакета и детерминированно включает один случай
+`tabular_field_platform_dynamic`. Реальные выгрузки, UUID и пути не требуются.

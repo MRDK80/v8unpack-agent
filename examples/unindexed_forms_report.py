@@ -61,6 +61,7 @@ from pathlib import Path
 
 from v8unpack_agent.coverage_metric import calc_data_path_coverage
 from v8unpack_agent.elem_parser import (
+    PLATFORM_DYNAMIC_SOURCE_MARKER,
     UnindexedReason,
     classify_unindexed_form,
     parse_elem_json,
@@ -76,10 +77,6 @@ UUID_OWN_2 = "3d446928-2fb8-11d7-85a2-0050bae0a772"
 UUID_ALIEN_1 = "aaaaaaaa-0000-0000-0000-000000000001"
 UUID_ALIEN_2 = "aaaaaaaa-0000-0000-0000-000000000002"
 
-# UUID, который classify_unindexed_form распознаёт как платформенный источник
-# (СКД / диаграмма). Конкретное значение зависит от реализации детектора B3 —
-# замените на реальный UUID из вашей версии elem_parser, если тест падает.
-UUID_SKD_SOURCE = "e3c0c9b0-59c5-4e5e-8a1e-000000000001"
 
 
 # ---------------------------------------------------------------------------
@@ -136,7 +133,7 @@ def _form_json_skd_like() -> dict:
 
     Колонки формирует платформа динамически; статический разбор невозможен.
     classify_unindexed_form() должен вернуть TABULAR_FIELD_PLATFORM_DYNAMIC (B3).
-    UUID_SKD_SOURCE используется как маркер платформенного источника.
+    PLATFORM_DYNAMIC_SOURCE_MARKER используется как маркер платформенного источника.
     """
     return {
         "form": [
@@ -145,9 +142,9 @@ def _form_json_skd_like() -> dict:
                     [
                         TABULAR_FIELD_UUID,
                         "4",
-                        [["0", UUID_SKD_SOURCE]],
+                        [],
                         ["8", "0", "0", "100", "100", "1"],
-                        '"СКДСписок"',
+                        ["14", f'"{PLATFORM_DYNAMIC_SOURCE_MARKER}"'],
                     ]
                 ]
             ]
@@ -222,7 +219,7 @@ def build_demo_export(root: Path) -> list[Path]:
     # B3 — платформенный источник (СКД / диаграмма), колонки формирует
     # платформа динамически; статический разбор невозможен (#107)
     forms.append(_write_form(
-        root, "Report/СводныйОтчёт/ReportForm/ФормаОтчёта", "ReportForm",
+        root, "Catalog/ДинамическийИсточник/CatalogForm/ФормаСписка", "CatalogForm",
         form_json=_form_json_skd_like(),
         catalog=_catalog_json((UUID_OWN_1, "Показатель")),
     ))

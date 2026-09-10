@@ -575,3 +575,10 @@ missing path и regular file вызывают `NotADirectoryError`, а суще�
 - Покрытие: `tests/test_scan_root_invalid_reserved_issue242.py` — исключение на
   отсутствующем и на файловом корне, отсутствие эмиссии кода на пустом каталоге,
   разбор legacy-строки с маркером кода.
+
+## Issue #235 — synthetic platform dynamic
+
+Synthetic example использует публичный `PLATFORM_DYNAMIC_SOURCE_MARKER` вместо
+UUID-заглушки. Категории `TABULAR_FIELD_EMPTY_ATTR_MAP` и
+`TABULAR_FIELD_PLATFORM_DYNAMIC` представлены по одному разу; production
+семантика `classify_unindexed_form()` не изменена.
