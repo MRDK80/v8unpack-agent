@@ -20,6 +20,11 @@
 
     python examples/legacy_list_form_bindings.py FORM_DIR --json
 
+Чтобы ссылка на форму печаталась относительно корня выгрузки:
+
+    python examples/legacy_list_form_bindings.py FORM_DIR \
+      --export-root /path/to/cf_export
+
 Требуемые данные: скрипт работает только на реальной выгрузке v8unpack и
 требует обязательного позиционного ``FORM_DIR``. Без выгрузки запуск
 невозможен: вызов без аргументов штатно завершается ошибкой argparse.
@@ -43,6 +48,9 @@ RC=1, если elem_index_ok=False — это штатный признак
 печатаются как обычно, ошибкой запуска RC=1 не является;
 RC=2 при ошибке argparse (см. «Поведение без данных»).
 Локальные имена и CSV не публикуются и не коммитятся.
+Абсолютные пути в выводе не печатаются (#262): ссылка на форму
+выводится относительно ``--export-root``, без флага — как имя
+каталога формы; абсолютный путь вычищается и из ``unindexed_detail``.
 Поведение без данных: штатная ошибка argparse (RC=2) —
 это ожидаемое поведение, а не дефект; в автоматический
 прогон файл не входит.
@@ -71,7 +79,35 @@ def _legacy_list_columns(elements: Sequence[dict[str, Any]]) -> list[dict[str, A
     ]
 
 
-def _build_report(form_dir: Path) -> dict[str, Any]:
+def _form_ref(form_dir: Path, root: Path | None) -> str:
+    """Ссылка на форму для печати.
+
+    Если корень выгрузки известен, печатается относительный POSIX-путь.
+    Иначе печатается только имя каталога формы: абсолютные пути в stdout
+    недопустимы (#251, #262).
+    """
+    if root is not None:
+        try:
+            return form_dir.relative_to(root).as_posix()
+        except ValueError:
+            return form_dir.name
+    return form_dir.name
+
+
+def _sanitize_detail(detail: str, form_dir: Path, form_ref: str) -> str:
+    """Заменить абсолютный путь формы в тексте детали на относительный.
+
+    Текст детали формирует ``classify_unindexed_form()`` из production-кода,
+    поэтому подстановка выполняется здесь и только по известному
+    ``form_dir`` — без регулярных выражений по произвольному тексту.
+    """
+    for variant in (str(form_dir), form_dir.as_posix()):
+        detail = detail.replace(variant, form_ref)
+    return detail
+
+
+def _build_report(form_dir: Path, root: Path | None = None) -> dict[str, Any]:
+    form_ref = _form_ref(form_dir, root)
     result = parse_elem_json(form_dir)
     columns = _legacy_list_columns(result.elements)
     extraction_source = getattr(result, "extraction_source", None)
@@ -83,10 +119,10 @@ def _build_report(form_dir: Path) -> dict[str, Any]:
         # Вызов не создаёт data_path и не изменяет result.
         info = classify_unindexed_form(form_dir, result)
         unindexed_reason = info.reason.value
-        unindexed_detail = info.detail
+        unindexed_detail = _sanitize_detail(info.detail, form_dir, form_ref)
 
     return {
-        "form_dir": str(form_dir),
+        "form_dir": form_ref,
         "elem_index_ok": result.elem_index_ok,
         "extraction_source": extraction_source,
         "unindexed_reason": unindexed_reason,
@@ -146,6 +182,12 @@ def _parse_args() -> argparse.Namespace:
         help="директория формы, содержащая *.elem.json и legacy *.json",
     )
     parser.add_argument(
+        "--export-root",
+        type=Path,
+        default=None,
+        help="корень выгрузки; ссылка на форму печатается относительно него",
+    )
+    parser.add_argument(
         "--json",
         action="store_true",
         help="вывести машиночитаемый JSON",
@@ -158,9 +200,15 @@ def main() -> int:
     form_dir = args.form_dir.expanduser().resolve()
 
     if not form_dir.is_dir():
-        raise SystemExit(f"Директория формы не найдена: {form_dir}")
+        raise SystemExit(f"Директория формы не найдена: {args.form_dir}")
 
-    report = _build_report(form_dir)
+    root: Path | None = None
+    if args.export_root is not None:
+        root = args.export_root.expanduser().resolve()
+        if not root.is_dir():
+            raise SystemExit(f"Каталог выгрузки не найден: {args.export_root}")
+
+    report = _build_report(form_dir, root)
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:
