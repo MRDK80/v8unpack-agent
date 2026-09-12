@@ -290,10 +290,14 @@ def run_context(root: Path, entry: Any, index, max_prompt_chars: int) -> None:
 def run_managed_forms(root: Path) -> None:
     step(9, "discover_elem_forms")
     discovered = discover_elem_forms(root)
-    with_elem = sum(
-        1
-        for item in discovered
-        if item.elem_json_path and absolute_path(root, item.elem_json_path).is_file()
+    # len([...]) вместо sum(1 for ...): значение и вывод идентичны, но у len
+    # нет перегрузок, из-за которых mypy 2.3.1 выдаёт misc на этом генераторе.
+    with_elem = len(
+        [
+            item
+            for item in discovered
+            if item.elem_json_path and absolute_path(root, item.elem_json_path).is_file()
+        ]
     )
     line("status", "ok" if discovered else "not_applicable")
     line("discovered", len(discovered))

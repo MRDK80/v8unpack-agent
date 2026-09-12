@@ -201,12 +201,15 @@ pytest tests/test_form_artifact.py
 Полный набор проверок:
 
     ruff check .
-    mypy v8unpack_agent
+    mypy v8unpack_agent examples
     python -m pytest -q
 
 Правила:
 
 - версии `ruff` и `mypy` запинены в `pyproject.toml`; локально и в CI используется одна версия;
+- область `mypy` — пакет `v8unpack_agent` и каталог `examples`: и локально, и в CI
+  выполняется одна команда `mypy v8unpack_agent examples` (#264). Каталог примеров
+  входит в область, потому что примеры являются публичной витриной API;
 - линтеры запускаются до открытия PR, а не после ревью;
 - с момента коммита `ci: make ruff and mypy blocking` обе проверки являются блокирующим гейтом;
 - конфигурация линтеров живёт только в `pyproject.toml`, длинные CLI-аргументы не используются;
