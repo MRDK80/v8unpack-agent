@@ -57,4 +57,4 @@ jobs:
         run: ruff check .
 
       - name: Mypy
-        run: mypy v8unpack_agent
+        run: mypy v8unpack_agent examples
