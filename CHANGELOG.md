@@ -71,6 +71,11 @@ Production-код `v8unpack_agent/` и публичный API не изменя�
 
 ### Changed
 
+- docs(examples): в `examples/legacy_list_form_bindings.py` и
+  `examples/README.md` задокументированы фактические коды возврата
+  примера — RC=0 при `elem_index_ok=True`, RC=1 при
+  `elem_index_ok=False`, RC=2 при ошибке argparse. Поведение примера
+  и production-код не менялись (#261).
 - `examples/`: в module docstring каждого примера зафиксированы категория,
   входные данные, ожидаемый результат и поведение без данных (#246).
 - `examples/extract_skd_queries.py`: детерминированный выбор каталога
