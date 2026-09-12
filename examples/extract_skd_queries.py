@@ -3,25 +3,30 @@
 Второй шаг двухэтапной схемы для .erf:
 
     my_report.erf
-      └─► v8unpack -E  →  текстовый слой (BSL виден)
-           └─► extract_skd_queries.py  →  skd_queries.json (запросы СКД в тексте)
+      -> v8unpack -E: текстовый слой (BSL виден)
+         -> extract_skd_queries.py: skd_queries.json (запросы СКД в тексте)
 
-v8unpack распаковывает контейнер .erf так же, как .epf. Но внутри .erf живёт
-Схема Компоновки Данных (СКД): запросы наборов данных, вычисляемые поля,
-связи между наборами. Всё это лежит в файле ``metadata`` как сериализованная
-строка и v8unpack его не разбирает. Данный скрипт вытаскивает запросы СКД
-в читаемый JSON, чтобы агент мог делать семантический поиск по тексту запроса,
-а не только по BSL-коду модуля.
+Пример демонстрирует публичный API пакета (#253): разбор выполняет
+``v8unpack_agent.skd_extractor.extract_skd_queries()``, собственного парсера
+в примере больше нет.
+
+Ранее файл разбирал сериализованный файл ``metadata`` собственными
+регулярными выражениями. Проверка на реальной выгрузке ``.erf`` показала, что
+файла ``metadata`` в ней нет вовсе: схема компоновки данных лежит в
+v8-контейнере ``Template/<ИмяСхемы>/Template.bin``, который и читает
+публичная функция.
+
+Побочный эффект публичной функции: помимо ``--output`` она всегда пишет
+``skd_queries.json`` в корень переданной выгрузки.
 
 Запуск (аргументы совпадают с вызовом из обработки 1С):
 
-    python examples/extract_skd_queries.py \
-        --unpack-dir path/to/unpacked/report \
-        --output    path/to/unpacked/report/skd_queries.json
+    python examples/extract_skd_queries.py --unpack-dir DIR --output DIR/skd_queries.json
 
-Скрипт некритичен для пайплайна: если metadata не содержит ожидаемых маркеров
-(нестандартная сериализация, новая версия платформы), он завершается с кодом 1
-и сообщением в stderr, не прерывая основной цикл выгрузки.
+Скрипт некритичен для пайплайна: если контейнер схемы найден, но запросы не
+извлечены, он пишет пустой JSON и завершается с кодом 0; при отсутствии
+каталога выгрузки или контейнера схемы — с кодом 1 и сообщением в stderr, не
+прерывая основной цикл выгрузки.
 
 Все примеры синтетические. Реальные данные, базы 1С и внутренняя
 инфраструктура не используются.
@@ -33,7 +38,7 @@ v8unpack распаковывает контейнер .erf так же, как 
 
 Категория: пример на реальной выгрузке.
 Входные данные: --unpack-dir, --output — распакованный внешний
-отчёт .erf.
+отчёт .erf с контейнером Template/<ИмяСхемы>/Template.bin.
 Ожидаемый результат: обезличенный агрегат в stdout, RC=0;
 локальные имена и CSV не публикуются и не коммитятся.
 Поведение без данных: штатная ошибка argparse (RC=2) —
@@ -44,90 +49,22 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
 from pathlib import Path
 
-# ---------------------------------------------------------------------------
-# Маркеры СКД в файле metadata
-# ---------------------------------------------------------------------------
-# После v8unpack файл metadata содержит текстовое представление объекта 1С.
-# Запросы наборов данных обрамлены специфичными тегами сериализации платформы.
-# Паттерн ниже покрывает типовой формат платформ 8.2/8.3; при смене версии
-# может потребоваться корректировка.
-_QUERY_BLOCK_RE = re.compile(
-    r'"DataSource"\s*:\s*"Query".*?"QueryText"\s*:\s*"(.*?)"',
-    re.DOTALL,
-)
-# Запасной вариант — построчный поиск секций ВЫБРАТЬ/SELECT внутри metadata.
-_SELECT_LINE_RE = re.compile(r"^\s*(ВЫБРАТЬ|SELECT)\b", re.IGNORECASE | re.MULTILINE)
+from v8unpack_agent.skd_extractor import extract_skd_queries
+
+_TEMPLATE_BIN = "Template.bin"
 
 
-def _unescape_1c(s: str) -> str:
-    """Минимальный анэскейп 1С-строк (двойные кавычки → одинарные)."""
-    return s.replace('""', '"')
+def has_skd_container(unpack_dir: Path) -> bool:
+    """Проверить наличие контейнера схемы компоновки данных в выгрузке.
 
-
-def find_metadata_file(unpack_dir: Path) -> Path | None:
-    """Найти файл metadata внутри распакованной директории.
-
-    v8unpack кладёт metadata в корень распакованной структуры:
-    ``<unpack_dir>/root/metadata`` или ``<unpack_dir>/metadata``.
+    Разбор контейнера выполняет публичная функция. Здесь проверяется только
+    наличие носителя, чтобы отличить «выгрузка без СКД» (RC=1) от «схема
+    есть, запросов нет» (RC=0 и пустой JSON).
     """
-    for candidate in (
-        unpack_dir / "root" / "metadata",
-        unpack_dir / "metadata",
-    ):
-        if candidate.exists():
-            return candidate
-    # Рекурсивный fallback: первый файл с именем metadata
-    metadata_dirs = sorted(unpack_dir.rglob("metadata"))
-    found = metadata_dirs[0] if metadata_dirs else None
-    return found
-
-
-def extract_queries(metadata_path: Path) -> list[dict]:
-    """Извлечь запросы СКД из файла metadata.
-
-    Возвращает список словарей вида::
-
-        [{"name": "Основной", "query": "ВЫБРАТЬ ..."}]
-
-    Если ни один запрос не найден — возвращает пустой список.
-    """
-    text = metadata_path.read_text(encoding="utf-8", errors="replace")
-
-    datasets: list[dict] = []
-
-    # Попытка 1: структурный разбор по маркерам JSON-like сериализации
-    for i, m in enumerate(_QUERY_BLOCK_RE.finditer(text), start=1):
-        raw_query = _unescape_1c(m.group(1).replace("\\n", "\n"))
-        datasets.append({"name": f"Dataset{i}", "query": raw_query.strip()})
-
-    if datasets:
-        return datasets
-
-    # Попытка 2: эвристика — вырезать блоки начиная с ВЫБРАТЬ/SELECT
-    # Используется как fallback для нестандартных сериализаций.
-    blocks: list[str] = []
-    current: list[str] = []
-    in_block = False
-    for line in text.splitlines():
-        if _SELECT_LINE_RE.match(line):
-            if current and in_block:
-                blocks.append("\n".join(current).strip())
-                current = []
-            in_block = True
-        if in_block:
-            current.append(line)
-    if current and in_block:
-        blocks.append("\n".join(current).strip())
-
-    return [
-        {"name": f"Dataset{i}", "query": q}
-        for i, q in enumerate(blocks, start=1)
-        if q
-    ]
+    return any(unpack_dir.rglob(_TEMPLATE_BIN))
 
 
 def build_output(report_name: str, datasets: list[dict]) -> dict:
@@ -166,34 +103,37 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Ошибка: директория не найдена: {unpack_dir}", file=sys.stderr)
         return 1
 
-    metadata_path = find_metadata_file(unpack_dir)
-    if metadata_path is None:
+    if not has_skd_container(unpack_dir):
         print(
-            f"Ошибка: файл metadata не найден в {unpack_dir}. "
-            "Убедитесь, что v8unpack -E выполнен перед запуском скрипта.",
+            f"Ошибка: {_TEMPLATE_BIN} не найден в {unpack_dir}. "
+            "Убедитесь, что v8unpack -E выполнен и отчёт содержит схему "
+            "компоновки данных.",
             file=sys.stderr,
         )
         return 1
 
-    datasets = extract_queries(metadata_path)
+    result = extract_skd_queries(unpack_dir)
+    for warning in result.warnings:
+        print(f"Предупреждение: {warning}", file=sys.stderr)
+
+    datasets: list[dict] = list(result.datasets)
     if not datasets:
         print(
-            f"Предупреждение: запросы СКД не найдены в {metadata_path}. "
+            "Предупреждение: запросы СКД не найдены. "
             "Нестандартная сериализация или отчёт не содержит запросов.",
             file=sys.stderr,
         )
-        # Пишем пустой JSON, не возвращаем ошибку — пайплайн продолжит работу.
-        datasets = []
 
-    report_name = args.report_name or unpack_dir.name
+    report_name: str = args.report_name or unpack_dir.name
     output_data = build_output(report_name, datasets)
 
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(
+    output_path: Path = args.output
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
         json.dumps(output_data, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
-    print(f"skd_queries.json записан: {args.output} ({len(datasets)} наборов данных)")
+    print(f"skd_queries.json записан: {output_path} ({len(datasets)} наборов данных)")
     return 0
 
 

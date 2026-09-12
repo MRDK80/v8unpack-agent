@@ -48,7 +48,7 @@ done
 
 | Файл | Обязательные аргументы | Источник данных |
 |---|---|---|
-| `extract_skd_queries.py` | `--unpack-dir`, `--output` | распакованный внешний отчёт `.erf` |
+| `extract_skd_queries.py` | `--unpack-dir`, `--output` | распакованный внешний отчёт `.erf`: запросы СКД извлекает публичная функция `v8unpack_agent.skd_extractor.extract_skd_queries()` из контейнера `Template/<ИмяСхемы>/Template.bin` (#253), собственного разбора и файла `metadata` пример больше не использует; помимо `--output` публичная функция всегда пишет `skd_queries.json` в корень переданной выгрузки; коды возврата: RC=0 — JSON записан, в том числе с пустым набором, RC=1 — нет каталога выгрузки или контейнера схемы, RC=2 — ошибка argparse |
 | `legacy_list_form_bindings.py` (historical, #252) | `FORM_DIR` | каталог формы из выгрузки v8unpack; опциональный `--export-root` печатает ссылку на форму относительно корня выгрузки, без него выводится имя каталога формы — абсолютных путей в выводе нет (#262); для диагностики неиндексируемых форм используйте `unindexed_forms_report.py`; коды возврата: RC=0 — форма проиндексирована, RC=1 — `elem_index_ok=False` (штатная диагностика, не ошибка), RC=2 — ошибка argparse |
 | `unresolved_refs_report.py` | `CF_EXPORT` | каталог распакованной выгрузки конфигурации |
 | `missing_object_attributes_report.py` | `EXPORT_ROOT` | корень выгрузки `cf_export` конфигурации |
@@ -181,6 +181,13 @@ Compare-режим `unresolved_refs_report.py` подключает
 не является пакетом, поэтому файл загружается по пути, а регистрация в
 `sys.modules` выполняется до `exec_module` — иначе `dataclasses` не резолвит
 строковые аннотации при `from __future__ import annotations`.
+
+Компаратор `reference_only_compare.py` намеренно не использует публичный
+API (#253): он не читает выгрузку — агрегаты ему передаёт
+`unresolved_refs_report.py`, а `re`, `json` и `sha256` обслуживают вердикты,
+ранги `P01..Pnn` и `anonymity_guard` методики #164. Части, воспроизводимой
+через `scan_forms` / `object_decoder`, в файле нет, поэтому переводить
+нечего.
 
 | Код возврата | Значение |
 |---|---|
