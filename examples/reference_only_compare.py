@@ -6,6 +6,11 @@
 `examples/unresolved_refs_report.py`, который уже умеет строить остаток,
 контрольную группу и слоты идентичности.
 
+Отсутствие публичного API здесь осознанно (#253): модуль не разбирает
+выгрузку, поэтому воспроизводить через `scan_forms` / `object_decoder`
+нечего, а `re`, `json` и `sha256` обслуживают вердикты, ранги и
+`anonymity_guard` методики #164.
+
 Граница доказательства
 ----------------------
 Сравнивается ТОЛЬКО класс `reference_only`, а не весь неразрешённый остаток:
@@ -94,7 +99,8 @@ class ExportStats:
         return self.control_total > 0 and self.control_coverage >= threshold
 
     def class_counts(self) -> dict:
-        uuids, occ = Counter(), Counter()
+        uuids: Counter[str] = Counter()
+        occ: Counter[str] = Counter()
         for uuid, cls in self.classes.items():
             uuids[cls] += 1
             occ[cls] += self.occurrences.get(uuid, 0)
