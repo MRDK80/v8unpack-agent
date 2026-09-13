@@ -1,5 +1,36 @@
 # Changelog
 
+## Контракт CI-проверок уточнён: внешний check `update-pip-graph` (#272)
+
+### Изменено
+
+- `docs/branch_protection.md`: добавлен раздел о внешних условных checks,
+  зафиксировано решение владельца и переформулирован критерий готовности CI.
+  Post-merge готовность определяется точными именами шести обязательных
+  checks и `completed/success`, а не общим числом check runs.
+- `CONTRIBUTING.md`: перечень обязательных CI-checks приведён к фактическому
+  составу (шесть jobs, включая lint на двух платформах) и добавлена норма
+  о том, что на push в `main` check runs может быть больше шести; дана
+  ссылка на канонический документ.
+
+### Зафиксировано
+
+- Источник `update-pip-graph` — автоматическая отправка зависимостей для pip,
+  включаемая в настройках репозитория; собственного workflow в
+  `.github/workflows/` для неё нет.
+- Наблюдения: после merge PR #270 (`dff3b73d`, изменён `pyproject.toml`) —
+  семь check runs; после merge PR #269 (`411d82df`) и PR #273 (`efe4cbdf`)
+  без изменения манифеста — шесть.
+- Решение владельца: automatic dependency submission для pip остаётся
+  включённой, в required status checks check не добавляется.
+
+### Не изменялось
+
+- Настройки репозитория и фактический список required status checks.
+- `.github/workflows/tests.yml`, матрица, имена jobs и триггеры.
+- `pyproject.toml`, production-код `v8unpack_agent/`, `examples/`, тесты
+  и исторические таблицы замеров в `docs/`.
+
 ## Fallback раздела «слоты иного layout» восстановлен (#267)
 
 ### Исправлено
