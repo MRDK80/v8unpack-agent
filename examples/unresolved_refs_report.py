@@ -486,15 +486,14 @@ def anonymized_report(evidence, control_evidence, stats, baseline, top: int) -> 
         lines.append("не выведен — результаты классификации недостоверны")
 
     lines += ["", "## слоты иного layout"]
-    # Поведение сохранено дословно: list.extend возвращает None, поэтому
-    # прежняя идиома `extend(...) or append("нет")` добавляла "нет" всегда.
-    # Вывод зафиксирован тестом #251; смысловое исправление — отдельной issue.
-    lines.extend(
-        f"{slot} | покрытие {metrics[slot]['coverage'] * 100:.1f}% | "
-        f"uuid остатка {metrics[slot]['residual_uuids']}"
-        for slot in sorted(layout)
-    )
-    lines.append("нет")
+    if layout:
+        lines.extend(
+            f"{slot} | покрытие {metrics[slot]['coverage'] * 100:.1f}% | "
+            f"uuid остатка {metrics[slot]['residual_uuids']}"
+            for slot in sorted(layout)
+        )
+    else:
+        lines.append("нет")
 
     classes: Counter[str] = Counter()
     class_occ: Counter[str] = Counter()
