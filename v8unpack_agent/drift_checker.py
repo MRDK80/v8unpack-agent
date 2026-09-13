@@ -53,7 +53,7 @@ import json
 import logging
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Literal
 
 logger = logging.getLogger(__name__)
@@ -162,8 +162,24 @@ def _load_index_dict(index_path: Path) -> list[dict]:
     return data.get("forms", [])
 
 
+def _resolve_index_path(raw: str, root: Path | None) -> Path | None:
+    """Разрешить путь записи индекса относительно корня выгрузки (issue #239).
+
+    Схема 2 хранит относительные пути, поэтому существование файла и mtime
+    проверяются относительно ``root``, а не текущего каталога процесса.
+    Legacy-схема 1 хранит абсолютные пути — они возвращаются без изменений.
+    """
+    if not raw:
+        return None
+    candidate = Path(raw)
+    if root is None or candidate.is_absolute() or PureWindowsPath(raw).drive:
+        return candidate
+    return root / candidate
+
+
 def _index_snapshot(
     index_path: Path,
+    root: Path | None = None,
 ) -> tuple[
     dict[str, float],
     dict[str, str | None],
@@ -210,8 +226,8 @@ def _index_snapshot(
         # --- elem-only detection (#58) ---
         # Форма считается elem-only, если у неё нет реального bsl_path
         # (None/пусто/несуществующий файл) И есть elem_json_path.
-        bsl_raw = e.get("bsl_path") or ""
-        has_real_bsl = bool(bsl_raw) and Path(bsl_raw).exists()
+        bsl_resolved = _resolve_index_path(e.get("bsl_path") or "", root)
+        has_real_bsl = bsl_resolved is not None and bsl_resolved.exists()
         has_elem_json = bool(e.get("elem_json_path"))
         is_elem_only = has_elem_json and not has_real_bsl
         if is_elem_only:
@@ -227,9 +243,9 @@ def _index_snapshot(
             if stored_mtime != 0.0:
                 mtime_map[key] = stored_mtime
             else:
-                bsl = e.get("bsl_path", "")
+                bsl = _resolve_index_path(e.get("bsl_path", ""), root)
                 try:
-                    mtime = Path(bsl).stat().st_mtime if bsl else -1.0
+                    mtime = bsl.stat().st_mtime if bsl is not None else -1.0
                 except OSError:
                     mtime = -1.0
                 mtime_map[key] = mtime
@@ -265,7 +281,11 @@ def _disk_snapshot(
     }
 
 
-def _stale_keys(index_path: Path, elem_only_keys: set[str]) -> list[str]:
+def _stale_keys(
+    index_path: Path,
+    elem_only_keys: set[str],
+    root: Path | None = None,
+) -> list[str]:
     """Вернуть ключи форм, чей .obj.bsl не существует на диске.
 
     Elem-only формы (ключи из ``elem_only_keys``) пропускаются: у них
@@ -282,8 +302,8 @@ def _stale_keys(index_path: Path, elem_only_keys: set[str]) -> list[str]:
         if key in elem_only_keys:
             # Elem-only форма — нет BSL по дизайну, stale не применяется
             continue
-        bsl = e.get("bsl_path", "")
-        if bsl and not Path(bsl).exists():
+        bsl = _resolve_index_path(e.get("bsl_path", ""), root)
+        if bsl is not None and not bsl.exists():
             stale.append(key)
     return stale
 
@@ -383,7 +403,9 @@ def check_drift(
 
     # --- Штатный путь ---
     try:
-        index_mtime, index_hash, index_elem, elem_only_keys = _index_snapshot(ipath)
+        index_mtime, index_hash, index_elem, elem_only_keys = _index_snapshot(
+            ipath, root
+        )
     except Exception as exc:  # noqa: BLE001
         logger.error("failed to load index %s: %s", ipath, exc)
         index_mtime, index_hash, index_elem, elem_only_keys = {}, {}, {}, set()
@@ -451,7 +473,7 @@ def check_drift(
                 structure_modified.append(k)
 
     try:
-        stale = sorted(_stale_keys(ipath, elem_only_keys))
+        stale = sorted(_stale_keys(ipath, elem_only_keys, root))
     except Exception as exc:  # noqa: BLE001
         logger.warning("stale check failed: %s", exc)
         stale = []

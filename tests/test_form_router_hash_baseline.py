@@ -27,21 +27,26 @@ def _make_entry(
         object_name="TestObject",
         container_name="CatalogForm",
         form_name=form_name,
-        form_path=Path(f"/fake/{form_name}"),
-        bsl_path=Path(f"/fake/{form_name}/CatalogForm.obj.bsl"),
-        json_path=Path(f"/fake/{form_name}/CatalogForm.json"),
+        form_path=Path("fake") / form_name,
+        bsl_path=Path("fake") / form_name / "CatalogForm.obj.bsl",
+        json_path=Path("fake") / form_name / "CatalogForm.json",
         bsl_mtime=bsl_mtime,
         bsl_sha256=bsl_sha256,
         elem_sha256=elem_sha256,
     )
 
 
-def _write_index(path: Path, entries: list[FormEntry]) -> None:
+def _write_index(
+    path: Path,
+    entries: list[FormEntry],
+    scan_root: Path | None = None,
+) -> None:
     """Сохранить индекс с заданными FormEntry через FormScanIndex.save()."""
     idx = FormScanIndex(
         forms=entries,
         total=len(entries),
         scanned_at="2026-01-01T00:00:00+00:00",
+        scan_root=scan_root,
     )
     idx.save(path)
 
@@ -170,7 +175,9 @@ class TestReindexPreservesHashBaselineForUntouchedForms:
         form_other.object_name = "Other"
 
         idx_file = tmp_path / "forms_scan_index.json"
-        _write_index(idx_file, [form_untouched, form_other])
+        _write_index(
+            idx_file, [form_untouched, form_other], scan_root=tmp_path
+        )
 
         router = FormRouter(idx_file)
 

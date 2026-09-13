@@ -6,6 +6,11 @@
 `examples/unresolved_refs_report.py`, который уже умеет строить остаток,
 контрольную группу и слоты идентичности.
 
+Отсутствие публичного API здесь осознанно (#253): модуль не разбирает
+выгрузку, поэтому воспроизводить через `scan_forms` / `object_decoder`
+нечего, а `re`, `json` и `sha256` обслуживают вердикты, ранги и
+`anonymity_guard` методики #164.
+
 Граница доказательства
 ----------------------
 Сравнивается ТОЛЬКО класс `reference_only`, а не весь неразрешённый остаток:
@@ -23,6 +28,15 @@ UUID в публичный вывод не попадают: подтвержд�
 Самопроверка (выгрузки не нужны)::
 
     python examples/reference_only_compare.py --selftest
+
+Категория: самодостаточный синтетический пример
+(кросс-конфигурационное сравнение класса reference_only).
+Входные данные: не требуются в режиме --selftest — контроли
+синтетические, выгрузка не нужна.
+Ожидаемый результат: --selftest даёт RC=0; публичный вывод
+обезличен, UUID и hex-блобы не печатаются.
+Поведение без данных: модуль также подключается компаратором
+из unresolved_refs_report.py в режиме --compare-root.
 """
 
 from __future__ import annotations
@@ -85,7 +99,8 @@ class ExportStats:
         return self.control_total > 0 and self.control_coverage >= threshold
 
     def class_counts(self) -> dict:
-        uuids, occ = Counter(), Counter()
+        uuids: Counter[str] = Counter()
+        occ: Counter[str] = Counter()
         for uuid, cls in self.classes.items():
             uuids[cls] += 1
             occ[cls] += self.occurrences.get(uuid, 0)

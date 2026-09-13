@@ -23,6 +23,14 @@ Research-инструмент. Production-код не меняет: только
 
     --local-names   вывести реальные имена форм
     --csv PATH      выгрузить построчную таблицу (*.csv под .gitignore)
+
+Категория: пример на реальной выгрузке.
+Входные данные: EXPORT_ROOT — корень выгрузки cf_export конфигурации.
+Ожидаемый результат: обезличенный агрегат в stdout, RC=0;
+локальные имена и CSV не публикуются и не коммитятся.
+Поведение без данных: штатная ошибка argparse (RC=2) —
+это ожидаемое поведение, а не дефект; в автоматический
+прогон файл не входит.
 """
 
 from __future__ import annotations
@@ -34,8 +42,10 @@ import json
 import sys
 import tempfile
 from collections import Counter
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any, cast
 
 from v8unpack_agent.catalog_resolver import clear_object_cache, object_json_path
 from v8unpack_agent.form_classifier import FormClass, classify_form
@@ -180,7 +190,7 @@ def _candidate_key(root: Path, candidate: Path) -> str:
 
 def _as_element_dicts(elements: object) -> list[dict]:
     result: list[dict] = []
-    for element in elements or []:  # type: ignore[union-attr]
+    for element in cast(Iterable[Any], elements or []):
         if isinstance(element, dict):
             result.append(element)
         else:
@@ -350,7 +360,11 @@ def analyse(root: Path, *, keep_names: bool) -> tuple[Aggregate, list[Row]]:
 # контроли A / B / C (DoD issue #163)
 # ---------------------------------------------------------------------------
 
-def _clone_entry(entry: object, form_path: Path) -> object:
+# Возврат Any: клон создаётся динамически через object.__setattr__, а
+# структурный контракт (наличие form_path) проверяет сама object_json_path
+# своим протоколом — дублировать его в примере значило бы объявить тип поля,
+# которого у клона нет статически.
+def _clone_entry(entry: object, form_path: Path) -> Any:
     clone = copy.copy(entry)
     try:
         object.__setattr__(clone, "form_path", str(form_path))

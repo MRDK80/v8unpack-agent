@@ -472,3 +472,203 @@
 
 Пропуск группы объектов через `--skip-common-modules` или `--skip-skd` не
 создаёт результатов со статусом `excluded`: обнаружение не выполняется.
+
+<!-- issue-228 -->
+## Контракт пайплайна в документации (#228)
+
+Задача документационная: исполняемые выражения, публичные сигнатуры и
+`__all__` не изменялись. `pytest` — 1059 passed.
+
+| Артефакт | Состояние |
+| --- | --- |
+| `README.md` | схема пайплайна показывает композицию фактических функций; `index_cf()` и `rag.rebuild()` убраны |
+| `v8unpack_agent/pipeline.py` | module docstring синхронизирован с API; правка только docstring |
+| `docs/pipeline.md` | новый профильный документ входного контракта и ответственности распаковщика |
+| `docs/research/form_bin_issue150.md` | dated addendum о состоянии после #226; историческое наблюдение сохранено |
+| `CHANGELOG.md` | запись в разделе `[Unreleased]` |
+
+Зафиксированный входной контракт: библиотечный пайплайн принимает уже
+подготовленное дерево выгрузки (`dump_root`). Распаковка контейнера
+конфигурации — штатная задача upstream-инструмента; поштучный `Form.bin`
+документированным upstream-входом не является, и автоматического фасада
+пакет не предоставляет.
+
+Канонический контракт распаковщика —
+`FormUnpacker = Callable[[FormBinSource, Path], FormArtifact]` (#226).
+Реализацию инъектирует вызывающая сторона; каталог результата строится по
+безопасному `form_id`. Старый протокол существует как `LegacyFormUnpacker`
+и подключается через `adapt_legacy_unpacker()`, `discover_form_bins()`
+остаётся legacy shim, а не каноническим API обнаружения.
+
+Полнота результата описана по реальным полям `FormArtifact`:
+`extraction_ok` с обязательными `extraction_warnings`, best-effort
+`elem_index_ok` и `skd_extracted`. Полей вида `status` или `reason` в
+артефакте нет.
+
+Границы задачи: внешняя индексация и RAG находятся вне scope пакета —
+пакет отдаёт `FormArtifact` и `FormsIndex`, их передача индексатору
+принадлежит вызывающей стороне. Заглушки `rag` в пакете не создавались.
+Распаковщики из примера и тестов остаются заглушками и не являются
+production-адаптерами.
+
+## Issue #229 — доля `elem_index_ok=False` по распакованному `.cf` (2026-09-09)
+
+Замер выполнен на корпусе `D`: 2216 кандидатов `*.elem.json`, 2174 формы
+проиндексированы, 42 нет — 1.8953%. Два прогона дали одинаковую подпись
+агрегата `8be7db3be301b7b6`. Инвариант `forms_total == ok + failed + excluded`
+выполняется.
+
+Распределение `FormClass`: `service` 1994, `object` 197, `unknown` 25.
+Причины: `no_tabular_no_widgets` 17, `tabular_field_bsl_source_mismatch` 11,
+`tabular_field_platform_dynamic` 7, `tabular_field_programmatic_no_defs` 5,
+`no_owner_object` 2. Остальные значения enum — 0.
+
+Решения: `keep unknown` для четырёх классов, `insufficient evidence` для
+`tabular_field_programmatic_no_defs`. Классов на `implement` и на upstream issue
+нет. Отчёт: [research/unindexed_share_issue229.md](research/unindexed_share_issue229.md).
+
+Расширение отчётного примера: `--json`, `--runs N`, счётчики `FormClass`,
+матрица причин и подпись агрегата. Production-код не изменялся.
+
+## Issue #239 — портируемая сериализация FormScanIndex
+
+`to_dict()` больше не записывает абсолютные пути. Корень сканирования живёт
+в runtime-поле `scan_root` и не сериализуется; все path-поля пишутся
+относительно него через прямой слэш.
+
+- `schema_version = 2`; payload без ключа — legacy-схема 1.
+- Политика legacy: read-compatible, write-new; неизвестная версия отклоняется.
+- `FormScanIndex.load(path, root=...)` разрешает пути относительно нового
+  корня, что даёт перенос индекса с корня A на корень B.
+- `check_drift()` разрешает пути baseline через `cf_export_root`: смена
+  корня не создаёт ложный drift, реальное изменение по-прежнему видно.
+- `FormRouter(index_path, scan_root=...)` — корень нужен, когда `reindex()`
+  получает записи свежего сканирования.
+- Контракты issue #57 (`elem_json_path` relative-to-root), #91 и #234
+  сохранены; публичная сигнатура `scan_forms()` не менялась.
+
+Контроль на обезличенной выгрузке: 2216 форм, 8864 path-поля,
+0 вхождений абсолютного корня, 0 литеральных разделителей Windows,
+подпись агрегата стабильна между прогонами.
+
+## Issue #234 — проверка корня scan_forms
+
+`scan_forms()` различает ошибочный корень и валидную пустую директорию:
+missing path и regular file вызывают `NotADirectoryError`, а существующий
+пустой каталог возвращает пустой `FormScanIndex`. Проверка выполняется до
+обхода и записи `save_to`; публичная сигнатура и успешные режимы `config` и
+`external` не изменены.
+
+## Issue #242 — недостижимая ветка SCAN_ROOT_INVALID
+
+- В `scan_forms()` осталась одна precondition-проверка корня: отсутствующий и
+  файловый корень дают `NotADirectoryError`, пустой каталог — валидный пустой
+  `FormScanIndex`.
+- Недостижимый блок с `_format_scan_warning(SCAN_WARNING_SCAN_ROOT_INVALID, ...)`
+  и ранним `return` удалён: альтернативного режима поведения у ошибочного корня
+  больше нет.
+- Константа `SCAN_WARNING_SCAN_ROOT_INVALID` и её членство в
+  `SCAN_WARNING_CODES` сохранены как зарезервированный legacy-код, поэтому
+  чтение ранее сохранённых предупреждений не ломается.
+- Документация: строка таблицы кодов в `docs/scan_forms.md` больше не обещает
+  runtime-предупреждение и описывает фактический exception-контракт.
+- Покрытие: `tests/test_scan_root_invalid_reserved_issue242.py` — исключение на
+  отсутствующем и на файловом корне, отсутствие эмиссии кода на пустом каталоге,
+  разбор legacy-строки с маркером кода.
+
+## Issue #235 — synthetic platform dynamic
+
+Synthetic example использует публичный `PLATFORM_DYNAMIC_SOURCE_MARKER` вместо
+UUID-заглушки. Категории `TABULAR_FIELD_EMPTY_ATTR_MAP` и
+`TABULAR_FIELD_PLATFORM_DYNAMIC` представлены по одному разу; production
+семантика `classify_unindexed_form()` не изменена.
+
+## Issue #245 — README и профильная документация
+
+Дата: 10 сентября 2026. Ветка `docs/245-readme-docs-refactor`, база `main`
+`c06e9f5df0b2ce6142b1f1916a95a17a6b20d5be`.
+
+Задача выделена из #210 вместе с #246 и охватывает только документацию:
+production-код, `examples/*.py`, workflow и `pyproject.toml` не изменялись.
+
+### Результат
+
+| Метрика | До | После |
+|---|---|---|
+| `README.md` | 30123 bytes | 14830 bytes |
+| битые относительные ссылки | не измерялось | 0 |
+| `ruff check .` | RC=0 | RC=0 |
+| `mypy v8unpack_agent` | RC=0, 25 source files | RC=0, 25 source files |
+| `python -m pytest -q` | 1087 passed | 1087 passed |
+
+Порог по README — не более 20 000 bytes UTF-8; фактическое сокращение
+15 293 bytes, запас до порога 5 170 bytes.
+
+### Вердикты документов
+
+Все 28 Markdown-файлов в scope перечислены в
+[`documentation_audit_issue245.md`](documentation_audit_issue245.md): 5
+`updated`, 15 `current`, 8 `historical`. Четыре документа переведены из
+предварительного `updated` в `current`, поскольку чтение показало, что
+`runner.md`, `run_report.md`, `object_decoder.md` и `elem_parser.md` уже
+полны, а дублировал их README.
+
+### Исправленные расхождения с кодом
+
+- Python quick start использовал распаковщик с тремя аргументами, тогда как
+  `unpack_all_forms()` вызывает `unpacker(source, unpacked_root)` и передаёт
+  `FormBinSource`; legacy-функция допустима только через
+  `adapt_legacy_unpacker()`.
+- `discover_form_sources()` отсутствовал в описании как канонический
+  discovery API, а `discover_form_bins()` не был помечен legacy shim.
+- Не было сказано, что отбор по `form_ids` каноничен, а `form_names` при
+  неоднозначном имени поднимает `AmbiguousFormNameError`.
+- Три версии схем не были разведены между собой.
+- `docs/run_report.md` не имел входящих ссылок.
+- Корпусные числа приводились как текущие вместо ссылки на датированное
+  исследование по #229.
+- `docs/scan_forms.md` раскрывал существование внутреннего репозитория.
+
+Метрика покрытия `data_path` не сериализуется в post-run report: совпадений
+`CoverageReport` и `calc_data_path_coverage` в `runner.py` и `run_report.py`
+нет. Каноническое место метрики — `docs/form_classifier.md`; отдельный
+документ не создавался.
+
+### Граница со смежными задачами
+
+`examples/*.py` не рефакторились — это #246; проверены только ссылки.
+Установка описана без утверждения о публикации пакета, публикация
+отслеживается в #149. Финальная интеграция — #210.
+
+## Issue #248 — layout сериализованного post-run report
+
+`docs/run_report.md` описывал только контракт Python-модели: конструктор
+`PostRunReport` принимает `completed`, `started_at` и `finished_at` плоским
+списком аргументов. Сериализованный файл группирует эти поля в объект `run`,
+поэтому внешний потребитель, обращавшийся к `payload["completed"]`, получал
+`KeyError`.
+
+Что сделано:
+
+- добавлен раздел «Сериализованный JSON-файл» с явным разведением Python-модели
+  и layout готового файла;
+- зафиксированы ключи верхнего уровня `schema_version`, `run`, `summary`,
+  `objects`, `fatal_error`;
+- описан объект `run` и оговорено, что `run.completed` означает управляемое
+  завершение runner, а не код возврата 0;
+- инварианты `found = complete + partial + failed` и
+  `discovered = found + excluded` связаны с полями файла, `discovered`
+  помечен как вычисляемое property, а не поле конструктора `RunSummary`;
+- degraded-завершение с кодом 3 отделено от managed fatal с кодом 4;
+- пример чтения приведён к `payload["run"]["completed"]`.
+
+Проверка контракта: `tests/test_run_report_docs_issue248.py` парсит JSON-блок
+из документа, сравнивает его с `PostRunReport.to_dict()` и с фактическим
+выводом `write_post_run_report()` во временном каталоге, проверяет набор
+ключей, вложенность `run`, инварианты summary и обезличенность примера.
+
+Production-код, схема, `examples/*.py`, workflow и `pyproject.toml` не
+изменялись, реальные отчёты не коммитились.
+
+Результаты: Ruff RC=0, Mypy RC=0 на 25 файлах, pytest 1118 passed
+(1111 baseline и 7 новых проверок).

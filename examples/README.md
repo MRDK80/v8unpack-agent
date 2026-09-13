@@ -8,6 +8,15 @@
 годится для регрессионного прогона, вторая без выгрузки принципиально не
 стартует и проверяется только вручную на машине с данными.
 
+Категория, входные данные, ожидаемый результат и поведение без данных
+зафиксированы в module docstring каждого примера (issue #246), чтобы этот
+README и код не расходились. Соответствие проверяется тестом
+`tests/test_examples_contract_issue246.py`.
+
+Каталог входит в область статической проверки типов: область задана
+`[tool.mypy] files` в `pyproject.toml`, локальный gate и CI выполняют одну
+команду `mypy` — RC=0, 40 файлов (issue #264, #268).
+
 ## Самодостаточные (запускаются без аргументов)
 
 Создают синтетические данные во временном каталоге и удаляют их за собой.
@@ -43,8 +52,8 @@ done
 
 | Файл | Обязательные аргументы | Источник данных |
 |---|---|---|
-| `extract_skd_queries.py` | `--unpack-dir`, `--output` | распакованный внешний отчёт `.erf` |
-| `legacy_list_form_bindings.py` | `FORM_DIR` | каталог формы из выгрузки v8unpack |
+| `extract_skd_queries.py` | `--unpack-dir`, `--output` | распакованный внешний отчёт `.erf`: запросы СКД извлекает публичная функция `v8unpack_agent.skd_extractor.extract_skd_queries()` из контейнера `Template/<ИмяСхемы>/Template.bin` (#253), собственного разбора и файла `metadata` пример больше не использует; помимо `--output` публичная функция всегда пишет `skd_queries.json` в корень переданной выгрузки; коды возврата: RC=0 — JSON записан, в том числе с пустым набором, RC=1 — нет каталога выгрузки или контейнера схемы, RC=2 — ошибка argparse |
+| `legacy_list_form_bindings.py` (historical, #252) | `FORM_DIR` | каталог формы из выгрузки v8unpack; опциональный `--export-root` печатает ссылку на форму относительно корня выгрузки, без него выводится имя каталога формы — абсолютных путей в выводе нет (#262); для диагностики неиндексируемых форм используйте `unindexed_forms_report.py`; коды возврата: RC=0 — форма проиндексирована, RC=1 — `elem_index_ok=False` (штатная диагностика, не ошибка), RC=2 — ошибка argparse |
 | `unresolved_refs_report.py` | `CF_EXPORT` | каталог распакованной выгрузки конфигурации |
 | `missing_object_attributes_report.py` | `EXPORT_ROOT` | корень выгрузки `cf_export` конфигурации |
 | `common_modules.py` | `EXPORT_ROOT` | корень выгрузки `cf_export` конфигурации |
@@ -171,6 +180,19 @@ python examples/reference_only_compare.py --selftest
 | `--control-threshold` | минимальное покрытие позитивного контроля, по умолчанию 90 |
 | `--selftest` (у компаратора) | синтетические контроли, выгрузка не нужна |
 
+Compare-режим `unresolved_refs_report.py` подключает
+`examples/reference_only_compare.py` через `importlib`: каталог `examples/`
+не является пакетом, поэтому файл загружается по пути, а регистрация в
+`sys.modules` выполняется до `exec_module` — иначе `dataclasses` не резолвит
+строковые аннотации при `from __future__ import annotations`.
+
+Компаратор `reference_only_compare.py` намеренно не использует публичный
+API (#253): он не читает выгрузку — агрегаты ему передаёт
+`unresolved_refs_report.py`, а `re`, `json` и `sha256` обслуживают вердикты,
+ранги `P01..Pnn` и `anonymity_guard` методики #164. Части, воспроизводимой
+через `scan_forms` / `object_decoder`, в файле нет, поэтому переводить
+нечего.
+
 | Код возврата | Значение |
 |---|---|
 | 0 | сравнение выполнено, контроли валидны |
@@ -196,3 +218,9 @@ python examples/reference_only_compare.py --selftest
 5.52% применимых), B 45 (100.00% / 17.72%). Итог: `partially_confirmed`, exit code 0.
 
 Отчёт исследования: `docs/research/platform_types_cross_config_issue164.md`.
+
+## Динамический источник в synthetic report
+
+Синтетический режим `unindexed_forms_report.py` использует публичный
+`PLATFORM_DYNAMIC_SOURCE_MARKER` пакета и детерминированно включает один случай
+`tabular_field_platform_dynamic`. Реальные выгрузки, UUID и пути не требуются.

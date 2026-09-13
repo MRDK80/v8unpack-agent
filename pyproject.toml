@@ -56,6 +56,6 @@ target-version = "py310"
 
 [tool.mypy]
 python_version = "3.10"
-files = ["v8unpack_agent"]
+files = ["v8unpack_agent", "examples"]
 show_error_codes = true
 warn_unused_configs = true

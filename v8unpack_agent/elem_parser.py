@@ -68,7 +68,7 @@ import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Final
 
 from v8unpack_agent._safe_paths import safe_error_text, safe_path_ref
 from v8unpack_agent.chain_data_path import (  # noqa: F401  # реэкспорт для #89
@@ -167,8 +167,10 @@ _PLATFORM_SERVICE_UUIDS: frozenset[str] = frozenset({
 
 # Имена платформенных источников TF — колонки генерируются динамически,
 # привязка к реквизитам объекта отсутствует (wontfix by design).
+PLATFORM_DYNAMIC_SOURCE_MARKER: Final[str] = "Отбор"
+
 _PLATFORM_DYNAMIC_SOURCE_NAMES: frozenset[str] = frozenset({
-    "Отбор",
+    PLATFORM_DYNAMIC_SOURCE_MARKER,
     "ПостроительОтбор",
     "ИзмеренияСтроки",
     "ИзмеренияКолонки",

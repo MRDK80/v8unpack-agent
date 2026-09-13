@@ -15,12 +15,21 @@
 Запуск:
 
 python examples/form_bindings.py
+
+Категория: самодостаточный синтетический пример (подтверждённые привязки data_path элементов).
+Входные данные: не требуются; синтетическая выгрузка создаётся
+во временном каталоге и удаляется за собой.
+Ожидаемый результат: детерминированный вывод в stdout, RC=0;
+повторный запуск даёт тот же вывод.
+Поведение без данных: запускается без аргументов, установленная
+платформа 1С и реальная выгрузка не нужны.
 """
 from __future__ import annotations
 
 import json
 import tempfile
 from pathlib import Path
+from typing import Any
 
 from v8unpack_agent.elem_parser import parse_elem_json
 
@@ -179,7 +188,13 @@ def make_structural_fallback_form(register_root: Path) -> Path:
     form_root.mkdir(parents=True, exist_ok=True)
 
     # elem.json с пустым tree — v8unpack не смог извлечь структуру обычным путём
-    empty_elem = {"params": [], "props": [], "commands": [], "tree": [], "data": {}}
+    empty_elem: dict[str, Any] = {
+        "params": [],
+        "props": [],
+        "commands": [],
+        "tree": [],
+        "data": {},
+    }
     (form_root / "InformationRegisterForm.elem.json").write_text(
         json.dumps(empty_elem, ensure_ascii=False), encoding="utf-8"
     )

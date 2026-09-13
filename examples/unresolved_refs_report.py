@@ -37,6 +37,18 @@
     python examples/unresolved_refs_report.py /path/to/cf_export --runs 2 --top 10
     python examples/unresolved_refs_report.py /path/to/cf_export --local-names
     python examples/unresolved_refs_report.py /path/to/cf_export --annex ~/annex.csv
+
+Категория: пример на реальной выгрузке.
+Входные данные: CF_EXPORT — каталог распакованной выгрузки конфигурации.
+Ожидаемый результат: обезличенный агрегат в stdout, RC=0;
+локальные имена и CSV не публикуются и не коммитятся.
+Поведение без данных: штатная ошибка argparse (RC=2) —
+это ожидаемое поведение, а не дефект; в автоматический
+прогон файл не входит.
+Зависимость: compare-режим (--compare-root) загружает
+examples/reference_only_compare.py через importlib — каталог examples/
+не является пакетом, поэтому модуль подключается по пути, а регистрация
+в sys.modules выполняется до exec_module.
 """
 
 from __future__ import annotations
@@ -331,9 +343,10 @@ def walk(node, targets, pointer, sink, collector=None) -> None:
 def preflight(root: Path, evidence: dict, control):
     control_evidence = {uuid: Evidence() for uuid in control}
     targets = set(evidence) | set(control)
-    roles_hist, kinds_hist = Counter(), Counter()
+    roles_hist: Counter[str] = Counter()
+    kinds_hist: Counter[str] = Counter()
     slot_control_uuids, slot_residual_uuids = defaultdict(set), defaultdict(set)
-    slot_hits_control = Counter()
+    slot_hits_control: Counter[str] = Counter()
     file_identity: dict[int, dict[str, str]] = {}
     file_kind: dict[int, str] = {}
 
@@ -473,13 +486,18 @@ def anonymized_report(evidence, control_evidence, stats, baseline, top: int) -> 
         lines.append("не выведен — результаты классификации недостоверны")
 
     lines += ["", "## слоты иного layout"]
-    lines.extend(
-        f"{slot} | покрытие {metrics[slot]['coverage'] * 100:.1f}% | "
-        f"uuid остатка {metrics[slot]['residual_uuids']}"
-        for slot in sorted(layout)
-    ) or lines.append("нет")
+    if layout:
+        lines.extend(
+            f"{slot} | покрытие {metrics[slot]['coverage'] * 100:.1f}% | "
+            f"uuid остатка {metrics[slot]['residual_uuids']}"
+            for slot in sorted(layout)
+        )
+    else:
+        lines.append("нет")
 
-    classes, class_occ, class_pos = Counter(), Counter(), Counter()
+    classes: Counter[str] = Counter()
+    class_occ: Counter[str] = Counter()
+    class_pos: Counter[str] = Counter()
     facet_rows, boundary_rows, anomaly_rows = [], [], []
     for uuid, record in ranks:
         cls = classify(record, identity, layout, has_identity)
@@ -492,7 +510,8 @@ def anonymized_report(evidence, control_evidence, stats, baseline, top: int) -> 
         for slot in record.slots:
             if slot in identity:
                 file_ids |= record.slot_files.get(slot, set())
-        indexed, all_slots, own_slot, kinds = [], 0, "?", Counter()
+        indexed, all_slots, own_slot = [], 0, "?"
+        kinds: Counter[str] = Counter()
         for fid in file_ids:
             identity_map = stats["file_identity"].get(fid, {})
             kinds[stats["file_kind"].get(fid, "<Other>")] += 1
@@ -531,7 +550,9 @@ def anonymized_report(evidence, control_evidence, stats, baseline, top: int) -> 
     lines.append(f"аномалия индекса (требует RCA)                 | {len(anomaly_rows)}")
     lines.extend(f"  {row}" for row in anomaly_rows[:10])
 
-    attrs, form_names, sections = Counter(), Counter(), Counter()
+    attrs: Counter[str] = Counter()
+    form_names: Counter[str] = Counter()
+    sections: Counter[str] = Counter()
     for _, record in ranks:
         attrs.update(record.attributes)
         form_names.update(record.form_names)
@@ -680,7 +701,7 @@ def main() -> None:
             args.root, args.control
         )
         control_evidence, stats = preflight(args.root, evidence, control)
-        anonymized_report.index_uuids = index_uuids
+        anonymized_report.index_uuids = index_uuids  # type: ignore[attr-defined]
         text = anonymized_report(evidence, control_evidence, stats, baseline, args.top)
         digests.append(sha256(text.encode("utf-8")).hexdigest())
 

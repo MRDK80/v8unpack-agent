@@ -13,12 +13,21 @@
 Запуск:
 
 python examples/coverage_metric.py
+
+Категория: самодостаточный синтетический пример (метрика покрытия по элементам данных).
+Входные данные: не требуются; синтетическая выгрузка создаётся
+во временном каталоге и удаляется за собой.
+Ожидаемый результат: детерминированный вывод в stdout, RC=0;
+повторный запуск даёт тот же вывод.
+Поведение без данных: запускается без аргументов, установленная
+платформа 1С и реальная выгрузка не нужны.
 """
 from __future__ import annotations
 
 import json
 import tempfile
 from pathlib import Path
+from typing import Any
 
 from v8unpack_agent.coverage_metric import (
     DATA_ELEMENT_TYPES,
@@ -40,7 +49,7 @@ from v8unpack_agent.elem_parser import parse_elem_json
 # (78.6%) — три платформенных реквизита (Код, Наименование, Родитель) не
 # разрешены до issue #88. Синтетика намеренно опускает эти три элемента,
 # чтобы показать 11/11 = 100% без шума от нерешённого #88.
-BANKS_FORM_ELEMENTS = [
+BANKS_FORM_ELEMENTS: list[dict[str, Any]] = [
     # Данные — привязаны
     {"type": "Field", "name": "КоррСчет",    "data_path": "Объект.КоррСчет"},
     {"type": "Field", "name": "БИК",          "data_path": "Объект.БИК"},
@@ -98,7 +107,7 @@ def demo_old_vs_new() -> None:
 def demo_partial_coverage() -> None:
     """Форма с частичной привязкой: часть полей не заполнена."""
     print("=== Частичная привязка ===")
-    elements = [
+    elements: list[dict[str, Any]] = [
         {"type": "Field",  "name": "Наименование", "data_path": "Объект.Наименование"},
         {"type": "Field",  "name": "ИНН",           "data_path": None},  # не привязан
         {"type": "Field",  "name": "КПП",           "data_path": None},  # не привязан
@@ -233,7 +242,13 @@ def demo_empty_tree_class() -> None:
 
         # Минимальный elem.json с пустым tree — имитируем форму с нераспознанной
         # разметкой (бинарный формат, v8unpack не извлёк элементы).
-        empty_payload = {"params": [], "props": [], "commands": [], "tree": [], "data": {}}
+        empty_payload: dict[str, Any] = {
+            "params": [],
+            "props": [],
+            "commands": [],
+            "tree": [],
+            "data": {},
+        }
         (form_dir / "InformationRegisterForm.elem.json").write_text(
             json.dumps(empty_payload, ensure_ascii=False), encoding="utf-8"
         )

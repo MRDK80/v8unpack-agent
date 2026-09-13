@@ -39,20 +39,45 @@
 Для отчёта по реальной выгрузке:
 
     python examples/unindexed_forms_report.py /path/to/cf_export
+
+Обезличенный детерминированный агрегат и проверка стабильности (#229):
+
+    python examples/unindexed_forms_report.py --json --runs 2 /path/to/cf_export
+
+Режим --json печатает только агрегированные счётчики: путей, имён форм,
+UUID и содержимого файлов в нём нет. Cohort строится по кандидатам
+*.elem.json, как и в историческом screening.
+
+Категория: самодостаточный синтетический пример
+(отчёт по неиндексируемым формам).
+Входные данные: не требуются; синтетическая выгрузка создаётся
+во временном каталоге и удаляется за собой. Опциональные
+аргументы позволяют прогнать тот же разбор на реальной выгрузке.
+Ожидаемый результат: запуск без аргументов даёт RC=0 и разбор
+шести форм с различными причинами неиндексируемости.
+Поведение без данных: установленная платформа 1С и реальная
+выгрузка не нужны.
 """
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import sys
 import tempfile
 from collections import Counter
 from pathlib import Path
 
+from v8unpack_agent.coverage_metric import calc_data_path_coverage
 from v8unpack_agent.elem_parser import (
+    PLATFORM_DYNAMIC_SOURCE_MARKER,
     UnindexedReason,
     classify_unindexed_form,
     parse_elem_json,
 )
+from v8unpack_agent.form_classifier import FormClass, classify_no_widgets_form
+
+AGGREGATE_SCHEMA_VERSION = 1
 
 TABULAR_FIELD_UUID = "ea83fe3a-ac3c-4cce-8045-3dddf35b28b1"
 
@@ -61,10 +86,6 @@ UUID_OWN_2 = "3d446928-2fb8-11d7-85a2-0050bae0a772"
 UUID_ALIEN_1 = "aaaaaaaa-0000-0000-0000-000000000001"
 UUID_ALIEN_2 = "aaaaaaaa-0000-0000-0000-000000000002"
 
-# UUID, который classify_unindexed_form распознаёт как платформенный источник
-# (СКД / диаграмма). Конкретное значение зависит от реализации детектора B3 —
-# замените на реальный UUID из вашей версии elem_parser, если тест падает.
-UUID_SKD_SOURCE = "e3c0c9b0-59c5-4e5e-8a1e-000000000001"
 
 
 # ---------------------------------------------------------------------------
@@ -121,7 +142,7 @@ def _form_json_skd_like() -> dict:
 
     Колонки формирует платформа динамически; статический разбор невозможен.
     classify_unindexed_form() должен вернуть TABULAR_FIELD_PLATFORM_DYNAMIC (B3).
-    UUID_SKD_SOURCE используется как маркер платформенного источника.
+    PLATFORM_DYNAMIC_SOURCE_MARKER используется как маркер платформенного источника.
     """
     return {
         "form": [
@@ -130,9 +151,9 @@ def _form_json_skd_like() -> dict:
                     [
                         TABULAR_FIELD_UUID,
                         "4",
-                        [["0", UUID_SKD_SOURCE]],
+                        [],
                         ["8", "0", "0", "100", "100", "1"],
-                        '"СКДСписок"',
+                        ["14", f'"{PLATFORM_DYNAMIC_SOURCE_MARKER}"'],
                     ]
                 ]
             ]
@@ -207,7 +228,7 @@ def build_demo_export(root: Path) -> list[Path]:
     # B3 — платформенный источник (СКД / диаграмма), колонки формирует
     # платформа динамически; статический разбор невозможен (#107)
     forms.append(_write_form(
-        root, "Report/СводныйОтчёт/ReportForm/ФормаОтчёта", "ReportForm",
+        root, "Catalog/ДинамическийИсточник/CatalogForm/ФормаСписка", "CatalogForm",
         form_json=_form_json_skd_like(),
         catalog=_catalog_json((UUID_OWN_1, "Показатель")),
     ))
@@ -218,25 +239,172 @@ def build_demo_export(root: Path) -> list[Path]:
 # ---------------------------------------------------------------------------
 # Отчёт
 # ---------------------------------------------------------------------------
-def report_for_form(form_dir: Path) -> dict:
+def _form_class_for_indexed(form_dir: Path, elements: list) -> str:
+    """FormClass проиндексированной формы через канонический coverage-API."""
+    try:
+        report = calc_data_path_coverage(elements, form_name=form_dir.name)
+        return str(report.form_class)
+    except Exception:  # noqa: BLE001
+        return str(FormClass.UNKNOWN)
+
+
+def _form_class_for_unindexed(form_dir: Path, reason: UnindexedReason) -> str:
+    """FormClass непроиндексированной формы: канон #98/#109/#112 без эвристик."""
+    if reason is UnindexedReason.NO_TABULAR_NO_WIDGETS:
+        try:
+            return str(classify_no_widgets_form(form_dir.name, reason))
+        except Exception:  # noqa: BLE001
+            return str(FormClass.UNKNOWN)
+    return str(FormClass.UNKNOWN)
+
+
+def _form_ref(form_dir: Path, root: Path | None) -> str:
+    """Ссылка на форму для печати.
+
+    Если корень выгрузки известен, печатается относительный POSIX-путь:
+    абсолютные пути и имена временных каталогов в stdout недопустимы
+    (issue #251).
+    """
+    if root is None:
+        return str(form_dir)
+    try:
+        return form_dir.relative_to(root).as_posix()
+    except ValueError:
+        return form_dir.name
+
+
+def _sanitize_detail(detail: str, form_dir: Path, form_ref: str) -> str:
+    """Заменить абсолютный путь формы в тексте детали на относительный.
+
+    Текст детали формирует ``classify_unindexed_form()`` из production-кода,
+    поэтому подстановка выполняется здесь и только по известному
+    ``form_dir`` — без регулярных выражений по произвольному тексту.
+    """
+    for variant in (str(form_dir), form_dir.as_posix()):
+        detail = detail.replace(variant, form_ref)
+    return detail
+
+
+def report_for_form(form_dir: Path, root: Path | None = None) -> dict:
+    form_ref = _form_ref(form_dir, root)
     result = parse_elem_json(form_dir)
     if result.elem_index_ok:
-        return {"form": str(form_dir), "indexed": True}
+        return {
+            "form": form_ref,
+            "indexed": True,
+            "form_class": _form_class_for_indexed(form_dir, result.elements),
+        }
 
     info = classify_unindexed_form(form_dir, result)
     return {
-        "form": str(form_dir),
+        "form": form_ref,
         "indexed": False,
         "reason": info.reason.value,
-        "detail": info.detail,
+        "detail": _sanitize_detail(info.detail, form_dir, form_ref),
+        "form_class": _form_class_for_unindexed(form_dir, info.reason),
     }
+
+
+def canonical_json(payload: dict) -> str:
+    """Детерминированное представление агрегата для подписи и сравнения."""
+    return json.dumps(
+        payload, sort_keys=True, ensure_ascii=False, separators=(",", ":")
+    )
+
+
+def aggregate_signature(payload: dict) -> str:
+    """sha256 канонического JSON, первые 16 hex."""
+    body = canonical_json(payload).encode("utf-8")
+    return hashlib.sha256(body).hexdigest()[:16]
+
+
+def build_aggregate(rows: list[dict], *, mode: str) -> dict:
+    """Обезличенный агрегат: только счётчики, без путей, имён и UUID."""
+    forms_total = len(rows)
+    ok = sum(1 for row in rows if row["indexed"])
+    failed = forms_total - ok
+    excluded = 0
+
+    reasons: Counter = Counter(
+        row["reason"] for row in rows if not row["indexed"]
+    )
+    classes: Counter = Counter(row["form_class"] for row in rows)
+
+    matrix: dict[str, dict[str, int]] = {}
+    for row in rows:
+        if row["indexed"]:
+            continue
+        by_class = matrix.setdefault(row["reason"], {})
+        by_class[row["form_class"]] = by_class.get(row["form_class"], 0) + 1
+
+    if forms_total != ok + failed + excluded:
+        raise SystemExit(
+            "нарушен инвариант баланса: "
+            f"{forms_total} != {ok} + {failed} + {excluded}"
+        )
+
+    failed_pct = round(100.0 * failed / forms_total, 4) if forms_total else 0.0
+
+    payload: dict = {
+        "schema_version": AGGREGATE_SCHEMA_VERSION,
+        "cohort": {
+            "mode": mode,
+            "unit": "elem_json_candidate",
+            "forms_total": forms_total,
+            "elem_candidates": forms_total,
+        },
+        "elem_index": {
+            "ok": ok,
+            "failed": failed,
+            "failed_pct": failed_pct,
+            "excluded": excluded,
+        },
+        "form_class": dict(sorted(classes.items())),
+        "unindexed_reason": {
+            reason.value: reasons.get(reason.value, 0)
+            for reason in UnindexedReason
+        },
+        "form_class_by_reason": {
+            reason: dict(sorted(by_class.items()))
+            for reason, by_class in sorted(matrix.items())
+        },
+    }
+    payload["aggregate_signature"] = aggregate_signature(payload)
+    return payload
+
+
+def run_measurement(root: Path, *, mode: str, as_json: bool, runs: int) -> int:
+    """Выполнить runs замеров на одном и том же входе и сверить подписи."""
+    payloads: list[dict] = []
+    for index in range(runs):
+        counter, rows = report_for_export(root)
+        payloads.append(build_aggregate(rows, mode=mode))
+        if index == 0 and not as_json:
+            print_report(counter, rows)
+
+    if as_json:
+        print(json.dumps(payloads[0], ensure_ascii=False, indent=2, sort_keys=True))
+
+    signatures = sorted({payload["aggregate_signature"] for payload in payloads})
+    if runs > 1:
+        stream = sys.stderr if as_json else sys.stdout
+        if len(signatures) == 1:
+            print(f"детерминированность: OK, подпись {signatures[0]}", file=stream)
+        else:
+            print(
+                "детерминированность: РАСХОЖДЕНИЕ, подписи "
+                + ", ".join(signatures),
+                file=stream,
+            )
+            return 1
+    return 0
 
 
 def report_for_export(root: Path) -> tuple[Counter, list[dict]]:
     counter: Counter = Counter()
     rows: list[dict] = []
     for elem_json in sorted(root.rglob("*.elem.json")):
-        row = report_for_form(elem_json.parent)
+        row = report_for_form(elem_json.parent, root)
         rows.append(row)
         counter["indexed" if row["indexed"] else row["reason"]] += 1
     return counter, rows
@@ -266,7 +434,18 @@ def main() -> int:
         "export_root", nargs="?", type=Path,
         help="корень cf_export; без аргумента строится синтетическая выгрузка",
     )
+    parser.add_argument(
+        "--json", action="store_true", dest="as_json",
+        help="печатать только обезличенный детерминированный агрегат (#229)",
+    )
+    parser.add_argument(
+        "--runs", type=int, default=1,
+        help="сколько замеров выполнить на одном входе для проверки подписи (#229)",
+    )
     args = parser.parse_args()
+
+    if args.runs < 1:
+        raise SystemExit("--runs должен быть не меньше 1")
 
     # Проверка, что все причины покрыты примером
     assert {r.value for r in UnindexedReason} >= {"unknown"}
@@ -275,21 +454,23 @@ def main() -> int:
         root = args.export_root.expanduser().resolve()
         if not root.is_dir():
             raise SystemExit(f"Директория не найдена: {root}")
-        counter, rows = report_for_export(root)
-        print_report(counter, rows)
-        return 0
+        return run_measurement(
+            root, mode="prepared_cf_dump", as_json=args.as_json, runs=args.runs
+        )
 
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
         build_demo_export(root)
-        counter, rows = report_for_export(root)
-        print_report(counter, rows)
+        code = run_measurement(
+            root, mode="synthetic_demo", as_json=args.as_json, runs=args.runs
+        )
 
-    print(
-        "\nНи одна форма не получила data_path: classify_unindexed_form() "
-        "только объясняет причину."
-    )
-    return 0
+    if not args.as_json:
+        print(
+            "\nНи одна форма не получила data_path: classify_unindexed_form() "
+            "только объясняет причину."
+        )
+    return code
 
 
 if __name__ == "__main__":

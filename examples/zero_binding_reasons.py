@@ -13,6 +13,14 @@
 Запуск:
 
     python examples/zero_binding_reasons.py
+
+Категория: самодостаточный синтетический пример (машиночитаемые причины нулевой привязки).
+Входные данные: не требуются; синтетическая выгрузка создаётся
+во временном каталоге и удаляется за собой.
+Ожидаемый результат: детерминированный вывод в stdout, RC=0;
+повторный запуск даёт тот же вывод.
+Поведение без данных: запускается без аргументов, установленная
+платформа 1С и реальная выгрузка не нужны.
 """
 from __future__ import annotations
 
@@ -120,6 +128,7 @@ def demo_reasons(tables: dict, attribute_ids: dict) -> list:
                 payload, tables, attribute_ids, name
             )
         reasons.append(reason)
+        assert reason is not None  # классификатор возвращает причину для этих кейсов
         print(f"  {title:<34} → {reason.value}")
     return reasons
 
@@ -129,8 +138,11 @@ def demo_aggregate(reasons: list) -> None:
     print("\nАгрегат уровня формы")
     print("-" * 72)
     single = [ZeroBindingReason.NO_BIND_SLOT] * 3
-    print(f"  все элементы с одной причиной → {aggregate_form_zero_binding(single).value}")
-    print(f"  разные причины                → {aggregate_form_zero_binding(reasons).value}")
+    single_reason = aggregate_form_zero_binding(single)
+    mixed_reason = aggregate_form_zero_binding(reasons)
+    assert single_reason is not None and mixed_reason is not None
+    print(f"  все элементы с одной причиной → {single_reason.value}")
+    print(f"  разные причины                → {mixed_reason.value}")
     print(f"  непривязанных элементов нет   → {aggregate_form_zero_binding([])}")
 
 

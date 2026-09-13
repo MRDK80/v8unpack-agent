@@ -1,4 +1,6 @@
 
+import pytest
+
 from v8unpack_agent import FormsIndex, FormsIndexEntry, is_form_stale
 
 
@@ -59,3 +61,12 @@ def test_save_load_roundtrip(tmp_path):
 
 def test_load_missing_is_empty(tmp_path):
     assert FormsIndex.load(tmp_path / "nope.json").entries() == {}
+
+
+def test_is_form_stale_rejects_none_issue230() -> None:
+    """Отсутствующая запись реестра даёт явный ValueError (issue #230)."""
+    index = FormsIndex()
+    entry = index.get("missing-form-id")
+    assert entry is None
+    with pytest.raises(ValueError, match="forms index entry is required"):
+        is_form_stale(entry)
