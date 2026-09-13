@@ -56,5 +56,7 @@ jobs:
       - name: Ruff
         run: ruff check .
 
+      # Область проверки mypy задана [tool.mypy] files в pyproject.toml (#268):
+      # явные аргументы командной строки переопределяют files, поэтому их здесь нет.
       - name: Mypy
-        run: mypy v8unpack_agent examples
+        run: mypy
