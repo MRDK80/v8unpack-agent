@@ -41,6 +41,8 @@ from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Literal
 
+from v8unpack_agent.platform_reference_types import PLATFORM_REFERENCE_TYPES
+
 logger = logging.getLogger(__name__)
 
 # --- константы структуры External (issues #25, #32) ------------------------
@@ -299,12 +301,21 @@ class FormScanIndex:
     """Корень сканирования. Runtime-only: в сериализацию не попадает (#239)."""
 
     def resolve_reference_type(self, uuid: str) -> str | None:
-        """Вернуть читаемое имя ссылочного типа либо ``None`` (issue #88).
+        """UUID -> имя ссылочного типа либо ``None`` (issues #88, #165).
 
-        Подходит как ``type_resolver`` для ``decode_object_attributes``:
-        неизвестный UUID оставляет безопасный fallback ``Ref#<uuid>``.
+        Порядок резолюции: :attr:`reference_types` (индекс выгрузки) ->
+        :data:`~v8unpack_agent.platform_reference_types.PLATFORM_REFERENCE_TYPES`
+        (статическая таблица платформенных типов) -> ``None``. При ``None``
+        :func:`~v8unpack_agent.object_decoder.decode_object_attributes`
+        сохраняет ``Ref#uuid``.
+
+        Первая ступень приоритетнее статики: объекты конфигурации не
+        перекрываются платформенной таблицей.
         """
-        return self.reference_types.get(uuid)
+        indexed = self.reference_types.get(uuid)
+        if indexed is not None:
+            return indexed
+        return PLATFORM_REFERENCE_TYPES.get(uuid)
 
     def to_dict(self) -> dict:
         """Сериализовать индекс портируемым payload (issue #239).
