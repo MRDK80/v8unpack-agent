@@ -280,6 +280,31 @@ Production-код `v8unpack_agent/` и публичный API не изменя�
 
 ## [Unreleased]
 
+### Added
+
+- Резолюция платформенных ссылочных типов (#165, PR #277, squash `d3b68adc`):
+  статическая таблица `PLATFORM_REFERENCE_TYPES` из 13 канонических машинных
+  имён XDTO плюс один явный fallback `PLATFORM_TYPES_WITHOUT_XDTO_NAME`.
+  Порядок резолюции: индекс `FormScanIndex.reference_types` → статическая
+  таблица → `None`, после чего `object_decoder` сохраняет `Ref#uuid` без
+  потери идентификатора. Даёт 1026 новых резолюций; `reference_only`
+  сокращается с 1143 до 117 вхождений (20 → 7 UUID); `FormScanIndex`
+  schema v2 не менялась.
+
+### Fixed
+
+- Диагностическая метрика применимости в `examples/unresolved_refs_report.py`
+  (#278): предикат `is_reference_type()` отбрасывал имена второй ступени вида
+  `prefix:LocalName`, поэтому 1026 корректно разрешённых вхождений выпадали и
+  из знаменателя, и из `resolved`. Признак применимости расширен точным
+  членством имени в значениях `PLATFORM_REFERENCE_TYPES`. Стабильная
+  популяция: `applicable_reference_occurrences` 15723, `resolved` 15448,
+  coverage 98.2510 % (+6.5255 п.п. от 91.7255 %). Классы остатка не
+  изменились: `unresolved` 275, `reference_only` 117, `definition_known`
+  28 UUID / 158 вхождений, `in_index_but_unresolved` 0. Резолвер, статическая
+  таблица, schema v2 и fallback не затронуты; измерения #143 и #164 остаются
+  интерпретируемыми в своих исторических значениях.
+
 ### Changed
 
 - docs(examples): в `examples/legacy_list_form_bindings.py` и
