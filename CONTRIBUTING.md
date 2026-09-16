@@ -221,3 +221,15 @@ pytest tests/test_form_artifact.py
   точечного `# noqa: BLE001` с объяснением рядом; массовые ignores на пакет не добавляются;
 - массовое форматирование (`ruff format`, `black`) в pipeline не входит;
 - `--unsafe-fixes` не применяется: для группы `UP*` он переписывает тексты диагностики.
+
+## Выпуск пакета
+
+Каноническая release-процедура описана в `docs/RELEASING.md`. Обычный pull
+request никогда не публикует пакет: production upload запускается только для
+согласованного version tag и проходит через защищённое GitHub environment.
+Постоянные PyPI API tokens не используются.
+
+Перед release PR обязательны `ruff check .`, `mypy`, полный Pytest, локальные
+`python -m build` и `python -m twine check dist/*`, проверка metadata и install
+smoke wheel/sdist в чистых окружениях. Версия в `pyproject.toml` должна точно
+соответствовать тегу с префиксом `v`.
