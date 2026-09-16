@@ -683,7 +683,7 @@ Production-код, схема, `examples/*.py`, workflow и `pyproject.toml` н�
 Release infrastructure находится в draft PR #219: статическая проверка
 version/tag/dependency, однократная сборка wheel и sdist, `twine check`, install
 smoke на Linux/Windows с Python 3.10/3.12 и минимальный OIDC publishing job.
-Локально подтверждены 1184 теста, Ruff, Mypy, artifact metadata, console script,
+Локально подтверждены 1194 теста, Ruff, Mypy, artifact metadata, console script,
 wheel/sdist installation и создание post-run report.
 
 TestPyPI/PyPI upload, version tag и GitHub Release ещё не выполнялись. Issue
