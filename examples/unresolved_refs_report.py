@@ -63,6 +63,7 @@ from hashlib import sha256
 from pathlib import Path
 
 from v8unpack_agent.form_context import build_form_context
+from v8unpack_agent.platform_reference_types import PLATFORM_REFERENCE_TYPES
 from v8unpack_agent.scan_forms import scan_forms
 
 try:
@@ -77,6 +78,10 @@ LOCAL_NAMES_BANNER = (
 
 UUID_RE = re.compile(r"^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$")
 REF_PREFIX = "Ref#"
+# Вторая ступень резолюции (#165) отдаёт каноническое машинное имя XDTO
+# вида prefix:LocalName. Применимость проверяется точным членством в
+# значениях доказанной статической таблицы, а не эвристикой по двоеточию.
+PLATFORM_REFERENCE_TYPE_NAMES = frozenset(PLATFORM_REFERENCE_TYPES.values())
 
 #: Ключи, допустимые к публикации в нормализованном указателе.
 KNOWN_TAGS = frozenset({
@@ -117,7 +122,11 @@ def mask(value: str, allowed) -> str:
 
 
 def is_reference_type(type_name: str) -> bool:
-    return type_name.startswith(REF_PREFIX) or "Ref." in type_name
+    return (
+        type_name.startswith(REF_PREFIX)
+        or "Ref." in type_name
+        or type_name in PLATFORM_REFERENCE_TYPE_NAMES
+    )
 
 
 def file_role(parts) -> tuple[str, str]:
