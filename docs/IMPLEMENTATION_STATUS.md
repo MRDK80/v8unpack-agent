@@ -672,3 +672,20 @@ Production-код, схема, `examples/*.py`, workflow и `pyproject.toml` н�
 
 Результаты: Ruff RC=0, Mypy RC=0 на 25 файлах, pytest 1118 passed
 (1111 baseline и 7 новых проверок).
+
+## Issue #149 — подготовка публикации в PyPI
+
+Подготовлен первый release candidate `0.1.0rc1`. Проверенный PyPI-релиз
+`v8unpack==1.2.13` содержит поддержку `ExternalReport` и функционально
+распаковывает `.erf`, поэтому VCS dependency заменена на индексную
+`v8unpack>=1.2.13`.
+
+Release infrastructure находится в draft PR #219: статическая проверка
+version/tag/dependency, однократная сборка wheel и sdist, `twine check`, install
+smoke на Linux/Windows с Python 3.10/3.12 и минимальный OIDC publishing job.
+Локально подтверждены 1184 теста, Ruff, Mypy, artifact metadata, console script,
+wheel/sdist installation и создание post-run report.
+
+TestPyPI/PyPI upload, version tag и GitHub Release ещё не выполнялись. Issue
+закрывается только после production upload и проверки установки из PyPI без
+локального cache.

@@ -25,6 +25,7 @@ sys
 
 # Packaging artifacts (issue #194)
 build/
+dist/
 
 # Post-run reports (issue #196)
 /post-run*.json

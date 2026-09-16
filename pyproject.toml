@@ -1,18 +1,17 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "v8unpack-agent"
-version = "0.1.0"
+version = "0.1.0rc1"
 description = "Agent-pipeline adapter for v8unpack: path factory, FormArtifact, drift index"
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.10"
 dependencies = [
-    # PR#29 (.erf support) merged into saby-integration/v8unpack main, release >1.2.9 pending.
-    # Switch to v8unpack>=<next-release> once published on PyPI.
-    "v8unpack @ git+https://github.com/saby-integration/v8unpack.git@main",
+    "v8unpack>=1.2.13",
 ]
 
 [project.optional-dependencies]

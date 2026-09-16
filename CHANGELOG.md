@@ -1,5 +1,36 @@
 # Changelog
 
+## Первый PyPI release candidate подготовлен (#149)
+
+### Изменено
+
+- Версия первого release candidate зафиксирована как `0.1.0rc1`; статическое
+  поле `project.version` остаётся единственным источником версии.
+- VCS-зависимость заменена на проверенную индексную зависимость
+  `v8unpack>=1.2.13`; опубликованный upstream wheel функционально проверен на
+  поддержке `ExternalReport` и распаковке публичного `.erf` fixture.
+- Packaging metadata переведены на SPDX license expression, добавлен
+  `license-files`, минимальная версия build backend поднята до setuptools 77.
+- Добавлены release validator, отдельный release/deployment workflow с Trusted
+  Publishing, install smoke для wheel/sdist и документация выпуска.
+- `dist/` добавлен в `.gitignore`; README сохраняет Git-установку как временный
+  вариант до фактической публикации.
+
+### Проверено
+
+- `ruff check .` — RC=0.
+- `mypy` — RC=0, 41 source files (`v8unpack_agent` и `examples`).
+- `python -m pytest -q` — 1184 passed.
+- `python -m build` и `python -m twine check dist/*` — RC=0.
+- Wheel и sdist установлены с разрешением dependencies в чистые окружения;
+  импорт идёт из `site-packages`, console script и module CLI возвращают help,
+  синтетический run создаёт читаемый post-run JSON report.
+
+### Не выполнялось
+
+- Upload в TestPyPI или PyPI, создание version tag и GitHub Release.
+  Каждое действие выполняется отдельно после merge и явного подтверждения.
+
 ## Контракт CI-проверок уточнён: внешний check `update-pip-graph` (#272)
 
 ### Изменено

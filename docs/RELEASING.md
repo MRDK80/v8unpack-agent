@@ -2,13 +2,11 @@
 
 Этот документ описывает воспроизводимый выпуск wheel и sdist через GitHub Actions и PyPI Trusted Publishing. Обычный CI остаётся в `.github/workflows/tests.yml`; `.github/workflows/release.yml` отвечает только за release/deployment.
 
-## Текущий blocker
+## Проверенная upstream-зависимость
 
-До публикации запрещено заменять VCS-зависимость на `v8unpack>=0.19.1`: проверенный PyPI-дистрибутив 0.19.1 не содержит поддержки `ExternalReport` и `.erf`. Поддержка присутствует в upstream `main` и заявлена для 1.2.11, но соответствующий индексный релиз пока отсутствует. Выпуск отслеживается в `saby-integration/v8unpack#30`.
+Upstream опубликовал `v8unpack==1.2.13` в PyPI. Wheel установлен с `--no-cache-dir` из основного индекса в чистое окружение: версия подтверждена через package metadata, `ExternalReport` зарегистрирован, публичный `.erf` fixture успешно распакован в четыре файла. Минимальная runtime-зависимость зафиксирована как `v8unpack>=1.2.13`.
 
-Пока dependency содержит direct/VCS reference, `scripts/validate_release.py` намеренно завершает release с ненулевым кодом до сборки и получения publishing credential.
-
-После upstream-релиза необходимо установить его wheel из PyPI в чистое окружение, проверить `ExternalReport` и `.erf`, запустить релевантные тесты и только затем указать фактически проверенную минимальную версию в `pyproject.toml`.
+Release validator продолжает блокировать direct/VCS и локальные runtime dependencies. История проверки upstream-релиза зафиксирована в `saby-integration/v8unpack#30`.
 
 ## Источник версии
 
