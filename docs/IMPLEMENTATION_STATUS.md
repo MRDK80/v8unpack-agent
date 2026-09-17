@@ -680,12 +680,15 @@ Production-код, схема, `examples/*.py`, workflow и `pyproject.toml` н�
 распаковывает `.erf`, поэтому VCS dependency заменена на индексную
 `v8unpack>=1.2.13`.
 
-Release infrastructure находится в draft PR #219: статическая проверка
+Release infrastructure влита PR #219: статическая проверка
 version/tag/dependency, однократная сборка wheel и sdist, `twine check`, install
 smoke на Linux/Windows с Python 3.10/3.12 и минимальный OIDC publishing job.
 Локально подтверждены 1194 теста, Ruff, Mypy, artifact metadata, console script,
 wheel/sdist installation и создание post-run report.
 
-TestPyPI/PyPI upload, version tag и GitHub Release ещё не выполнялись. Issue
-закрывается только после production upload и проверки установки из PyPI без
-локального cache.
+`v8unpack-agent==0.1.0rc1` опубликован в TestPyPI и production PyPI через
+Trusted Publishing. Production run `35151644090` успешен; tag `v0.1.0rc1` и
+GitHub prerelease указывают на
+`0a4880fbf17a96446743f50f60f4e81cf3e23379`. Чистые точная и непинованная
+установки из PyPI успешны, зависимости разрешаются из индекса без VCS URL,
+`pip check`, console script и synthetic post-run report проверены.

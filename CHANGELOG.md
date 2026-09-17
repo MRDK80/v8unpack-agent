@@ -23,13 +23,23 @@
 - `python -m pytest -q` — 1194 passed.
 - `python -m build` и `python -m twine check dist/*` — RC=0.
 - Wheel и sdist установлены с разрешением dependencies в чистые окружения;
-  импорт идёт из `site-packages`, console script и module CLI возвращают help,
+  импорт идёт из `site-packages`, console script возвращает help,
   синтетический run создаёт читаемый post-run JSON report.
 
-### Не выполнялось
+### Опубликовано
 
-- Upload в TestPyPI или PyPI, создание version tag и GitHub Release.
-  Каждое действие выполняется отдельно после merge и явного подтверждения.
+- `v8unpack-agent==0.1.0rc1` опубликован сначала в TestPyPI, затем в PyPI
+  через Trusted Publishing; production run `35151644090` завершён успешно.
+- Аннотированный tag `v0.1.0rc1` указывает на
+  `0a4880fbf17a96446743f50f60f4e81cf3e23379`; создан одноимённый GitHub
+  prerelease с wheel и sdist.
+- Чистые установки точной и непинованной командой из production PyPI успешны;
+  `pip check`, импорт из `site-packages`, console script и синтетический
+  post-run report проверены.
+- SHA256 production artifacts: wheel —
+  `60e57612837fe1827bd6907141ad1c8d884cede8352810f6c6a79d3ebed0c7a0`,
+  sdist —
+  `a55eced457d7f838cebdecd65ba9bf43ee2d2d901e31c74a5e359d800deab63c`.
 
 ## Контракт CI-проверок уточнён: внешний check `update-pip-graph` (#272)
 
