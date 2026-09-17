@@ -28,18 +28,23 @@
 
 ## Установка
 
-Пакет готовится к первой публикации в PyPI. До завершения релиза
-используйте установку из Git:
-
-```bash
-pip install "v8unpack>=1.2.13"
-pip install git+https://github.com/MRDK80/v8unpack-agent.git
-```
-
-После фактической публикации и post-publish проверки основной командой станет:
+Основная установка из PyPI:
 
 ```bash
 pip install v8unpack-agent
+```
+
+Для воспроизводимой установки первого release candidate:
+
+```bash
+pip install v8unpack-agent==0.1.0rc1
+```
+
+Установка актуального состояния `main` напрямую из Git остаётся вариантом для
+проверки ещё не опубликованных изменений:
+
+```bash
+pip install git+https://github.com/MRDK80/v8unpack-agent.git
 ```
 
 Установка для разработки из клона:
