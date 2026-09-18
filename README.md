@@ -34,7 +34,8 @@
 pip install v8unpack-agent
 ```
 
-Для воспроизводимой установки первого release candidate:
+Исторический pre-release `0.1.0rc1` остаётся доступным в PyPI и по умолчанию
+не выбирается резолверами (нужен явный pin или `--pre`):
 
 ```bash
 pip install v8unpack-agent==0.1.0rc1
