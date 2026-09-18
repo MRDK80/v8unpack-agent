@@ -27,7 +27,7 @@ def _quoted_value(text: str, key: str) -> str:
 def test_packaging_metadata_contract() -> None:
     text = _pyproject_text()
     assert _quoted_value(text, "name") == "v8unpack-agent"
-    assert _quoted_value(text, "version") == "0.1.0rc1"
+    assert _quoted_value(text, "version") == "0.1.0"
     assert _quoted_value(text, "requires-python") == ">=3.10"
     assert _quoted_value(text, "license") == "MIT"
     assert 'license-files = ["LICENSE"]' in text
