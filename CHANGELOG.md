@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 — подготовлено к выпуску
+## 0.1.0 — 2026-09-18
 
 Стабильный релиз повторяет проверенный контур `0.1.0rc1` без изменений
 runtime API и без изменений публикационного конвейера.
@@ -14,8 +14,14 @@ runtime API и без изменений публикационного конв
   `v8unpack.decoder.available_types` и маппится в `ExternalDataProcessor`,
   публичный `.erf` fixture upstream-дистрибутива распакован через
   `v8unpack.extract` в 4 файла без исключений.
-- Публикация выполняется существующим `release.yml` по тегу `v0.1.0`.
-  На момент подготовки изменения upload в PyPI не выполнялся.
+- Опубликована в production PyPI существующим `release.yml` по тегу
+  `v0.1.0`. Все джобы release workflow успешны, включая восемь install
+  smoke: wheel и sdist × Python 3.10/3.12 × Ubuntu/Windows.
+- Артефакты релиза совпадают у workflow, GitHub Release и PyPI:
+  wheel `sha256 4d4386f7181140f14e0c8f1411eff4940879508c84b0c1fb8ca2fbbd17038baf`,
+  sdist `sha256 64c0fcf1e1a4badab13d46e54e49146c9c62d8cea662423c5a9103579a132e14`.
+- Непинованная установка `pip install v8unpack-agent` даёт `0.1.0`:
+  pre-release `0.1.0rc1` резолверами по умолчанию больше не выбирается.
 
 ## Первый PyPI release candidate подготовлен (#149)
 

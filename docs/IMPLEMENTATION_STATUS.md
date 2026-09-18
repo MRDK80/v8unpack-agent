@@ -675,8 +675,12 @@ Production-код, схема, `examples/*.py`, workflow и `pyproject.toml` н�
 
 ## Issue #149 — подготовка публикации в PyPI
 
-Подготовлен первый release candidate `0.1.0rc1`. Проверенный PyPI-релиз
-`v8unpack==1.2.13` содержит поддержку `ExternalReport` и функционально
+Выпущена стабильная версия `0.1.0`: она опубликована в production PyPI и
+является версией по умолчанию для `pip install v8unpack-agent`.
+Ранее подготовленный release candidate `0.1.0rc1` остаётся в истории.
+Проверенный PyPI-релиз
+`v8unpack==1.2.13` регистрирует тип `ExternalReport` в `available_types`
+(класса с таким именем в публичном API нет) и функционально
 распаковывает `.erf`, поэтому VCS dependency заменена на индексную
 `v8unpack>=1.2.13`.
 
@@ -685,6 +689,12 @@ version/tag/dependency, однократная сборка wheel и sdist, `twi
 smoke на Linux/Windows с Python 3.10/3.12 и минимальный OIDC publishing job.
 Локально подтверждены 1194 теста, Ruff, Mypy, artifact metadata, console script,
 wheel/sdist installation и создание post-run report.
+
+`v8unpack-agent==0.1.0` опубликован в production PyPI через Trusted
+Publishing с ручным approval защищённого environment. Тег `v0.1.0`
+указывает на release commit `main`; install smoke release workflow
+покрыл wheel и sdist на Python 3.10 и 3.12, Ubuntu и Windows. Точная и
+непинованная установки из production PyPI дают `0.1.0`.
 
 `v8unpack-agent==0.1.0rc1` опубликован в TestPyPI и production PyPI через
 Trusted Publishing. Production run `35151644090` успешен; tag `v0.1.0rc1` и
