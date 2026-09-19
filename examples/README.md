@@ -29,7 +29,7 @@ README и код не расходились. Соответствие пров�
 | `coverage_metric.py` | метрика покрытия по элементам данных |
 | `form_bindings.py` | подтверждённые привязки `data_path` элементов |
 | `form_context.py` | `FormContext` и компактный фрагмент для промпта |
-| `reference_types.py` | резолюция `Ref#uuid` в читаемое имя типа |
+| `reference_types.py` | резолюция `Ref#uuid` через индекс выгрузки и платформенную таблицу (#165), fallback для неизвестного UUID |
 | `unindexed_forms_report.py` | отчёт по неиндексируемым формам |
 | `zero_binding_reasons.py` | машиночитаемые причины нулевой привязки |
 

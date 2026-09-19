@@ -7,7 +7,9 @@
    (прежнее поведение, обратная совместимость).
 2. С резолвером из `scan_forms` — тип становится читаемым именем
    (`CatalogRef.<Имя>`, `EnumRef.<Имя>` и др.).
-3. Неизвестный UUID — остаётся `Ref#<uuid>`: тип не угадывается.
+3. Платформенный UUID — разрешается второй ступенью из доказанной статической
+   таблицы (#165), даже если его нет в выгрузке.
+4. Неизвестный UUID — остаётся `Ref#<uuid>`: тип не угадывается.
 
 Дополнительно показано, что индекс собирается тем же обходом выгрузки
 (второго discovery нет), что примитивные типы резолверу не передаются
@@ -32,6 +34,7 @@ import tempfile
 from pathlib import Path
 
 from v8unpack_agent.object_decoder import decode_object_attributes
+from v8unpack_agent.platform_reference_types import PLATFORM_REFERENCE_TYPES
 from v8unpack_agent.scan_forms import scan_forms
 
 # UUID синтетические: ни один не взят из реальной конфигурации.
@@ -189,6 +192,10 @@ def demo_index(export_root: Path) -> None:
         print(f"    {uuid}  →  {type_name}")
 
     print(f"  неизвестный UUID    : {index.resolve_reference_type(UNKNOWN_TYPE_UUID)}")
+    platform_uuid = "acf6192e-81ca-46ef-93a6-5a6968b78663"
+    assert platform_uuid not in index.reference_types
+    assert index.resolve_reference_type(platform_uuid) == PLATFORM_REFERENCE_TYPES[platform_uuid]
+    print(f"  платформенный тип   : {index.resolve_reference_type(platform_uuid)}")
     if index.scan_warnings:
         print("  предупреждения обхода:")
         for warning in index.scan_warnings:

@@ -102,7 +102,7 @@ unpacked_root = Path("text_layer")
 
 def unpack_one(source: FormBinSource, root: Path) -> FormArtifact:
     """Здесь вызывается реальное извлечение текстов из source.bin_path."""
-    return FormArtifact.for_form(root, source.name)
+    return FormArtifact.for_source(root, source)
 
 
 scan_index = scan_forms(dump_root)
@@ -141,8 +141,9 @@ index.save(Path("forms_index.json"))
 - Формы без кода попадают в опись: elem-only ветка заполняет `elem_json_path`.
 - Частичный результат всегда явный: `extraction_ok=False` невозможен без
   непустого `extraction_warnings`.
-- Ссылочные типы реквизитов приводятся к имени объекта метаданных; неизвестный
-  UUID остаётся `Ref#<uuid>` и не угадывается.
+- Ссылочные типы реквизитов сначала разрешаются по объектам выгрузки, затем
+  по доказанной таблице платформенных типов (#165). Неизвестный UUID остаётся
+  `Ref#<uuid>` и не угадывается.
 - Сервисные формы отделены от объектных, чтобы метрика покрытия не занижалась
   архитектурным паттерном платформы.
 - Дрейф детектируется по хешам модуля и структуры, а не только по времени

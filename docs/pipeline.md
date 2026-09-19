@@ -87,10 +87,10 @@ def unpack_one(source: FormBinSource, root: Path) -> FormArtifact:
     # Здесь вызывается реальное извлечение текстов из source.bin_path.
     paths = form_paths(root, source.form_id)
     if paths["object_module"].exists():
-        return FormArtifact.for_form(root, source.name)
-    return FormArtifact.for_form(
+        return FormArtifact.for_source(root, source)
+    return FormArtifact.for_source(
         root,
-        source.name,
+        source,
         extraction_ok=False,
         extraction_warnings=["модуль формы не извлечён"],
     )
