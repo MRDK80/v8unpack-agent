@@ -100,8 +100,13 @@ dump_root = Path("unpacked_cf")
 unpacked_root = Path("text_layer")
 
 
+def extract_form_texts(source: FormBinSource, root: Path) -> None:
+    """Замените заглушку записью текстов формы в каталог source.form_id."""
+    raise NotImplementedError("подключите распаковщик Form.bin")
+
+
 def unpack_one(source: FormBinSource, root: Path) -> FormArtifact:
-    """Здесь вызывается реальное извлечение текстов из source.bin_path."""
+    extract_form_texts(source, root)
     return FormArtifact.for_source(root, source)
 
 
@@ -113,6 +118,8 @@ index = update_forms_index(dump_root, unpacked_root, artifacts)
 index.save(Path("forms_index.json"))
 ```
 
+Код выше — шаблон: до запуска замените `NotImplementedError` реальным
+извлечением текстов. Артефакт возвращается только после успешной записи.
 Распаковщик получает `FormBinSource` и корень текстового слоя — ровно два
 аргумента. Существующая трёхаргументная реализация подключается только через
 `adapt_legacy_unpacker()`. Подробный разбор и отбор по `form_ids` — в
