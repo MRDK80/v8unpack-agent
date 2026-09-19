@@ -37,7 +37,8 @@ from v8unpack_agent.object_decoder import decode_object_attributes
 from v8unpack_agent.platform_reference_types import PLATFORM_REFERENCE_TYPES
 from v8unpack_agent.scan_forms import scan_forms
 
-# UUID синтетические: ни один не взят из реальной конфигурации.
+# UUID объектов синтетические: ни один не взят из реальной конфигурации.
+# platform_uuid ниже взят из публичной канонической таблицы типов платформы.
 NULL_UUID = "00000000-0000-0000-0000-000000000000"
 
 # Идентификаторы объектов-целей ссылки. У объекта метаданных их несколько,
