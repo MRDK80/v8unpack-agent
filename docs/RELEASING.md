@@ -29,7 +29,7 @@ Release validator продолжает блокировать direct/VCS и ло
 
 1. Дождаться публикации upstream dependency и подтвердить её функциональным probe.
 2. Заменить VCS dependency на проверенную индексную версию.
-3. Установить `project.version` равным версии кандидата, например `0.1.0rc1`.
+3. Установить `project.version` равным выпускаемой версии, например `0.1.0` или `0.1.0rc1`.
 4. Обновить CHANGELOG и release notes.
 5. Собрать wheel и sdist локально.
 6. Выполнить `twine check` и install smoke из обоих artifacts.
