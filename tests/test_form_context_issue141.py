@@ -161,9 +161,11 @@ def test_unproven_binding_gets_explicit_status(tmp_path: Path) -> None:
 
     lines = _status_lines(to_llm_prompt_fragment(context))
     assert lines == [
-        'data_path: "<UNRESOLVED: путь не доказан>"; status: unresolved; '
-        'reason: binding_not_proven; scope: element; '
-        f'element: "{UNPROVEN_ELEMENT}"'
+        (
+            'data_path: "<UNRESOLVED: путь не доказан>"; status: unresolved; '
+            'reason: binding_not_proven; scope: element; '
+            f'element: "{UNPROVEN_ELEMENT}"'
+        )
     ]
 
 
@@ -233,8 +235,10 @@ def test_unknown_layout(tmp_path: Path, monkeypatch) -> None:
     }]
     lines = _status_lines(to_llm_prompt_fragment(context))
     assert lines == [
-        'data_path: "<UNKNOWN_LAYOUT: путь не доказан>"; status: unknown_layout; '
-        "reason: layout_not_recognized; scope: form"
+        (
+            'data_path: "<UNKNOWN_LAYOUT: путь не доказан>"; status: unknown_layout; '
+            "reason: layout_not_recognized; scope: form"
+        )
     ]
 
 
