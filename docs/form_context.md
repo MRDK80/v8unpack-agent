@@ -350,3 +350,19 @@ tuple приватного хелпера не изменились.
 `_FormEntryLike` с единственным полем `form_path`.
 
 Проверки: `tests/test_form_entry_protocol_issue191.py`.
+
+## Явное отрицательное знание о data_path (#141)
+
+Недоказанные привязки `data_path` не остаются молчаливым пропуском.
+`FormContext.unresolved_data_paths` хранит канонический `data_path: null` со
+стабильными `status` и `reason`, а `to_llm_prompt_fragment()` выводит в секции
+`## SUMMARY` сразу после JSON выжимки строку с видимым маркером:
+
+```text
+data_path: "<UNRESOLVED: путь не доказан>"; status: unresolved; reason: binding_not_proven; scope: element; element: "ПолеФормы"
+```
+
+Строка атомарна относительно `max_chars`: маркер не отделяется от статуса.
+Без недоказанных привязок фрагмент совпадает с форматом, описанным выше.
+Полная семантика статусов, кодов причин и маркеров —
+в [form_context_data_path_status.md](form_context_data_path_status.md).
