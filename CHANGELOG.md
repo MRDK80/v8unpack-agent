@@ -1,5 +1,30 @@
 # Changelog
 
+## Явное отрицательное знание для недоказанных data_path (#141)
+
+### Добавлено
+
+- `FormContext.unresolved_data_paths` — по записи на каждую недоказанную
+  привязку: `data_path: null`, стабильные `status` и `reason`. Статусы:
+  `unresolved`, `unknown_layout`; `not_found` зарезервирован за доказанным
+  отсутствием и модулем не выдаётся. Причины: `form_dir_missing`,
+  `elem_json_missing`, `elem_json_invalid`, `layout_not_recognized`,
+  `binding_not_proven`; определяются по структурным фактам, а не по тексту
+  `warnings`.
+- `to_llm_prompt_fragment()` выводит в `## SUMMARY` после JSON выжимки строку
+  с маркером `<UNRESOLVED: ...>` или `<UNKNOWN_LAYOUT: ...>`. Строка атомарна
+  относительно `max_chars`: маркер не отделяется от статуса.
+- Документация: [`docs/form_context_data_path_status.md`](docs/form_context_data_path_status.md);
+  тесты: `tests/test_form_context_issue141.py`.
+
+### Не изменялось
+
+- доказанные `data_path` в `summary.relations` и `resolved_relations`;
+- публичные сигнатуры `build_form_context` и `to_llm_prompt_fragment`;
+- порядок секций `# FORM` → `## SUMMARY` → `## OBJECT_ATTRIBUTES` → `## BSL`
+  и формат фрагмента для форм без недоказанных привязок;
+- `warnings` сохранены как дополнительная диагностика.
+
 ## 0.1.0 — 2026-09-18
 
 Стабильный релиз повторяет проверенный контур `0.1.0rc1` без изменений

@@ -21,7 +21,8 @@ relative-to-root и может быть ``None`` (старые индексы). 
 ------------------
 
 * второго пути разбора не вводится: структуру даёт единственный
-  ``build_form_summary`` поверх ``parse_elem_json``;
+  ``parse_elem_json``, выжимку — ``build_form_summary_from_elem_index``
+  (та же композиция, что внутри ``build_form_summary``);
 * отсутствие BSL — штатный ``None``, пустой файл — пустая строка;
 * отсутствие ``*.elem.json`` обрабатывает сам ``FormSummary`` — пустые
   бакеты и ``warnings`` парсера;
@@ -47,6 +48,18 @@ relative-to-root и может быть ``None`` (старые индексы). 
 Содержательная часть предупреждения не меняется и не теряется. То же
 правило применяется к предупреждениям ``object_decoder``.
 
+Явное отрицательное знание о ``data_path`` (issue #141)
+------------------------------------------------------
+
+Недоказанная привязка не угадывается и не остаётся молчаливым пропуском.
+Каноническая структура ``FormContext.unresolved_data_paths`` хранит
+``data_path: None`` вместе со стабильными ``status`` и ``reason``; LLM-проекция
+выводит строковый маркер в той же строке, что и статус, и обрезка
+``max_chars`` не может разделить маркер и статус. Доказанные ``data_path``
+по-прежнему живут только в ``summary.relations`` и не меняются. Статус
+``not_found`` зарезервирован за доказанным отсутствием целевой сущности;
+отсутствие результата разбора таким доказательством не является.
+
 RAG-индексация (#78) и диспетчеризация (#79) в этот модуль не входят.
 """
 
@@ -59,9 +72,11 @@ from pathlib import Path
 from typing import Any, Protocol
 
 from v8unpack_agent.catalog_resolver import object_json_path, resolve_data_path
+from v8unpack_agent.coverage_metric import DATA_ELEMENT_TYPES
+from v8unpack_agent.elem_parser import _find_elem_json, parse_elem_json
 from v8unpack_agent.form_summary import (
     FormSummary,
-    build_form_summary,
+    build_form_summary_from_elem_index,
     to_normalized_json,
 )
 from v8unpack_agent.object_decoder import decode_object_attributes
@@ -85,6 +100,44 @@ NO_OBJECT_PLACEHOLDER = "(реквизиты объекта не найдены)
 #: тип неизвестен и значение остаётся ``Ref#<uuid>``. Алиас приватный: в
 #: ``object_decoder`` тип задан inline, второй публичный контракт не вводится.
 _TypeResolver = Callable[[str], str | None]
+
+#: Статусы недоказанного ``data_path`` (issue #141). Набор конечный.
+#: ``unresolved`` — привязка не доказана, причина в ``reason``;
+#: ``unknown_layout`` — файл структуры есть, но раскладка не распознана;
+#: ``not_found`` — отсутствие целевой сущности доказано. Ни одна текущая
+#: диагностическая ветка такого доказательства не даёт, поэтому модуль
+#: ``not_found`` не выдаёт: пустой результат разбора — не доказательство.
+DATA_PATH_STATUS_UNRESOLVED = "unresolved"
+DATA_PATH_STATUS_UNKNOWN_LAYOUT = "unknown_layout"
+DATA_PATH_STATUS_NOT_FOUND = "not_found"
+DATA_PATH_STATUSES: frozenset[str] = frozenset({
+    DATA_PATH_STATUS_UNRESOLVED,
+    DATA_PATH_STATUS_UNKNOWN_LAYOUT,
+    DATA_PATH_STATUS_NOT_FOUND,
+})
+
+#: Стабильные коды причин деградации (issue #141) и их статусы.
+DATA_PATH_REASON_FORM_DIR_MISSING = "form_dir_missing"
+DATA_PATH_REASON_ELEM_JSON_MISSING = "elem_json_missing"
+DATA_PATH_REASON_ELEM_JSON_INVALID = "elem_json_invalid"
+DATA_PATH_REASON_LAYOUT_NOT_RECOGNIZED = "layout_not_recognized"
+DATA_PATH_REASON_BINDING_NOT_PROVEN = "binding_not_proven"
+DATA_PATH_REASONS: dict[str, str] = {
+    DATA_PATH_REASON_FORM_DIR_MISSING: DATA_PATH_STATUS_UNRESOLVED,
+    DATA_PATH_REASON_ELEM_JSON_MISSING: DATA_PATH_STATUS_UNRESOLVED,
+    DATA_PATH_REASON_ELEM_JSON_INVALID: DATA_PATH_STATUS_UNRESOLVED,
+    DATA_PATH_REASON_LAYOUT_NOT_RECOGNIZED: DATA_PATH_STATUS_UNKNOWN_LAYOUT,
+    DATA_PATH_REASON_BINDING_NOT_PROVEN: DATA_PATH_STATUS_UNRESOLVED,
+}
+
+#: Видимые маркеры LLM-проекции. Стабильны и машинно различимы.
+DATA_PATH_MARKERS: dict[str, str] = {
+    DATA_PATH_STATUS_UNRESOLVED: "<UNRESOLVED: путь не доказан>",
+    DATA_PATH_STATUS_UNKNOWN_LAYOUT: "<UNKNOWN_LAYOUT: путь не доказан>",
+    DATA_PATH_STATUS_NOT_FOUND: "<NOT_FOUND: отсутствие доказано>",
+}
+#: Начало строки отрицательного знания в секции ``## SUMMARY``.
+DATA_PATH_LINE_PREFIX = "data_path: "
 
 
 class _FormEntryProtocol(Protocol):
@@ -151,6 +204,13 @@ class FormContext:
         через ``catalog_resolver.resolve_data_path``: тип и синоним
         реквизита, если он найден в файле объекта. Элементы, для которых
         резолюция не удалась, помечаются ``resolved=False`` и не отбрасываются.
+    ``unresolved_data_paths``
+        Явное отрицательное знание (issue #141): по записи на каждую
+        недоказанную привязку. Ключи ``scope`` (``"form"`` или
+        ``"element"``), ``element`` (имя элемента либо ``None``),
+        ``data_path`` (всегда ``None``), ``status`` и ``reason``.
+        Доказанные привязки сюда не попадают и остаются в
+        ``summary.relations`` без изменений.
 
     Датакласс frozen, как и ``FormSummary``: подмена полей запрещена.
     Глубокой неизменяемости у ``metadata``/``object_attributes`` нет — это
@@ -166,6 +226,7 @@ class FormContext:
     metadata: dict[str, Any]
     object_attributes: dict[str, Any] | None = None
     resolved_relations: list[dict[str, Any]] = field(default_factory=list)
+    unresolved_data_paths: list[dict[str, Any]] = field(default_factory=list)
 
 
 def build_form_context(
@@ -202,7 +263,7 @@ def build_form_context(
     # Старые индексы форм могут не содержать это поле: толерантный доступ — часть контракта, а не долг.
     elem_json_path = getattr(form_entry, "elem_json_path", None)
     form_dir = _form_dir(form_entry, elem_json_path, root)
-    summary = _build_summary(form_dir, root)
+    summary, unresolved_data_paths = _build_summary(form_dir, root)
 
     object_attributes, object_warnings, object_json = _build_object_attributes(
         form_entry, root, type_resolver=type_resolver
@@ -232,6 +293,7 @@ def build_form_context(
         metadata=metadata,
         object_attributes=object_attributes,
         resolved_relations=resolved_relations,
+        unresolved_data_paths=unresolved_data_paths,
     )
 
 
@@ -246,6 +308,13 @@ def to_llm_prompt_fragment(context: FormContext, max_chars: int = -1) -> str:
     Нулевой и остальные отрицательные лимиты дают пустую строку.
     При положительном лимите результат детерминирован и всегда не длиннее
     ``max_chars``.
+
+    Недоказанные ``data_path`` (issue #141) выводятся в секции
+    ``## SUMMARY`` сразу после JSON выжимки — по одной строке на запись,
+    маркер идёт первым, статус и причина — в той же строке. Строка
+    атомарна относительно обрезки: если лимит попадает внутрь неё, она
+    отбрасывается целиком. Без недоказанных привязок фрагмент совпадает
+    с прежним форматом.
     """
     if max_chars == 0 or max_chars < -1:
         return ""
@@ -270,17 +339,57 @@ def to_llm_prompt_fragment(context: FormContext, max_chars: int = -1) -> str:
     else:
         object_block = NO_OBJECT_PLACEHOLDER
 
+    summary_block = to_normalized_json(context.summary)
+    status_lines = [
+        _data_path_status_line(entry) for entry in context.unresolved_data_paths
+    ]
+
     fragment = "\n".join((
         header,
         SUMMARY_MARKER,
-        to_normalized_json(context.summary),
+        summary_block,
+        *status_lines,
         OBJECT_ATTRIBUTES_MARKER,
         object_block,
         BSL_MARKER,
         body,
     ))
 
-    return fragment if max_chars == -1 else fragment[:max_chars]
+    if max_chars == -1:
+        return fragment
+
+    # issue #141: обрезка не оставляет маркер без статуса — строка
+    # отрицательного знания либо входит целиком, либо не входит вовсе.
+    offset = len(header) + len(SUMMARY_MARKER) + len(summary_block) + 3
+    for line in status_lines:
+        end = offset + len(line)
+        if offset < max_chars < end:
+            return fragment[:offset]
+        offset = end + 1
+    return fragment[:max_chars]
+
+
+def _data_path_status_line(entry: dict[str, Any]) -> str:
+    """Строка LLM-проекции для одной записи отрицательного знания.
+
+    Маркер стоит первым и в одной строке со ``status`` и ``reason``.
+    Неизвестный статус не маскируется под доказанный: fail-closed
+    выводится маркер ``unresolved``.
+    """
+    status = str(entry.get("status") or DATA_PATH_STATUS_UNRESOLVED)
+    marker = DATA_PATH_MARKERS.get(
+        status, DATA_PATH_MARKERS[DATA_PATH_STATUS_UNRESOLVED]
+    )
+    parts = [
+        f'{DATA_PATH_LINE_PREFIX}"{marker}"',
+        f"status: {status}",
+        f"reason: {entry.get('reason')}",
+        f"scope: {entry.get('scope')}",
+    ]
+    element = entry.get("element")
+    if element is not None:
+        parts.append("element: " + json.dumps(str(element), ensure_ascii=False))
+    return "; ".join(parts)
 
 
 def _object_attributes_to_json(
@@ -412,21 +521,96 @@ def _form_dir(
     return _resolve(form_entry.form_path, root)
 
 
-def _build_summary(form_dir: Path | None, root: Path) -> FormSummary:
+def _build_summary(
+    form_dir: Path | None, root: Path
+) -> tuple[FormSummary, list[dict[str, Any]]]:
     """Выжимка структуры формы единственным парсером проекта.
 
     Каталога формы может не быть вовсе — например, индекс старше
     выгрузки. Тогда возвращается пустая выжимка с предупреждением:
     вызывать парсер по несуществующему пути нет смысла, а глотать
     произвольные исключения нельзя.
+
+    Вторым элементом возвращается явное отрицательное знание о
+    ``data_path`` (issue #141). Оно выводится из структурных фактов
+    (каталог, файл структуры, флаг ``elem_index_ok``, привязки), а не из
+    текста ``warnings``.
     """
     if form_dir is None or not form_dir.is_dir():
         location = _relative_str(form_dir, root) or "неизвестно"
-        return FormSummary(
+        summary = FormSummary(
             warnings=[f"каталог формы не найден: {location}"]
         )
+        return summary, [_form_status(DATA_PATH_REASON_FORM_DIR_MISSING)]
 
-    return _anonymize_summary(build_form_summary(form_dir), root)
+    elem_result = parse_elem_json(form_dir)
+    summary = _anonymize_summary(
+        build_form_summary_from_elem_index(elem_result), root
+    )
+    if not elem_result.elem_index_ok:
+        return summary, [_form_status(_unindexed_reason(form_dir))]
+    return summary, _element_statuses(summary)
+
+
+def _status_entry(reason: str, scope: str, element: str | None) -> dict[str, Any]:
+    """Каноническая запись отрицательного знания (issue #141)."""
+    return {
+        "scope": scope,
+        "element": element,
+        "data_path": None,
+        "status": DATA_PATH_REASONS[reason],
+        "reason": reason,
+    }
+
+
+def _form_status(reason: str) -> dict[str, Any]:
+    """Отрицательное знание для всей формы: элементы не прочитаны."""
+    return _status_entry(reason, "form", None)
+
+
+def _unindexed_reason(form_dir: Path) -> str:
+    """Причина, по которой структура формы не прочитана.
+
+    Файл ищется тем же локатором, что и в ``parse_elem_json``. Проверка
+    ``json.loads`` лишь различает «файл не является JSON» и «JSON есть, но
+    раскладка не распознана»; структуру она не разбирает.
+    """
+    elem_path = _find_elem_json(form_dir)
+    if elem_path is None:
+        return DATA_PATH_REASON_ELEM_JSON_MISSING
+    try:
+        json.loads(Path(elem_path).read_text(encoding="utf-8-sig"))
+    except (OSError, ValueError):
+        return DATA_PATH_REASON_ELEM_JSON_INVALID
+    return DATA_PATH_REASON_LAYOUT_NOT_RECOGNIZED
+
+
+def _element_statuses(summary: FormSummary) -> list[dict[str, Any]]:
+    """Элементы данных без доказанной привязки.
+
+    Учитываются только типы из ``coverage_metric.DATA_ELEMENT_TYPES``:
+    у служебных элементов привязки нет по определению. Доказанной считается
+    привязка, которую уже выдал парсер (``relations`` с ``kind == "data"``).
+    Порядок повторяет ``summary.elements``, дубликаты имён схлопываются.
+    """
+    proven = {
+        str(relation.get("element") or "")
+        for relation in summary.relations
+        if relation.get("kind") == "data" and relation.get("target")
+    }
+    statuses: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for item in summary.elements:
+        if item.get("kind") not in DATA_ELEMENT_TYPES:
+            continue
+        name = str(item.get("name") or "")
+        if name in proven or name in seen:
+            continue
+        seen.add(name)
+        statuses.append(
+            _status_entry(DATA_PATH_REASON_BINDING_NOT_PROVEN, "element", name)
+        )
+    return statuses
 
 
 def _anonymize_summary(summary: FormSummary, root: Path) -> FormSummary:
