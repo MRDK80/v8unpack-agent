@@ -310,7 +310,7 @@ def build_form_context(
     )
 
 
-def to_llm_prompt_fragment(context: FormContext, max_chars: int = -1) -> str:
+def _to_llm_prompt_fragment_chars(context: FormContext, max_chars: int = -1) -> str:
     """Компактное текстовое представление для вставки в промпт.
 
     Порядок фиксирован: заголовок формы, ``## SUMMARY``,
@@ -691,3 +691,98 @@ def _relative_str(value: str | Path | None, root: Path) -> str | None:
                 continue
 
     return path.name
+
+
+# --- issue #125: token budget ---
+
+_TOKEN_BUDGET_PAIRING_ERROR = (
+    "to_llm_prompt_fragment: max_tokens и count_tokens передаются только вместе"
+)
+
+
+def _split_complete_lines(text: str) -> list[str]:
+    parts = text.split("\n")
+    lines = [part + "\n" for part in parts[:-1]]
+    if parts[-1]:
+        lines.append(parts[-1])
+    return lines
+
+
+def _line_prefix(lines: list[str], char_cap: int) -> list[str]:
+    kept: list[str] = []
+    total = 0
+    for line in lines:
+        if total + len(line) > char_cap:
+            break
+        kept.append(line)
+        total += len(line)
+    return kept
+
+
+def _safe_token_count(count_tokens: Callable[[str], int], text: str) -> int | None:
+    try:
+        value = count_tokens(text)
+    except Exception:  # noqa: BLE001 - сбой внешнего счётчика не роняет промпт
+        return None
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        return None
+    return value
+
+
+def to_llm_prompt_fragment(
+    context: FormContext,
+    max_chars: int = -1,
+    *,
+    max_tokens: int | None = None,
+    count_tokens: Callable[[str], int] | None = None,
+) -> str:
+    """Фрагмент для промпта с символьным и опциональным токенным бюджетом.
+
+    Без ``max_tokens`` и ``count_tokens`` результат бит-в-бит совпадает с
+    символьным режимом (#77). Контракт токенного режима (#125):
+
+    - ``max_tokens`` и ``count_tokens`` передаются только вместе, иначе
+      ``ValueError``;
+    - ``max_tokens <= 0`` даёт пустую строку;
+    - итог — префикс из целых строк санитизированного фрагмента, для
+      которого одновременно ``len(result) <= max_chars`` (по семантике
+      символьного режима) и ``count_tokens(result) <= max_tokens``;
+    - исключение или некорректный результат ``count_tokens`` (не ``int``,
+      ``bool`` или отрицательное число) — fail-safe fallback на символьный
+      бюджет с той же границей целых строк, исходное исключение не
+      пробрасывается.
+    """
+    if max_tokens is None and count_tokens is None:
+        return _to_llm_prompt_fragment_chars(context, max_chars)
+    if max_tokens is None or count_tokens is None:
+        raise ValueError(_TOKEN_BUDGET_PAIRING_ERROR)
+    if isinstance(max_tokens, bool) or not isinstance(max_tokens, int):
+        raise TypeError("to_llm_prompt_fragment: max_tokens должен быть int")
+    if not callable(count_tokens):
+        raise TypeError("to_llm_prompt_fragment: count_tokens должен быть callable")
+    if max_tokens <= 0:
+        return ""
+
+    char_limited = _to_llm_prompt_fragment_chars(context, max_chars)
+    if not char_limited:
+        return ""
+    full = _to_llm_prompt_fragment_chars(context, -1)
+    lines = _line_prefix(_split_complete_lines(full), len(char_limited))
+
+    def fits(count: int) -> bool | None:
+        tokens = _safe_token_count(count_tokens, "".join(lines[:count]))
+        if tokens is None:
+            return None
+        return tokens <= max_tokens
+
+    low, high = 0, len(lines)
+    while low < high:
+        mid = (low + high + 1) // 2
+        verdict = fits(mid)
+        if verdict is None:
+            return "".join(lines)
+        if verdict:
+            low = mid
+        else:
+            high = mid - 1
+    return "".join(lines[:low])
