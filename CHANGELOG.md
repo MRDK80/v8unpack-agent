@@ -1,5 +1,32 @@
 # Changelog
 
+## Опциональный токенный бюджет LLM-фрагмента (#125)
+
+### Добавлено
+
+- `to_llm_prompt_fragment(context, max_chars=-1, *, max_tokens=None,
+  count_tokens=None)` — keyword-only `max_tokens` и `count_tokens`.
+  Токенайзер передаёт потребитель; внешних зависимостей нет.
+- В токенном режиме итог — наибольший префикс целых строк санитизированного
+  фрагмента: одновременно `len(result) <= max_chars` и
+  `count_tokens(result) <= max_tokens`. Строки отрицательного знания #141
+  атомарны, граница `sanitize_diagnostic` (#142) не обходится.
+- Непарные `max_tokens`/`count_tokens` — `ValueError`; неверные типы —
+  `TypeError`; `max_tokens <= 0` — пустая строка.
+- Сбой или некорректный результат `count_tokens` — fail-safe fallback на
+  символьный бюджет по целым строкам; исключение не пробрасывается.
+- Документация: раздел «Токенный бюджет (#125)» в
+  [`docs/form_context.md`](docs/form_context.md); тесты:
+  `tests/test_form_context_token_budget_issue125.py`,
+  `tests/test_form_context_token_budget_integration_issue125.py`.
+
+### Не изменялось
+
+- поведение без новых аргументов — бит-в-бит, включая default `max_chars=-1`;
+- структура `FormContext` и порядок секций `# FORM` → `## SUMMARY` →
+  `## OBJECT_ATTRIBUTES` → `## BSL`;
+- контракт `sanitize_diagnostic` и формат строк `data_path` из #141.
+
 ## Явное отрицательное знание для недоказанных data_path (#141)
 
 ### Добавлено
