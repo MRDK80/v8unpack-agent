@@ -60,6 +60,18 @@ relative-to-root и может быть ``None`` (старые индексы). 
 ``not_found`` зарезервирован за доказанным отсутствием целевой сущности;
 отсутствие результата разбора таким доказательством не является.
 
+Граница санитизации (issue #142)
+--------------------------------
+
+Диагностические части LLM-проекции — заголовок, JSON выжимки с
+``warnings`` и строки отрицательного знания — проходят через
+:func:`~v8unpack_agent._safe_paths.sanitize_diagnostic` до сборки и
+обрезки фрагмента, поэтому лимит ``max_chars`` и атомарность строк #141
+сохраняются. ``metadata['warnings']`` проходит ту же границу. Текст BSL и
+реквизиты объекта — данные выгрузки, а не диагностика: они не меняются.
+``FormContext.unresolved_data_paths`` остаётся канонической структурой без
+изменений.
+
 RAG-индексация (#78) и диспетчеризация (#79) в этот модуль не входят.
 """
 
@@ -71,6 +83,7 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Protocol
 
+from v8unpack_agent._safe_paths import sanitize_diagnostic
 from v8unpack_agent.catalog_resolver import object_json_path, resolve_data_path
 from v8unpack_agent.coverage_metric import DATA_ELEMENT_TYPES
 from v8unpack_agent.elem_parser import _find_elem_json, parse_elem_json
@@ -277,10 +290,10 @@ def build_form_context(
         "elem_sha256": form_entry.elem_sha256,
         "has_bsl": bsl_text is not None,
         "warnings": [
-            _strip_root(str(item), root)
+            sanitize_diagnostic(_strip_root(str(item), root))
             for item in (form_entry.warnings or [])
         ]
-        + [_strip_root(item, root) for item in object_warnings],
+        + [sanitize_diagnostic(_strip_root(item, root)) for item in object_warnings],
     }
 
     return FormContext(
@@ -339,9 +352,12 @@ def to_llm_prompt_fragment(context: FormContext, max_chars: int = -1) -> str:
     else:
         object_block = NO_OBJECT_PLACEHOLDER
 
-    summary_block = to_normalized_json(context.summary)
+    # issue #142: диагностические части санитизируются до сборки и обрезки.
+    header = sanitize_diagnostic(header)
+    summary_block = sanitize_diagnostic(to_normalized_json(context.summary))
     status_lines = [
-        _data_path_status_line(entry) for entry in context.unresolved_data_paths
+        sanitize_diagnostic(_data_path_status_line(entry))
+        for entry in context.unresolved_data_paths
     ]
 
     fragment = "\n".join((

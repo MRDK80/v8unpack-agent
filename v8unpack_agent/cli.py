@@ -31,6 +31,15 @@ Degraded считается неуспешным завершением проц
 Прогон без записи отчёта невозможен: каталог-родитель должен существовать
 заранее, иначе writer бросает ``RunReportWriteError`` и процесс завершается
 кодом 5.
+
+Диагностический вывод (issue #142)
+----------------------------------
+
+Сообщения в stderr проходят через
+:func:`~v8unpack_agent._safe_paths.sanitize_diagnostic`. Непредвиденное
+исключение после разбора аргументов не печатает traceback: выводится
+нейтральный код ``internal_error`` с именем класса исключения, процесс
+завершается кодом 4.
 """
 
 from __future__ import annotations
@@ -40,6 +49,7 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
+from v8unpack_agent._safe_paths import sanitize_diagnostic
 from v8unpack_agent.run_report import RunReportWriteError, write_post_run_report
 from v8unpack_agent.runner import RunOptions, RunOutcome, run_pipeline
 
@@ -61,6 +71,7 @@ EXIT_WRITE_ERROR = 5
 EXIT_FATAL_AND_WRITE_ERROR = 6
 
 _PROGRAM = "v8unpack-agent-run"
+_INTERNAL_ERROR_CODE = "internal_error"
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -138,11 +149,20 @@ def main(argv: Sequence[str] | None = None) -> int:
         max_prompt_chars=args.max_prompt_chars,
     )
 
-    outcome = run_pipeline(options)
-    write_error = _write_report(outcome, Path(args.report_path))
+    try:
+        outcome = run_pipeline(options)
+        write_error = _write_report(outcome, Path(args.report_path))
 
-    _print_summary(outcome, write_error=write_error)
-    return _resolve_exit_code(outcome, write_error=write_error)
+        _print_summary(outcome, write_error=write_error)
+        return _resolve_exit_code(outcome, write_error=write_error)
+    except Exception as exc:  # noqa: BLE001 — внешняя fail-closed граница CLI
+        # str/repr исключения не печатается: в нём может быть путь.
+        print(
+            f"{_PROGRAM}: внутренняя ошибка: {_INTERNAL_ERROR_CODE} "
+            f"({type(exc).__name__})",
+            file=sys.stderr,
+        )
+        return EXIT_FATAL
 
 
 def _write_report(outcome: RunOutcome, report_path: Path) -> RunReportWriteError | None:
@@ -150,7 +170,10 @@ def _write_report(outcome: RunOutcome, report_path: Path) -> RunReportWriteError
     try:
         write_post_run_report(outcome.report, report_path)
     except RunReportWriteError as exc:
-        print(f"{_PROGRAM}: не удалось записать отчёт: {exc}", file=sys.stderr)
+        print(
+            f"{_PROGRAM}: не удалось записать отчёт: {sanitize_diagnostic(exc)}",
+            file=sys.stderr,
+        )
         return exc
     return None
 
