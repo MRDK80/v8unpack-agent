@@ -36,9 +36,10 @@ import math
 import re
 import struct
 import zipfile
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, List, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from v8unpack_agent.scan_forms import FormEntry, FormScanIndex
@@ -72,7 +73,7 @@ class RagLoadError(ValueError):
 
 def _npy_header(n_rows: int, n_cols: int) -> bytes:
     """Сформировать NPY v1.0 заголовок для 2D float64 C-order массива."""
-    # Не используем f-строку с {"..."}: недопустимо в py3.10 (SyntaxError).
+    # %-формат для шаблона не трогает UP031 (не единственная подстановка).
     descr = (
         "{'descr': '%s', 'fortran_order': False, 'shape': (%d, %d), }"
         % (_DTYPE_STR, n_rows, n_cols)
@@ -85,7 +86,7 @@ def _npy_header(n_rows: int, n_cols: int) -> bytes:
     return _NPY_MAGIC + _NPY_VER + hlen + raw
 
 
-def _encode_matrix(matrix: List[List[float]]) -> bytes:
+def _encode_matrix(matrix: list[list[float]]) -> bytes:
     """Закодировать 2D список float в NPY v1.0 bytes."""
     if not matrix:
         return _npy_header(0, 0)
@@ -93,7 +94,7 @@ def _encode_matrix(matrix: List[List[float]]) -> bytes:
     n_cols = len(matrix[0])
     header = _npy_header(n_rows, n_cols)
     body = struct.pack(
-        "<%dd" % (n_rows * n_cols),
+        f"<{n_rows * n_cols}d",
         *(v for row in matrix for v in row),
     )
     return header + body
@@ -104,12 +105,12 @@ def _parse_npy_header(hdr_bytes: bytes) -> dict:
     try:
         text = hdr_bytes.decode("latin-1").strip()
     except Exception as exc:
-        raise RagLoadError("Cannot decode NPY header: %s" % exc) from exc
+        raise RagLoadError(f"Cannot decode NPY header: {exc}") from exc
 
     result: dict = {}
 
     # descr: 'descr': '<f8'  или  "descr": "<f8"
-    # Используем одинарные кавычки для raw-строк, чтобы двойные не обрывали строку.
+    # Одинарные кавычки снаружи: двойные внутри r"..." обрывают строку.
     m = re.search(r'[\'"]descr[\'"]\s*:\s*[\'"]([^\'"]+)[\'"]', text)
     if not m:
         raise RagLoadError("NPY header missing key 'descr'")
@@ -134,17 +135,17 @@ def _parse_npy_header(hdr_bytes: bytes) -> dict:
             result["shape"] = tuple(int(p) for p in parts)
         except ValueError as exc:
             raise RagLoadError(
-                "Cannot parse shape %r: %s" % (shape_inner, exc)
+                f"Cannot parse shape {shape_inner!r}: {exc}"
             ) from exc
 
     return result
 
 
-def _decode_matrix(data: bytes) -> List[List[float]]:
+def _decode_matrix(data: bytes) -> list[list[float]]:
     """Декодировать NPY v1.0 bytes → 2D list[float]. Fail-closed."""
     if len(data) > _MAX_NPY_BYTES:
         raise RagLoadError(
-            "NPY entry size %d exceeds limit %d" % (len(data), _MAX_NPY_BYTES)
+            f"NPY entry size {len(data)} exceeds limit {_MAX_NPY_BYTES}"
         )
     if not data.startswith(_NPY_MAGIC + _NPY_VER):
         raise RagLoadError("NPY magic/version mismatch; expected v1.0")
@@ -155,7 +156,7 @@ def _decode_matrix(data: bytes) -> List[List[float]]:
 
     if hdr["descr"] != _DTYPE_STR:
         raise RagLoadError(
-            "dtype %r != %r" % (hdr["descr"], _DTYPE_STR)
+            f"dtype {hdr['descr']!r} != {_DTYPE_STR!r}"
         )
     if hdr["fortran_order"]:
         raise RagLoadError("Only C-order (fortran_order=False) is supported")
@@ -165,7 +166,7 @@ def _decode_matrix(data: bytes) -> List[List[float]]:
         return []
     if len(shape) != 2:
         raise RagLoadError(
-            "Only 2D arrays are supported, got shape %r" % (shape,)
+            f"Only 2D arrays are supported, got shape {shape!r}"
         )
 
     n_rows, n_cols = shape
@@ -173,9 +174,9 @@ def _decode_matrix(data: bytes) -> List[List[float]]:
     body = data[10 + hlen:]
     if len(body) != expected_body:
         raise RagLoadError(
-            "NPY body size %d != expected %d" % (len(body), expected_body)
+            f"NPY body size {len(body)} != expected {expected_body}"
         )
-    flat = struct.unpack("<%dd" % (n_rows * n_cols), body)
+    flat = struct.unpack(f"<{n_rows * n_cols}d", body)
     return [list(flat[r * n_cols: (r + 1) * n_cols]) for r in range(n_rows)]
 
 
@@ -183,7 +184,7 @@ def _decode_matrix(data: bytes) -> List[List[float]]:
 # Cosine similarity
 # ---------------------------------------------------------------------------
 
-def _cosine(a: List[float], b: List[float]) -> float:
+def _cosine(a: list[float], b: list[float]) -> float:
     """Cosine similarity ∈ [0, 1]. Возвращает 0 при нулевых векторах."""
     dot = sum(x * y for x, y in zip(a, b))
     na = math.sqrt(sum(x * x for x in a))
@@ -213,7 +214,7 @@ def _entry_key(entry: FormEntry) -> tuple:
 @dataclass
 class _Record:
     key: tuple
-    vector: List[float]
+    vector: list[float]
 
 
 class FormRagIndex:
@@ -240,11 +241,11 @@ class FormRagIndex:
             k = _entry_key(entry)
             if k in lookup:
                 raise RagBuildError(
-                    "Duplicate form key in scan_index: %r" % (k,)
+                    f"Duplicate form key in scan_index: {k!r}"
                 )
             lookup[k] = entry
         self._lookup: dict = lookup
-        self._records: List[_Record] = []
+        self._records: list[_Record] = []
         self._dim: int = 0
 
     # ------------------------------------------------------------------
@@ -254,7 +255,7 @@ class FormRagIndex:
     def build(
         self,
         contexts: list,
-        embedder: Callable[[str], List[float]],
+        embedder: Callable[[str], list[float]],
     ) -> None:
         """Вычислить векторы для списка контекстов.
 
@@ -276,8 +277,8 @@ class FormRagIndex:
         from v8unpack_agent.form_context import to_llm_prompt_fragment
 
         seen: set = set()
-        records: List[_Record] = []
-        dim: Optional[int] = None
+        records: list[_Record] = []
+        dim: int | None = None
 
         for ctx in contexts:
             k = (
@@ -288,11 +289,11 @@ class FormRagIndex:
             )
             if k not in self._lookup:
                 raise RagBuildError(
-                    "Context key %r not found in scan_index" % (k,)
+                    f"Context key {k!r} not found in scan_index"
                 )
             if k in seen:
                 raise RagBuildError(
-                    "Duplicate context key in build(): %r" % (k,)
+                    f"Duplicate context key in build(): {k!r}"
                 )
             seen.add(k)
 
@@ -300,14 +301,13 @@ class FormRagIndex:
             vec = embedder(text)
             if not isinstance(vec, list) or not vec:
                 raise RagBuildError(
-                    "embedder must return non-empty list[float] for key %r" % (k,)
+                    f"embedder must return non-empty list[float] for key {k!r}"
                 )
             if dim is None:
                 dim = len(vec)
             elif len(vec) != dim:
                 raise RagBuildError(
-                    "dimension mismatch: expected %d, got %d for key %r"
-                    % (dim, len(vec), k)
+                    f"dimension mismatch: expected {dim}, got {len(vec)} for key {k!r}"
                 )
             records.append(_Record(key=k, vector=vec))
 
@@ -320,7 +320,7 @@ class FormRagIndex:
 
     def query(
         self,
-        vector: List[float],
+        vector: list[float],
         top_k: int = 5,
     ) -> list:
         """Вернуть top_k результатов по cosine similarity.
@@ -411,7 +411,7 @@ class FormRagIndex:
         sv = raw_meta.get("schema_version")
         if sv != _SCHEMA_VERSION:
             raise RagLoadError(
-                "Unsupported rag_meta schema_version: %r" % (sv,)
+                f"Unsupported rag_meta schema_version: {sv!r}"
             )
         raw_keys = raw_meta.get("keys", [])
         dimension = int(raw_meta.get("dimension", 0))
@@ -419,17 +419,17 @@ class FormRagIndex:
 
         if len(raw_keys) != count:
             raise RagLoadError(
-                "rag_meta count=%d != len(keys)=%d" % (count, len(raw_keys))
+                f"rag_meta count={count} != len(keys)={len(raw_keys)}"
             )
 
         keys = []
         for raw_k in raw_keys:
             if len(raw_k) != 4:
-                raise RagLoadError("Invalid key length: %r" % (raw_k,))
+                raise RagLoadError(f"Invalid key length: {raw_k!r}")
             k = (raw_k[0], raw_k[1], raw_k[2], raw_k[3])
             if k not in self._lookup:
                 raise RagLoadError(
-                    "Key from rag_meta not found in scan_index: %r" % (k,)
+                    f"Key from rag_meta not found in scan_index: {k!r}"
                 )
             keys.append(k)
 
@@ -440,7 +440,7 @@ class FormRagIndex:
             names = zf.namelist()
             if names != [_NPY_ENTRY]:
                 raise RagLoadError(
-                    "Expected exactly [%r] in NPZ, got %r" % (_NPY_ENTRY, names)
+                    f"Expected exactly [{_NPY_ENTRY!r}] in NPZ, got {names!r}"
                 )
             npy_bytes = zf.read(_NPY_ENTRY)
 
@@ -453,12 +453,12 @@ class FormRagIndex:
 
         if len(matrix) != count:
             raise RagLoadError(
-                "NPY row count %d != meta count %d" % (len(matrix), count)
+                f"NPY row count {len(matrix)} != meta count {count}"
             )
         actual_dim = len(matrix[0]) if matrix else 0
         if actual_dim != dimension:
             raise RagLoadError(
-                "NPY dimension %d != meta dimension %d" % (actual_dim, dimension)
+                f"NPY dimension {actual_dim} != meta dimension {dimension}"
             )
 
         self._records = [

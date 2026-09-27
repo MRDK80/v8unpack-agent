@@ -22,17 +22,16 @@ from pathlib import Path
 import pytest
 
 from v8unpack_agent.form_rag import (
+    FormRagIndex,
+    RagBuildError,
+    RagLoadError,
     _META_NAME,
     _NPY_ENTRY,
     _NPZ_NAME,
-    _SCHEMA_VERSION,
     _ZIP_DATE,
     _cosine,
     _decode_matrix,
     _encode_matrix,
-    FormRagIndex,
-    RagBuildError,
-    RagLoadError,
 )
 from v8unpack_agent.scan_forms import FormEntry, FormScanIndex
 
@@ -68,7 +67,7 @@ def _scan_index(*entries: FormEntry) -> FormScanIndex:
 
 def _embedder_const(dim: int = 4) -> object:
     """Embedder, возвращающий вектор из единиц."""
-    def embed(text: str) -> list[float]:  # noqa: ARG001
+    def embed(text: str) -> list[float]:
         return [1.0] * dim
     return embed
 
@@ -103,7 +102,7 @@ def _embedder_unique(dim: int = 3) -> object:
     """Каждый вызов возвращает уникальный вектор (счётчик в первом элементе)."""
     state = {"n": 0}
 
-    def embed(text: str) -> list[float]:  # noqa: ARG001
+    def embed(text: str) -> list[float]:
         n = state["n"]
         state["n"] += 1
         vec = [0.0] * dim
@@ -122,7 +121,7 @@ def patch_prompt(monkeypatch: pytest.MonkeyPatch) -> None:
     """Заменить to_llm_prompt_fragment на заглушку для build()."""
     import v8unpack_agent.form_rag as rag_mod
 
-    def _fake_prompt(ctx, **kwargs) -> str:  # noqa: ARG001
+    def _fake_prompt(ctx, **kwargs) -> str:
         return getattr(ctx, "_prompt", str(ctx))
 
     monkeypatch.setattr(rag_mod, "_prompt_fn", _fake_prompt, raising=False)
@@ -135,7 +134,6 @@ def patch_prompt(monkeypatch: pytest.MonkeyPatch) -> None:
 def _build(rag: FormRagIndex, contexts: list, embedder) -> None:
     """build() с обходом to_llm_prompt_fragment через прямую инъекцию."""
     import v8unpack_agent.form_context as fc_mod
-    from v8unpack_agent import form_rag as rag_mod  # noqa: F401
 
     original = getattr(fc_mod, "to_llm_prompt_fragment", None)
     fc_mod.to_llm_prompt_fragment = lambda ctx, **kw: getattr(ctx, "_prompt", str(ctx))  # type: ignore[assignment]
@@ -161,7 +159,7 @@ def test_query_returns_top_k_by_cosine() -> None:
 
     call = {"n": 0}
 
-    def embed(text: str) -> list[float]:  # noqa: ARG001
+    def embed(text: str) -> list[float]:
         n = call["n"]
         call["n"] += 1
         # e1=[1,0,0], e2=[0,1,0], e3=[0,0,1]
@@ -212,7 +210,7 @@ def test_tie_break_by_key() -> None:
     e2 = _entry(form_name="A")
     idx = FormRagIndex(_scan_index(e1, e2))
 
-    def embed(text: str) -> list[float]:  # noqa: ARG001
+    def embed(text: str) -> list[float]:
         return [1.0, 0.0]
 
     _build(idx, _contexts_for(e1, e2), embed)
@@ -233,7 +231,7 @@ def test_save_load_roundtrip(tmp_path: Path) -> None:
     idx_orig = FormRagIndex(si)
     call = {"n": 0}
 
-    def embed(text: str) -> list[float]:  # noqa: ARG001
+    def embed(text: str) -> list[float]:
         n = call["n"]; call["n"] += 1
         return [float(n), float(n + 1)]
 
@@ -420,8 +418,10 @@ def test_form_rag_does_not_import_scan_forms_eagerly() -> None:
     result = subprocess.run(
         [
             sys.executable, "-c",
-            "import json, sys; import v8unpack_agent.form_rag; "
-            "print(json.dumps('v8unpack_agent.scan_forms' in sys.modules))",
+            (
+                "import json, sys; import v8unpack_agent.form_rag; "
+                "print(json.dumps('v8unpack_agent.scan_forms' in sys.modules))"
+            ),
         ],
         capture_output=True, text=True, encoding="utf-8", check=True,
     )
