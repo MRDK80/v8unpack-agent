@@ -7,7 +7,6 @@
 - RouteResult.source: обратная совместимость (дефолт "router").
 """
 from unittest.mock import MagicMock
-
 import pytest
 
 from v8unpack_agent.form_dispatcher import FormDispatcher
@@ -48,7 +47,7 @@ def _router_miss() -> MagicMock:
 
 
 def _rag_hit(entry) -> MagicMock:
-    """RAG, возвращающий один результат с confidence=0.85."""
+    """RAG, returning one result with confidence=0.85."""
     rag = MagicMock()
     rag.query.return_value = [
         RouteResult(matched=[entry], confidence=0.85, source="router"),
