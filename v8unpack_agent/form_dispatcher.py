@@ -4,6 +4,7 @@ FormRagIndex (семантический fallback, issue #79).
 """
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -26,9 +27,17 @@ class FormDispatcher:
 
     Notes
     -----
-    ``dispatch()`` не мутирует переданные объекты. Каждый :class:`RouteResult`
+    ``dispatch()`` не мутирует ни результат роутера, ни объекты, которые
+    вернул ``rag.query()`` (issue #308). Каждый :class:`RouteResult`
     в возвращаемом списке несёт поле ``source``: ``"router"`` для результата
-    точного совпадения, ``"rag"`` для результатов семантического поиска.
+    роутера, ``"rag"`` для результатов семантического поиска.
+
+    Результат роутера возвращается тем же объектом, что вернул
+    ``router.route()``. Результаты RAG возвращаются новыми объектами
+    :class:`RouteResult` с ``source="rag"``: ``matched``, ``confidence``,
+    ``warnings``, порядок и количество совпадают с выдачей ``rag.query()``;
+    списки ``matched`` и ``warnings`` копируются поверхностно, элементы
+    :class:`FormEntry` в них общие с исходными результатами.
     """
 
     def __init__(
@@ -54,10 +63,16 @@ class FormDispatcher:
         -------
         list[RouteResult]
             * Точное совпадение — список из одного элемента с ``source="router"``.
-            * Промах + RAG подключён — список до ``top_k`` элементов с
-              ``source="rag"``.
+            * Промах + RAG подключён — список до ``top_k`` новых элементов
+              с ``source="rag"`` в порядке выдачи RAG; пустая выдача RAG
+              остаётся пустым списком. Исходные объекты RAG не изменяются.
             * Промах + RAG отсутствует — список из одного элемента с
               ``source="router"`` и пустым ``matched``.
+
+        Raises
+        ------
+        RagQueryError
+            Пробрасывается из ``rag.query()`` без перехвата.
         """
         result = self._router.route(query)
 
@@ -66,10 +81,17 @@ class FormDispatcher:
             return [result]
 
         if self._rag is not None:
-            rag_results = self._rag.query(query, top_k)
-            for r in rag_results:
-                r.source = "rag"
-            return rag_results
+            # Новые объекты вместо присваивания r.source: выдача RAG
+            # может переиспользоваться вызывающей стороной (issue #308).
+            return [
+                replace(
+                    r,
+                    matched=list(r.matched),
+                    warnings=list(r.warnings),
+                    source="rag",
+                )
+                for r in self._rag.query(query, top_k)
+            ]
 
         # RAG не подключён — возвращаем промах роутера без ошибки
         return [result]
