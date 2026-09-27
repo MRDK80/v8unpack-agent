@@ -73,11 +73,8 @@ class RagLoadError(ValueError):
 
 def _npy_header(n_rows: int, n_cols: int) -> bytes:
     """Сформировать NPY v1.0 заголовок для 2D float64 C-order массива."""
-    # %-формат для шаблона не трогает UP031 (не единственная подстановка).
-    descr = (
-        "{'descr': '%s', 'fortran_order': False, 'shape': (%d, %d), }"
-        % (_DTYPE_STR, n_rows, n_cols)
-    )
+    # Одинарные кавычки снаружи f-строки: двойные кавычки внутри {} в py3.10 дают SyntaxError.
+    descr = f"{{'descr': '{_DTYPE_STR}', 'fortran_order': False, 'shape': ({n_rows}, {n_cols}), }}"
     prefix_len = len(_NPY_MAGIC) + len(_NPY_VER) + 2  # +2 = uint16 header_len
     raw = descr.encode("latin-1") + b"\n"
     pad = (-len(raw) - prefix_len) % 64
@@ -109,20 +106,17 @@ def _parse_npy_header(hdr_bytes: bytes) -> dict:
 
     result: dict = {}
 
-    # descr: 'descr': '<f8'  или  "descr": "<f8"
-    # Одинарные кавычки снаружи: двойные внутри r"..." обрывают строку.
+    # Одинарные кавычки снаружи raw-строк: двойные кавычки внутри r"..." обрывают строку.
     m = re.search(r'[\'"]descr[\'"]\s*:\s*[\'"]([^\'"]+)[\'"]', text)
     if not m:
         raise RagLoadError("NPY header missing key 'descr'")
     result["descr"] = m.group(1)
 
-    # fortran_order: True / False (без кавычек)
     m = re.search(r'[\'"]fortran_order[\'"]\s*:\s*(True|False)', text)
     if not m:
         raise RagLoadError("NPY header missing key 'fortran_order'")
     result["fortran_order"] = m.group(1) == "True"
 
-    # shape: (N,) или (N, M) — числа, разделённые запятой внутри скобок
     m = re.search(r'[\'"]shape[\'"]\s*:\s*\(([^)]*)\)', text)
     if not m:
         raise RagLoadError("NPY header missing key 'shape'")
@@ -366,10 +360,7 @@ class FormRagIndex:
     # ------------------------------------------------------------------
 
     def save(self, index_dir: Path) -> None:
-        """Сохранить ``rag_index.npz`` и ``rag_meta.json`` в ``index_dir``.
-
-        Параметры не записываются в мета. Пути, BSL и промпт не сохраняются.
-        """
+        """Сохранить ``rag_index.npz`` и ``rag_meta.json`` в ``index_dir``."""
         index_dir = Path(index_dir)
         index_dir.mkdir(parents=True, exist_ok=True)
 

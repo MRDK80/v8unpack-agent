@@ -22,13 +22,13 @@ from pathlib import Path
 import pytest
 
 from v8unpack_agent.form_rag import (
-    FormRagIndex,
-    RagBuildError,
-    RagLoadError,
     _META_NAME,
     _NPY_ENTRY,
     _NPZ_NAME,
     _ZIP_DATE,
+    FormRagIndex,
+    RagBuildError,
+    RagLoadError,
     _cosine,
     _decode_matrix,
     _encode_matrix,
@@ -162,7 +162,6 @@ def test_query_returns_top_k_by_cosine() -> None:
     def embed(text: str) -> list[float]:
         n = call["n"]
         call["n"] += 1
-        # e1=[1,0,0], e2=[0,1,0], e3=[0,0,1]
         v = [0.0, 0.0, 0.0]
         v[n % 3] = 1.0
         return v
