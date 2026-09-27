@@ -51,6 +51,9 @@ def __getattr__(name: str):
         "classify_form_by_bindings",
         "classify_form_by_name",
     }:
+        # Ленивая группа form_classifier (issue #140, часть A). Вместе с ней
+        # перестаёт загружаться транзитивный coverage_metric: его тянет
+        # form_classifier ради DATA_ELEMENT_TYPES.
         from v8unpack_agent.form_classifier import (
             SERVICE_FORM_NAME_PATTERNS,
             FormClass,
@@ -69,6 +72,8 @@ def __getattr__(name: str):
         globals().update(values)
         return values[name]
     if name in {"FormRouter", "RouteResult"}:
+        # Ленивая группа form_router (issue #140, часть B). Публичные имена
+        # FormRouter и RouteResult остаются в __all__ и доступны как раньше.
         from v8unpack_agent.form_router import FormRouter, RouteResult
 
         values = {
@@ -266,6 +271,31 @@ def __getattr__(name: str):
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
+# Публичная поверхность пакета. Порядок — isort-style (требование RUF022):
+# SCREAMING_SNAKE_CASE → CamelCase → snake_case. Порядок не является
+# контрактом: тесты #124/#128/#131/#134 проверяют состав через set()/in,
+# а не последовательность. Ленивые имена разрешаются через PEP 562
+# __getattr__, сортировка не делает импорты eager.
+#
+# Происхождение экспортов (карта сохранена при сортировке):
+#   issue #55                                   — discover_elem_forms
+#                                                 ElemFormEntry
+#   deprecated aliases (обратная совместимость) — discover_managed_forms
+#                                                 ManagedFormEntry
+#   issue #69                                   — FormSummary
+#                                                 build_form_summary
+#                                                 build_form_summary_from_elem_index
+#   issue #124 (form_context, issue #77)        — FormContext
+#                                                 build_form_context
+#                                                 to_llm_prompt_fragment
+#   issue #98                                   — FormClass
+#                                                 classify_form
+#                                                 classify_form_by_name
+#                                                 classify_form_by_bindings
+#                                                 SERVICE_FORM_NAME_PATTERNS
+#   issue #78                                   — FormRagIndex
+#                                                 RagBuildError
+#                                                 RagLoadError
 __all__ = [
     "SERVICE_FORM_NAME_PATTERNS",
     "DriftReport",
