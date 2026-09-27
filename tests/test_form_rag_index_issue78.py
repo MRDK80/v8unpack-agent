@@ -35,7 +35,6 @@ from v8unpack_agent.form_rag import (
 )
 from v8unpack_agent.scan_forms import FormEntry, FormScanIndex
 
-
 # ---------------------------------------------------------------------------
 # Fixtures helpers
 # ---------------------------------------------------------------------------
