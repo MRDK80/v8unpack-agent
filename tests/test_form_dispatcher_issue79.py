@@ -33,7 +33,7 @@ def _router_hit(entry) -> MagicMock:
     """Роутер, возвращающий точное совпадение."""
     router = MagicMock()
     router.route.return_value = RouteResult(
-        matched=[entry], confidence=1.0, source="router"
+        matched=[entry], confidence=1.0, source="router",
     )
     return router
 
