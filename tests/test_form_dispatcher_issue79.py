@@ -2,12 +2,10 @@
 
 Покрываются acceptance criteria:
 - точное попадание роутера (source="router");
-- промах роутера → RAG-hit (source="rag");
+- промах роутера -> RAG-hit (source="rag");
 - rag=None, промах роутера — возврат без ошибки (source="router");
 - RouteResult.source: обратная совместимость (дефолт "router").
 """
-from __future__ import annotations
-
 from unittest.mock import MagicMock
 
 import pytest
@@ -91,7 +89,7 @@ class TestRouterHit:
 
 
 # ---------------------------------------------------------------------------
-# Test 2: промах роутера → RAG-hit
+# Test 2: промах роутера -> RAG-hit
 # ---------------------------------------------------------------------------
 
 
@@ -156,12 +154,12 @@ class TestNoRag:
 
 class TestRouteResultBackwardCompat:
     def test_default_source_is_router(self):
-        """Код, не знающий о source, получает дефолт и не падает."""
+        """Default source equals router for code unaware of this field."""
         result = RouteResult(matched=[], confidence=0.0)
         assert result.source == "router"
 
     def test_positional_args_still_work(self):
-        """Первые три позиционных аргумента не изменились."""
+        """First three positional args are unchanged."""
         entry = _make_entry()
         result = RouteResult([entry], 0.9, ["warn"])
         assert result.matched == [entry]
