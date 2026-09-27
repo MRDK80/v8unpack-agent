@@ -18,6 +18,7 @@ class RouteResult:
     matched: list[FormEntry]
     confidence: float          # 0.0–1.0
     warnings: list[str] = field(default_factory=list)
+    source: str = "router"     # «router» или «rag» (issue #79)
 
 
 class FormRouter:
