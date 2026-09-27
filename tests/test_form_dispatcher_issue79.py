@@ -7,6 +7,7 @@
 - RouteResult.source: обратная совместимость (дефолт "router").
 """
 from unittest.mock import MagicMock
+
 import pytest
 
 from v8unpack_agent.form_dispatcher import FormDispatcher
