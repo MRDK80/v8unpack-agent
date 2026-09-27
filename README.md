@@ -187,7 +187,7 @@ POSIX-пути, одинаковые на POSIX и NT.
 | `coverage_metric` | `calc_data_path_coverage`, `CoverageReport` | [form_classifier](docs/form_classifier.md) |
 | `object_decoder` | `decode_object_attributes`, `DecodeResult`, `DecodeError` | [object_decoder](docs/object_decoder.md) |
 | `catalog_resolver` | `resolve_data_path`, `ResolvedBinding` | [catalog_resolver](docs/catalog_resolver.md) |
-| `form_context` | `FormContext`, `build_form_context`, `to_llm_prompt_fragment` | [form_context](docs/form_context.md) |
+| `form_context` | `FormContext`, `build_form_context`, `to_llm_prompt_fragment`, `ALL_SECTIONS` / `SECTION_*` (выбор блоков, #146) | [form_context](docs/form_context.md) |
 | `form_summary` | `build_form_summary`, `to_normalized_json` | [form_summary](docs/form_summary.md) |
 | `form_router` | `FormRouter`, `form_paths` | [form_router](docs/form_router.md) |
 | `common_modules` | `scan_common_modules`, `build_common_module_context` | [common_modules](docs/common_modules.md) |

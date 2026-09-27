@@ -34,7 +34,8 @@ scan_forms(root)                 -> FormScanIndex / FormEntry (указател�
 |--------|------------|
 | `FormContext` | `frozen`-датакласс с содержимым одной формы. |
 | `build_form_context(form_entry, unpacked_root, *, type_resolver=None)` | Материализует содержимое по карточке `FormEntry`; `type_resolver` — опциональный резолвер ссылочных типов `uuid -> имя типа`. |
-| `to_llm_prompt_fragment(context, max_chars=-1)` | Детерминированный текст для промпта; по умолчанию без обрезки. |
+| `to_llm_prompt_fragment(context, max_chars=-1, *, max_tokens=None, count_tokens=None, sections=None)` | Детерминированный текст для промпта; по умолчанию без обрезки и в полном составе блоков. Бюджет токенов — #125, выбор блоков — #146. |
+| `SECTION_FORM`, `SECTION_SUMMARY`, `SECTION_OBJECT_ATTRIBUTES`, `SECTION_BSL`, `ALL_SECTIONS` | Имена целых блоков фрагмента и их канонический порядок (#146); импорт из `v8unpack_agent.form_context`. |
 
 Символы доступны двумя равнодопустимыми путями: из корняй пакета
 (`from v8unpack_agent import FormContext, build_form_context, to_llm_prompt_fragment`)
@@ -418,3 +419,70 @@ fragment = to_llm_prompt_fragment(
     context, 8000, max_tokens=1500, count_tokens=rough_tokens
 )
 ```
+
+
+<!-- issue-146-sections -->
+## Выбор блоков фрагмента (#146)
+
+`to_llm_prompt_fragment(context, max_chars=-1, *, max_tokens=None, count_tokens=None, sections=None)`
+
+Фрагмент состоит из четырёх целых блоков. Их имена — публичные константы
+модуля `v8unpack_agent.form_context`:
+
+| Константа | Значение | Блок |
+|-----------|----------|------|
+| `SECTION_FORM` | `"form"` | заголовок `# FORM ...` |
+| `SECTION_SUMMARY` | `"summary"` | `## SUMMARY`, JSON выжимки и строки отрицательного знания #141 |
+| `SECTION_OBJECT_ATTRIBUTES` | `"object_attributes"` | `## OBJECT_ATTRIBUTES` |
+| `SECTION_BSL` | `"bsl"` | `## BSL` |
+
+`ALL_SECTIONS = ("form", "summary", "object_attributes", "bsl")` — полный
+состав и канонический порядок вывода.
+
+Правила:
+
+- `sections=None` — полный состав; результат символ в символ совпадает с
+  прежним при тех же `max_chars`, `max_tokens` и `count_tokens`.
+- При явном `sections` выводятся только выбранные блоки, всегда в порядке
+  `ALL_SECTIONS`. Порядок элементов и дубликаты в аргументе на результат не
+  влияют. Принимается любой iterable имён: tuple, list, set, генератор.
+- Исключённый блок не оставляет ни маркера, ни пустой строки. Соседние блоки
+  разделены тем же единственным переводом строки, что и в полном фрагменте.
+- Неизвестное имя — `ValueError` с отсортированным перечнем неизвестных имён и
+  стабильным списком допустимых: `form, summary, object_attributes, bsl`.
+  Строка вместо набора (`sections="form"`) и не-строковое имя — `TypeError`.
+- Пустой набор (`()`, `[]`, `set()`) даёт пустую строку — по аналогии с
+  `max_chars=0` и `max_tokens<=0`. Проверка пары `max_tokens`/`count_tokens`
+  при этом всё равно выполняется.
+- Непустой набор обязан включать `SECTION_FORM`, иначе `ValueError`. Без
+  заголовка фрагмент нельзя отнести к форме ни в индексе, ни в промпте с
+  несколькими кандидатами. Решение принято в рамках #146 и закреплено тестами.
+
+Бюджеты: сначала выбираются блоки, затем к выбранному тексту применяется
+символьный лимит `max_chars`, а при переданной паре — токенный бюджет #125.
+В токенном режиме итог — префикс целых строк отфильтрованного фрагмента,
+удовлетворяющий обоим лимитам; при сбое счётчика действует тот же fail-safe
+fallback по целым строкам в пределах символьного бюджета.
+
+Отрицательное знание #141: при включённом `summary` строки
+`data_path: ...; status: ...; reason: ...` выводятся и обрезаются атомарно;
+при исключённом `summary` они исчезают вместе с блоком, без остатка маркера.
+
+Санитизация #142: выбор работает только с уже санитизированными частями
+символьного пути; отдельного канала к исходным данным нет. Текст
+`ValueError` о неизвестных секциях тоже проходит `sanitize_diagnostic`.
+
+```python
+from v8unpack_agent.form_context import (
+    SECTION_FORM,
+    SECTION_SUMMARY,
+    to_llm_prompt_fragment,
+)
+
+rag_text = to_llm_prompt_fragment(context, sections=(SECTION_FORM, SECTION_SUMMARY))
+```
+
+`FormRagIndex.build()` (#78, #305) по-прежнему эмбеддит полный фрагмент и
+параметр `sections` не передаёт: смена текста для эмбеддинга меняет индекс и
+требует отдельной политики перестроения. #146 поставляет только механизм.
+Тесты: `tests/test_form_context_sections_issue146.py`.

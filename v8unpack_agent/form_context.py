@@ -78,7 +78,7 @@ RAG-индексация (#78) и диспетчеризация (#79) в это
 from __future__ import annotations
 
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Protocol
@@ -108,6 +108,19 @@ BSL_MARKER = "## BSL"
 NO_BSL_PLACEHOLDER = "(модуль формы отсутствует)"
 #: Замена секции объекта, когда файл объекта не найден или не декодирован.
 NO_OBJECT_PLACEHOLDER = "(реквизиты объекта не найдены)"
+
+#: Имена целых блоков фрагмента для аргумента ``sections`` (issue #146).
+#: ``ALL_SECTIONS`` задаёт канонический порядок вывода и полный состав.
+SECTION_FORM = "form"
+SECTION_SUMMARY = "summary"
+SECTION_OBJECT_ATTRIBUTES = "object_attributes"
+SECTION_BSL = "bsl"
+ALL_SECTIONS: tuple[str, ...] = (
+    SECTION_FORM,
+    SECTION_SUMMARY,
+    SECTION_OBJECT_ATTRIBUTES,
+    SECTION_BSL,
+)
 
 #: Резолвер ссылочных типов ``uuid -> имя типа`` (#88); ``None`` означает, что
 #: тип неизвестен и значение остаётся ``Ref#<uuid>``. Алиас приватный: в
@@ -310,7 +323,12 @@ def build_form_context(
     )
 
 
-def _to_llm_prompt_fragment_chars(context: FormContext, max_chars: int = -1) -> str:
+def _to_llm_prompt_fragment_chars(
+    context: FormContext,
+    max_chars: int = -1,
+    *,
+    sections: frozenset[str] | None = None,
+) -> str:
     """Компактное текстовое представление для вставки в промпт.
 
     Порядок фиксирован: заголовок формы, ``## SUMMARY``,
@@ -328,6 +346,10 @@ def _to_llm_prompt_fragment_chars(context: FormContext, max_chars: int = -1) -> 
     атомарна относительно обрезки: если лимит попадает внутрь неё, она
     отбрасывается целиком. Без недоказанных привязок фрагмент совпадает
     с прежним форматом.
+
+    ``sections`` (issue #146) — уже проверенный набор имён блоков;
+    ``None`` означает полный состав. Выбор применяется до обрезки,
+    исключённый блок не оставляет ни маркера, ни разделителя.
     """
     if max_chars == 0 or max_chars < -1:
         return ""
@@ -360,23 +382,31 @@ def _to_llm_prompt_fragment_chars(context: FormContext, max_chars: int = -1) -> 
         for entry in context.unresolved_data_paths
     ]
 
-    fragment = "\n".join((
-        header,
-        SUMMARY_MARKER,
-        summary_block,
-        *status_lines,
-        OBJECT_ATTRIBUTES_MARKER,
-        object_block,
-        BSL_MARKER,
-        body,
-    ))
+    # issue #146: блоки собираются в каноническом порядке ALL_SECTIONS;
+    # при полном составе список строк совпадает с прежним символ в символ.
+    blocks: dict[str, tuple[str, ...]] = {
+        SECTION_FORM: (header,),
+        SECTION_SUMMARY: (SUMMARY_MARKER, summary_block, *status_lines),
+        SECTION_OBJECT_ATTRIBUTES: (OBJECT_ATTRIBUTES_MARKER, object_block),
+        SECTION_BSL: (BSL_MARKER, body),
+    }
+    selected = frozenset(ALL_SECTIONS) if sections is None else sections
+    lines: list[str] = []
+    status_start: int | None = None
+    for name in ALL_SECTIONS:
+        if name not in selected:
+            continue
+        if name == SECTION_SUMMARY:
+            status_start = len(lines) + 2
+        lines.extend(blocks[name])
+    fragment = "\n".join(lines)
 
-    if max_chars == -1:
-        return fragment
+    if max_chars == -1 or status_start is None:
+        return fragment if max_chars == -1 else fragment[:max_chars]
 
     # issue #141: обрезка не оставляет маркер без статуса — строка
     # отрицательного знания либо входит целиком, либо не входит вовсе.
-    offset = len(header) + len(SUMMARY_MARKER) + len(summary_block) + 3
+    offset = sum(len(line) + 1 for line in lines[:status_start])
     for line in status_lines:
         end = offset + len(line)
         if offset < max_chars < end:
@@ -729,12 +759,52 @@ def _safe_token_count(count_tokens: Callable[[str], int], text: str) -> int | No
     return value
 
 
+# --- issue #146: section selection ---
+
+_SECTIONS_ALLOWED_TEXT = ", ".join(ALL_SECTIONS)
+
+
+def _normalize_sections(sections: Iterable[str]) -> frozenset[str]:
+    """Проверить ``sections`` и вернуть множество допустимых имён.
+
+    Строка целиком отклоняется: иначе ``"form"`` молча разобралась бы на
+    символы. Неизвестные имена перечисляются в отсортированном виде, текст
+    сообщения проходит границу #142.
+    """
+    if isinstance(sections, (str, bytes)):
+        raise TypeError(
+            "to_llm_prompt_fragment: sections — набор имён секций, а не строка"
+        )
+    selected: set[str] = set()
+    unknown: set[str] = set()
+    for name in sections:
+        if not isinstance(name, str):
+            raise TypeError("to_llm_prompt_fragment: имя секции должно быть str")
+        if name in ALL_SECTIONS:
+            selected.add(name)
+        else:
+            unknown.add(name)
+    if unknown:
+        names = ", ".join(repr(name) for name in sorted(unknown))
+        raise ValueError(sanitize_diagnostic(
+            f"to_llm_prompt_fragment: неизвестные секции: {names}; "
+            f"допустимые: {_SECTIONS_ALLOWED_TEXT}"
+        ))
+    if selected and SECTION_FORM not in selected:
+        raise ValueError(
+            "to_llm_prompt_fragment: непустой sections должен включать "
+            f"{SECTION_FORM!r}: заголовок # FORM идентифицирует форму"
+        )
+    return frozenset(selected)
+
+
 def to_llm_prompt_fragment(
     context: FormContext,
     max_chars: int = -1,
     *,
     max_tokens: int | None = None,
     count_tokens: Callable[[str], int] | None = None,
+    sections: Iterable[str] | None = None,
 ) -> str:
     """Фрагмент для промпта с символьным и опциональным токенным бюджетом.
 
@@ -751,9 +821,23 @@ def to_llm_prompt_fragment(
       ``bool`` или отрицательное число) — fail-safe fallback на символьный
       бюджет с той же границей целых строк, исходное исключение не
       пробрасывается.
+
+    Выбор блоков (#146): ``sections=None`` — полный состав, результат
+    бит-в-бит прежний. Иначе выводятся только выбранные целые блоки в
+    каноническом порядке :data:`ALL_SECTIONS`; порядок и дубликаты в
+    ``sections`` на результат не влияют. Пустой набор даёт пустую строку.
+    Непустой набор обязан включать :data:`SECTION_FORM`, неизвестное имя —
+    ``ValueError``. Оба бюджета считаются по уже отфильтрованному тексту.
     """
+    selected = None if sections is None else _normalize_sections(sections)
+
+    def chars(limit: int) -> str:
+        if selected is None:
+            return _to_llm_prompt_fragment_chars(context, limit)
+        return _to_llm_prompt_fragment_chars(context, limit, sections=selected)
+
     if max_tokens is None and count_tokens is None:
-        return _to_llm_prompt_fragment_chars(context, max_chars)
+        return chars(max_chars)
     if max_tokens is None or count_tokens is None:
         raise ValueError(_TOKEN_BUDGET_PAIRING_ERROR)
     if isinstance(max_tokens, bool) or not isinstance(max_tokens, int):
@@ -763,10 +847,10 @@ def to_llm_prompt_fragment(
     if max_tokens <= 0:
         return ""
 
-    char_limited = _to_llm_prompt_fragment_chars(context, max_chars)
+    char_limited = chars(max_chars)
     if not char_limited:
         return ""
-    full = _to_llm_prompt_fragment_chars(context, -1)
+    full = chars(-1)
     lines = _line_prefix(_split_complete_lines(full), len(char_limited))
 
     def fits(count: int) -> bool | None:

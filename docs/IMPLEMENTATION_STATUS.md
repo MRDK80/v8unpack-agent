@@ -278,7 +278,8 @@ UUID без публикуемого имени и остальные неизв
 |---|---|---|
 | `FormContext` | ✅ | #77 |
 | `build_form_context(form_entry, unpacked_root, *, type_resolver=None)` | ✅ | #77, #147 |
-| `to_llm_prompt_fragment(context, max_chars=-1)` | ✅ | #77 |
+| `to_llm_prompt_fragment(context, max_chars=-1, *, max_tokens=None, count_tokens=None, sections=None)` | ✅ | #77, #125, #146 |
+| `SECTION_FORM`, `SECTION_SUMMARY`, `SECTION_OBJECT_ATTRIBUTES`, `SECTION_BSL`, `ALL_SECTIONS` | ✅ | #146 |
 
 - `FormContext` материализует содержимое формы поверх `FormEntry` и
   `FormSummary`: прочитанный BSL-текст, семантическая выжимка и компактные
@@ -297,6 +298,13 @@ UUID без публикуемого имени и остальные неизв
 - `to_llm_prompt_fragment` по умолчанию возвращает полный контекст:
   `max_chars=-1` отключает обрезку. Положительный лимит применяется последним
   шагом и не может быть превышен; `0` и значения меньше `-1` дают пустую строку.
+- Выбор блоков (#146): keyword-only `sections` выводит только выбранные целые
+  блоки в каноническом порядке `ALL_SECTIONS` (`form` → `summary` →
+  `object_attributes` → `bsl`); `None` сохраняет прежний результат символ в
+  символ. Пустой набор даёт `""`, непустой набор без `form` и неизвестное имя —
+  `ValueError`. Бюджеты `max_chars` и `max_tokens` (#125) считаются по
+  отфильтрованному тексту, строки #141 и граница #142 сохраняются.
+  `FormRagIndex` параметр не использует и индексирует полный фрагмент.
 - Предупреждения `parse_elem_json` содержат абсолютный путь каталога формы,
   поэтому база `unpacked_root` вырезается из текстов на границе контекста.
   Парсер не менялся — обезличивание пути в самих предупреждениях парсера
