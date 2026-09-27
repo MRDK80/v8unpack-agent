@@ -12,7 +12,9 @@
 4. ``to_llm_prompt_fragment`` по умолчанию не режет контекст, а положительный
 ``max_chars`` задаёт жёсткий лимит;
 5. ``object_attributes``/``resolved_relations`` (issue #NEW) — реквизиты объекта
-метаданных за формой и их отсутствие как равноправные исходы.
+метаданных за формой и их отсутствие как равноправные исходы;
+6. ``sections`` (issue #146) — сокращённый состав фрагмента, например только
+``# FORM`` и ``## SUMMARY``.
 
 Запуск:
 
@@ -35,6 +37,10 @@ from pathlib import Path
 from v8unpack_agent import (
     build_form_context,
     to_llm_prompt_fragment,
+)
+from v8unpack_agent.form_context import (
+    SECTION_FORM,
+    SECTION_SUMMARY,
 )
 from v8unpack_agent.scan_forms import FormEntry
 
@@ -253,6 +259,29 @@ def demo_truncation(root: Path) -> None:
     second = to_llm_prompt_fragment(build_form_context(entry, root), max_chars=4000)
     print(f"  детерминизм              : {first == second}")
 
+def demo_sections(root: Path) -> None:
+    """sections (issue #146): только выбранные целые блоки в каноническом порядке."""
+    entry = make_form(root, "Секции", "ФормаЭлемента", with_bsl=True, with_elem=True)
+    context = build_form_context(entry, root)
+
+    full = to_llm_prompt_fragment(context)
+    short = to_llm_prompt_fragment(context, sections=(SECTION_SUMMARY, SECTION_FORM))
+    empty = to_llm_prompt_fragment(context, sections=())
+
+    print("\nВыбор блоков (issue #146)")
+    print("-" * 72)
+    print(f"  полный состав          : {len(full)} символов")
+    print(f"  form + summary         : {len(short)} символов")
+    for marker in ("## SUMMARY", "## OBJECT_ATTRIBUTES", "## BSL"):
+        print(f"  {marker:<22} в сокращённом: {marker in short.splitlines()}")
+    print(f"  начинается с # FORM    : {short.startswith('# FORM ')}")
+    print(f"  пустой набор → пусто   : {empty == ''}")
+    try:
+        to_llm_prompt_fragment(context, sections=(SECTION_SUMMARY,))
+    except ValueError:
+        print("  без form               : ValueError")
+
+
 def demo_type_resolver(root: Path) -> None:
     """type_resolver (issue #147): Ref#uuid превращается в имя типа.
 
@@ -287,6 +316,7 @@ def main() -> None:
         demo_object_attributes(root)
         demo_type_resolver(root)
         demo_truncation(root)
+        demo_sections(root)
 
         print(
             "\nИтог: контекст открывает то, на что реестр только указывал,"
