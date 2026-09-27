@@ -57,9 +57,6 @@ _ZIP_DATE = (1980, 1, 1, 0, 0, 0)  # детерминированный timestam
 # Максимальный допустимый размер NPY до выделения памяти (100 МБ)
 _MAX_NPY_BYTES = 100 * 1024 * 1024
 
-# Регулярное выражение для разбора NPY-заголовка (python-dict-подобный формат)
-_RE_HDR_KEY = re.compile(r"['"]([\w]+)['"]\s*:\s*")
-
 
 class RagBuildError(ValueError):
     """Ошибка при построении индекса: дубликат/конфликт ключа."""
@@ -76,7 +73,6 @@ class RagLoadError(ValueError):
 def _npy_header(n_rows: int, n_cols: int) -> bytes:
     """Сформировать NPY v1.0 заголовок для 2D float64 C-order массива."""
     # Не используем f-строку с {"..."}: недопустимо в py3.10 (SyntaxError).
-    # Используем строковую интерполяцию через %-форматирование.
     descr = (
         "{'descr': '%s', 'fortran_order': False, 'shape': (%d, %d), }"
         % (_DTYPE_STR, n_rows, n_cols)
@@ -112,20 +108,21 @@ def _parse_npy_header(hdr_bytes: bytes) -> dict:
 
     result: dict = {}
 
-    # descr: 'key': 'value'  или "key": "value"
-    m = re.search(r"['"]descr['"]\s*:\s*['"]([^'"]+)['"]" , text)
+    # descr: 'descr': '<f8'  или  "descr": "<f8"
+    # Используем одинарные кавычки для raw-строк, чтобы двойные не обрывали строку.
+    m = re.search(r'[\'"]descr[\'"]\s*:\s*[\'"]([^\'"]+)[\'"]', text)
     if not m:
         raise RagLoadError("NPY header missing key 'descr'")
     result["descr"] = m.group(1)
 
     # fortran_order: True / False (без кавычек)
-    m = re.search(r"['"]fortran_order['"]\s*:\s*(True|False)", text)
+    m = re.search(r'[\'"]fortran_order[\'"]\s*:\s*(True|False)', text)
     if not m:
         raise RagLoadError("NPY header missing key 'fortran_order'")
     result["fortran_order"] = m.group(1) == "True"
 
     # shape: (N,) или (N, M) — числа, разделённые запятой внутри скобок
-    m = re.search(r"['"]shape['"]\s*:\s*\(([^)]*)\)", text)
+    m = re.search(r'[\'"]shape[\'"]\s*:\s*\(([^)]*)\)', text)
     if not m:
         raise RagLoadError("NPY header missing key 'shape'")
     shape_inner = m.group(1).strip()
@@ -136,7 +133,9 @@ def _parse_npy_header(hdr_bytes: bytes) -> dict:
         try:
             result["shape"] = tuple(int(p) for p in parts)
         except ValueError as exc:
-            raise RagLoadError("Cannot parse shape %r: %s" % (shape_inner, exc)) from exc
+            raise RagLoadError(
+                "Cannot parse shape %r: %s" % (shape_inner, exc)
+            ) from exc
 
     return result
 
@@ -165,7 +164,9 @@ def _decode_matrix(data: bytes) -> List[List[float]]:
     if len(shape) == 0 or (len(shape) == 2 and shape[0] == 0):
         return []
     if len(shape) != 2:
-        raise RagLoadError("Only 2D arrays are supported, got shape %r" % (shape,))
+        raise RagLoadError(
+            "Only 2D arrays are supported, got shape %r" % (shape,)
+        )
 
     n_rows, n_cols = shape
     expected_body = n_rows * n_cols * 8
@@ -195,9 +196,6 @@ def _cosine(a: List[float], b: List[float]) -> float:
 # ---------------------------------------------------------------------------
 # Key helpers
 # ---------------------------------------------------------------------------
-
-_FormKey = tuple  # (object_type, object_name, container_name, form_name): tuple[str,str,str,str]
-
 
 def _entry_key(entry: FormEntry) -> tuple:
     return (

@@ -22,17 +22,17 @@ from pathlib import Path
 import pytest
 
 from v8unpack_agent.form_rag import (
+    _META_NAME,
+    _NPY_ENTRY,
+    _NPZ_NAME,
+    _SCHEMA_VERSION,
+    _ZIP_DATE,
+    _cosine,
+    _decode_matrix,
+    _encode_matrix,
     FormRagIndex,
     RagBuildError,
     RagLoadError,
-    _NPY_ENTRY,
-    _NPZ_NAME,
-    _META_NAME,
-    _SCHEMA_VERSION,
-    _ZIP_DATE,
-    _encode_matrix,
-    _decode_matrix,
-    _cosine,
 )
 from v8unpack_agent.scan_forms import FormEntry, FormScanIndex
 
@@ -134,8 +134,8 @@ def patch_prompt(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def _build(rag: FormRagIndex, contexts: list, embedder) -> None:
     """build() с обходом to_llm_prompt_fragment через прямую инъекцию."""
-    from v8unpack_agent import form_rag as rag_mod
     import v8unpack_agent.form_context as fc_mod
+    from v8unpack_agent import form_rag as rag_mod  # noqa: F401
 
     original = getattr(fc_mod, "to_llm_prompt_fragment", None)
     fc_mod.to_llm_prompt_fragment = lambda ctx, **kw: getattr(ctx, "_prompt", str(ctx))  # type: ignore[assignment]
@@ -171,7 +171,6 @@ def test_query_returns_top_k_by_cosine() -> None:
 
     _build(idx, ctxs, embed)
 
-    # Запрос близок к e2 → confidence e2 высшая
     results = idx.query([0.0, 1.0, 0.0], top_k=3)
     assert len(results) == 3
     assert results[0].matched[0].form_name == "B"
@@ -218,7 +217,6 @@ def test_tie_break_by_key() -> None:
 
     _build(idx, _contexts_for(e1, e2), embed)
     results = idx.query([1.0, 0.0], top_k=2)
-    # Оба confidence=1.0, ключ e2 < e1 по form_name
     assert results[0].matched[0].form_name == "A"
     assert results[1].matched[0].form_name == "Z"
 
@@ -242,7 +240,6 @@ def test_save_load_roundtrip(tmp_path: Path) -> None:
     _build(idx_orig, _contexts_for(e1, e2), embed)
     idx_orig.save(tmp_path)
 
-    # Загрузить в новый индекс с тем же scan_index
     idx_loaded = FormRagIndex(si)
     idx_loaded.load(tmp_path)
 
@@ -304,17 +301,14 @@ def test_decode_wrong_magic_raises() -> None:
 
 
 def test_decode_wrong_version_raises() -> None:
-    # Заголовок NPY v2.0
     bad = b"\x93NUMPY\x02\x00" + b"\x00" * 100
     with pytest.raises(RagLoadError, match="magic"):
         _decode_matrix(bad)
 
 
 def test_decode_wrong_dtype_raises() -> None:
-    # Сформируем валидный заголовок, но с float32
-    from v8unpack_agent.form_rag import _npy_header, _NPY_MAGIC, _NPY_VER
-    import io
-    descr = '{"descr": "<f4", "fortran_order": False, "shape": (1, 2), }'
+    from v8unpack_agent.form_rag import _NPY_MAGIC, _NPY_VER, _npy_header  # noqa: F401
+    descr = "{'descr': '<f4', 'fortran_order': False, 'shape': (1, 2), }"
     raw = descr.encode("latin-1") + b"\n"
     prefix_len = len(_NPY_MAGIC) + len(_NPY_VER) + 2
     pad = (-len(raw) - prefix_len) % 64
@@ -336,7 +330,6 @@ def test_decode_size_limit_raises() -> None:
 def test_load_unknown_schema_raises(tmp_path: Path) -> None:
     meta = {"schema_version": 99, "count": 0, "dimension": 0, "keys": []}
     (tmp_path / _META_NAME).write_text(json.dumps(meta), encoding="utf-8")
-    # Создадим валидный пустой npz
     npy = _encode_matrix([])
     with zipfile.ZipFile(tmp_path / _NPZ_NAME, "w") as zf:
         zi = zipfile.ZipInfo(_NPY_ENTRY, date_time=_ZIP_DATE)
@@ -354,7 +347,6 @@ def test_load_unknown_key_raises(tmp_path: Path) -> None:
     _build(idx, _contexts_for(e), _embedder_const(dim=2))
     idx.save(tmp_path)
 
-    # Загружаем с пустым scan_index
     idx2 = FormRagIndex(_scan_index())
     with pytest.raises(RagLoadError, match="not found in scan_index"):
         idx2.load(tmp_path)
@@ -367,7 +359,7 @@ def test_load_unknown_key_raises(tmp_path: Path) -> None:
 def test_build_raises_on_missing_key() -> None:
     e = _entry(form_name="X")
     other = _entry(form_name="Y")
-    idx = FormRagIndex(_scan_index(e))  # только e
+    idx = FormRagIndex(_scan_index(e))
     with pytest.raises(RagBuildError, match="not found in scan_index"):
         _build(idx, _contexts_for(other), _embedder_const(dim=2))
 
@@ -375,14 +367,14 @@ def test_build_raises_on_missing_key() -> None:
 def test_build_raises_on_duplicate_context() -> None:
     e = _entry()
     idx = FormRagIndex(_scan_index(e))
-    ctxs = _contexts_for(e, e)  # дубликат
+    ctxs = _contexts_for(e, e)
     with pytest.raises(RagBuildError, match="Duplicate"):
         _build(idx, ctxs, _embedder_const(dim=2))
 
 
 def test_duplicate_key_in_scan_index_raises() -> None:
     e1 = _entry()
-    e2 = _entry()  # тот же ключ
+    e2 = _entry()
     with pytest.raises(RagBuildError, match="Duplicate form key"):
         FormRagIndex(_scan_index(e1, e2))
 
