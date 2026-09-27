@@ -13,7 +13,6 @@ import pytest
 from v8unpack_agent.form_dispatcher import FormDispatcher
 from v8unpack_agent.form_router import RouteResult
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
