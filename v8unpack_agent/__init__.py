@@ -52,6 +52,9 @@ def __getattr__(name: str):
         "classify_form_by_bindings",
         "classify_form_by_name",
     }:
+        # Ленивая группа form_classifier (issue #140, часть A). Вместе с ней
+        # перестаёт загружаться транзитивный coverage_metric: его тянет
+        # form_classifier ради DATA_ELEMENT_TYPES.
         from v8unpack_agent.form_classifier import (
             SERVICE_FORM_NAME_PATTERNS,
             FormClass,
@@ -70,6 +73,8 @@ def __getattr__(name: str):
         globals().update(values)
         return values[name]
     if name in {"FormRouter", "RouteResult"}:
+        # Ленивая группа form_router (issue #140, часть B). Публичные имена
+        # FormRouter и RouteResult остаются в __all__ и доступны как раньше.
         from v8unpack_agent.form_router import FormRouter, RouteResult
 
         values = {
