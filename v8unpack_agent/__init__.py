@@ -32,6 +32,7 @@ pre-step индексации.
 - :func:`~v8unpack_agent.form_classifier.classify_form_by_name` (issue #98)
 - :func:`~v8unpack_agent.form_classifier.classify_form_by_bindings` (issue #98)
 - :class:`~v8unpack_agent.form_rag.FormRagIndex` (issue #78)
+- :class:`~v8unpack_agent.form_dispatcher.FormDispatcher` (issue #79)
 """
 
 from v8unpack_agent.form_paths import (
@@ -51,9 +52,6 @@ def __getattr__(name: str):
         "classify_form_by_bindings",
         "classify_form_by_name",
     }:
-        # Ленивая группа form_classifier (issue #140, часть A). Вместе с ней
-        # перестаёт загружаться транзитивный coverage_metric: его тянет
-        # form_classifier ради DATA_ELEMENT_TYPES.
         from v8unpack_agent.form_classifier import (
             SERVICE_FORM_NAME_PATTERNS,
             FormClass,
@@ -72,8 +70,6 @@ def __getattr__(name: str):
         globals().update(values)
         return values[name]
     if name in {"FormRouter", "RouteResult"}:
-        # Ленивая группа form_router (issue #140, часть B). Публичные имена
-        # FormRouter и RouteResult остаются в __all__ и доступны как раньше.
         from v8unpack_agent.form_router import FormRouter, RouteResult
 
         values = {
@@ -268,6 +264,14 @@ def __getattr__(name: str):
         globals().update(values)
         return values[name]
 
+    # Ленивая группа form_dispatcher (issue #79)
+    if name in {"FormDispatcher"}:
+        from v8unpack_agent.form_dispatcher import FormDispatcher
+
+        values = {"FormDispatcher": FormDispatcher}
+        globals().update(values)
+        return values[name]
+
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
@@ -296,6 +300,7 @@ def __getattr__(name: str):
 #   issue #78                                   — FormRagIndex
 #                                                 RagBuildError
 #                                                 RagLoadError
+#   issue #79                                   — FormDispatcher
 __all__ = [
     "SERVICE_FORM_NAME_PATTERNS",
     "DriftReport",
@@ -305,6 +310,7 @@ __all__ = [
     "FormArtifact",
     "FormClass",
     "FormContext",
+    "FormDispatcher",
     "FormEntry",
     "FormRagIndex",
     "FormRouter",
