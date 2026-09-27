@@ -31,6 +31,7 @@ pre-step индексации.
 - :func:`~v8unpack_agent.form_classifier.classify_form` (issue #98)
 - :func:`~v8unpack_agent.form_classifier.classify_form_by_name` (issue #98)
 - :func:`~v8unpack_agent.form_classifier.classify_form_by_bindings` (issue #98)
+- :class:`~v8unpack_agent.form_rag.FormRagIndex` (issue #78)
 """
 
 from v8unpack_agent.form_paths import (
@@ -145,7 +146,7 @@ def __getattr__(name: str):
         }
         globals().update(values)
         return values[name]
-    
+
     if name in {"FormArtifact"}:
         from v8unpack_agent.form_artifact import FormArtifact
 
@@ -251,6 +252,22 @@ def __getattr__(name: str):
         globals().update(values)
         return values[name]
 
+    # Ленивая группа form_rag (issue #78)
+    if name in {"FormRagIndex", "RagBuildError", "RagLoadError"}:
+        from v8unpack_agent.form_rag import (
+            FormRagIndex,
+            RagBuildError,
+            RagLoadError,
+        )
+
+        values = {
+            "FormRagIndex": FormRagIndex,
+            "RagBuildError": RagBuildError,
+            "RagLoadError": RagLoadError,
+        }
+        globals().update(values)
+        return values[name]
+
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
@@ -276,6 +293,9 @@ def __getattr__(name: str):
 #                                                 classify_form_by_name
 #                                                 classify_form_by_bindings
 #                                                 SERVICE_FORM_NAME_PATTERNS
+#   issue #78                                   — FormRagIndex
+#                                                 RagBuildError
+#                                                 RagLoadError
 __all__ = [
     "SERVICE_FORM_NAME_PATTERNS",
     "DriftReport",
@@ -286,6 +306,7 @@ __all__ = [
     "FormClass",
     "FormContext",
     "FormEntry",
+    "FormRagIndex",
     "FormRouter",
     "FormScanIndex",
     "FormSummary",
@@ -293,6 +314,8 @@ __all__ = [
     "FormsIndex",
     "FormsIndexEntry",
     "ManagedFormEntry",
+    "RagBuildError",
+    "RagLoadError",
     "RouteResult",
     "SkdBatchResult",
     "SkdResult",
