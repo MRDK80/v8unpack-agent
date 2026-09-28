@@ -146,7 +146,7 @@ def test_absolute_common_module_path_does_not_leak(
 def test_absolute_path_outside_layout_is_unknown(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    canary = "/" + "/".join(["home", USER, ROOT, "Module.bsl"])
+    canary = f"/home/{USER}/{ROOT}/Module.bsl"
     monkeypatch.setattr(
         runner, "scan_common_modules", lambda root: _common_module_index(canary)
     )
@@ -199,9 +199,9 @@ def test_relative_text_with_spaces_is_unchanged(text: str) -> None:
 
 
 def test_text_after_path_is_kept() -> None:
-    posix = "/" + "/".join(["tmp", "x"])
+    posix = "/tmp/x"
     assert sanitize_diagnostic(f"read {posix} failed") == "read .../tmp/x failed"
-    other = "/" + "/".join(["c", "d"])
+    other = "/c/d"
     assert (
         sanitize_diagnostic(f"found {posix} and {other}")
         == "found .../tmp/x and .../c/d"
