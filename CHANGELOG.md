@@ -19,6 +19,9 @@
   `docs/IMPLEMENTATION_STATUS.md`: убраны утверждения, что RAG отсутствует
   или ещё является следующим шагом; добавлен статус RAG-маршрутизации.
 
+- `CHANGELOG.md`: восполнены записи #301, #146, #308, #79, #305 и #78 —
+  их PR слиты в эпик без записи в CHANGELOG.
+
 ### Не изменялось
 
 - runtime-код, тесты, `examples/`, CI; предупреждение об отсутствии
@@ -46,6 +49,109 @@
   имя пользователя вне `home`, `Users`, `root`, `~` описаны в
   [`docs/diagnostic_sanitizer.md`](docs/diagnostic_sanitizer.md).
   Sanitizer не является DLP.
+
+## Выбор блоков LLM-фрагмента: sections (#146)
+
+Запись восполнена в #311: PR #310 слит без записи в CHANGELOG.
+
+### Добавлено
+
+- `to_llm_prompt_fragment(..., *, sections=None)` — keyword-only выбор целых
+  блоков; константы `SECTION_FORM`, `SECTION_SUMMARY`,
+  `SECTION_OBJECT_ATTRIBUTES`, `SECTION_BSL`, `ALL_SECTIONS` в
+  `v8unpack_agent.form_context` (корневой `__init__` не менялся).
+- Вывод всегда в каноническом порядке `ALL_SECTIONS`, дубликаты
+  игнорируются; исключённый блок не оставляет маркера и разделителя.
+- Пустой набор — `""`; непустой набор без `form` и неизвестное имя —
+  `ValueError`; строка вместо набора и не-строковое имя — `TypeError`.
+- Блоки выбираются до обрезки: `max_chars` и `max_tokens`/`count_tokens`
+  (#125) считаются по отфильтрованному тексту; строки #141 атомарны,
+  граница #142 сохранена.
+- Документация: раздел «Выбор блоков фрагмента (#146)» в
+  [`docs/form_context.md`](docs/form_context.md); пример в
+  `examples/form_context.py`; тесты:
+  `tests/test_form_context_sections_issue146.py`.
+
+### Не изменялось
+
+- `sections=None` — результат бит-в-бит прежний;
+- `FormRagIndex.build()` по-прежнему индексирует полный фрагмент.
+
+## FormDispatcher не мутирует выдачу RAG (#308)
+
+Запись восполнена в #311: PR #309 слит без записи в CHANGELOG.
+
+### Исправлено
+
+- При промахе роутера `FormDispatcher.dispatch()` возвращает новые
+  `RouteResult` с `source="rag"` вместо присваивания `source` объектам из
+  `rag.query()`. `matched`, `confidence`, `warnings`, порядок и количество
+  сохраняются; списки копируются поверхностно, `FormEntry` общие.
+- Восстановлены два поясняющих комментария #140 в `v8unpack_agent/__init__.py`.
+- Тесты: `tests/test_form_dispatcher_issue308.py`.
+
+### Не изменялось
+
+- точное попадание роутера, ветвь `rag=None`, проброс `RagQueryError`;
+- `RouteResult` без явного `source` по-прежнему `"router"`.
+
+## Двухуровневая маршрутизация FormDispatcher (#79)
+
+Запись восполнена в #311: PR #307 слит без записи в CHANGELOG.
+
+### Добавлено
+
+- `FormDispatcher(router, rag=None).dispatch(query, top_k=5)`: сначала
+  `FormRouter.route()`; при пустом `matched` и подключённом RAG —
+  `rag.query(query, top_k)`; при `rag=None` — промах роутера как есть.
+  Экспорт из корня пакета (ленивый импорт).
+- `RouteResult.source: str = "router"` — источник результата; позиционные
+  аргументы и конструирование без `source` совместимы.
+- Тесты: `tests/test_form_dispatcher_issue79.py`.
+
+### Не изменялось
+
+- CLI, `runner` и pipeline: диспетчер в них не встроен.
+
+## Контракт D2 и защитные проверки FormRagIndex (#305)
+
+Запись восполнена в #311: PR #306 слит без записи в CHANGELOG.
+
+### Изменено
+
+- Контракт: `FormRagIndex(scan_index)`, `build(contexts, embedder, *,
+  max_chars=-1, max_tokens=None, count_tokens=None)`,
+  `query(text, top_k=5)`, `save(index_dir)`, `load(index_dir, embedder)`.
+  Эмбеддер передаёт вызывающая сторона; модуль не делает сетевых вызовов.
+- `rag_meta.json` schema 2 с `vectors_sha256`; артефакты schema 1 (#78)
+  не загружаются и пересобираются.
+
+### Добавлено
+
+- `RagError(ValueError)` и `RagQueryError` в `v8unpack_agent.form_rag`.
+- Валидация векторов в `build()`/`query()`: пустой, нечисловой, NaN/inf,
+  нулевая норма, несовпадение размерности; `top_k <= 0` и `query()` до
+  готовности индекса — `RagQueryError`; сбой эмбеддера — типизированная
+  ошибка без текста исходного исключения.
+- Атомарный `save()`: временные файлы, `fsync`, `os.replace()`; все ошибки
+  артефактов в `load()` — `RagLoadError` со стабильным сообщением без путей.
+- Документация: [`docs/form_rag.md`](docs/form_rag.md); тесты:
+  `tests/test_form_rag_index_issue78.py`.
+
+## RAG-индекс форм FormRagIndex (#78)
+
+Запись восполнена в #311: PR #304 слит без записи в CHANGELOG.
+
+### Добавлено
+
+- `v8unpack_agent.form_rag.FormRagIndex` поверх `FormScanIndex`:
+  `build`/`query`/`save`/`load`, cosine similarity, `RouteResult` на форму.
+  Первоначальный контракт `query(vector)` и schema 1 заменены в #305.
+- Артефакты `rag_index.npz` (NPY v1.0 `<f8`, ZIP_STORED, детерминированные
+  байты, без runtime-зависимости от numpy) и `rag_meta.json` (только ключи
+  и размеры).
+- `FormRagIndex`, `RagBuildError`, `RagLoadError` в `__all__` корневого
+  пакета; `scan_forms` импортируется только под `TYPE_CHECKING` (#140).
 
 ## Опциональный токенный бюджет LLM-фрагмента (#125)
 
