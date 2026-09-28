@@ -18,7 +18,6 @@
 - `docs/pipeline.md`, `docs/form_context.md`,
   `docs/IMPLEMENTATION_STATUS.md`: убраны утверждения, что RAG отсутствует
   или ещё является следующим шагом; добавлен статус RAG-маршрутизации.
-
 - `CHANGELOG.md`: восполнены записи #301, #146, #308, #79, #305 и #78 —
   их PR слиты в эпик без записи в CHANGELOG.
 
