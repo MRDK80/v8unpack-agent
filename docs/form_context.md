@@ -301,8 +301,9 @@ print(len(to_llm_prompt_fragment(context, max_chars=500)) <= 500)  # True
 
 ## Ограничения
 
-- `FormContext` не индексирует и не ищет: RAG (`form_rag`, #78) и
-  диспетчеризация (`form_dispatcher`, #79) в scope не входят.
+- `FormContext` не индексирует и не ищет: RAG-индекс (`form_rag`, #78, #305)
+  и диспетчеризация (`form_dispatcher`, #79, #308) — отдельные модули, см.
+  [form_rag](form_rag.md) и [form_router](form_router.md).
 - Новые привязки `data_path` не создаются и не достраиваются: `resolved_relations`
   (issue #NEW) только обогащает типом/синонимом те, привязки, которые уже выдал
   `elem_parser`; форма без подтверждённых привязок даёт выжимку без `relations` — это

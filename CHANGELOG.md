@@ -1,5 +1,52 @@
 # Changelog
 
+## Сверка документации RAG-маршрутизации (#311)
+
+### Изменено
+
+- `docs/form_rag.md`: `RouteResult.source` описан по факту #79/#308 вместо
+  «появится в #79»; `sections` (#146) существует, но `build()` его не
+  передаёт и индексирует полный фрагмент; пустой индекс после
+  `build([], embedder)`; явная оговорка об отсутствии эмбеддера/LLM и
+  гарантии релевантности.
+- `docs/form_router.md`: поле `source` и раздел «Двухуровневая
+  маршрутизация (FormDispatcher)» — ветви router hit, `rag=None`, выдача
+  и исключения RAG, отсутствие мутации (#308), отсутствие интеграции в
+  CLI/runner/pipeline.
+- `README.md`: строки `form_rag` и `form_dispatcher` в таблице модулей;
+  устаревшее «векторная индексация вне scope пакета» заменено фактом.
+- `docs/pipeline.md`, `docs/form_context.md`,
+  `docs/IMPLEMENTATION_STATUS.md`: убраны утверждения, что RAG отсутствует
+  или ещё является следующим шагом; добавлен статус RAG-маршрутизации.
+
+### Не изменялось
+
+- runtime-код, тесты, `examples/`, CI; предупреждение об отсутствии
+  `index_cf()` и `rag.rebuild()` сохранено.
+
+## Follow-up санитизации диагностики (#301)
+
+Запись восполнена в #311: PR #313 слит без записи в CHANGELOG.
+
+### Исправлено
+
+- Абсолютный `bsl_path` общего модуля больше не переносит компоненты вне
+  export root в `report.objects[].object`: `runner._common_module_object_id`
+  оставляет хвост `CommonModule/<имя>/CommonModule.obj.bsl` или
+  `unknown_object`.
+- `sanitize_diagnostic` продолжает абсолютный путь через пробел, только если
+  следующий фрагмент содержит разделитель: закрыта утечка части сегмента с
+  пробелом в `scan_warnings` `forms_scan_index.json` и
+  `fatal_error.message` post-run report.
+- Тесты: `tests/test_diagnostic_sanitizer_issue301.py`.
+
+### Осознанные границы
+
+- Путь, оканчивающийся сегментом с пробелом без следующего разделителя, и
+  имя пользователя вне `home`, `Users`, `root`, `~` описаны в
+  [`docs/diagnostic_sanitizer.md`](docs/diagnostic_sanitizer.md).
+  Sanitizer не является DLP.
+
 ## Опциональный токенный бюджет LLM-фрагмента (#125)
 
 ### Добавлено
