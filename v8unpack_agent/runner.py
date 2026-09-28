@@ -114,6 +114,8 @@ _CAMEL_BOUNDARY_RE = re.compile(r"(?<=[a-z0-9])(?=[A-Z])")
 _NON_CODE_CHARS_RE = re.compile(r"[^a-z0-9_]+")
 _UNKNOWN_OBJECT = "unknown_object"
 _MESSAGE_LIMIT = 180
+_COMMON_MODULE_CONTAINER = "CommonModule"
+_COMMON_MODULE_BSL_NAME = "CommonModule.obj.bsl"
 
 
 @dataclass(frozen=True)
@@ -339,7 +341,7 @@ def _process_common_modules(
         return _fatal_error(FATAL_COMMON_MODULES_FAILED, exc)
 
     for entry in index.modules:
-        object_id = _safe_object_id(Path(entry.bsl_path).as_posix())
+        object_id = _common_module_object_id(entry.bsl_path)
         try:
             context = build_common_module_context(entry, export_root)
         except Exception as exc:  # noqa: BLE001
@@ -580,6 +582,29 @@ def _safe_object_id(value: str) -> str:
         return _UNKNOWN_OBJECT
 
     return PurePosixPath(*parts).as_posix()
+
+
+def _common_module_object_id(bsl_path: object) -> str:
+    """Идентификатор общего модуля без компонентов вне export root (issue #301).
+
+    ``scan_common_modules`` хранит ``bsl_path`` относительно export root —
+    такой путь используется как есть. Абсолютный путь в идентификатор не
+    переносится: из него берётся только хвост доказанной раскладки
+    ``CommonModule/<имя>/CommonModule.obj.bsl``. Если хвост раскладке не
+    соответствует, возвращается ``unknown_object``: fail-closed важнее
+    подробности. Разбор не зависит от разделителя текущей ОС.
+    """
+    text = str(bsl_path)
+    if not (PurePosixPath(text).is_absolute() or PureWindowsPath(text).anchor):
+        return _safe_object_id(Path(text).as_posix())
+    segments = [segment for segment in re.split(r"[\\/]+", text) if segment]
+    if (
+        len(segments) >= 3
+        and segments[-3] == _COMMON_MODULE_CONTAINER
+        and segments[-1] == _COMMON_MODULE_BSL_NAME
+    ):
+        return _safe_object_id("/".join(segments[-3:]))
+    return _UNKNOWN_OBJECT
 
 
 def _fallback_form_id(entry: FormEntry, export_root: Path) -> str:
