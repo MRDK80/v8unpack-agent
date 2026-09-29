@@ -34,6 +34,15 @@ owner-уровня и BSL у elem-only формы деградацией не с
 Пути строятся только через :mod:`pathlib`, абсолютные пути и разделители
 конкретной ОС в отчёт не попадают. Идентификатор формы берётся из
 ``FormContext.metadata['form_path']`` — уже относительного posix-пути.
+
+Граница санитизации (issue #142)
+--------------------------------
+
+Сообщения исключений и ``RunOutcome.scan_warnings`` проходят через
+:func:`~v8unpack_agent._safe_paths.sanitize_diagnostic`. Непредвиденное
+исключение в любой точке прогона, в том числе после формирования основных
+полей, не выходит из :func:`run_pipeline`: оно становится
+``fatal_error`` с кодом ``internal_error`` и санитизированным сообщением.
 """
 
 from __future__ import annotations
@@ -44,6 +53,7 @@ from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Literal
 
+from v8unpack_agent._safe_paths import sanitize_diagnostic
 from v8unpack_agent.common_modules import (
     build_common_module_context,
     scan_common_modules,
@@ -96,6 +106,7 @@ REASON_SKD_UNCLASSIFIED = "skd_unclassified"
 FATAL_SCAN_FAILED = "scan_failed"
 FATAL_COMMON_MODULES_FAILED = "common_modules_failed"
 FATAL_SKD_FAILED = "skd_failed"
+FATAL_INTERNAL_ERROR = "internal_error"
 FATAL_ERROR_TYPE_FALLBACK = "runtime_error"
 
 _MACHINE_CODE_RE = re.compile(r"^[a-z][a-z0-9_]*$")
@@ -103,6 +114,8 @@ _CAMEL_BOUNDARY_RE = re.compile(r"(?<=[a-z0-9])(?=[A-Z])")
 _NON_CODE_CHARS_RE = re.compile(r"[^a-z0-9_]+")
 _UNKNOWN_OBJECT = "unknown_object"
 _MESSAGE_LIMIT = 180
+_COMMON_MODULE_CONTAINER = "CommonModule"
+_COMMON_MODULE_BSL_NAME = "CommonModule.obj.bsl"
 
 
 @dataclass(frozen=True)
@@ -166,9 +179,33 @@ def run_pipeline(options: RunOptions) -> RunOutcome:
 
     Функция не бросает исключений пайплайна: управляемая фатальная ошибка
     превращается в ``fatal_error`` отчёта, а ошибка отдельного объекта — в
-    ``failed``/``partial`` результат.
+    ``failed``/``partial`` результат. Непредвиденное исключение вне
+    стадийных обработчиков даёт ``fatal_error`` с кодом ``internal_error``
+    (issue #142): исходный текст и traceback наружу не выходят.
     """
     started_at = _utc_now()
+    try:
+        return _run_pipeline(options, started_at)
+    except Exception as exc:  # noqa: BLE001 — внешняя fail-closed граница прогона
+        return _internal_failure(started_at, exc)
+
+
+def _internal_failure(started_at: str, error: BaseException) -> RunOutcome:
+    """Собрать управляемый отчёт для непредвиденного исключения прогона."""
+    report = PostRunReport(
+        schema_version=SCHEMA_VERSION,
+        completed=False,
+        started_at=started_at,
+        finished_at=_utc_now(),
+        summary=RunSummary.from_objects(()),
+        objects=(),
+        fatal_error=_fatal_error(FATAL_INTERNAL_ERROR, error),
+    )
+    return RunOutcome(report=report)
+
+
+def _run_pipeline(options: RunOptions, started_at: str) -> RunOutcome:
+    """Тело прогона; исключения перехватывает :func:`run_pipeline`."""
     export_root = Path(options.export_root)
 
     objects: list[ObjectRunResult] = []
@@ -185,7 +222,7 @@ def run_pipeline(options: RunOptions) -> RunOutcome:
     except Exception as exc:  # noqa: BLE001
         fatal = _fatal_error(FATAL_SCAN_FAILED, exc)
     else:
-        scan_warnings.extend(index.scan_warnings)
+        scan_warnings.extend(sanitize_diagnostic(w) for w in index.scan_warnings)
         for entry in index.forms:
             result, fragment_chars = _process_form(entry, export_root, index, options)
             objects.append(result)
@@ -304,7 +341,7 @@ def _process_common_modules(
         return _fatal_error(FATAL_COMMON_MODULES_FAILED, exc)
 
     for entry in index.modules:
-        object_id = _safe_object_id(Path(entry.bsl_path).as_posix())
+        object_id = _common_module_object_id(entry.bsl_path)
         try:
             context = build_common_module_context(entry, export_root)
         except Exception as exc:  # noqa: BLE001
@@ -516,10 +553,10 @@ def _error_type(error: BaseException) -> str:
 
 
 def _safe_message(error: BaseException | None) -> str | None:
-    """Свести текст исключения к одной короткой строке."""
+    """Свести санитизированный текст исключения к одной короткой строке."""
     if error is None:
         return None
-    text = " ".join(str(error).split())
+    text = " ".join(sanitize_diagnostic(error).split())
     if not text:
         text = type(error).__name__
     trimmed = text[:_MESSAGE_LIMIT].strip()
@@ -545,6 +582,29 @@ def _safe_object_id(value: str) -> str:
         return _UNKNOWN_OBJECT
 
     return PurePosixPath(*parts).as_posix()
+
+
+def _common_module_object_id(bsl_path: object) -> str:
+    """Идентификатор общего модуля без компонентов вне export root (issue #301).
+
+    ``scan_common_modules`` хранит ``bsl_path`` относительно export root —
+    такой путь используется как есть. Абсолютный путь в идентификатор не
+    переносится: из него берётся только хвост доказанной раскладки
+    ``CommonModule/<имя>/CommonModule.obj.bsl``. Если хвост раскладке не
+    соответствует, возвращается ``unknown_object``: fail-closed важнее
+    подробности. Разбор не зависит от разделителя текущей ОС.
+    """
+    text = str(bsl_path)
+    if not (PurePosixPath(text).is_absolute() or PureWindowsPath(text).anchor):
+        return _safe_object_id(Path(text).as_posix())
+    segments = [segment for segment in re.split(r"[\\/]+", text) if segment]
+    if (
+        len(segments) >= 3
+        and segments[-3] == _COMMON_MODULE_CONTAINER
+        and segments[-1] == _COMMON_MODULE_BSL_NAME
+    ):
+        return _safe_object_id("/".join(segments[-3:]))
+    return _UNKNOWN_OBJECT
 
 
 def _fallback_form_id(entry: FormEntry, export_root: Path) -> str:

@@ -41,6 +41,7 @@ from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Literal
 
+from v8unpack_agent._safe_paths import sanitize_diagnostic
 from v8unpack_agent.platform_reference_types import PLATFORM_REFERENCE_TYPES
 
 logger = logging.getLogger(__name__)
@@ -322,13 +323,15 @@ class FormScanIndex:
 
         Все path-поля записываются относительно ``scan_root`` через прямой
         слэш. Абсолютные пути и разделители NT в payload не попадают.
+        Тексты ``scan_warnings`` и ``warnings`` проходят единую границу
+        :func:`~v8unpack_agent._safe_paths.sanitize_diagnostic` (issue #142).
         """
         root = self.scan_root
         return {
             "schema_version": INDEX_SCHEMA_VERSION,
             "total": self.total,
             "scanned_at": self.scanned_at,
-            "scan_warnings": self.scan_warnings,
+            "scan_warnings": [sanitize_diagnostic(w) for w in self.scan_warnings],
             "reference_types": self.reference_types,
             "forms": [
                 {
@@ -339,7 +342,7 @@ class FormScanIndex:
                     "form_path": _serialize_path(e.form_path, root, "form_path"),
                     "bsl_path": _serialize_path(e.bsl_path, root, "bsl_path"),
                     "json_path": _serialize_path(e.json_path, root, "json_path"),
-                    "warnings": e.warnings,
+                    "warnings": [sanitize_diagnostic(w) for w in e.warnings],
                     "bsl_mtime": e.bsl_mtime,
                     "form_elem_path": _serialize_path(
                         e.form_elem_path, root, "form_elem_path"
@@ -615,7 +618,10 @@ def _collect_forms_from_container(
                 )
                 logger.debug(msg)
         except Exception as exc:  # noqa: BLE001
-            msg = f"error scanning {_rel_for_message(form_dir, root)}: {exc}"
+            msg = (
+                f"error scanning {_rel_for_message(form_dir, root)}: "
+                f"{sanitize_diagnostic(exc)}"
+            )
             scan_warnings.append(
                 _format_scan_warning(SCAN_WARNING_FORM_SCAN_ERROR, msg)
             )
@@ -726,7 +732,8 @@ def _scan_external(
                     )
                 except Exception as exc:  # noqa: BLE001
                     msg = (
-                        f"error scanning {_rel_for_message(form_dir, root)}: {exc}"
+                        f"error scanning {_rel_for_message(form_dir, root)}: "
+                        f"{sanitize_diagnostic(exc)}"
                     )
                     scan_warnings.append(
                         _format_scan_warning(SCAN_WARNING_FORM_SCAN_ERROR, msg)
@@ -840,7 +847,7 @@ def _collect_elem_only_forms(
         scan_warnings.append(
             _format_scan_warning(
                 SCAN_WARNING_ELEM_DISCOVERY_UNAVAILABLE,
-                f"cannot import discover_elem_forms: {exc}",
+                f"cannot import discover_elem_forms: {sanitize_diagnostic(exc)}",
             )
         )
         return
@@ -987,11 +994,11 @@ def main() -> None:
             include_elem_only=not args.no_elem_only,
         )
     except NotADirectoryError as exc:
-        parser.error(str(exc))
+        parser.error(sanitize_diagnostic(exc))
 
     print(f"Найдено форм: {len(index.forms)}")
     if save_to is not None:
-        print(f"Индекс сохранён: {save_to}")
+        print(f"Индекс сохранён: {sanitize_diagnostic(save_to)}")
 
 
 if __name__ == "__main__":

@@ -23,6 +23,7 @@ SELF_CONTAINED = (
     "coverage_metric.py",
     "form_bindings.py",
     "form_context.py",
+    "form_rag_dispatch.py",
     "reference_types.py",
     "zero_binding_reasons.py",
     "unindexed_forms_report.py",

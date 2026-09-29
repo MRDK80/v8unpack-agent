@@ -38,6 +38,7 @@ from collections.abc import Callable, Iterable
 from dataclasses import replace
 from pathlib import Path
 
+from v8unpack_agent._safe_paths import sanitize_diagnostic
 from v8unpack_agent.elem_parser import ElemIndexResult, parse_elem_json
 from v8unpack_agent.form_artifact import FormArtifact
 from v8unpack_agent.form_identity import (
@@ -165,7 +166,8 @@ def update_forms_index(
     Источник берётся из самого артефакта, поэтому повторное обнаружение форм
     не выполняется и потеря по имени невозможна (issue #226). Ключ записи —
     ``form_id``. В индекс пишутся только относительные POSIX-пути: файл
-    остаётся обезличенным и одинаковым на POSIX и NT.
+    остаётся обезличенным и одинаковым на POSIX и NT. Предупреждения
+    распаковщика проходят единую границу санитизации (issue #142).
     """
     idx = index or FormsIndex()
     for art in artifacts:
@@ -194,7 +196,7 @@ def update_forms_index(
                 bin_mtime=bin_path.stat().st_mtime,
                 unpacked_mtime=unpacked_mtime,
                 extraction_ok=art.extraction_ok,
-                warnings=list(art.extraction_warnings),
+                warnings=[sanitize_diagnostic(w) for w in art.extraction_warnings],
                 form_id=key,
                 form_name=art.name,
             ),

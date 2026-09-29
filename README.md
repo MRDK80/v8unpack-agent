@@ -17,8 +17,9 @@
   `v8unpack`, а агент работает с уже раскрытым каталогом.
 - Production-адаптера одиночного `Form.bin` в пакете нет: реализацию
   распаковщика передаёт вызывающая сторона.
-- Функций `index_cf()` и `rag.rebuild()` не существует; векторная индексация
-  находится вне scope пакета.
+- Функций `index_cf()` и `rag.rebuild()` не существует. Векторный индекс
+  `FormRagIndex` и `FormDispatcher` — библиотечные классы с внешним
+  эмбеддером ([form_rag](docs/form_rag.md)); в CLI и pipeline не встроены.
 - Пакет не подключается к живой информационной базе и не читает её данные.
 
 ## Кто что решает
@@ -187,9 +188,11 @@ POSIX-пути, одинаковые на POSIX и NT.
 | `coverage_metric` | `calc_data_path_coverage`, `CoverageReport` | [form_classifier](docs/form_classifier.md) |
 | `object_decoder` | `decode_object_attributes`, `DecodeResult`, `DecodeError` | [object_decoder](docs/object_decoder.md) |
 | `catalog_resolver` | `resolve_data_path`, `ResolvedBinding` | [catalog_resolver](docs/catalog_resolver.md) |
-| `form_context` | `FormContext`, `build_form_context`, `to_llm_prompt_fragment` | [form_context](docs/form_context.md) |
+| `form_context` | `FormContext`, `build_form_context`, `to_llm_prompt_fragment`, `ALL_SECTIONS` / `SECTION_*` (выбор блоков, #146) | [form_context](docs/form_context.md) |
 | `form_summary` | `build_form_summary`, `to_normalized_json` | [form_summary](docs/form_summary.md) |
 | `form_router` | `FormRouter`, `form_paths` | [form_router](docs/form_router.md) |
+| `form_rag` | `FormRagIndex`, `RagBuildError`, `RagQueryError`, `RagLoadError` | [form_rag](docs/form_rag.md) |
+| `form_dispatcher` | `FormDispatcher`: роутер, при промахе — RAG | [form_router](docs/form_router.md) |
 | `common_modules` | `scan_common_modules`, `build_common_module_context` | [common_modules](docs/common_modules.md) |
 | `managed_forms` | `discover_elem_forms`, `ElemFormEntry` | [managed_forms_structure](docs/managed_forms_structure.md) |
 | `skd_extractor` | `extract_skd_queries`, `extract_all_skd_queries` | [skd_extractor](docs/skd_extractor.md) |

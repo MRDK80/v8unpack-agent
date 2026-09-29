@@ -21,7 +21,8 @@ relative-to-root и может быть ``None`` (старые индексы). 
 ------------------
 
 * второго пути разбора не вводится: структуру даёт единственный
-  ``build_form_summary`` поверх ``parse_elem_json``;
+  ``parse_elem_json``, выжимку — ``build_form_summary_from_elem_index``
+  (та же композиция, что внутри ``build_form_summary``);
 * отсутствие BSL — штатный ``None``, пустой файл — пустая строка;
 * отсутствие ``*.elem.json`` обрабатывает сам ``FormSummary`` — пустые
   бакеты и ``warnings`` парсера;
@@ -31,11 +32,12 @@ relative-to-root и может быть ``None`` (старые индексы). 
   ``object_json_path`` не находит файл объекта, ``object_attributes``
   остаётся ``None`` — это фиксируется предупреждением, а не подменяется
   пустой структурой, похожей на успех;
-* ``to_llm_prompt_fragment`` физически не может вернуть больше
-  ``max_chars`` символов: обрезка выполняется последним шагом и режет
-  только хвост секции ``## BSL`` — секции ``## SUMMARY`` и
-  ``## OBJECT_ATTRIBUTES`` идут раньше и в обрезку попадают только если
-  сами по себе длиннее лимита.
+* ``to_llm_prompt_fragment`` при положительном ``max_chars`` возвращает
+  не больше заданного числа символов: символьный режим обрезает префикс
+  всего фрагмента, сохраняя целостность строк отрицательного знания #141.
+  При переданных ``max_tokens`` и ``count_tokens`` итог обрезается по
+  границе целых строк; целостность секций при этом не гарантируется.
+  Исключить секцию целиком можно через ``sections`` (#146).
 
 Обезличенность предупреждений
 --------------------------------
@@ -47,21 +49,48 @@ relative-to-root и может быть ``None`` (старые индексы). 
 Содержательная часть предупреждения не меняется и не теряется. То же
 правило применяется к предупреждениям ``object_decoder``.
 
+Явное отрицательное знание о ``data_path`` (issue #141)
+------------------------------------------------------
+
+Недоказанная привязка не угадывается и не остаётся молчаливым пропуском.
+Каноническая структура ``FormContext.unresolved_data_paths`` хранит
+``data_path: None`` вместе со стабильными ``status`` и ``reason``; LLM-проекция
+выводит строковый маркер в той же строке, что и статус, и обрезка
+``max_chars`` не может разделить маркер и статус. Доказанные ``data_path``
+по-прежнему живут только в ``summary.relations`` и не меняются. Статус
+``not_found`` зарезервирован за доказанным отсутствием целевой сущности;
+отсутствие результата разбора таким доказательством не является.
+
+Граница санитизации (issue #142)
+--------------------------------
+
+Диагностические части LLM-проекции — заголовок, JSON выжимки с
+``warnings`` и строки отрицательного знания — проходят через
+:func:`~v8unpack_agent._safe_paths.sanitize_diagnostic` до сборки и
+обрезки фрагмента, поэтому лимит ``max_chars`` и атомарность строк #141
+сохраняются. ``metadata['warnings']`` проходит ту же границу. Текст BSL и
+реквизиты объекта — данные выгрузки, а не диагностика: они не меняются.
+``FormContext.unresolved_data_paths`` остаётся канонической структурой без
+изменений.
+
 RAG-индексация (#78) и диспетчеризация (#79) в этот модуль не входят.
 """
 
 from __future__ import annotations
 
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Protocol
 
+from v8unpack_agent._safe_paths import sanitize_diagnostic
 from v8unpack_agent.catalog_resolver import object_json_path, resolve_data_path
+from v8unpack_agent.coverage_metric import DATA_ELEMENT_TYPES
+from v8unpack_agent.elem_parser import _find_elem_json, parse_elem_json
 from v8unpack_agent.form_summary import (
     FormSummary,
-    build_form_summary,
+    build_form_summary_from_elem_index,
     to_normalized_json,
 )
 from v8unpack_agent.object_decoder import decode_object_attributes
@@ -81,10 +110,61 @@ NO_BSL_PLACEHOLDER = "(модуль формы отсутствует)"
 #: Замена секции объекта, когда файл объекта не найден или не декодирован.
 NO_OBJECT_PLACEHOLDER = "(реквизиты объекта не найдены)"
 
+#: Имена целых блоков фрагмента для аргумента ``sections`` (issue #146).
+#: ``ALL_SECTIONS`` задаёт канонический порядок вывода и полный состав.
+SECTION_FORM = "form"
+SECTION_SUMMARY = "summary"
+SECTION_OBJECT_ATTRIBUTES = "object_attributes"
+SECTION_BSL = "bsl"
+ALL_SECTIONS: tuple[str, ...] = (
+    SECTION_FORM,
+    SECTION_SUMMARY,
+    SECTION_OBJECT_ATTRIBUTES,
+    SECTION_BSL,
+)
+
 #: Резолвер ссылочных типов ``uuid -> имя типа`` (#88); ``None`` означает, что
 #: тип неизвестен и значение остаётся ``Ref#<uuid>``. Алиас приватный: в
 #: ``object_decoder`` тип задан inline, второй публичный контракт не вводится.
 _TypeResolver = Callable[[str], str | None]
+
+#: Статусы недоказанного ``data_path`` (issue #141). Набор конечный.
+#: ``unresolved`` — привязка не доказана, причина в ``reason``;
+#: ``unknown_layout`` — файл структуры есть, но раскладка не распознана;
+#: ``not_found`` — отсутствие целевой сущности доказано. Ни одна текущая
+#: диагностическая ветка такого доказательства не даёт, поэтому модуль
+#: ``not_found`` не выдаёт: пустой результат разбора — не доказательство.
+DATA_PATH_STATUS_UNRESOLVED = "unresolved"
+DATA_PATH_STATUS_UNKNOWN_LAYOUT = "unknown_layout"
+DATA_PATH_STATUS_NOT_FOUND = "not_found"
+DATA_PATH_STATUSES: frozenset[str] = frozenset({
+    DATA_PATH_STATUS_UNRESOLVED,
+    DATA_PATH_STATUS_UNKNOWN_LAYOUT,
+    DATA_PATH_STATUS_NOT_FOUND,
+})
+
+#: Стабильные коды причин деградации (issue #141) и их статусы.
+DATA_PATH_REASON_FORM_DIR_MISSING = "form_dir_missing"
+DATA_PATH_REASON_ELEM_JSON_MISSING = "elem_json_missing"
+DATA_PATH_REASON_ELEM_JSON_INVALID = "elem_json_invalid"
+DATA_PATH_REASON_LAYOUT_NOT_RECOGNIZED = "layout_not_recognized"
+DATA_PATH_REASON_BINDING_NOT_PROVEN = "binding_not_proven"
+DATA_PATH_REASONS: dict[str, str] = {
+    DATA_PATH_REASON_FORM_DIR_MISSING: DATA_PATH_STATUS_UNRESOLVED,
+    DATA_PATH_REASON_ELEM_JSON_MISSING: DATA_PATH_STATUS_UNRESOLVED,
+    DATA_PATH_REASON_ELEM_JSON_INVALID: DATA_PATH_STATUS_UNRESOLVED,
+    DATA_PATH_REASON_LAYOUT_NOT_RECOGNIZED: DATA_PATH_STATUS_UNKNOWN_LAYOUT,
+    DATA_PATH_REASON_BINDING_NOT_PROVEN: DATA_PATH_STATUS_UNRESOLVED,
+}
+
+#: Видимые маркеры LLM-проекции. Стабильны и машинно различимы.
+DATA_PATH_MARKERS: dict[str, str] = {
+    DATA_PATH_STATUS_UNRESOLVED: "<UNRESOLVED: путь не доказан>",
+    DATA_PATH_STATUS_UNKNOWN_LAYOUT: "<UNKNOWN_LAYOUT: путь не доказан>",
+    DATA_PATH_STATUS_NOT_FOUND: "<NOT_FOUND: отсутствие доказано>",
+}
+#: Начало строки отрицательного знания в секции ``## SUMMARY``.
+DATA_PATH_LINE_PREFIX = "data_path: "
 
 
 class _FormEntryProtocol(Protocol):
@@ -151,6 +231,13 @@ class FormContext:
         через ``catalog_resolver.resolve_data_path``: тип и синоним
         реквизита, если он найден в файле объекта. Элементы, для которых
         резолюция не удалась, помечаются ``resolved=False`` и не отбрасываются.
+    ``unresolved_data_paths``
+        Явное отрицательное знание (issue #141): по записи на каждую
+        недоказанную привязку. Ключи ``scope`` (``"form"`` или
+        ``"element"``), ``element`` (имя элемента либо ``None``),
+        ``data_path`` (всегда ``None``), ``status`` и ``reason``.
+        Доказанные привязки сюда не попадают и остаются в
+        ``summary.relations`` без изменений.
 
     Датакласс frozen, как и ``FormSummary``: подмена полей запрещена.
     Глубокой неизменяемости у ``metadata``/``object_attributes`` нет — это
@@ -166,6 +253,7 @@ class FormContext:
     metadata: dict[str, Any]
     object_attributes: dict[str, Any] | None = None
     resolved_relations: list[dict[str, Any]] = field(default_factory=list)
+    unresolved_data_paths: list[dict[str, Any]] = field(default_factory=list)
 
 
 def build_form_context(
@@ -202,7 +290,7 @@ def build_form_context(
     # Старые индексы форм могут не содержать это поле: толерантный доступ — часть контракта, а не долг.
     elem_json_path = getattr(form_entry, "elem_json_path", None)
     form_dir = _form_dir(form_entry, elem_json_path, root)
-    summary = _build_summary(form_dir, root)
+    summary, unresolved_data_paths = _build_summary(form_dir, root)
 
     object_attributes, object_warnings, object_json = _build_object_attributes(
         form_entry, root, type_resolver=type_resolver
@@ -216,10 +304,10 @@ def build_form_context(
         "elem_sha256": form_entry.elem_sha256,
         "has_bsl": bsl_text is not None,
         "warnings": [
-            _strip_root(str(item), root)
+            sanitize_diagnostic(_strip_root(str(item), root))
             for item in (form_entry.warnings or [])
         ]
-        + [_strip_root(item, root) for item in object_warnings],
+        + [sanitize_diagnostic(_strip_root(item, root)) for item in object_warnings],
     }
 
     return FormContext(
@@ -232,20 +320,38 @@ def build_form_context(
         metadata=metadata,
         object_attributes=object_attributes,
         resolved_relations=resolved_relations,
+        unresolved_data_paths=unresolved_data_paths,
     )
 
 
-def to_llm_prompt_fragment(context: FormContext, max_chars: int = -1) -> str:
+def _to_llm_prompt_fragment_chars(
+    context: FormContext,
+    max_chars: int = -1,
+    *,
+    sections: frozenset[str] | None = None,
+) -> str:
     """Компактное текстовое представление для вставки в промпт.
 
     Порядок фиксирован: заголовок формы, ``## SUMMARY``,
-    ``## OBJECT_ATTRIBUTES``, затем ``## BSL``. Смысловая выжимка важнее
-    кода, поэтому при жёстком лимите обрезается именно хвост BSL.
+    ``## OBJECT_ATTRIBUTES``, затем ``## BSL``. При жёстком лимите
+    сохраняется префикс всего выбранного фрагмента: обрезка может затронуть
+    любой блок, кроме атомарных строк отрицательного знания #141.
 
     ``max_chars=-1`` отключает обрезку и возвращает полный контекст.
     Нулевой и остальные отрицательные лимиты дают пустую строку.
     При положительном лимите результат детерминирован и всегда не длиннее
     ``max_chars``.
+
+    Недоказанные ``data_path`` (issue #141) выводятся в секции
+    ``## SUMMARY`` сразу после JSON выжимки — по одной строке на запись,
+    маркер идёт первым, статус и причина — в той же строке. Строка
+    атомарна относительно обрезки: если лимит попадает внутрь неё, она
+    отбрасывается целиком. Без недоказанных привязок фрагмент совпадает
+    с прежним форматом.
+
+    ``sections`` (issue #146) — уже проверенный набор имён блоков;
+    ``None`` означает полный состав. Выбор применяется до обрезки,
+    исключённый блок не оставляет ни маркера, ни разделителя.
     """
     if max_chars == 0 or max_chars < -1:
         return ""
@@ -270,17 +376,68 @@ def to_llm_prompt_fragment(context: FormContext, max_chars: int = -1) -> str:
     else:
         object_block = NO_OBJECT_PLACEHOLDER
 
-    fragment = "\n".join((
-        header,
-        SUMMARY_MARKER,
-        to_normalized_json(context.summary),
-        OBJECT_ATTRIBUTES_MARKER,
-        object_block,
-        BSL_MARKER,
-        body,
-    ))
+    # issue #142: диагностические части санитизируются до сборки и обрезки.
+    header = sanitize_diagnostic(header)
+    summary_block = sanitize_diagnostic(to_normalized_json(context.summary))
+    status_lines = [
+        sanitize_diagnostic(_data_path_status_line(entry))
+        for entry in context.unresolved_data_paths
+    ]
 
-    return fragment if max_chars == -1 else fragment[:max_chars]
+    # issue #146: блоки собираются в каноническом порядке ALL_SECTIONS;
+    # при полном составе список строк совпадает с прежним символ в символ.
+    blocks: dict[str, tuple[str, ...]] = {
+        SECTION_FORM: (header,),
+        SECTION_SUMMARY: (SUMMARY_MARKER, summary_block, *status_lines),
+        SECTION_OBJECT_ATTRIBUTES: (OBJECT_ATTRIBUTES_MARKER, object_block),
+        SECTION_BSL: (BSL_MARKER, body),
+    }
+    selected = frozenset(ALL_SECTIONS) if sections is None else sections
+    lines: list[str] = []
+    status_start: int | None = None
+    for name in ALL_SECTIONS:
+        if name not in selected:
+            continue
+        if name == SECTION_SUMMARY:
+            status_start = len(lines) + 2
+        lines.extend(blocks[name])
+    fragment = "\n".join(lines)
+
+    if max_chars == -1 or status_start is None:
+        return fragment if max_chars == -1 else fragment[:max_chars]
+
+    # issue #141: обрезка не оставляет маркер без статуса — строка
+    # отрицательного знания либо входит целиком, либо не входит вовсе.
+    offset = sum(len(line) + 1 for line in lines[:status_start])
+    for line in status_lines:
+        end = offset + len(line)
+        if offset < max_chars < end:
+            return fragment[:offset]
+        offset = end + 1
+    return fragment[:max_chars]
+
+
+def _data_path_status_line(entry: dict[str, Any]) -> str:
+    """Строка LLM-проекции для одной записи отрицательного знания.
+
+    Маркер стоит первым и в одной строке со ``status`` и ``reason``.
+    Неизвестный статус не маскируется под доказанный: fail-closed
+    выводится маркер ``unresolved``.
+    """
+    status = str(entry.get("status") or DATA_PATH_STATUS_UNRESOLVED)
+    marker = DATA_PATH_MARKERS.get(
+        status, DATA_PATH_MARKERS[DATA_PATH_STATUS_UNRESOLVED]
+    )
+    parts = [
+        f'{DATA_PATH_LINE_PREFIX}"{marker}"',
+        f"status: {status}",
+        f"reason: {entry.get('reason')}",
+        f"scope: {entry.get('scope')}",
+    ]
+    element = entry.get("element")
+    if element is not None:
+        parts.append("element: " + json.dumps(str(element), ensure_ascii=False))
+    return "; ".join(parts)
 
 
 def _object_attributes_to_json(
@@ -412,21 +569,96 @@ def _form_dir(
     return _resolve(form_entry.form_path, root)
 
 
-def _build_summary(form_dir: Path | None, root: Path) -> FormSummary:
+def _build_summary(
+    form_dir: Path | None, root: Path
+) -> tuple[FormSummary, list[dict[str, Any]]]:
     """Выжимка структуры формы единственным парсером проекта.
 
     Каталога формы может не быть вовсе — например, индекс старше
     выгрузки. Тогда возвращается пустая выжимка с предупреждением:
     вызывать парсер по несуществующему пути нет смысла, а глотать
     произвольные исключения нельзя.
+
+    Вторым элементом возвращается явное отрицательное знание о
+    ``data_path`` (issue #141). Оно выводится из структурных фактов
+    (каталог, файл структуры, флаг ``elem_index_ok``, привязки), а не из
+    текста ``warnings``.
     """
     if form_dir is None or not form_dir.is_dir():
         location = _relative_str(form_dir, root) or "неизвестно"
-        return FormSummary(
+        summary = FormSummary(
             warnings=[f"каталог формы не найден: {location}"]
         )
+        return summary, [_form_status(DATA_PATH_REASON_FORM_DIR_MISSING)]
 
-    return _anonymize_summary(build_form_summary(form_dir), root)
+    elem_result = parse_elem_json(form_dir)
+    summary = _anonymize_summary(
+        build_form_summary_from_elem_index(elem_result), root
+    )
+    if not elem_result.elem_index_ok:
+        return summary, [_form_status(_unindexed_reason(form_dir))]
+    return summary, _element_statuses(summary)
+
+
+def _status_entry(reason: str, scope: str, element: str | None) -> dict[str, Any]:
+    """Каноническая запись отрицательного знания (issue #141)."""
+    return {
+        "scope": scope,
+        "element": element,
+        "data_path": None,
+        "status": DATA_PATH_REASONS[reason],
+        "reason": reason,
+    }
+
+
+def _form_status(reason: str) -> dict[str, Any]:
+    """Отрицательное знание для всей формы: элементы не прочитаны."""
+    return _status_entry(reason, "form", None)
+
+
+def _unindexed_reason(form_dir: Path) -> str:
+    """Причина, по которой структура формы не прочитана.
+
+    Файл ищется тем же локатором, что и в ``parse_elem_json``. Проверка
+    ``json.loads`` лишь различает «файл не является JSON» и «JSON есть, но
+    раскладка не распознана»; структуру она не разбирает.
+    """
+    elem_path = _find_elem_json(form_dir)
+    if elem_path is None:
+        return DATA_PATH_REASON_ELEM_JSON_MISSING
+    try:
+        json.loads(Path(elem_path).read_text(encoding="utf-8-sig"))
+    except (OSError, ValueError):
+        return DATA_PATH_REASON_ELEM_JSON_INVALID
+    return DATA_PATH_REASON_LAYOUT_NOT_RECOGNIZED
+
+
+def _element_statuses(summary: FormSummary) -> list[dict[str, Any]]:
+    """Элементы данных без доказанной привязки.
+
+    Учитываются только типы из ``coverage_metric.DATA_ELEMENT_TYPES``:
+    у служебных элементов привязки нет по определению. Доказанной считается
+    привязка, которую уже выдал парсер (``relations`` с ``kind == "data"``).
+    Порядок повторяет ``summary.elements``, дубликаты имён схлопываются.
+    """
+    proven = {
+        str(relation.get("element") or "")
+        for relation in summary.relations
+        if relation.get("kind") == "data" and relation.get("target")
+    }
+    statuses: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for item in summary.elements:
+        if item.get("kind") not in DATA_ELEMENT_TYPES:
+            continue
+        name = str(item.get("name") or "")
+        if name in proven or name in seen:
+            continue
+        seen.add(name)
+        statuses.append(
+            _status_entry(DATA_PATH_REASON_BINDING_NOT_PROVEN, "element", name)
+        )
+    return statuses
 
 
 def _anonymize_summary(summary: FormSummary, root: Path) -> FormSummary:
@@ -491,3 +723,152 @@ def _relative_str(value: str | Path | None, root: Path) -> str | None:
                 continue
 
     return path.name
+
+
+# --- issue #125: token budget ---
+
+_TOKEN_BUDGET_PAIRING_ERROR = (
+    "to_llm_prompt_fragment: max_tokens и count_tokens передаются только вместе"
+)
+
+
+def _split_complete_lines(text: str) -> list[str]:
+    parts = text.split("\n")
+    lines = [part + "\n" for part in parts[:-1]]
+    if parts[-1]:
+        lines.append(parts[-1])
+    return lines
+
+
+def _line_prefix(lines: list[str], char_cap: int) -> list[str]:
+    kept: list[str] = []
+    total = 0
+    for line in lines:
+        if total + len(line) > char_cap:
+            break
+        kept.append(line)
+        total += len(line)
+    return kept
+
+
+def _safe_token_count(count_tokens: Callable[[str], int], text: str) -> int | None:
+    try:
+        value = count_tokens(text)
+    except Exception:  # noqa: BLE001 - сбой внешнего счётчика не роняет промпт
+        return None
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        return None
+    return value
+
+
+# --- issue #146: section selection ---
+
+_SECTIONS_ALLOWED_TEXT = ", ".join(ALL_SECTIONS)
+
+
+def _normalize_sections(sections: Iterable[str]) -> frozenset[str]:
+    """Проверить ``sections`` и вернуть множество допустимых имён.
+
+    Строка целиком отклоняется: иначе ``"form"`` молча разобралась бы на
+    символы. Неизвестные имена перечисляются в отсортированном виде, текст
+    сообщения проходит границу #142.
+    """
+    if isinstance(sections, (str, bytes)):
+        raise TypeError(
+            "to_llm_prompt_fragment: sections — набор имён секций, а не строка"
+        )
+    selected: set[str] = set()
+    unknown: set[str] = set()
+    for name in sections:
+        if not isinstance(name, str):
+            raise TypeError("to_llm_prompt_fragment: имя секции должно быть str")
+        if name in ALL_SECTIONS:
+            selected.add(name)
+        else:
+            unknown.add(name)
+    if unknown:
+        names = ", ".join(repr(name) for name in sorted(unknown))
+        raise ValueError(sanitize_diagnostic(
+            f"to_llm_prompt_fragment: неизвестные секции: {names}; "
+            f"допустимые: {_SECTIONS_ALLOWED_TEXT}"
+        ))
+    if selected and SECTION_FORM not in selected:
+        raise ValueError(
+            "to_llm_prompt_fragment: непустой sections должен включать "
+            f"{SECTION_FORM!r}: заголовок # FORM идентифицирует форму"
+        )
+    return frozenset(selected)
+
+
+def to_llm_prompt_fragment(
+    context: FormContext,
+    max_chars: int = -1,
+    *,
+    max_tokens: int | None = None,
+    count_tokens: Callable[[str], int] | None = None,
+    sections: Iterable[str] | None = None,
+) -> str:
+    """Фрагмент для промпта с символьным и опциональным токенным бюджетом.
+
+    Без ``max_tokens`` и ``count_tokens`` результат бит-в-бит совпадает с
+    символьным режимом (#77). Контракт токенного режима (#125):
+
+    - ``max_tokens`` и ``count_tokens`` передаются только вместе, иначе
+      ``ValueError``;
+    - ``max_tokens <= 0`` даёт пустую строку;
+    - итог — префикс из целых строк санитизированного фрагмента, для
+      которого одновременно ``len(result) <= max_chars`` (по семантике
+      символьного режима) и ``count_tokens(result) <= max_tokens``;
+    - исключение или некорректный результат ``count_tokens`` (не ``int``,
+      ``bool`` или отрицательное число) — fail-safe fallback на символьный
+      бюджет с той же границей целых строк, исходное исключение не
+      пробрасывается.
+
+    Выбор блоков (#146): ``sections=None`` — полный состав, результат
+    бит-в-бит прежний. Иначе выводятся только выбранные целые блоки в
+    каноническом порядке :data:`ALL_SECTIONS`; порядок и дубликаты в
+    ``sections`` на результат не влияют. Пустой набор даёт пустую строку.
+    Непустой набор обязан включать :data:`SECTION_FORM`, неизвестное имя —
+    ``ValueError``. Оба бюджета считаются по уже отфильтрованному тексту.
+    """
+    selected = None if sections is None else _normalize_sections(sections)
+
+    def chars(limit: int) -> str:
+        if selected is None:
+            return _to_llm_prompt_fragment_chars(context, limit)
+        return _to_llm_prompt_fragment_chars(context, limit, sections=selected)
+
+    if max_tokens is None and count_tokens is None:
+        return chars(max_chars)
+    if max_tokens is None or count_tokens is None:
+        raise ValueError(_TOKEN_BUDGET_PAIRING_ERROR)
+    if isinstance(max_tokens, bool) or not isinstance(max_tokens, int):
+        raise TypeError("to_llm_prompt_fragment: max_tokens должен быть int")
+    if not callable(count_tokens):
+        raise TypeError("to_llm_prompt_fragment: count_tokens должен быть callable")
+    if max_tokens <= 0:
+        return ""
+
+    char_limited = chars(max_chars)
+    if not char_limited:
+        return ""
+    full = chars(-1)
+    lines = _line_prefix(_split_complete_lines(full), len(char_limited))
+
+    def fits(count: int) -> bool | None:
+        tokens = _safe_token_count(count_tokens, "".join(lines[:count]))
+        if tokens is None:
+            return None
+        return tokens <= max_tokens
+
+    low, high = 0, len(lines)
+    while low < high:
+        mid = (low + high + 1) // 2
+        verdict = fits(mid)
+        if verdict is None:
+            return "".join(lines)
+        if verdict:
+            low = mid
+        else:
+            high = mid - 1
+    return "".join(lines[:low])

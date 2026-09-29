@@ -14,6 +14,7 @@ result = router.route("Банки")
 # result.matched    — список FormEntry с путями к .bsl и .json
 # result.confidence — 0.0–1.0
 # result.warnings   — при нулевом результате
+# result.source     — "router" (значение по умолчанию, #79)
 
 for entry in result.matched:
     print(entry.object_type, entry.object_name, entry.form_name)
@@ -55,3 +56,38 @@ result = router.route("ЗагрузкаЦен")    # по object_name  → conf 
 ```python
 router.reindex([updated_entry])   # обновляет без полного пересканирования
 ```
+
+## Двухуровневая маршрутизация (FormDispatcher)
+
+`FormDispatcher` (#79, #308) объединяет `FormRouter` и необязательный
+`FormRagIndex` ([form_rag](form_rag.md)). Роутер вызывается всегда и
+первым; RAG — только если `route()` вернул пустой `matched`. Любой
+непустой `matched` роутера считается попаданием независимо от `confidence`.
+
+```python
+from v8unpack_agent import FormDispatcher
+
+# router — FormRouter, index — готовый FormRagIndex (см. form_rag.md)
+dispatcher = FormDispatcher(router, rag=index)   # rag=None — только роутер
+results = dispatcher.dispatch("список документов", top_k=5)
+for result in results:
+    print(result.source, result.confidence, result.matched)
+```
+
+| Ситуация | Результат `dispatch()` |
+|---|---|
+| `matched` роутера непуст | `[result]` — тот же объект, что вернул `route()`, `source="router"`; RAG не вызывается |
+| промах, `rag=None` | `[result]` промаха роутера: пустой `matched`, `source="router"`, без исключения |
+| промах, RAG подключён | до `top_k` новых `RouteResult` с `source="rag"` в порядке `rag.query(query, top_k)`; пустая выдача RAG — `[]` |
+| исключение RAG | пробрасывается без перехвата, например `RagQueryError` при `top_k <= 0` |
+
+`RouteResult.source` — строка со значением по умолчанию `"router"`, поэтому
+код, создающий `RouteResult` без этого поля, работает как раньше. Объекты
+из `rag.query()` диспетчер не изменяет (#308): он возвращает новые
+`RouteResult`, списки `matched` и `warnings` копируются поверхностно,
+элементы `FormEntry` общие с исходной выдачей.
+
+Ограничения: `FormDispatcher` — библиотечный класс, в CLI, `runner` и
+pipeline он не встроен. Слияния и переранжирования выдачи роутера и RAG нет.
+Эмбеддер передаёт вызывающая сторона; LLM-провайдера пакет не содержит,
+релевантность смысловой выдачи не гарантируется.

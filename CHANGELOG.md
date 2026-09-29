@@ -1,5 +1,256 @@
 # Changelog
 
+## Корректировка документационных контрактов (#317)
+
+### Исправлено
+
+- `examples/README.md`, `CONTRIBUTING.md`: из текущих инструкций убрано
+  фиксированное «40 файлов» Mypy. Сохранены команда `mypy` без аргументов,
+  ожидаемый RC=0 и источник области — `[tool.mypy] files` в `pyproject.toml`.
+  Число проверенных файлов зависит от состава проекта и контрактом не
+  является; датированные исторические замеры не менялись.
+- `docs/form_context.md`, раздел #125: вместо «последние секции выпадают
+  целиком» описан фактический результат токенного режима — префикс целых
+  строк, который может закончиться внутри блока. Блок исключается целиком
+  только через `sections` (#146), выбор блоков выполняется до бюджетов;
+  атомарность строки отрицательного знания #141 сохранена.
+
+### Не изменялось
+
+- runtime-код, тесты, `examples/*.py`, CI.
+
+## Пример полного цикла RAG-маршрутизации (#312)
+
+### Добавлено
+
+- `examples/form_rag_dispatch.py` — самодостаточный офлайн-пример:
+  `build_form_context()` → `FormRagIndex.build(contexts, embedder)` →
+  `save()`/`load(index_dir, embedder)` → `FormDispatcher.dispatch()`.
+  Ветви: точное попадание роутера (`source=router`, эмбеддер не вызывается),
+  промах → RAG (`source=rag`), промах при `rag=None`, а также одинаковый
+  `confidence` при запросе без сигнала. Встроенная самопроверка: RC=1 при
+  расхождении с ожидаемыми значениями.
+- Учебный `ToyKeywordEmbedder` явно помечен как иллюстрация интерфейса, а не
+  модель смыслового поиска.
+- `examples/README.md`: пример в группе самодостаточных, команда запуска,
+  таблица сценариев и ограничения.
+- `tests/test_examples_determinism_issue251.py`: пример добавлен в
+  `SELF_CONTAINED` — CI дважды запускает его на всех связках ОС и Python и
+  проверяет побайтовое совпадение stdout и отсутствие временных каталогов,
+  абсолютных путей и Windows-разделителей.
+
+### Не изменялось
+
+- runtime-код, схема RAG-индекса, алгоритм маршрутизации, CLI/runner/pipeline,
+  логика тестов и CI; `FormRagIndex.build()` по-прежнему индексирует полный
+  фрагмент.
+- Исключения из файловой границы `examples/` по решению владельца:
+  `CHANGELOG.md` (вариант A) и одна строка в `SELF_CONTAINED` (вариант 2).
+
+## Сверка документации RAG-маршрутизации (#311)
+
+### Изменено
+
+- `docs/form_rag.md`: `RouteResult.source` описан по факту #79/#308 вместо
+  «появится в #79»; `sections` (#146) существует, но `build()` его не
+  передаёт и индексирует полный фрагмент; пустой индекс после
+  `build([], embedder)`; явная оговорка об отсутствии эмбеддера/LLM и
+  гарантии релевантности.
+- `docs/form_router.md`: поле `source` и раздел «Двухуровневая
+  маршрутизация (FormDispatcher)» — ветви router hit, `rag=None`, выдача
+  и исключения RAG, отсутствие мутации (#308), отсутствие интеграции в
+  CLI/runner/pipeline.
+- `README.md`: строки `form_rag` и `form_dispatcher` в таблице модулей;
+  устаревшее «векторная индексация вне scope пакета» заменено фактом.
+- `docs/pipeline.md`, `docs/form_context.md`,
+  `docs/IMPLEMENTATION_STATUS.md`: убраны утверждения, что RAG отсутствует
+  или ещё является следующим шагом; добавлен статус RAG-маршрутизации.
+- `CHANGELOG.md`: восполнены записи #301, #146, #308, #79, #305 и #78 —
+  их PR слиты в эпик без записи в CHANGELOG.
+
+### Не изменялось
+
+- runtime-код, тесты, `examples/`, CI; предупреждение об отсутствии
+  `index_cf()` и `rag.rebuild()` сохранено.
+
+## Follow-up санитизации диагностики (#301)
+
+Запись восполнена в #311: PR #313 слит без записи в CHANGELOG.
+
+### Исправлено
+
+- Абсолютный `bsl_path` общего модуля больше не переносит компоненты вне
+  export root в `report.objects[].object`: `runner._common_module_object_id`
+  оставляет хвост `CommonModule/<имя>/CommonModule.obj.bsl` или
+  `unknown_object`.
+- `sanitize_diagnostic` продолжает абсолютный путь через пробел, только если
+  следующий фрагмент содержит разделитель: закрыта утечка части сегмента с
+  пробелом в `scan_warnings` `forms_scan_index.json` и
+  `fatal_error.message` post-run report.
+- Тесты: `tests/test_diagnostic_sanitizer_issue301.py`.
+
+### Осознанные границы
+
+- Путь, оканчивающийся сегментом с пробелом без следующего разделителя, и
+  имя пользователя вне `home`, `Users`, `root`, `~` описаны в
+  [`docs/diagnostic_sanitizer.md`](docs/diagnostic_sanitizer.md).
+  Sanitizer не является DLP.
+
+## Выбор блоков LLM-фрагмента: sections (#146)
+
+Запись восполнена в #311: PR #310 слит без записи в CHANGELOG.
+
+### Добавлено
+
+- `to_llm_prompt_fragment(..., *, sections=None)` — keyword-only выбор целых
+  блоков; константы `SECTION_FORM`, `SECTION_SUMMARY`,
+  `SECTION_OBJECT_ATTRIBUTES`, `SECTION_BSL`, `ALL_SECTIONS` в
+  `v8unpack_agent.form_context` (корневой `__init__` не менялся).
+- Вывод всегда в каноническом порядке `ALL_SECTIONS`, дубликаты
+  игнорируются; исключённый блок не оставляет маркера и разделителя.
+- Пустой набор — `""`; непустой набор без `form` и неизвестное имя —
+  `ValueError`; строка вместо набора и не-строковое имя — `TypeError`.
+- Блоки выбираются до обрезки: `max_chars` и `max_tokens`/`count_tokens`
+  (#125) считаются по отфильтрованному тексту; строки #141 атомарны,
+  граница #142 сохранена.
+- Документация: раздел «Выбор блоков фрагмента (#146)» в
+  [`docs/form_context.md`](docs/form_context.md); пример в
+  `examples/form_context.py`; тесты:
+  `tests/test_form_context_sections_issue146.py`.
+
+### Не изменялось
+
+- `sections=None` — результат бит-в-бит прежний;
+- `FormRagIndex.build()` по-прежнему индексирует полный фрагмент.
+
+## FormDispatcher не мутирует выдачу RAG (#308)
+
+Запись восполнена в #311: PR #309 слит без записи в CHANGELOG.
+
+### Исправлено
+
+- При промахе роутера `FormDispatcher.dispatch()` возвращает новые
+  `RouteResult` с `source="rag"` вместо присваивания `source` объектам из
+  `rag.query()`. `matched`, `confidence`, `warnings`, порядок и количество
+  сохраняются; списки копируются поверхностно, `FormEntry` общие.
+- Восстановлены два поясняющих комментария #140 в `v8unpack_agent/__init__.py`.
+- Тесты: `tests/test_form_dispatcher_issue308.py`.
+
+### Не изменялось
+
+- точное попадание роутера, ветвь `rag=None`, проброс `RagQueryError`;
+- `RouteResult` без явного `source` по-прежнему `"router"`.
+
+## Двухуровневая маршрутизация FormDispatcher (#79)
+
+Запись восполнена в #311: PR #307 слит без записи в CHANGELOG.
+
+### Добавлено
+
+- `FormDispatcher(router, rag=None).dispatch(query, top_k=5)`: сначала
+  `FormRouter.route()`; при пустом `matched` и подключённом RAG —
+  `rag.query(query, top_k)`; при `rag=None` — промах роутера как есть.
+  Экспорт из корня пакета (ленивый импорт).
+- `RouteResult.source: str = "router"` — источник результата; позиционные
+  аргументы и конструирование без `source` совместимы.
+- Тесты: `tests/test_form_dispatcher_issue79.py`.
+
+### Не изменялось
+
+- CLI, `runner` и pipeline: диспетчер в них не встроен.
+
+## Контракт D2 и защитные проверки FormRagIndex (#305)
+
+Запись восполнена в #311: PR #306 слит без записи в CHANGELOG.
+
+### Изменено
+
+- Контракт: `FormRagIndex(scan_index)`, `build(contexts, embedder, *,
+  max_chars=-1, max_tokens=None, count_tokens=None)`,
+  `query(text, top_k=5)`, `save(index_dir)`, `load(index_dir, embedder)`.
+  Эмбеддер передаёт вызывающая сторона; модуль не делает сетевых вызовов.
+- `rag_meta.json` schema 2 с `vectors_sha256`; артефакты schema 1 (#78)
+  не загружаются и пересобираются.
+
+### Добавлено
+
+- `RagError(ValueError)` и `RagQueryError` в `v8unpack_agent.form_rag`.
+- Валидация векторов в `build()`/`query()`: пустой, нечисловой, NaN/inf,
+  нулевая норма, несовпадение размерности; `top_k <= 0` и `query()` до
+  готовности индекса — `RagQueryError`; сбой эмбеддера — типизированная
+  ошибка без текста исходного исключения.
+- Атомарный `save()`: временные файлы, `fsync`, `os.replace()`; все ошибки
+  артефактов в `load()` — `RagLoadError` со стабильным сообщением без путей.
+- Документация: [`docs/form_rag.md`](docs/form_rag.md); тесты:
+  `tests/test_form_rag_index_issue78.py`.
+
+## RAG-индекс форм FormRagIndex (#78)
+
+Запись восполнена в #311: PR #304 слит без записи в CHANGELOG.
+
+### Добавлено
+
+- `v8unpack_agent.form_rag.FormRagIndex` поверх `FormScanIndex`:
+  `build`/`query`/`save`/`load`, cosine similarity, `RouteResult` на форму.
+  Первоначальный контракт `query(vector)` и schema 1 заменены в #305.
+- Артефакты `rag_index.npz` (NPY v1.0 `<f8`, ZIP_STORED, детерминированные
+  байты, без runtime-зависимости от numpy) и `rag_meta.json` (только ключи
+  и размеры).
+- `FormRagIndex`, `RagBuildError`, `RagLoadError` в `__all__` корневого
+  пакета; `scan_forms` импортируется только под `TYPE_CHECKING` (#140).
+
+## Опциональный токенный бюджет LLM-фрагмента (#125)
+
+### Добавлено
+
+- `to_llm_prompt_fragment(context, max_chars=-1, *, max_tokens=None,
+  count_tokens=None)` — keyword-only `max_tokens` и `count_tokens`.
+  Токенайзер передаёт потребитель; внешних зависимостей нет.
+- В токенном режиме итог — наибольший префикс целых строк санитизированного
+  фрагмента: одновременно `len(result) <= max_chars` и
+  `count_tokens(result) <= max_tokens`. Строки отрицательного знания #141
+  атомарны, граница `sanitize_diagnostic` (#142) не обходится.
+- Непарные `max_tokens`/`count_tokens` — `ValueError`; неверные типы —
+  `TypeError`; `max_tokens <= 0` — пустая строка.
+- Сбой или некорректный результат `count_tokens` — fail-safe fallback на
+  символьный бюджет по целым строкам; исключение не пробрасывается.
+- Документация: раздел «Токенный бюджет (#125)» в
+  [`docs/form_context.md`](docs/form_context.md); тесты:
+  `tests/test_form_context_token_budget_issue125.py`,
+  `tests/test_form_context_token_budget_integration_issue125.py`.
+
+### Не изменялось
+
+- поведение без новых аргументов — бит-в-бит, включая default `max_chars=-1`;
+- структура `FormContext` и порядок секций `# FORM` → `## SUMMARY` →
+  `## OBJECT_ATTRIBUTES` → `## BSL`;
+- контракт `sanitize_diagnostic` и формат строк `data_path` из #141.
+
+## Явное отрицательное знание для недоказанных data_path (#141)
+
+### Добавлено
+
+- `FormContext.unresolved_data_paths` — по записи на каждую недоказанную
+  привязку: `data_path: null`, стабильные `status` и `reason`. Статусы:
+  `unresolved`, `unknown_layout`; `not_found` зарезервирован за доказанным
+  отсутствием и модулем не выдаётся. Причины: `form_dir_missing`,
+  `elem_json_missing`, `elem_json_invalid`, `layout_not_recognized`,
+  `binding_not_proven`; определяются по структурным фактам, а не по тексту
+  `warnings`.
+- `to_llm_prompt_fragment()` выводит в `## SUMMARY` после JSON выжимки строку
+  с маркером `<UNRESOLVED: ...>` или `<UNKNOWN_LAYOUT: ...>`. Строка атомарна
+  относительно `max_chars`: маркер не отделяется от статуса.
+- Документация: [`docs/form_context_data_path_status.md`](docs/form_context_data_path_status.md);
+  тесты: `tests/test_form_context_issue141.py`.
+
+### Не изменялось
+
+- доказанные `data_path` в `summary.relations` и `resolved_relations`;
+- публичные сигнатуры `build_form_context` и `to_llm_prompt_fragment`;
+- порядок секций `# FORM` → `## SUMMARY` → `## OBJECT_ATTRIBUTES` → `## BSL`
+  и формат фрагмента для форм без недоказанных привязок;
+- `warnings` сохранены как дополнительная диагностика.
+
 ## 0.1.0 — 2026-09-18
 
 Стабильный релиз повторяет проверенный контур `0.1.0rc1` без изменений

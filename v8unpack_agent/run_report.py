@@ -12,6 +12,8 @@ from enum import Enum
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import TYPE_CHECKING
 
+from v8unpack_agent._safe_paths import sanitize_diagnostic
+
 if TYPE_CHECKING:
     from v8unpack_agent.common_modules import CommonModuleReadStatus
     from v8unpack_agent.elem_parser import UnindexedReason
@@ -67,6 +69,10 @@ def _validate_safe_text(value: str, field_name: str) -> None:
         or _WINDOWS_DRIVE_RE.search(value)
         or "\\\\" in value
     ):
+        raise RunReportValidationError(f"{field_name} contains an absolute path")
+    # issue #142: тот же детектор, что и у единой границы санитизации.
+    # Текст, который санитайзер изменил бы, в отчёт не допускается.
+    if sanitize_diagnostic(value) != value:
         raise RunReportValidationError(f"{field_name} contains an absolute path")
 
 

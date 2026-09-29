@@ -15,7 +15,9 @@ README и код не расходились. Соответствие пров�
 
 Каталог входит в область статической проверки типов: область задана
 `[tool.mypy] files` в `pyproject.toml`, локальный gate и CI выполняют одну
-команду `mypy` — RC=0, 40 файлов (issue #264, #268).
+команду `mypy` без аргументов (issue #264, #268). Ожидаемый результат — RC=0;
+число проверенных файлов зависит от текущего состава пакета и `examples/` и
+постоянным контрактом не является (#317).
 
 ## Самодостаточные (запускаются без аргументов)
 
@@ -29,6 +31,7 @@ README и код не расходились. Соответствие пров�
 | `coverage_metric.py` | метрика покрытия по элементам данных |
 | `form_bindings.py` | подтверждённые привязки `data_path` элементов |
 | `form_context.py` | `FormContext` и компактный фрагмент для промпта |
+| `form_rag_dispatch.py` | полный офлайн-цикл `FormContext` → `FormRagIndex` → `FormDispatcher` с учебным эмбеддером (#312) |
 | `reference_types.py` | резолюция `Ref#uuid` через индекс выгрузки и платформенную таблицу (#165), fallback для неизвестного UUID |
 | `unindexed_forms_report.py` | отчёт по неиндексируемым формам |
 | `zero_binding_reasons.py` | машиночитаемые причины нулевой привязки |
@@ -38,11 +41,56 @@ README и код не расходились. Соответствие пров�
 ```bash
 for f in examples/basic_usage.py examples/chain_form_bindings.py \
          examples/coverage_metric.py examples/form_bindings.py \
-         examples/form_context.py examples/reference_types.py \
+         examples/form_context.py examples/form_rag_dispatch.py \
+         examples/reference_types.py \
          examples/unindexed_forms_report.py examples/zero_binding_reasons.py; do
     python "$f" > /dev/null || echo "FAIL $f"
 done
 ```
+
+### `form_rag_dispatch.py` (issue #312)
+
+Сквозной офлайн-пример RAG-маршрутизации на настоящих публичных классах:
+`build_form_context()` → `FormRagIndex.build(contexts, embedder)` →
+`save(index_dir)` → `load(index_dir, embedder)` → `FormDispatcher.dispatch()`.
+Запуск из корня репозитория в dev-окружении (`pip install -e ".[test]"`):
+
+```bash
+python examples/form_rag_dispatch.py; echo "RC=$?"
+```
+
+Сценарии на одних и тех же синтетических формах:
+
+| Запрос | Ветвь | Ожидаемо |
+|---|---|---|
+| `ФормаЗаказа` | точное попадание `FormRouter` | `source=router`, `confidence=1.000000`, эмбеддер не вызывается |
+| `печать списка заказов` | промах роутера → RAG | три результата `source=rag`: `0.816497`, `0.408248`, `0.408248` |
+| `печать списка заказов`, `rag=None` | промах без RAG | один результат `source=router`, `matched=[]`, `confidence=0.000000`, warning роутера |
+| `совершенно другой запрос` | промах → RAG | три результата с одинаковым `0.707107`: RAG возвращает ближайших, а не доказанное совпадение |
+
+`ToyKeywordEmbedder` — учебный детерминированный эмбеддер: он отмечает наличие
+четырёх подстрок и не моделирует смысловую близость. Значения `confidence`
+иллюстрируют интерфейс и не характеризуют качество настоящего semantic search;
+эмбеддер и порог отсечения выбирает вызывающий код. Пакет эмбеддера не
+содержит, пример не обращается к сети и не принимает ключей.
+
+Дополнительно показано:
+
+- `build()` получает ровно полный `to_llm_prompt_fragment(ctx)`; сокращённый
+  состав `form` + `summary` (#146) выводится отдельно и в индекс не попадает —
+  `build()` параметра `sections` не принимает;
+- бюджет `max_chars` (#125) передаётся в `build()` как есть; тексты для
+  эмбеддера не содержат абсолютного пути выгрузки (#142), отрицательное знание
+  (#141) приходит внутри фрагмента без переработки;
+- `rag_index.npz` и `rag_meta.json` пишутся во временный каталог вне
+  синтетической выгрузки, в meta нет путей, выдача после `load()` совпадает,
+  `load()` без эмбеддера отклоняется `RagLoadError`.
+
+Самопроверка встроена: при расхождении ветвей, `source`, `matched` или
+`confidence` с ожидаемыми значениями пример печатает `Самопроверка: FAIL` и
+завершается с RC=1. Детерминизм и обезличенность stdout в CI проверяет
+`tests/test_examples_determinism_issue251.py`. Режима работы с реальной
+выгрузкой нет.
 
 ## Требующие реальной выгрузки
 

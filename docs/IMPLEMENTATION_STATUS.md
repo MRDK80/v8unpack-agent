@@ -278,7 +278,8 @@ UUID без публикуемого имени и остальные неизв
 |---|---|---|
 | `FormContext` | ✅ | #77 |
 | `build_form_context(form_entry, unpacked_root, *, type_resolver=None)` | ✅ | #77, #147 |
-| `to_llm_prompt_fragment(context, max_chars=-1)` | ✅ | #77 |
+| `to_llm_prompt_fragment(context, max_chars=-1, *, max_tokens=None, count_tokens=None, sections=None)` | ✅ | #77, #125, #146 |
+| `SECTION_FORM`, `SECTION_SUMMARY`, `SECTION_OBJECT_ATTRIBUTES`, `SECTION_BSL`, `ALL_SECTIONS` | ✅ | #146 |
 
 - `FormContext` материализует содержимое формы поверх `FormEntry` и
   `FormSummary`: прочитанный BSL-текст, семантическая выжимка и компактные
@@ -297,6 +298,13 @@ UUID без публикуемого имени и остальные неизв
 - `to_llm_prompt_fragment` по умолчанию возвращает полный контекст:
   `max_chars=-1` отключает обрезку. Положительный лимит применяется последним
   шагом и не может быть превышен; `0` и значения меньше `-1` дают пустую строку.
+- Выбор блоков (#146): keyword-only `sections` выводит только выбранные целые
+  блоки в каноническом порядке `ALL_SECTIONS` (`form` → `summary` →
+  `object_attributes` → `bsl`); `None` сохраняет прежний результат символ в
+  символ. Пустой набор даёт `""`, непустой набор без `form` и неизвестное имя —
+  `ValueError`. Бюджеты `max_chars` и `max_tokens` (#125) считаются по
+  отфильтрованному тексту, строки #141 и граница #142 сохраняются.
+  `FormRagIndex` параметр не использует и индексирует полный фрагмент.
 - Предупреждения `parse_elem_json` содержат абсолютный путь каталога формы,
   поэтому база `unpacked_root` вырезается из текстов на границе контекста.
   Парсер не менялся — обезличивание пути в самих предупреждениях парсера
@@ -408,8 +416,9 @@ UUID без публикуемого имени и остальные неизв
   Подтверждённых `data_path` по-прежнему 13729; вне критического пути.
 - ~~`form_context`~~ — **closed** (#77): материализация
   `FormEntry → FormContext` реализована (`bsl_text` + `FormSummary` +
-  компактные `metadata` + `to_llm_prompt_fragment`). Следующий приоритет
-  критического пути — `form_rag` (#78).
+  компактные `metadata` + `to_llm_prompt_fragment`). RAG-индекс `form_rag`
+  (#78, #305) и `form_dispatcher` (#79, #308) реализованы в эпике #81 —
+  см. «RAG-маршрутизация (эпик #81)».
 - CLI для `check_drift` (аналогично `scan_forms --mode`)
 - Детекция дрейфа по `form_summary` (семантический уровень)
 - Инкрементальный baseline (обновление только изменённых форм)
@@ -742,3 +751,26 @@ GitHub prerelease указывают на
 `0a4880fbf17a96446743f50f60f4e81cf3e23379`. Чистые точная и непинованная
 установки из PyPI успешны, зависимости разрешаются из индекса без VCS URL,
 `pip check`, console script и synthetic post-run report проверены.
+
+## RAG-маршрутизация (эпик #81)
+
+| Компонент | Статус | Issue |
+|---|---|---|
+| `FormRagIndex(scan_index)`: `build(contexts, embedder, *, max_chars=-1, max_tokens=None, count_tokens=None)`, `query(text, top_k=5)`, `save(index_dir)`, `load(index_dir, embedder)` | ✅ | #78, #305 |
+| `RagError`, `RagBuildError`, `RagQueryError`, `RagLoadError` | ✅ | #78, #305 |
+| `RouteResult.source` (`"router"` по умолчанию, `"rag"` от диспетчера) | ✅ | #79 |
+| `FormDispatcher(router, rag=None).dispatch(query, top_k=5)` | ✅ | #79, #308 |
+
+- Эмбеддер `str -> list[float]` передаёт вызывающая сторона в `build()` и
+  `load()`; модуль не читает переменные окружения и не делает сетевых
+  вызовов. Артефакты: `rag_index.npz` и `rag_meta.json` схемы 2 с
+  `vectors_sha256`; `save()` пишет через временные файлы и `os.replace()`,
+  ошибки `load()` — `RagLoadError` без путей. Артефакты схемы 1 (#78)
+  не загружаются, их пересобирают. Подробно — [form_rag](form_rag.md).
+- `FormRagIndex.build()` индексирует полный фрагмент
+  `to_llm_prompt_fragment`; `sections` (#146) не передаётся.
+- `FormDispatcher` вызывает RAG только при пустом `matched` роутера и не
+  изменяет объекты выдачи RAG (#308) — [form_router](form_router.md).
+- Не реализовано: встраивание в CLI, `runner` и pipeline; встроенный
+  провайдер эмбеддингов или LLM; переранжирование; инкрементальное
+  обновление индекса. Релевантность смысловой выдачи не гарантируется.
