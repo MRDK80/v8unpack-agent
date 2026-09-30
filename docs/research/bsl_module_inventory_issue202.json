@@ -1,0 +1,2020 @@
+{
+  "issue": 202,
+  "schema": "bsl_module_inventory/1",
+  "agent_sha": "5047a84788e1d65f64b1adce1f785ad76af6605d",
+  "upstream_unpacker": "saby v8unpack 1.2.13",
+  "exports": {
+    "A": "configuration, normalized v8unpack layout, designer dump available",
+    "B": "configuration, normalized v8unpack layout",
+    "C": "configuration, normalized v8unpack layout",
+    "X1": "extension, previously scanned",
+    "X2": "extension, fresh unpack"
+  },
+  "read_status_values": [
+    "nonempty",
+    "empty",
+    "whitespace_only",
+    "read_error",
+    "missing_file"
+  ],
+  "status_values": [
+    "supported",
+    "partially_supported",
+    "ignored",
+    "not_detected"
+  ],
+  "candidate_module_kind": [
+    "command",
+    "common_module",
+    "external_connection",
+    "form",
+    "managed_application",
+    "manager",
+    "object",
+    "ordinary_application",
+    "record_set",
+    "service",
+    "session",
+    "value_manager"
+  ],
+  "candidate_owner_kind": [
+    "common_command",
+    "common_form",
+    "common_module",
+    "configuration",
+    "extension",
+    "external_data_processor",
+    "external_report",
+    "metadata_object",
+    "metadata_object_command",
+    "metadata_object_form"
+  ],
+  "detected": [
+    {
+      "path_pattern": "AccountingRegister/{Name}/AccountingRegister.obj.bsl",
+      "owner_kind": "metadata_object",
+      "metadata_type": "AccountingRegister",
+      "module_kind": "record_set",
+      "exports": {
+        "A": null,
+        "B": null,
+        "C": {
+          "files": 1,
+          "nonempty": 1,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "upstream_ext_code_and_layout_analogy",
+      "designer_match_A": null
+    },
+    {
+      "path_pattern": "AccountingRegister/{Name}/AccountingRegisterForm/{Name}/AccountingRegisterForm.obj.bsl",
+      "owner_kind": "metadata_object_form",
+      "metadata_type": "AccountingRegister",
+      "module_kind": "form",
+      "exports": {
+        "A": null,
+        "B": null,
+        "C": {
+          "files": 1,
+          "nonempty": 1,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "scan_forms"
+      ],
+      "status": "supported",
+      "semantic_evidence": "layout_and_scan_forms",
+      "designer_match_A": null
+    },
+    {
+      "path_pattern": "AccumulationRegister/{Name}/AccumulationRegister.mgr.bsl",
+      "owner_kind": "metadata_object",
+      "metadata_type": "AccumulationRegister",
+      "module_kind": "manager",
+      "exports": {
+        "A": {
+          "files": 3,
+          "nonempty": 3,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": {
+          "files": 1,
+          "nonempty": 1,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "AccumulationRegisters/{Name}/Ext/ManagerModule.bsl": 3
+      }
+    },
+    {
+      "path_pattern": "AccumulationRegister/{Name}/AccumulationRegister.obj.bsl",
+      "owner_kind": "metadata_object",
+      "metadata_type": "AccumulationRegister",
+      "module_kind": "record_set",
+      "exports": {
+        "A": {
+          "files": 59,
+          "nonempty": 57,
+          "empty": 2,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": {
+          "files": 48,
+          "nonempty": 28,
+          "empty": 20,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "<empty_not_matched>": 2,
+        "AccumulationRegisters/{Name}/Ext/RecordSetModule.bsl": 57
+      }
+    },
+    {
+      "path_pattern": "AccumulationRegister/{Name}/AccumulationRegisterForm/{Name}/AccumulationRegisterForm.obj.bsl",
+      "owner_kind": "metadata_object_form",
+      "metadata_type": "AccumulationRegister",
+      "module_kind": "form",
+      "exports": {
+        "A": {
+          "files": 17,
+          "nonempty": 14,
+          "empty": 3,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": {
+          "files": 35,
+          "nonempty": 33,
+          "empty": 2,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "scan_forms"
+      ],
+      "status": "supported",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "<empty_not_matched>": 3,
+        "<no_match>": 12,
+        "AccumulationRegisters/{Name}/Forms/{Name}/Ext/Form/Module.bsl": 2
+      }
+    },
+    {
+      "path_pattern": "BusinessProcess/{Name}/BusinessProcess.obj.bsl",
+      "owner_kind": "metadata_object",
+      "metadata_type": "BusinessProcess",
+      "module_kind": "object",
+      "exports": {
+        "A": {
+          "files": 3,
+          "nonempty": 3,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": null
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "BusinessProcesses/{Name}/Ext/ObjectModule.bsl": 3
+      }
+    },
+    {
+      "path_pattern": "BusinessProcess/{Name}/BusinessProcessForm/{Name}/BusinessProcessForm.obj.bsl",
+      "owner_kind": "metadata_object_form",
+      "metadata_type": "BusinessProcess",
+      "module_kind": "form",
+      "exports": {
+        "A": {
+          "files": 10,
+          "nonempty": 7,
+          "empty": 3,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": null
+      },
+      "agent_behavior": [
+        "scan_forms"
+      ],
+      "status": "supported",
+      "semantic_evidence": "layout_and_scan_forms",
+      "designer_match_A": {
+        "<empty_not_matched>": 3,
+        "<no_match>": 7
+      }
+    },
+    {
+      "path_pattern": "Catalog/{Name}/Catalog.mgr.bsl",
+      "owner_kind": "metadata_object",
+      "metadata_type": "Catalog",
+      "module_kind": "manager",
+      "exports": {
+        "A": {
+          "files": 65,
+          "nonempty": 58,
+          "empty": 5,
+          "whitespace_only": 2,
+          "read_error": 0
+        },
+        "B": null,
+        "C": {
+          "files": 25,
+          "nonempty": 18,
+          "empty": 6,
+          "whitespace_only": 1,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "<empty_not_matched>": 7,
+        "Catalogs/{Name}/Ext/ManagerModule.bsl": 58
+      }
+    },
+    {
+      "path_pattern": "Catalog/{Name}/Catalog.obj.bsl",
+      "owner_kind": "metadata_object",
+      "metadata_type": "Catalog",
+      "module_kind": "object",
+      "exports": {
+        "A": {
+          "files": 124,
+          "nonempty": 90,
+          "empty": 33,
+          "whitespace_only": 1,
+          "read_error": 0
+        },
+        "B": null,
+        "C": {
+          "files": 89,
+          "nonempty": 56,
+          "empty": 33,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "<empty_not_matched>": 34,
+        "Catalogs/{Name}/Ext/ObjectModule.bsl": 90
+      }
+    },
+    {
+      "path_pattern": "Catalog/{Name}/CatalogCommand/{Name}/CatalogCommand.obj.bsl",
+      "owner_kind": "metadata_object_command",
+      "metadata_type": "Catalog",
+      "module_kind": "command",
+      "exports": {
+        "A": {
+          "files": 20,
+          "nonempty": 20,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": {
+          "files": 2,
+          "nonempty": 2,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "C": {
+          "files": 8,
+          "nonempty": 8,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "Catalogs/{Name}/Commands/{Name}/Ext/CommandModule.bsl": 20
+      }
+    },
+    {
+      "path_pattern": "Catalog/{Name}/CatalogForm/{Name}/CatalogForm.obj.bsl",
+      "owner_kind": "metadata_object_form",
+      "metadata_type": "Catalog",
+      "module_kind": "form",
+      "exports": {
+        "A": {
+          "files": 475,
+          "nonempty": 404,
+          "empty": 54,
+          "whitespace_only": 17,
+          "read_error": 0
+        },
+        "B": {
+          "files": 3,
+          "nonempty": 3,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "C": {
+          "files": 358,
+          "nonempty": 294,
+          "empty": 40,
+          "whitespace_only": 24,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "scan_forms"
+      ],
+      "status": "supported",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "<empty_not_matched>": 71,
+        "<no_match>": 211,
+        "Catalogs/{Name}/Forms/{Name}/Ext/Form/Module.bsl": 193
+      }
+    },
+    {
+      "path_pattern": "ChartOfAccounts/{Name}/ChartOfAccounts.obj.bsl",
+      "owner_kind": "metadata_object",
+      "metadata_type": "ChartOfAccounts",
+      "module_kind": "object",
+      "exports": {
+        "A": null,
+        "B": null,
+        "C": {
+          "files": 1,
+          "nonempty": 1,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "upstream_ext_code_and_layout_analogy",
+      "designer_match_A": null
+    },
+    {
+      "path_pattern": "ChartOfAccounts/{Name}/ChartOfAccountsForm/{Name}/ChartOfAccountsForm.obj.bsl",
+      "owner_kind": "metadata_object_form",
+      "metadata_type": "ChartOfAccounts",
+      "module_kind": "form",
+      "exports": {
+        "A": null,
+        "B": null,
+        "C": {
+          "files": 3,
+          "nonempty": 3,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "scan_forms"
+      ],
+      "status": "supported",
+      "semantic_evidence": "layout_and_scan_forms",
+      "designer_match_A": null
+    },
+    {
+      "path_pattern": "ChartOfCalculationTypes/{Name}/ChartOfCalculationTypes.obj.bsl",
+      "owner_kind": "metadata_object",
+      "metadata_type": "ChartOfCalculationTypes",
+      "module_kind": "object",
+      "exports": {
+        "A": null,
+        "B": null,
+        "C": {
+          "files": 1,
+          "nonempty": 1,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "upstream_ext_code_and_layout_analogy",
+      "designer_match_A": null
+    },
+    {
+      "path_pattern": "ChartOfCalculationTypes/{Name}/ChartOfCalculationTypesForm/{Name}/ChartOfCalculationTypesForm.obj.bsl",
+      "owner_kind": "metadata_object_form",
+      "metadata_type": "ChartOfCalculationTypes",
+      "module_kind": "form",
+      "exports": {
+        "A": null,
+        "B": null,
+        "C": {
+          "files": 3,
+          "nonempty": 2,
+          "empty": 1,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "scan_forms"
+      ],
+      "status": "supported",
+      "semantic_evidence": "layout_and_scan_forms",
+      "designer_match_A": null
+    },
+    {
+      "path_pattern": "ChartOfCharacteristicType/{Name}/ChartOfCharacteristicType.obj.bsl",
+      "owner_kind": "metadata_object",
+      "metadata_type": "ChartOfCharacteristicType",
+      "module_kind": "object",
+      "exports": {
+        "A": {
+          "files": 3,
+          "nonempty": 2,
+          "empty": 1,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": {
+          "files": 3,
+          "nonempty": 2,
+          "empty": 1,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "<empty_not_matched>": 1,
+        "ChartsOfCharacteristicTypes/{Name}/Ext/ObjectModule.bsl": 2
+      }
+    },
+    {
+      "path_pattern": "ChartOfCharacteristicType/{Name}/ChartOfCharacteristicTypeForm/{Name}/ChartOfCharacteristicTypeForm.obj.bsl",
+      "owner_kind": "metadata_object_form",
+      "metadata_type": "ChartOfCharacteristicType",
+      "module_kind": "form",
+      "exports": {
+        "A": {
+          "files": 19,
+          "nonempty": 14,
+          "empty": 5,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": {
+          "files": 11,
+          "nonempty": 9,
+          "empty": 2,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "scan_forms"
+      ],
+      "status": "supported",
+      "semantic_evidence": "layout_and_scan_forms",
+      "designer_match_A": {
+        "<empty_not_matched>": 5,
+        "<no_match>": 14
+      }
+    },
+    {
+      "path_pattern": "CommonCommand/{Name}/CommonCommand.obj.bsl",
+      "owner_kind": "common_command",
+      "metadata_type": "CommonCommand",
+      "module_kind": "command",
+      "exports": {
+        "A": {
+          "files": 29,
+          "nonempty": 29,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": {
+          "files": 1,
+          "nonempty": 1,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "C": {
+          "files": 21,
+          "nonempty": 21,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "CommonCommands/{Name}/Ext/CommandModule.bsl": 29
+      }
+    },
+    {
+      "path_pattern": "CommonForm/{Name}/CommonForm.obj.bsl",
+      "owner_kind": "common_form",
+      "metadata_type": "CommonForm",
+      "module_kind": "form",
+      "exports": {
+        "A": {
+          "files": 162,
+          "nonempty": 161,
+          "empty": 1,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": {
+          "files": 113,
+          "nonempty": 113,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "scan_forms"
+      ],
+      "status": "supported",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "<empty_not_matched>": 1,
+        "<no_match>": 40,
+        "CommonForms/{Name}/Ext/Form/Module.bsl": 121
+      }
+    },
+    {
+      "path_pattern": "CommonModule/{Name}/CommonModule.obj.bsl",
+      "owner_kind": "common_module",
+      "metadata_type": "CommonModule",
+      "module_kind": "common_module",
+      "exports": {
+        "A": {
+          "files": 650,
+          "nonempty": 649,
+          "empty": 1,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": {
+          "files": 4,
+          "nonempty": 4,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "C": {
+          "files": 241,
+          "nonempty": 241,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "scan_common_modules"
+      ],
+      "status": "supported",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "<empty_not_matched>": 1,
+        "CommonModules/{Name}/Ext/Module.bsl": 649
+      }
+    },
+    {
+      "path_pattern": "Configuration.802.bsl",
+      "owner_kind": "configuration",
+      "metadata_type": null,
+      "module_kind": "ordinary_application",
+      "exports": {
+        "A": {
+          "files": 1,
+          "nonempty": 1,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": {
+          "files": 1,
+          "nonempty": 1,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_exact_match_A",
+      "designer_match_A": {
+        "Ext/OrdinaryApplicationModule.bsl": 1
+      }
+    },
+    {
+      "path_pattern": "Configuration.app.bsl",
+      "owner_kind": "configuration",
+      "metadata_type": null,
+      "module_kind": "managed_application",
+      "exports": {
+        "A": {
+          "files": 1,
+          "nonempty": 1,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": {
+          "files": 1,
+          "nonempty": 1,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "C": {
+          "files": 1,
+          "nonempty": 1,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_exact_match_A",
+      "designer_match_A": {
+        "Ext/ManagedApplicationModule.bsl": 1
+      }
+    },
+    {
+      "path_pattern": "Configuration.con.bsl",
+      "owner_kind": "configuration",
+      "metadata_type": null,
+      "module_kind": "external_connection",
+      "exports": {
+        "A": {
+          "files": 1,
+          "nonempty": 1,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": {
+          "files": 1,
+          "nonempty": 1,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "C": {
+          "files": 1,
+          "nonempty": 1,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_exact_match_A",
+      "designer_match_A": {
+        "Ext/ExternalConnectionModule.bsl": 1
+      }
+    },
+    {
+      "path_pattern": "Configuration.seance.bsl",
+      "owner_kind": "configuration",
+      "metadata_type": null,
+      "module_kind": "session",
+      "exports": {
+        "A": {
+          "files": 1,
+          "nonempty": 1,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": {
+          "files": 1,
+          "nonempty": 1,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "C": {
+          "files": 1,
+          "nonempty": 1,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_exact_match_A",
+      "designer_match_A": {
+        "Ext/SessionModule.bsl": 1
+      }
+    },
+    {
+      "path_pattern": "Constant/{Name}/Constant.obj.bsl",
+      "owner_kind": "metadata_object",
+      "metadata_type": "Constant",
+      "module_kind": "value_manager",
+      "exports": {
+        "A": {
+          "files": 39,
+          "nonempty": 17,
+          "empty": 22,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": {
+          "files": 9,
+          "nonempty": 5,
+          "empty": 4,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "<empty_not_matched>": 22,
+        "Constants/{Name}/Ext/ValueManagerModule.bsl": 17
+      }
+    },
+    {
+      "path_pattern": "DataProcessor/{Name}/DataProcessor.mgr.bsl",
+      "owner_kind": "metadata_object",
+      "metadata_type": "DataProcessor",
+      "module_kind": "manager",
+      "exports": {
+        "A": {
+          "files": 36,
+          "nonempty": 26,
+          "empty": 10,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": {
+          "files": 11,
+          "nonempty": 6,
+          "empty": 5,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "<empty_not_matched>": 10,
+        "DataProcessors/{Name}/Ext/ManagerModule.bsl": 26
+      }
+    },
+    {
+      "path_pattern": "DataProcessor/{Name}/DataProcessor.obj.bsl",
+      "owner_kind": "metadata_object",
+      "metadata_type": "DataProcessor",
+      "module_kind": "object",
+      "exports": {
+        "A": {
+          "files": 101,
+          "nonempty": 82,
+          "empty": 17,
+          "whitespace_only": 2,
+          "read_error": 0
+        },
+        "B": {
+          "files": 5,
+          "nonempty": 5,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "C": {
+          "files": 74,
+          "nonempty": 59,
+          "empty": 13,
+          "whitespace_only": 2,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "<empty_not_matched>": 19,
+        "DataProcessors/{Name}/Ext/ObjectModule.bsl": 82
+      }
+    },
+    {
+      "path_pattern": "DataProcessor/{Name}/DataProcessorCommand/{Name}/DataProcessorCommand.obj.bsl",
+      "owner_kind": "metadata_object_command",
+      "metadata_type": "DataProcessor",
+      "module_kind": "command",
+      "exports": {
+        "A": {
+          "files": 40,
+          "nonempty": 40,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": {
+          "files": 33,
+          "nonempty": 33,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "DataProcessors/{Name}/Commands/{Name}/Ext/CommandModule.bsl": 40
+      }
+    },
+    {
+      "path_pattern": "DataProcessor/{Name}/Form/{Name}/Form.obj.bsl",
+      "owner_kind": "metadata_object_form",
+      "metadata_type": "DataProcessor",
+      "module_kind": "form",
+      "exports": {
+        "A": {
+          "files": 418,
+          "nonempty": 414,
+          "empty": 4,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": {
+          "files": 42,
+          "nonempty": 41,
+          "empty": 1,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "C": {
+          "files": 454,
+          "nonempty": 443,
+          "empty": 11,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "scan_forms"
+      ],
+      "status": "supported",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "<empty_not_matched>": 4,
+        "<no_match>": 267,
+        "DataProcessors/{Name}/Forms/{Name}/Ext/Form/Module.bsl": 147
+      }
+    },
+    {
+      "path_pattern": "Document/{Name}/Document.mgr.bsl",
+      "owner_kind": "metadata_object",
+      "metadata_type": "Document",
+      "module_kind": "manager",
+      "exports": {
+        "A": {
+          "files": 74,
+          "nonempty": 70,
+          "empty": 2,
+          "whitespace_only": 2,
+          "read_error": 0
+        },
+        "B": null,
+        "C": {
+          "files": 32,
+          "nonempty": 22,
+          "empty": 9,
+          "whitespace_only": 1,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "<empty_not_matched>": 4,
+        "Documents/{Name}/Ext/ManagerModule.bsl": 70
+      }
+    },
+    {
+      "path_pattern": "Document/{Name}/Document.obj.bsl",
+      "owner_kind": "metadata_object",
+      "metadata_type": "Document",
+      "module_kind": "object",
+      "exports": {
+        "A": {
+          "files": 185,
+          "nonempty": 184,
+          "empty": 1,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": {
+          "files": 9,
+          "nonempty": 9,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "C": {
+          "files": 163,
+          "nonempty": 161,
+          "empty": 2,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "<empty_not_matched>": 1,
+        "Documents/{Name}/Ext/ObjectModule.bsl": 184
+      }
+    },
+    {
+      "path_pattern": "Document/{Name}/DocumentCommand/{Name}/DocumentCommand.obj.bsl",
+      "owner_kind": "metadata_object_command",
+      "metadata_type": "Document",
+      "module_kind": "command",
+      "exports": {
+        "A": {
+          "files": 9,
+          "nonempty": 9,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": {
+          "files": 5,
+          "nonempty": 5,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "Documents/{Name}/Commands/{Name}/Ext/CommandModule.bsl": 9
+      }
+    },
+    {
+      "path_pattern": "Document/{Name}/DocumentForm/{Name}/DocumentForm.obj.bsl",
+      "owner_kind": "metadata_object_form",
+      "metadata_type": "Document",
+      "module_kind": "form",
+      "exports": {
+        "A": {
+          "files": 694,
+          "nonempty": 629,
+          "empty": 64,
+          "whitespace_only": 1,
+          "read_error": 0
+        },
+        "B": {
+          "files": 9,
+          "nonempty": 9,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "C": {
+          "files": 480,
+          "nonempty": 478,
+          "empty": 1,
+          "whitespace_only": 1,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "scan_forms"
+      ],
+      "status": "supported",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "<empty_not_matched>": 65,
+        "<no_match>": 374,
+        "Documents/{Name}/Forms/{Name}/Ext/Form/Module.bsl": 255
+      }
+    },
+    {
+      "path_pattern": "DocumentJournal/{Name}/DocumentJournal.mgr.bsl",
+      "owner_kind": "metadata_object",
+      "metadata_type": "DocumentJournal",
+      "module_kind": "manager",
+      "exports": {
+        "A": {
+          "files": 1,
+          "nonempty": 1,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": {
+          "files": 1,
+          "nonempty": 1,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "DocumentJournals/{Name}/Ext/ManagerModule.bsl": 1
+      }
+    },
+    {
+      "path_pattern": "DocumentJournal/{Name}/DocumentJournalForm/{Name}/DocumentJournalForm.obj.bsl",
+      "owner_kind": "metadata_object_form",
+      "metadata_type": "DocumentJournal",
+      "module_kind": "form",
+      "exports": {
+        "A": {
+          "files": 9,
+          "nonempty": 9,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": {
+          "files": 22,
+          "nonempty": 22,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "scan_forms"
+      ],
+      "status": "supported",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "<no_match>": 7,
+        "DocumentJournals/{Name}/Forms/{Name}/Ext/Form/Module.bsl": 2
+      }
+    },
+    {
+      "path_pattern": "Enum/{Name}/Enum.obj.bsl",
+      "owner_kind": "metadata_object",
+      "metadata_type": "Enum",
+      "module_kind": "manager",
+      "exports": {
+        "A": {
+          "files": 24,
+          "nonempty": 14,
+          "empty": 10,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": {
+          "files": 4,
+          "nonempty": 4,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "<empty_not_matched>": 10,
+        "Enums/{Name}/Ext/ManagerModule.bsl": 14
+      }
+    },
+    {
+      "path_pattern": "Enum/{Name}/EnumForm/{Name}/EnumForm.obj.bsl",
+      "owner_kind": "metadata_object_form",
+      "metadata_type": "Enum",
+      "module_kind": "form",
+      "exports": {
+        "A": {
+          "files": 4,
+          "nonempty": 4,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": {
+          "files": 3,
+          "nonempty": 0,
+          "empty": 3,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "scan_forms"
+      ],
+      "status": "supported",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "Enums/{Name}/Forms/{Name}/Ext/Form/Module.bsl": 4
+      }
+    },
+    {
+      "path_pattern": "ExchangePlan/{Name}/ExchangePlan.mgr.bsl",
+      "owner_kind": "metadata_object",
+      "metadata_type": "ExchangePlan",
+      "module_kind": "manager",
+      "exports": {
+        "A": {
+          "files": 3,
+          "nonempty": 3,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": {
+          "files": 8,
+          "nonempty": 8,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "ExchangePlans/{Name}/Ext/ManagerModule.bsl": 3
+      }
+    },
+    {
+      "path_pattern": "ExchangePlan/{Name}/ExchangePlan.obj.bsl",
+      "owner_kind": "metadata_object",
+      "metadata_type": "ExchangePlan",
+      "module_kind": "object",
+      "exports": {
+        "A": {
+          "files": 14,
+          "nonempty": 10,
+          "empty": 4,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": {
+          "files": 8,
+          "nonempty": 7,
+          "empty": 1,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "<empty_not_matched>": 4,
+        "ExchangePlans/{Name}/Ext/ObjectModule.bsl": 10
+      }
+    },
+    {
+      "path_pattern": "ExchangePlan/{Name}/ExchangePlanForm/{Name}/ExchangePlanForm.obj.bsl",
+      "owner_kind": "metadata_object_form",
+      "metadata_type": "ExchangePlan",
+      "module_kind": "form",
+      "exports": {
+        "A": {
+          "files": 34,
+          "nonempty": 34,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": {
+          "files": 24,
+          "nonempty": 22,
+          "empty": 2,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "scan_forms"
+      ],
+      "status": "supported",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "<no_match>": 20,
+        "ExchangePlans/{Name}/Forms/{Name}/Ext/Form/Module.bsl": 14
+      }
+    },
+    {
+      "path_pattern": "FilterCriterion/{Name}/FilterCriterionForm/{Name}/FilterCriterionForm.obj.bsl",
+      "owner_kind": "metadata_object_form",
+      "metadata_type": "FilterCriterion",
+      "module_kind": "form",
+      "exports": {
+        "A": {
+          "files": 4,
+          "nonempty": 4,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": {
+          "files": 2,
+          "nonempty": 2,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "scan_forms"
+      ],
+      "status": "supported",
+      "semantic_evidence": "layout_and_scan_forms",
+      "designer_match_A": {
+        "<no_match>": 4
+      }
+    },
+    {
+      "path_pattern": "HTTPService/{Name}/HTTPService.obj.bsl",
+      "owner_kind": "metadata_object",
+      "metadata_type": "HTTPService",
+      "module_kind": "service",
+      "exports": {
+        "A": {
+          "files": 1,
+          "nonempty": 1,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": null
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "HTTPServices/{Name}/Ext/Module.bsl": 1
+      }
+    },
+    {
+      "path_pattern": "InformationRegister/{Name}/InformationRegister.mgr.bsl",
+      "owner_kind": "metadata_object",
+      "metadata_type": "InformationRegister",
+      "module_kind": "manager",
+      "exports": {
+        "A": {
+          "files": 83,
+          "nonempty": 77,
+          "empty": 6,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": {
+          "files": 60,
+          "nonempty": 43,
+          "empty": 17,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "<empty_not_matched>": 6,
+        "InformationRegisters/{Name}/Ext/ManagerModule.bsl": 77
+      }
+    },
+    {
+      "path_pattern": "InformationRegister/{Name}/InformationRegister.obj.bsl",
+      "owner_kind": "metadata_object",
+      "metadata_type": "InformationRegister",
+      "module_kind": "record_set",
+      "exports": {
+        "A": {
+          "files": 90,
+          "nonempty": 56,
+          "empty": 31,
+          "whitespace_only": 3,
+          "read_error": 0
+        },
+        "B": null,
+        "C": {
+          "files": 59,
+          "nonempty": 38,
+          "empty": 17,
+          "whitespace_only": 4,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "<empty_not_matched>": 34,
+        "InformationRegisters/{Name}/Ext/RecordSetModule.bsl": 56
+      }
+    },
+    {
+      "path_pattern": "InformationRegister/{Name}/InformationRegisterCommand/{Name}/InformationRegisterCommand.obj.bsl",
+      "owner_kind": "metadata_object_command",
+      "metadata_type": "InformationRegister",
+      "module_kind": "command",
+      "exports": {
+        "A": {
+          "files": 6,
+          "nonempty": 6,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": {
+          "files": 3,
+          "nonempty": 3,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "InformationRegisters/{Name}/Commands/{Name}/Ext/CommandModule.bsl": 6
+      }
+    },
+    {
+      "path_pattern": "InformationRegister/{Name}/InformationRegisterForm/{Name}/InformationRegisterForm.obj.bsl",
+      "owner_kind": "metadata_object_form",
+      "metadata_type": "InformationRegister",
+      "module_kind": "form",
+      "exports": {
+        "A": {
+          "files": 148,
+          "nonempty": 123,
+          "empty": 25,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": {
+          "files": 3,
+          "nonempty": 3,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "C": {
+          "files": 226,
+          "nonempty": 189,
+          "empty": 36,
+          "whitespace_only": 1,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "scan_forms"
+      ],
+      "status": "supported",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "<empty_not_matched>": 25,
+        "<no_match>": 48,
+        "InformationRegisters/{Name}/Forms/{Name}/Ext/Form/Module.bsl": 75
+      }
+    },
+    {
+      "path_pattern": "Report/{Name}/Report.mgr.bsl",
+      "owner_kind": "metadata_object",
+      "metadata_type": "Report",
+      "module_kind": "manager",
+      "exports": {
+        "A": {
+          "files": 23,
+          "nonempty": 22,
+          "empty": 1,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": {
+          "files": 34,
+          "nonempty": 16,
+          "empty": 18,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "<empty_not_matched>": 1,
+        "Reports/{Name}/Ext/ManagerModule.bsl": 22
+      }
+    },
+    {
+      "path_pattern": "Report/{Name}/Report.obj.bsl",
+      "owner_kind": "metadata_object",
+      "metadata_type": "Report",
+      "module_kind": "object",
+      "exports": {
+        "A": {
+          "files": 135,
+          "nonempty": 133,
+          "empty": 2,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": {
+          "files": 3,
+          "nonempty": 3,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "C": {
+          "files": 480,
+          "nonempty": 476,
+          "empty": 4,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "<empty_not_matched>": 2,
+        "Reports/{Name}/Ext/ObjectModule.bsl": 133
+      }
+    },
+    {
+      "path_pattern": "Report/{Name}/ReportCommand/{Name}/ReportCommand.obj.bsl",
+      "owner_kind": "metadata_object_command",
+      "metadata_type": "Report",
+      "module_kind": "command",
+      "exports": {
+        "A": {
+          "files": 1,
+          "nonempty": 1,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": null
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "Reports/{Name}/Commands/{Name}/Ext/CommandModule.bsl": 1
+      }
+    },
+    {
+      "path_pattern": "Report/{Name}/ReportForm/{Name}/ReportForm.obj.bsl",
+      "owner_kind": "metadata_object_form",
+      "metadata_type": "Report",
+      "module_kind": "form",
+      "exports": {
+        "A": {
+          "files": 166,
+          "nonempty": 166,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": {
+          "files": 1,
+          "nonempty": 1,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "C": {
+          "files": 1934,
+          "nonempty": 1933,
+          "empty": 1,
+          "whitespace_only": 0,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "scan_forms"
+      ],
+      "status": "supported",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "<no_match>": 165,
+        "Reports/{Name}/Forms/{Name}/Ext/Form/Module.bsl": 1
+      }
+    },
+    {
+      "path_pattern": "Sequences/{Name}/Sequences.obj.bsl",
+      "owner_kind": "metadata_object",
+      "metadata_type": "Sequences",
+      "module_kind": "record_set",
+      "exports": {
+        "A": null,
+        "B": null,
+        "C": {
+          "files": 3,
+          "nonempty": 0,
+          "empty": 2,
+          "whitespace_only": 1,
+          "read_error": 0
+        }
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "unresolved_semantics",
+      "designer_match_A": null
+    },
+    {
+      "path_pattern": "Task/{Name}/Task.obj.bsl",
+      "owner_kind": "metadata_object",
+      "metadata_type": "Task",
+      "module_kind": "object",
+      "exports": {
+        "A": {
+          "files": 1,
+          "nonempty": 1,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": null
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "Tasks/{Name}/Ext/ObjectModule.bsl": 1
+      }
+    },
+    {
+      "path_pattern": "Task/{Name}/TaskForm/{Name}/TaskForm.obj.bsl",
+      "owner_kind": "metadata_object_form",
+      "metadata_type": "Task",
+      "module_kind": "form",
+      "exports": {
+        "A": {
+          "files": 7,
+          "nonempty": 7,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": null,
+        "C": null
+      },
+      "agent_behavior": [
+        "scan_forms"
+      ],
+      "status": "supported",
+      "semantic_evidence": "layout_and_scan_forms",
+      "designer_match_A": {
+        "<no_match>": 7
+      }
+    },
+    {
+      "path_pattern": "WebService/{Name}/WebService.obj.bsl",
+      "owner_kind": "metadata_object",
+      "metadata_type": "WebService",
+      "module_kind": "service",
+      "exports": {
+        "A": {
+          "files": 3,
+          "nonempty": 3,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "B": {
+          "files": 1,
+          "nonempty": 1,
+          "empty": 0,
+          "whitespace_only": 0,
+          "read_error": 0
+        },
+        "C": null
+      },
+      "agent_behavior": [
+        "none"
+      ],
+      "status": "ignored",
+      "semantic_evidence": "designer_content_match_A",
+      "designer_match_A": {
+        "WebServices/{Name}/Ext/Module.bsl": 3
+      }
+    }
+  ],
+  "not_detected": [
+    {
+      "owner_kind": "extension",
+      "metadata_type": "ConfigurationExtension",
+      "module_kind": "managed_application",
+      "source": "upstream ConfigurationExtension.ext_code app",
+      "observed": "X1/X2: 0 BSL",
+      "status": "not_detected"
+    },
+    {
+      "owner_kind": "extension",
+      "metadata_type": "ConfigurationExtension",
+      "module_kind": "session",
+      "source": "upstream ConfigurationExtension.ext_code ssn",
+      "observed": "X1/X2: 0 BSL",
+      "status": "not_detected"
+    },
+    {
+      "owner_kind": "extension",
+      "metadata_type": "ConfigurationExtension",
+      "module_kind": "external_connection",
+      "source": "upstream ConfigurationExtension.ext_code con",
+      "observed": "X1/X2: 0 BSL",
+      "status": "not_detected"
+    },
+    {
+      "owner_kind": "external_data_processor",
+      "metadata_type": "ExternalDataProcessor",
+      "module_kind": "object",
+      "source": "epf artifact not provided",
+      "observed": "not examined",
+      "status": "not_detected"
+    },
+    {
+      "owner_kind": "external_data_processor",
+      "metadata_type": "ExternalDataProcessor",
+      "module_kind": "form",
+      "source": "epf artifact not provided",
+      "observed": "not examined",
+      "status": "not_detected"
+    },
+    {
+      "owner_kind": "external_report",
+      "metadata_type": "ExternalReport",
+      "module_kind": "object",
+      "source": "erf artifact not provided",
+      "observed": "not examined",
+      "status": "not_detected"
+    },
+    {
+      "owner_kind": "external_report",
+      "metadata_type": "ExternalReport",
+      "module_kind": "form",
+      "source": "erf artifact not provided",
+      "observed": "not examined",
+      "status": "not_detected"
+    },
+    {
+      "owner_kind": "metadata_object",
+      "metadata_type": "ChartOfAccounts",
+      "module_kind": "manager",
+      "source": "upstream ext_code mgr",
+      "observed": "A/B/C: 0 files",
+      "status": "not_detected"
+    },
+    {
+      "owner_kind": "metadata_object",
+      "metadata_type": "ChartOfCalculationTypes",
+      "module_kind": "manager",
+      "source": "upstream ext_code mgr",
+      "observed": "A/B/C: 0 files",
+      "status": "not_detected"
+    },
+    {
+      "owner_kind": "metadata_object",
+      "metadata_type": "ChartOfCharacteristicType",
+      "module_kind": "manager",
+      "source": "upstream ext_code mgr",
+      "observed": "A/B/C: 0 files",
+      "status": "not_detected"
+    },
+    {
+      "owner_kind": "metadata_object",
+      "metadata_type": "BusinessProcess",
+      "module_kind": "manager",
+      "source": "upstream ext_code mgr",
+      "observed": "A/B/C: 0 files",
+      "status": "not_detected"
+    },
+    {
+      "owner_kind": "metadata_object",
+      "metadata_type": "Task",
+      "module_kind": "manager",
+      "source": "upstream ext_code mgr",
+      "observed": "A/B/C: 0 files",
+      "status": "not_detected"
+    },
+    {
+      "owner_kind": "metadata_object",
+      "metadata_type": "AccountingRegister",
+      "module_kind": "manager",
+      "source": "upstream ext_code mgr",
+      "observed": "A/B/C: 0 files",
+      "status": "not_detected"
+    },
+    {
+      "owner_kind": "metadata_object",
+      "metadata_type": "CalculationRegister",
+      "module_kind": "record_set",
+      "source": "upstream ext_code obj",
+      "observed": "A/B/C: 0 object dirs",
+      "status": "not_detected"
+    },
+    {
+      "owner_kind": "metadata_object",
+      "metadata_type": "CalculationRegister",
+      "module_kind": "manager",
+      "source": "upstream ext_code mgr",
+      "observed": "A/B/C: 0 object dirs",
+      "status": "not_detected"
+    },
+    {
+      "owner_kind": "metadata_object",
+      "metadata_type": "SettingsStorage",
+      "module_kind": "manager",
+      "source": "upstream ext_code mgr",
+      "observed": "A/B/C: 0 object dirs",
+      "status": "not_detected"
+    },
+    {
+      "owner_kind": "metadata_object",
+      "metadata_type": "Bot",
+      "module_kind": "object",
+      "source": "upstream ext_code obj",
+      "observed": "A/B/C: 0 object dirs",
+      "status": "not_detected"
+    },
+    {
+      "owner_kind": "metadata_object",
+      "metadata_type": "ExternalDataSourceCube",
+      "module_kind": "object",
+      "source": "upstream ext_code obj",
+      "observed": "A/B/C: 0 object dirs",
+      "status": "not_detected"
+    },
+    {
+      "owner_kind": "metadata_object",
+      "metadata_type": "ExternalDataSourceCube",
+      "module_kind": "manager",
+      "source": "upstream ext_code mgr",
+      "observed": "A/B/C: 0 object dirs",
+      "status": "not_detected"
+    },
+    {
+      "owner_kind": "metadata_object_form",
+      "metadata_type": "*",
+      "module_kind": "form_descent_part",
+      "source": "upstream descent *.obj.<n>.bsl",
+      "observed": "A/B/C/X: 0 files",
+      "status": "not_detected"
+    }
+  ],
+  "determinism": {
+    "A": {
+      "kind": "configuration",
+      "files_total": 23775,
+      "bsl_total": 3996,
+      "run_digests_sha256": [
+        "502f5a44daa8ed149b9a59569cfc23e604f9644811ca52f2b51a5008958920fe",
+        "502f5a44daa8ed149b9a59569cfc23e604f9644811ca52f2b51a5008958920fe"
+      ],
+      "deterministic": true,
+      "differing_keys": [],
+      "agent_refs_total": {
+        "scan_common_modules": 651,
+        "scan_forms": 2216
+      },
+      "agent_refs_without_file": {
+        "scan_common_modules": 1,
+        "scan_forms": 49
+      }
+    },
+    "B": {
+      "kind": "configuration",
+      "files_total": 720,
+      "bsl_total": 86,
+      "run_digests_sha256": [
+        "376309bd8676c910bbd38f0d4c042b0c7801c789ac2844c8503768b2551a4dfd",
+        "376309bd8676c910bbd38f0d4c042b0c7801c789ac2844c8503768b2551a4dfd"
+      ],
+      "deterministic": true,
+      "differing_keys": [],
+      "agent_refs_total": {
+        "scan_common_modules": 4,
+        "scan_forms": 76
+      },
+      "agent_refs_without_file": {
+        "scan_forms": 18
+      }
+    },
+    "C": {
+      "kind": "configuration",
+      "files_total": 50353,
+      "bsl_total": 5099,
+      "run_digests_sha256": [
+        "a8afc212385fb55ac40eb50b87e1585f4ec19b1dcbf2de80344ce35b867b301c",
+        "a8afc212385fb55ac40eb50b87e1585f4ec19b1dcbf2de80344ce35b867b301c"
+      ],
+      "deterministic": true,
+      "differing_keys": [],
+      "agent_refs_total": {
+        "scan_common_modules": 242,
+        "scan_forms": 3738
+      },
+      "agent_refs_without_file": {
+        "scan_common_modules": 1,
+        "scan_forms": 69
+      }
+    },
+    "X1": {
+      "kind": "extension",
+      "files_total": 12,
+      "bsl_total": 0,
+      "run_digests_sha256": [
+        "fc4c3b6b3565bf6a0e2efeeec6b5ca6152253782eedd7e6cc12c2750a568a23f",
+        "fc4c3b6b3565bf6a0e2efeeec6b5ca6152253782eedd7e6cc12c2750a568a23f"
+      ],
+      "deterministic": true,
+      "differing_keys": [],
+      "agent_refs_total": {
+        "scan_common_modules": 0,
+        "scan_forms": 1
+      },
+      "agent_refs_without_file": {
+        "scan_forms": 1
+      }
+    },
+    "X2": {
+      "kind": "extension",
+      "files_total": 11,
+      "bsl_total": 0,
+      "run_digests_sha256": [
+        "bd66b45b5fd880df90d236a92d52a5fac755f01adb8749abc3a502ec83b9060d",
+        "fc4c3b6b3565bf6a0e2efeeec6b5ca6152253782eedd7e6cc12c2750a568a23f"
+      ],
+      "deterministic": false,
+      "differing_keys": [
+        "files_total"
+      ],
+      "agent_refs_total": {
+        "scan_common_modules": 0,
+        "scan_forms": 1
+      },
+      "agent_refs_without_file": {
+        "scan_forms": 1
+      }
+    }
+  },
+  "designer_parity_A": {
+    "v8unpack_bsl_total": 3996,
+    "designer_bsl_total": 2652,
+    "designer_nonempty_without_v8unpack_match": 0,
+    "deterministic": true,
+    "empty_designer_modules_without_v8unpack_file": {
+      "DataProcessor/{Name}/DataProcessor.obj.bsl": 6
+    }
+  }
+}
