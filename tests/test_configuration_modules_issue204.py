@@ -28,7 +28,7 @@ BS = chr(92)
 
 def write_all(root: Path, text: str = TEXT) -> None:
     for name in CONFIGURATION_MODULE_FILES.values():
-        (root / name).write_text(text, encoding="utf-8")
+        (root / name).write_bytes(text.encode("utf-8"))
 
 
 def snapshot(root: Path) -> dict[str, tuple[int, int]]:
