@@ -1,5 +1,31 @@
 # Changelog
 
+## Универсальные ModuleEntry и ModuleIndex (#203)
+
+### Добавлено
+
+- `v8unpack_agent.modules`: неизменяемые `ModuleEntry` и `ModuleIndex` —
+  общая модель BSL-модулей эпика #201, независимая от `FormContext` и
+  файлового layout. Закрытые наборы `ModuleKind` (12), `OwnerKind` (10) и
+  `ModuleReadStatus` (`ok` / `empty` / `whitespace_only` / `missing` /
+  `read_error`) взяты из результата #202; `missing` означает отсутствие
+  файла, а не модуля. `metadata_type` различает смысл суффикса `obj`.
+  Стабильный `module_id` не зависит от пути; дубликаты `module_id` и
+  `relative_path` без учёта регистра отклоняются. Относительный POSIX-путь
+  проверяется по семантике POSIX и Windows независимо от ОС. Сортировка
+  OS-нейтральна, JSON (`module_index/1`) детерминирован и не содержит
+  BSL-текста. Индекс не читает и не пишет файлы. Добавлены
+  `classify_bsl_bytes()` и адаптер `module_entry_from_common_module()`.
+- `docs/modules.md` — публичный контракт; `tests/test_modules_issue203.py` —
+  синтетические тесты, включая Ubuntu/Windows semantics путей.
+
+### Не изменялось
+
+- `common_modules` (`CommonModuleEntry`, `CommonModuleIndex`,
+  `CommonModuleContext`, `scan_common_modules`), API форм, `scan_forms`,
+  корневые импорты `v8unpack_agent`, CI; сканеры конкретных видов модулей
+  (#204–#207) не реализованы.
+
 ## Инвентаризация BSL-модулей и layout выгрузок v8unpack (#202)
 
 ### Добавлено
