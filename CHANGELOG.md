@@ -1,5 +1,28 @@
 # Changelog
 
+## Сканирование модулей уровня конфигурации (#204)
+
+### Добавлено
+
+- `v8unpack_agent.configuration_modules`: `scan_configuration_modules()` и
+  `CONFIGURATION_MODULE_FILES` — обнаружение и чтение модулей обычного и
+  управляемого приложения, сеанса и внешнего соединения
+  (`Configuration.802.bsl` / `.app.bsl` / `.seance.bsl` / `.con.bsl` в
+  корне normalized-выгрузки) по доказанным строкам #202. Возвращает
+  `ModuleIndex` из #203 со статусами `ok` / `empty` / `whitespace_only` /
+  `missing` / `read_error`, `size_bytes` и `sha256`, без BSL-текста.
+  `missing` выдаётся только для опознанной выгрузки конфигурации (есть хотя
+  бы один из четырёх файлов). Только чтение: symlink и не-обычные файлы дают
+  `read_error`, `scan_forms()` не вызывается.
+- `docs/configuration_modules.md` — контракт сканера;
+  `tests/test_configuration_modules_issue204.py` — синтетические тесты.
+
+### Не изменялось
+
+- `v8unpack_agent.modules`, `common_modules`, API форм, `scan_forms`,
+  корневые импорты `v8unpack_agent`, CI. Raw-layout и модули расширения не
+  поддержаны: в #202 они не доказаны.
+
 ## Универсальные ModuleEntry и ModuleIndex (#203)
 
 ### Добавлено
