@@ -1,5 +1,33 @@
 # Changelog
 
+## Сканирование модулей объектов и менеджеров метаданных (#205)
+
+### Добавлено
+
+- `v8unpack_agent.metadata_modules`: `scan_metadata_object_modules()` и
+  `METADATA_OBJECT_MODULE_LAYOUTS` — обнаружение и чтение объектных и
+  менеджерских модулей прикладных объектов в normalized-выгрузке v8unpack по
+  17 доказанным парам #202 (`designer_content_match_A`), включая
+  `Enum.obj.bsl` как модуль менеджера. Возвращает `ModuleIndex` из #203:
+  объектный и менеджерский модули владельца — отдельные записи,
+  `metadata_type` обязателен, статусы `ok` / `empty` / `whitespace_only` /
+  `missing` / `read_error`, `size_bytes` и `sha256`, без BSL-текста.
+  `missing` выдаётся только для существующего каталога объекта доказанного
+  типа и применимого к нему вида модуля. Модули форм, `record_set`,
+  `value_manager`, `service` и unresolved-строки #202 (`Sequences`, `obj` у
+  `ChartOfAccounts` / `ChartOfCalculationTypes` / `AccountingRegister`) не
+  классифицируются. Только чтение: symlink не обходятся, `scan_forms()` не
+  вызывается.
+- `docs/metadata_modules.md` — контракт сканера;
+  `tests/test_metadata_modules_issue205.py` — синтетические тесты.
+
+### Не изменялось
+
+- `v8unpack_agent.modules`, `configuration_modules`, `common_modules`, API
+  форм, `scan_forms`, корневые импорты `v8unpack_agent`, CI. Внешние
+  обработки и отчёты, расширения и raw-layout не поддержаны: в #202 они не
+  доказаны.
+
 ## Сканирование модулей уровня конфигурации (#204)
 
 ### Добавлено
