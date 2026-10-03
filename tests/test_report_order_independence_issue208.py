@@ -16,7 +16,7 @@ class _ListScandir:
     def __init__(self, entries: list[os.DirEntry[str]]) -> None:
         self._iterator = iter(entries)
 
-    def __enter__(self) -> _ListScandir:
+    def __enter__(self) -> _ListScandir:  # noqa: PYI034
         return self
 
     def __exit__(self, *exc_info: object) -> None:
