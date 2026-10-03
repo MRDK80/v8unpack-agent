@@ -27,6 +27,12 @@
 даёт ``completed=false`` и ``fatal_error``. Отсутствие ``object_attributes``,
 owner-уровня и BSL у elem-only формы деградацией не считается.
 
+Для индекса модулей (issue #208) деградацию даёт только
+``read_error``. Состояния ``empty``, ``whitespace_only`` и ``missing`` — допустимые
+состояния выгрузки: модуль учтён в отчёте со статусом ``excluded``
+(текста для LLM нет) и не меняют exit code. Сбой сканера или дубль
+идентификатора модуля — фатальная ошибка ``modules_failed``.
+
 Пропуск группы объектов (``include_skd``/``include_common_modules``) не
 создаёт результатов: обнаружение не выполняется, поэтому в отчёте таких
 объектов нет.
@@ -71,9 +77,10 @@ from v8unpack_agent.form_context import (
     to_llm_prompt_fragment,
 )
 from v8unpack_agent.metadata_modules import scan_metadata_object_modules
-from v8unpack_agent.modules import ModuleEntry
+from v8unpack_agent.modules import ModuleEntry, ModuleIndex
 from v8unpack_agent.record_set_modules import scan_record_set_modules
 from v8unpack_agent.run_report import (
+    ModuleStatusTable,
     ObjectRunResult,
     PostRunReport,
     RunFatalError,
@@ -232,6 +239,7 @@ def _run_pipeline(options: RunOptions, started_at: str) -> RunOutcome:
     scan_warnings: list[str] = []
     prompt_chars = 0
     fatal: RunFatalError | None = None
+    module_table: ModuleStatusTable | None = None
 
     try:
         index = scan_forms(
@@ -252,7 +260,7 @@ def _run_pipeline(options: RunOptions, started_at: str) -> RunOutcome:
             fatal = _process_common_modules(export_root, objects)
 
         if fatal is None and options.include_module_index:
-            fatal = _process_module_index(export_root, objects)
+            fatal, module_table = _process_module_index(export_root, objects)
 
         if fatal is None and options.include_skd:
             fatal = _process_skd(export_root, objects)
@@ -266,6 +274,7 @@ def _run_pipeline(options: RunOptions, started_at: str) -> RunOutcome:
         summary=RunSummary.from_objects(ordered),
         objects=ordered,
         fatal_error=fatal,
+        modules=module_table,
     )
     return RunOutcome(
         report=report,
@@ -457,22 +466,28 @@ def _module_scanners() -> tuple[Callable[[Path], Iterable[ModuleEntry]], ...]:
 def _process_module_index(
     export_root: Path,
     objects: list[ObjectRunResult],
-) -> RunFatalError | None:
+) -> tuple[RunFatalError | None, ModuleStatusTable | None]:
     """Обработать индекс BSL-модулей (issue #208).
 
-    Результаты добавляются в отчёт атомарно: при отказе любого сканера
-    частичные записи не попадают, а возвращается фатальная ошибка.
+    Записи всех сканеров собираются через :meth:`ModuleIndex.from_entries`:
+    дубли ``module_id`` и ``relative_path`` между сканерами дают
+    ``modules_failed``. Результаты добавляются в отчёт атомарно: при
+    отказе любого сканера частичные записи не попадают, а возвращается
+    фатальная ошибка. Таблица статусов возвращается только при успехе.
     """
     results: list[ObjectRunResult] = []
     try:
+        entries: list[ModuleEntry] = []
         for scanner in _module_scanners():
-            for entry in scanner(export_root):
-                results.append(_module_result(entry))
+            entries.extend(scanner(export_root))
+        module_index = ModuleIndex.from_entries(entries)
+        for entry in module_index:
+            results.append(_module_result(entry))
     except Exception as exc:  # noqa: BLE001
-        return _fatal_error(FATAL_MODULES_FAILED, exc)
+        return _fatal_error(FATAL_MODULES_FAILED, exc), None
 
     objects.extend(results)
-    return None
+    return None, ModuleStatusTable.from_entries(module_index)
 
 
 def _module_result(entry: ModuleEntry) -> ObjectRunResult:
