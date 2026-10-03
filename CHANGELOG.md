@@ -1,5 +1,44 @@
 # Changelog
 
+## Сканирование модулей менеджеров значений констант и модулей HTTP-/Web-сервисов (#337)
+
+### Добавлено
+
+- `v8unpack_agent.value_manager_modules`: `scan_value_manager_modules()` и
+  `VALUE_MANAGER_MODULE_FILES` — обнаружение и чтение модулей менеджеров
+  значений констант в normalized-выгрузке v8unpack по единственной
+  доказанной строке #202 (`designer_content_match_A`):
+  `Constant/{Name}/Constant.obj.bsl`. Возвращает `ModuleIndex` из #203 с
+  `module_kind="value_manager"`, `owner_kind="metadata_object"`,
+  `metadata_type="Constant"`; модуль константы не классифицируется как
+  `object`, `manager` или `form`.
+- `v8unpack_agent.service_modules`: `scan_service_modules()` и
+  `SERVICE_MODULE_FILES` — обнаружение и чтение модулей HTTP- и
+  Web-сервисов по двум доказанным строкам #202
+  (`designer_content_match_A`): `HTTPService/{Name}/HTTPService.obj.bsl` и
+  `WebService/{Name}/WebService.obj.bsl`. `module_kind="service"`;
+  различие HTTP и Web хранится в поле записи `metadata_type`
+  (`HTTPService` / `WebService`), входит в `module_id` и JSON
+  `module_index/1`, поэтому одноимённые сервисы разных типов не
+  конфликтуют. Новые значения закрытых наборов, поля и версия схемы не
+  вводились.
+- Для обоих сканеров: статусы `ok` / `empty` / `whitespace_only` /
+  `missing` / `read_error`, `size_bytes` и `sha256`, без BSL-текста;
+  `missing` выдаётся только для существующего каталога константы или
+  сервиса доказанного типа. Недоказанные типы, вложенные каталоги,
+  расширения и raw-layout не классифицируются. Только чтение: symlink не
+  обходятся, `scan_forms()` не вызывается, сервисы не исполняются.
+- `docs/value_manager_modules.md`, `docs/service_modules.md` — контракты
+  сканеров; `tests/test_value_manager_modules_issue337.py`,
+  `tests/test_service_modules_issue337.py` — синтетические тесты.
+
+### Не изменялось
+
+- `v8unpack_agent.modules` (схема `module_index/1` и формула `module_id`),
+  `configuration_modules`, `metadata_modules`, `record_set_modules`,
+  `command_modules`, `common_modules`, API форм, `scan_forms`, корневые
+  импорты `v8unpack_agent`, CI.
+
 ## Сканирование модулей команд (#207)
 
 ### Добавлено
