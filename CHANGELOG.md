@@ -1,5 +1,35 @@
 # Changelog
 
+## Сканирование модулей команд (#207)
+
+### Добавлено
+
+- `v8unpack_agent.command_modules`: `scan_command_modules()`,
+  `COMMON_COMMAND_TYPE`, `COMMON_COMMAND_MODULE_FILE` и
+  `OBJECT_COMMAND_CONTAINERS` — обнаружение и чтение модулей общих команд
+  и команд объектов в normalized-выгрузке v8unpack по шести доказанным
+  строкам #202 (`designer_content_match_A`): `CommonCommand` и
+  `<Type>Command` для `Catalog`, `DataProcessor`, `Document`,
+  `InformationRegister`, `Report`. Возвращает `ModuleIndex` из #203 с
+  `module_kind="command"` отдельно от вида владельца (`common_command` /
+  `metadata_object_command`); `owner_name` команды объекта —
+  `<Объект>.<Команда>`, поэтому одноимённые команды разных владельцев не
+  конфликтуют. Статусы `ok` / `empty` / `whitespace_only` / `missing` /
+  `read_error`, `size_bytes` и `sha256`, без BSL-текста. `missing`
+  выдаётся только для существующего каталога команды доказанного класса;
+  каталог объекта без команд записей не создаёт. Недоказанные типы,
+  контейнеры с чужим именем, расширения и raw-layout не классифицируются.
+  Только чтение: symlink не обходятся, `scan_forms()` не вызывается.
+- `docs/command_modules.md` — контракт сканера;
+  `tests/test_command_modules_issue207.py` — синтетические тесты.
+
+### Не изменялось
+
+- `v8unpack_agent.modules` (схема `module_index/1` и формула `module_id`),
+  `configuration_modules`, `metadata_modules`, `record_set_modules`,
+  `common_modules`, API форм, `scan_forms`, корневые импорты
+  `v8unpack_agent`, CI.
+
 ## Сканирование модулей наборов записей регистров (#206)
 
 ### Добавлено
