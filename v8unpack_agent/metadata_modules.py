@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from types import MappingProxyType
 
+from v8unpack_agent._exact_names import exact_child, exact_child_or_none
 from v8unpack_agent.modules import (
     ModuleEntry,
     ModuleIndex,
@@ -149,8 +150,8 @@ def _owners(
     metadata_type: str,
     layout: Mapping[ModuleKind, str],
 ) -> list[_Owner]:
-    type_dir = export_root / metadata_type
-    if not _is_real_dir(type_dir):
+    type_dir = exact_child_or_none(export_root, metadata_type)
+    if type_dir is None or not _is_real_dir(type_dir):
         return []
     if not _resolves_into(type_dir, resolved_root):
         return []
@@ -200,7 +201,13 @@ def _entry(
 def _scan_module(
     owner: _Owner, module_kind: ModuleKind, file_name: str
 ) -> ModuleEntry:
-    path = owner.directory / file_name
+    try:
+        found = exact_child(owner.directory, file_name)
+    except OSError:
+        return _entry(owner, module_kind, file_name, "read_error")
+    if found is None:
+        return _entry(owner, module_kind, file_name, "missing")
+    path = found
     try:
         info = path.lstat()
     except FileNotFoundError:
