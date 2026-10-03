@@ -279,8 +279,9 @@ def test_existing_owner_without_file_is_missing_not_error(
 
 
 def test_invalid_owner_dir_names_are_skipped(tmp_path: Path) -> None:
-    for owner in ("1Alpha", "Alpha.bak", "Al-pha", "NUL", "Alpha Beta"):
+    for owner in ("1Alpha", "Alpha.bak", "Al-pha", "Alpha Beta"):
         put(tmp_path, HTTP, owner)
+    (tmp_path / HTTP / "NUL").mkdir()
     put(tmp_path, HTTP, "ОбменДанными")
     index = scan_service_modules(tmp_path)
     assert {entry.owner_name for entry in index} == {"ОбменДанными"}
