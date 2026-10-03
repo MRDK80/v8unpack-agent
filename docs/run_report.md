@@ -208,3 +208,36 @@ completed = payload["run"]["completed"]
 только при включённом индексе модулей. Отображение статусов чтения описано в
 [docs/runner.md](runner.md). Ключи верхнего уровня и `schema_version`
 не изменились.
+
+### Таблица статусов `summary.modules`
+
+При включённом индексе модулей в `summary` появляется необязательный ключ
+`modules`. Он содержит `by_kind` (по виду модуля), `record_set_by_metadata_type`
+(разбивка `record_set` по типу метаданных) и `note`. В каждой строке: `ok`,
+`empty`, `whitespace_only`, `missing`, `read_error`, `total` и
+`owners_checked`.
+
+В `summary.excluded` для модулей входят `empty`, `whitespace_only` и
+`missing`; `read_error` попадает в `failed`. Таблица сверяется с объектами
+отчёта при создании `PostRunReport`; несовпадение отклоняется. Без ключа
+`modules` отчёт совпадает с прежним.
+
+Фрагмент таблицы (только вид `service`):
+
+```json
+{
+  "by_kind": {
+    "service": {
+      "empty": 0,
+      "missing": 1,
+      "ok": 0,
+      "owners_checked": 2,
+      "read_error": 0,
+      "total": 2,
+      "whitespace_only": 1
+    }
+  },
+  "note": "missing — файл модуля отсутствует в выгрузке. Это не доказывает отсутствие модуля и не считается дефектом выгрузки",
+  "record_set_by_metadata_type": {}
+}
+```
