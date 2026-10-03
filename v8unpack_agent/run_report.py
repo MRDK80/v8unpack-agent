@@ -6,6 +6,7 @@ import json
 import os
 import re
 import tempfile
+from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
@@ -15,8 +16,11 @@ from typing import TYPE_CHECKING
 from v8unpack_agent._safe_paths import sanitize_diagnostic
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from v8unpack_agent.common_modules import CommonModuleReadStatus
     from v8unpack_agent.elem_parser import UnindexedReason
+    from v8unpack_agent.modules import ModuleEntry, ModuleReadStatus
     from v8unpack_agent.object_decoder import DecodeError
 
 _MACHINE_CODE_RE = re.compile(r"^[a-z][a-z0-9_]*$")
@@ -48,6 +52,16 @@ class RunObjectKind(str, Enum):
     FORM = "form"
     COMMON_MODULE = "common_module"
     SKD_ARTIFACT = "skd_artifact"
+    MODULE_COMMAND = "module_command"
+    MODULE_EXTERNAL_CONNECTION = "module_external_connection"
+    MODULE_MANAGED_APPLICATION = "module_managed_application"
+    MODULE_MANAGER = "module_manager"
+    MODULE_OBJECT = "module_object"
+    MODULE_ORDINARY_APPLICATION = "module_ordinary_application"
+    MODULE_RECORD_SET = "module_record_set"
+    MODULE_SERVICE = "module_service"
+    MODULE_SESSION = "module_session"
+    MODULE_VALUE_MANAGER = "module_value_manager"
 
 
 def _validate_machine_code(value: str, field_name: str) -> None:
@@ -234,6 +248,7 @@ class PostRunReport:
     summary: RunSummary
     objects: tuple[ObjectRunResult, ...]
     fatal_error: RunFatalError | None = None
+    modules: ModuleStatusTable | None = None
 
     def __post_init__(self) -> None:
         if self.schema_version != 1:
@@ -268,8 +283,13 @@ class PostRunReport:
             raise RunReportValidationError(
                 "summary counters do not match object results"
             )
+        if self.modules is not None:
+            _validate_module_table(self.modules, ordered)
 
     def to_dict(self) -> dict[str, object]:
+        summary: dict[str, object] = dict(self.summary.to_dict())
+        if self.modules is not None:
+            summary["modules"] = self.modules.to_dict()
         return {
             "schema_version": self.schema_version,
             "run": {
@@ -277,7 +297,7 @@ class PostRunReport:
                 "started_at": self.started_at,
                 "finished_at": self.finished_at,
             },
-            "summary": self.summary.to_dict(),
+            "summary": summary,
             "objects": [item.to_dict() for item in self.objects],
             "fatal_error": (
                 None if self.fatal_error is None else self.fatal_error.to_dict()
@@ -348,6 +368,162 @@ def skd_status(
     if has_warnings:
         return RunObjectStatus.PARTIAL, "skd_warning"
     return RunObjectStatus.COMPLETE, None
+
+
+_MODULE_OBJECT_KINDS: dict[str, RunObjectKind] = {
+    "command": RunObjectKind.MODULE_COMMAND,
+    "external_connection": RunObjectKind.MODULE_EXTERNAL_CONNECTION,
+    "managed_application": RunObjectKind.MODULE_MANAGED_APPLICATION,
+    "manager": RunObjectKind.MODULE_MANAGER,
+    "object": RunObjectKind.MODULE_OBJECT,
+    "ordinary_application": RunObjectKind.MODULE_ORDINARY_APPLICATION,
+    "record_set": RunObjectKind.MODULE_RECORD_SET,
+    "service": RunObjectKind.MODULE_SERVICE,
+    "session": RunObjectKind.MODULE_SESSION,
+    "value_manager": RunObjectKind.MODULE_VALUE_MANAGER,
+}
+
+
+def module_object_kind(module_kind: str) -> RunObjectKind:
+    """Отобразить ModuleEntry.module_kind на вид объекта отчёта (#208).
+
+    form и common_module отчёт ведёт отдельными стадиями, здесь они не поддержаны.
+    """
+
+    try:
+        return _MODULE_OBJECT_KINDS[module_kind]
+    except KeyError as exc:
+        raise ValueError(f"unsupported module kind: {module_kind}") from exc
+
+
+def module_read_status(
+    read_status: ModuleReadStatus,
+) -> tuple[RunObjectStatus, str | None]:
+    """Отобразить ModuleReadStatus на статус объекта отчёта (#208).
+
+    empty, whitespace_only и missing не делают прогон degraded: модуль учтён,
+    текста для LLM нет (excluded). Только read_error даёт failed.
+    """
+
+    mapping: dict[str, tuple[RunObjectStatus, str | None]] = {
+        "ok": (RunObjectStatus.COMPLETE, None),
+        "empty": (RunObjectStatus.EXCLUDED, "empty"),
+        "whitespace_only": (RunObjectStatus.EXCLUDED, "whitespace_only"),
+        "missing": (RunObjectStatus.EXCLUDED, "missing"),
+        "read_error": (RunObjectStatus.FAILED, "read_error"),
+    }
+    try:
+        return mapping[read_status]
+    except KeyError as exc:
+        raise ValueError(f"unsupported module read status: {read_status}") from exc
+
+
+MODULE_STATUS_KEYS: tuple[str, ...] = (
+    "ok",
+    "empty",
+    "whitespace_only",
+    "missing",
+    "read_error",
+)
+MISSING_NOTE = (
+    "missing — файл модуля отсутствует в выгрузке. Это не доказывает "
+    "отсутствие модуля и не считается дефектом выгрузки"
+)
+
+_Row = tuple[tuple[str, int], ...]
+_OwnerKey = tuple[str, str | None, str | None]
+
+
+def _count_row(entries: list[ModuleEntry]) -> _Row:
+    counts = {key: 0 for key in MODULE_STATUS_KEYS}
+    owners: set[_OwnerKey] = set()
+    for entry in entries:
+        counts[entry.read_status] += 1
+        owners.add((entry.owner_kind, entry.metadata_type, entry.owner_name))
+    row = dict(counts)
+    row["total"] = len(entries)
+    row["owners_checked"] = len(owners)
+    return tuple(row.items())
+
+
+def _freeze(groups: dict[str, list[ModuleEntry]]) -> tuple[tuple[str, _Row], ...]:
+    return tuple(
+        (name, _count_row(items)) for name, items in sorted(groups.items())
+    )
+
+
+@dataclass(frozen=True)
+class ModuleStatusTable:
+    """Таблица module_kind x status для summary.modules (#208)."""
+
+    by_kind: tuple[tuple[str, _Row], ...] = ()
+    record_set_by_metadata_type: tuple[tuple[str, _Row], ...] = ()
+
+    @classmethod
+    def from_entries(cls, entries: Iterable[ModuleEntry]) -> ModuleStatusTable:
+        by_kind: dict[str, list[ModuleEntry]] = {}
+        by_meta: dict[str, list[ModuleEntry]] = {}
+        for entry in entries:
+            by_kind.setdefault(entry.module_kind, []).append(entry)
+            if entry.module_kind == "record_set":
+                by_meta.setdefault(entry.metadata_type or "", []).append(entry)
+        return cls(
+            by_kind=_freeze(by_kind),
+            record_set_by_metadata_type=_freeze(by_meta),
+        )
+
+    def kind_total(self, module_kind: str) -> int:
+        for name, row in self.by_kind:
+            if name == module_kind:
+                return dict(row)["total"]
+        return 0
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "by_kind": {name: dict(row) for name, row in self.by_kind},
+            "record_set_by_metadata_type": {
+                name: dict(row) for name, row in self.record_set_by_metadata_type
+            },
+            "note": MISSING_NOTE,
+        }
+
+
+def _validate_module_table(
+    table: ModuleStatusTable,
+    objects: tuple[ObjectRunResult, ...],
+) -> None:
+    """Сверить таблицу модулей с объектами отчёта по видам и статусам."""
+
+    counted: Counter[tuple[RunObjectKind, RunObjectStatus]] = Counter(
+        (item.object_kind, item.status) for item in objects
+    )
+    module_objects = sum(
+        1 for item in objects if item.object_kind.value.startswith("module_")
+    )
+    table_total = 0
+    for name, raw_row in table.by_kind:
+        try:
+            kind = module_object_kind(name)
+        except ValueError as exc:
+            raise RunReportValidationError(
+                "module table contains unsupported module kind"
+            ) from exc
+        row = dict(raw_row)
+        table_total += row["total"]
+        excluded = row["empty"] + row["whitespace_only"] + row["missing"]
+        expected = (
+            counted[(kind, RunObjectStatus.COMPLETE)],
+            counted[(kind, RunObjectStatus.FAILED)],
+            counted[(kind, RunObjectStatus.EXCLUDED)],
+        )
+        if (row["ok"], row["read_error"], excluded) != expected:
+            raise RunReportValidationError(
+                "module table does not match module object results"
+            )
+    if table_total != module_objects:
+        raise RunReportValidationError(
+            "module table does not match module object results"
+        )
 
 
 def write_post_run_report(report: PostRunReport, target: Path) -> None:

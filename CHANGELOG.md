@@ -1,5 +1,36 @@
 # Changelog
 
+## Интеграция ModuleIndex в runner и post-run report (#208)
+
+### Добавлено
+
+- `RunOptions.include_module_index` (по умолчанию `False`) и флаг CLI
+  `--include-module-index`: runner вызывает шесть сканеров модулей и
+  добавляет их записи в post-run report.
+- `RunObjectKind`: десять значений `module_<module_kind>`.
+- `run_report.module_object_kind()` и `run_report.module_read_status()`:
+  `ok` → `complete`; `empty`, `whitespace_only`, `missing` → `excluded`
+  (модуль учтён, текста для LLM нет; прогон не degraded, код 0);
+  `read_error` → `failed` (degraded, код 3). Для всех неуспешных
+  статусов стадия — `modules`, `reason_code` равен значению статуса
+  чтения. Идентификатор объекта — `relative_path`.
+- `summary.modules` (расширение внутри `summary`, только при
+  `--include-module-index`): таблица `module_kind` × статус
+  чтения со столбцом «владельцев проверено» и разбивкой `record_set`
+  по `metadata_type`; сноска: «missing — файл модуля отсутствует в
+  выгрузке. Это не доказывает отсутствие модуля и не считается
+  дефектом выгрузки».
+- Фатальная ошибка `modules_failed`: отказ любого сканера, частичные
+  записи модулей в отчёт не попадают.
+- `tests/test_module_index_runner_issue208.py`; разделы в
+  `docs/runner.md` и `docs/run_report.md`.
+
+### Не изменялось
+
+- `schema_version = 1` и ключи верхнего уровня отчёта; формы, общие модули
+  и СКД; поведение без `--include-module-index`; `modules`, сканеры
+  модулей, корневые импорты `v8unpack_agent`, CI.
+
 ## Сканирование модулей менеджеров значений констант и модулей HTTP-/Web-сервисов (#337)
 
 ### Добавлено
