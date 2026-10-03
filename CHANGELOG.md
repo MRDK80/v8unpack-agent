@@ -9,9 +9,17 @@
   добавляет их записи в post-run report.
 - `RunObjectKind`: десять значений `module_<module_kind>`.
 - `run_report.module_object_kind()` и `run_report.module_read_status()`:
-  `ok` → `complete`; `empty`, `whitespace_only` → `partial`; `missing`,
-  `read_error` → `failed` со стадией `modules` и `reason_code`,
-  равным значению статуса чтения. Идентификатор объекта — `relative_path`.
+  `ok` → `complete`; `empty`, `whitespace_only`, `missing` → `excluded`
+  (модуль учтён, текста для LLM нет; прогон не degraded, код 0);
+  `read_error` → `failed` (degraded, код 3). Для всех неуспешных
+  статусов стадия — `modules`, `reason_code` равен значению статуса
+  чтения. Идентификатор объекта — `relative_path`.
+- `summary.modules` (расширение внутри `summary`, только при
+  `--include-module-index`): таблица `module_kind` × статус
+  чтения со столбцом «владельцев проверено» и разбивкой `record_set`
+  по `metadata_type`; сноска: «missing — файл модуля отсутствует в
+  выгрузке. Это не доказывает отсутствие модуля и не считается
+  дефектом выгрузки».
 - Фатальная ошибка `modules_failed`: отказ любого сканера, частичные
   записи модулей в отчёт не попадают.
 - `tests/test_module_index_runner_issue208.py`; разделы в
