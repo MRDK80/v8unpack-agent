@@ -1,5 +1,31 @@
 # Changelog
 
+## Сканирование модулей наборов записей регистров (#206)
+
+### Добавлено
+
+- `v8unpack_agent.record_set_modules`: `scan_record_set_modules()` и
+  `RECORD_SET_MODULE_FILES` — обнаружение и чтение модулей наборов записей
+  регистров в normalized-выгрузке v8unpack по двум доказанным строкам #202
+  (`designer_content_match_A`): `InformationRegister.obj.bsl` и
+  `AccumulationRegister.obj.bsl`. Возвращает `ModuleIndex` из #203 с
+  `module_kind="record_set"`, отдельным от `object` и `manager`;
+  `metadata_type` обязателен, статусы `ok` / `empty` / `whitespace_only` /
+  `missing` / `read_error`, `size_bytes` и `sha256`, без BSL-текста.
+  `missing` выдаётся только для существующего каталога регистра доказанного
+  типа. Unresolved-строки #202 (`AccountingRegister`, `Sequences`) и
+  `CalculationRegister` не классифицируются. Только чтение: symlink не
+  обходятся, `scan_forms()` не вызывается.
+- `docs/record_set_modules.md` — контракт сканера;
+  `tests/test_record_set_modules_issue206.py` — синтетические тесты.
+
+### Не изменялось
+
+- `v8unpack_agent.modules`, `configuration_modules`, `metadata_modules`
+  (включая `METADATA_OBJECT_MODULE_LAYOUTS`), `common_modules`, API форм,
+  `scan_forms`, корневые импорты `v8unpack_agent`, CI. Расширения, внешние
+  обработки и отчёты и raw-layout не поддержаны: в #202 они не доказаны.
+
 ## Сканирование модулей объектов и менеджеров метаданных (#205)
 
 ### Добавлено
