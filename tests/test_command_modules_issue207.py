@@ -317,9 +317,15 @@ def test_foreign_container_name_is_not_classified(tmp_path: Path) -> None:
     wrong.mkdir(parents=True)
     (wrong / "DocumentCommand.obj.bsl").write_bytes(DATA)
     (wrong / "CatalogCommand.obj.bsl").write_bytes(DATA)
+    assert scan_command_modules(tmp_path) == ModuleIndex()
+
+
+def test_lowercase_container_name_is_not_classified(tmp_path: Path) -> None:
     lower = tmp_path / "Catalog" / "Beta" / "catalogcommand" / "Run"
     lower.mkdir(parents=True)
     (lower / "CatalogCommand.obj.bsl").write_bytes(DATA)
+    if (tmp_path / "Catalog" / "Beta" / "CatalogCommand").exists():
+        pytest.skip("case-insensitive file system")
     assert scan_command_modules(tmp_path) == ModuleIndex()
 
 
