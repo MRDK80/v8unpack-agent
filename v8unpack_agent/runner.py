@@ -15,6 +15,9 @@
    ``complete`` от ``partial`` по признаку ``elem_index_ok``.
 4. ``scan_common_modules`` и ``build_common_module_context`` — общие модули.
 5. ``extract_all_skd_queries`` — артефакты СКД.
+6. ``scan_*_modules`` (issue #208) — опциональный индекс BSL-модулей
+   конфигурации, объектов, наборов записей, команд, констант и сервисов;
+   по умолчанию выключен (``include_module_index``).
 
 Границы деградации
 ------------------
@@ -48,22 +51,28 @@ owner-уровня и BSL у elem-only формы деградацией не с
 from __future__ import annotations
 
 import re
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Literal
 
 from v8unpack_agent._safe_paths import sanitize_diagnostic
+from v8unpack_agent.command_modules import scan_command_modules
 from v8unpack_agent.common_modules import (
     build_common_module_context,
     scan_common_modules,
 )
+from v8unpack_agent.configuration_modules import scan_configuration_modules
 from v8unpack_agent.elem_parser import parse_elem_json
 from v8unpack_agent.form_context import (
     FormContext,
     build_form_context,
     to_llm_prompt_fragment,
 )
+from v8unpack_agent.metadata_modules import scan_metadata_object_modules
+from v8unpack_agent.modules import ModuleEntry
+from v8unpack_agent.record_set_modules import scan_record_set_modules
 from v8unpack_agent.run_report import (
     ObjectRunResult,
     PostRunReport,
@@ -73,12 +82,16 @@ from v8unpack_agent.run_report import (
     RunReportValidationError,
     RunSummary,
     common_module_status,
+    module_object_kind,
+    module_read_status,
     scan_warning_reason_code,
     skd_status,
     unindexed_reason_code,
 )
 from v8unpack_agent.scan_forms import FormEntry, FormScanIndex, scan_forms
+from v8unpack_agent.service_modules import scan_service_modules
 from v8unpack_agent.skd_extractor import extract_all_skd_queries
+from v8unpack_agent.value_manager_modules import scan_value_manager_modules
 
 __all__ = [
     "SCHEMA_VERSION",
@@ -94,6 +107,7 @@ STAGE_BUILD_CONTEXT = "build_context"
 STAGE_PARSE_ELEM = "parse_elem"
 STAGE_COMMON_MODULES = "common_modules"
 STAGE_SKD = "skd"
+STAGE_MODULES = "modules"
 
 REASON_CONTEXT_BUILD_ERROR = "context_build_error"
 REASON_PROMPT_BUILD_ERROR = "prompt_build_error"
@@ -102,10 +116,12 @@ REASON_SCAN_WARNING_UNCLASSIFIED = "scan_warning_unclassified"
 REASON_COMMON_MODULE_CONTEXT_ERROR = "common_module_context_error"
 REASON_COMMON_MODULE_UNCLASSIFIED = "common_module_unclassified"
 REASON_SKD_UNCLASSIFIED = "skd_unclassified"
+REASON_MODULE_UNCLASSIFIED = "module_unclassified"
 
 FATAL_SCAN_FAILED = "scan_failed"
 FATAL_COMMON_MODULES_FAILED = "common_modules_failed"
 FATAL_SKD_FAILED = "skd_failed"
+FATAL_MODULES_FAILED = "modules_failed"
 FATAL_INTERNAL_ERROR = "internal_error"
 FATAL_ERROR_TYPE_FALLBACK = "runtime_error"
 
@@ -134,6 +150,9 @@ class RunOptions:
         ``False`` полностью отключает извлечение артефактов СКД.
     max_prompt_chars:
         Лимит длины промпт-фрагмента; ``-1`` — без ограничения.
+    include_module_index:
+        ``True`` включает индекс BSL-модулей (issue #208). По умолчанию
+        выключен: прежние отчёты не меняются.
     """
 
     export_root: Path
@@ -141,6 +160,7 @@ class RunOptions:
     include_common_modules: bool = True
     include_skd: bool = True
     max_prompt_chars: int = -1
+    include_module_index: bool = False
 
 
 @dataclass(frozen=True)
@@ -230,6 +250,9 @@ def _run_pipeline(options: RunOptions, started_at: str) -> RunOutcome:
 
         if fatal is None and options.include_common_modules:
             fatal = _process_common_modules(export_root, objects)
+
+        if fatal is None and options.include_module_index:
+            fatal = _process_module_index(export_root, objects)
 
         if fatal is None and options.include_skd:
             fatal = _process_skd(export_root, objects)
@@ -417,6 +440,54 @@ def _process_skd(
         )
 
     return None
+
+
+def _module_scanners() -> tuple[Callable[[Path], Iterable[ModuleEntry]], ...]:
+    """Сканеры индекса модулей; собираются при вызове, чтобы их можно было подменить."""
+    return (
+        scan_configuration_modules,
+        scan_metadata_object_modules,
+        scan_record_set_modules,
+        scan_command_modules,
+        scan_value_manager_modules,
+        scan_service_modules,
+    )
+
+
+def _process_module_index(
+    export_root: Path,
+    objects: list[ObjectRunResult],
+) -> RunFatalError | None:
+    """Обработать индекс BSL-модулей (issue #208).
+
+    Результаты добавляются в отчёт атомарно: при отказе любого сканера
+    частичные записи не попадают, а возвращается фатальная ошибка.
+    """
+    results: list[ObjectRunResult] = []
+    try:
+        for scanner in _module_scanners():
+            for entry in scanner(export_root):
+                results.append(_module_result(entry))
+    except Exception as exc:  # noqa: BLE001
+        return _fatal_error(FATAL_MODULES_FAILED, exc)
+
+    objects.extend(results)
+    return None
+
+
+def _module_result(entry: ModuleEntry) -> ObjectRunResult:
+    """Собрать результат одного BSL-модуля; идентификатор — относительный путь."""
+    kind = module_object_kind(entry.module_kind)
+    status, reason_code = module_read_status(entry.read_status)
+    if status is RunObjectStatus.COMPLETE:
+        return _object_result(entry.relative_path, kind, status)
+    return _object_result(
+        entry.relative_path,
+        kind,
+        status,
+        stage=STAGE_MODULES,
+        reason_code=_machine_code(reason_code, REASON_MODULE_UNCLASSIFIED),
+    )
 
 
 def _probe_elem_index(context: FormContext, export_root: Path) -> tuple[bool, str]:

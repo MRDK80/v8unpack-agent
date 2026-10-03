@@ -198,3 +198,13 @@ completed = payload["run"]["completed"]
 
 Обращение к `completed` на верхнем уровне приводит к `KeyError`: поле
 находится внутри объекта `run`.
+
+## Виды объектов индекса модулей (#208)
+
+Поле `object_kind` дополнено десятью значениями `module_command`,
+`module_external_connection`, `module_managed_application`, `module_manager`,
+`module_object`, `module_ordinary_application`, `module_record_set`,
+`module_service`, `module_session`, `module_value_manager`. Они появляются
+только при включённом индексе модулей. Отображение статусов чтения описано в
+[docs/runner.md](runner.md). Ключи верхнего уровня и `schema_version`
+не изменились.

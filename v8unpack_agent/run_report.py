@@ -17,6 +17,7 @@ from v8unpack_agent._safe_paths import sanitize_diagnostic
 if TYPE_CHECKING:
     from v8unpack_agent.common_modules import CommonModuleReadStatus
     from v8unpack_agent.elem_parser import UnindexedReason
+    from v8unpack_agent.modules import ModuleReadStatus
     from v8unpack_agent.object_decoder import DecodeError
 
 _MACHINE_CODE_RE = re.compile(r"^[a-z][a-z0-9_]*$")
@@ -48,6 +49,16 @@ class RunObjectKind(str, Enum):
     FORM = "form"
     COMMON_MODULE = "common_module"
     SKD_ARTIFACT = "skd_artifact"
+    MODULE_COMMAND = "module_command"
+    MODULE_EXTERNAL_CONNECTION = "module_external_connection"
+    MODULE_MANAGED_APPLICATION = "module_managed_application"
+    MODULE_MANAGER = "module_manager"
+    MODULE_OBJECT = "module_object"
+    MODULE_ORDINARY_APPLICATION = "module_ordinary_application"
+    MODULE_RECORD_SET = "module_record_set"
+    MODULE_SERVICE = "module_service"
+    MODULE_SESSION = "module_session"
+    MODULE_VALUE_MANAGER = "module_value_manager"
 
 
 def _validate_machine_code(value: str, field_name: str) -> None:
@@ -348,6 +359,50 @@ def skd_status(
     if has_warnings:
         return RunObjectStatus.PARTIAL, "skd_warning"
     return RunObjectStatus.COMPLETE, None
+
+
+_MODULE_OBJECT_KINDS: dict[str, RunObjectKind] = {
+    "command": RunObjectKind.MODULE_COMMAND,
+    "external_connection": RunObjectKind.MODULE_EXTERNAL_CONNECTION,
+    "managed_application": RunObjectKind.MODULE_MANAGED_APPLICATION,
+    "manager": RunObjectKind.MODULE_MANAGER,
+    "object": RunObjectKind.MODULE_OBJECT,
+    "ordinary_application": RunObjectKind.MODULE_ORDINARY_APPLICATION,
+    "record_set": RunObjectKind.MODULE_RECORD_SET,
+    "service": RunObjectKind.MODULE_SERVICE,
+    "session": RunObjectKind.MODULE_SESSION,
+    "value_manager": RunObjectKind.MODULE_VALUE_MANAGER,
+}
+
+
+def module_object_kind(module_kind: str) -> RunObjectKind:
+    """Отобразить ModuleEntry.module_kind на вид объекта отчёта (#208).
+
+    form и common_module отчёт ведёт отдельными стадиями, здесь они не поддержаны.
+    """
+
+    try:
+        return _MODULE_OBJECT_KINDS[module_kind]
+    except KeyError as exc:
+        raise ValueError(f"unsupported module kind: {module_kind}") from exc
+
+
+def module_read_status(
+    read_status: ModuleReadStatus,
+) -> tuple[RunObjectStatus, str | None]:
+    """Отобразить ModuleReadStatus на статус объекта отчёта (#208)."""
+
+    mapping: dict[str, tuple[RunObjectStatus, str | None]] = {
+        "ok": (RunObjectStatus.COMPLETE, None),
+        "empty": (RunObjectStatus.PARTIAL, "empty"),
+        "whitespace_only": (RunObjectStatus.PARTIAL, "whitespace_only"),
+        "missing": (RunObjectStatus.FAILED, "missing"),
+        "read_error": (RunObjectStatus.FAILED, "read_error"),
+    }
+    try:
+        return mapping[read_status]
+    except KeyError as exc:
+        raise ValueError(f"unsupported module read status: {read_status}") from exc
 
 
 def write_post_run_report(report: PostRunReport, target: Path) -> None:

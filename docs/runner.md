@@ -41,6 +41,7 @@ python -m v8unpack_agent.cli <корень_выгрузки> --report-path <пу
 | `--mode` | `config` или `external`; режим сканирования форм |
 | `--skip-common-modules` | не обнаруживать общие модули |
 | `--skip-skd` | не извлекать артефакты СКД |
+| `--include-module-index` | добавить в отчёт индекс BSL-модулей (#208); по умолчанию выключен |
 | `--max-prompt-chars` | лимит длины промпт-фрагмента; `-1` без ограничения |
 
 Каталог-родитель для `--report-path` должен существовать заранее: writer
@@ -104,6 +105,32 @@ Degraded считается неуспешным завершением проц
 результатов со статусом `excluded`: обнаружение не выполняется, поэтому
 таких объектов в отчёте просто нет.
 
+## Индекс BSL-модулей (#208)
+
+С флагом `--include-module-index` (`RunOptions.include_module_index`) runner
+вызывает шесть сканеров: `scan_configuration_modules`,
+`scan_metadata_object_modules`, `scan_record_set_modules`,
+`scan_command_modules`, `scan_value_manager_modules`, `scan_service_modules`.
+Без флага модули не обнаруживаются, и отчёт совпадает с прежним.
+
+Вид объекта в отчёте — `module_<module_kind>`: `module_command`,
+`module_external_connection`, `module_managed_application`, `module_manager`,
+`module_object`, `module_ordinary_application`, `module_record_set`,
+`module_service`, `module_session`, `module_value_manager`. Идентификатор
+объекта — `relative_path` записи `ModuleEntry`.
+
+| `read_status` | Статус | `stage` | `reason_code` |
+| --- | --- | --- | --- |
+| `ok` | `complete` | — | — |
+| `empty` | `partial` | `modules` | `empty` |
+| `whitespace_only` | `partial` | `modules` | `whitespace_only` |
+| `missing` | `failed` | `modules` | `missing` |
+| `read_error` | `failed` | `modules` | `read_error` |
+
+Общие модули и формы индекс модулей не дублирует: они остаются в своих
+стадиях. Отказ любого сканера даёт `modules_failed` без частичных записей
+модулей. Схема отчёта (`schema_version = 1`) не менялась.
+
 ## Фатальные ошибки
 
 | `reason_code` | Когда возникает |
@@ -111,6 +138,7 @@ Degraded считается неуспешным завершением проц
 | `scan_failed` | отказ стадии обнаружения форм |
 | `common_modules_failed` | отказ обнаружения общих модулей |
 | `skd_failed` | отказ пакетного извлечения СКД |
+| `modules_failed` | отказ любого сканера индекса модулей (#208) |
 
 Поле `error_type` получается из имени класса исключения и приводится к
 машинному коду. Граница слов вставляется после строчной буквы или цифры,

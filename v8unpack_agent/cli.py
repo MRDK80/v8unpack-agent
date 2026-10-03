@@ -110,6 +110,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="не извлекать артефакты СКД",
     )
     parser.add_argument(
+        "--include-module-index",
+        action="store_true",
+        help="добавить в отчёт индекс BSL-модулей (issue #208)",
+    )
+    parser.add_argument(
         "--max-prompt-chars",
         type=int,
         default=-1,
@@ -146,6 +151,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         mode=args.mode,
         include_common_modules=not args.skip_common_modules,
         include_skd=not args.skip_skd,
+        include_module_index=args.include_module_index,
         max_prompt_chars=args.max_prompt_chars,
     )
 

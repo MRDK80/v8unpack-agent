@@ -1,5 +1,28 @@
 # Changelog
 
+## Интеграция ModuleIndex в runner и post-run report (#208)
+
+### Добавлено
+
+- `RunOptions.include_module_index` (по умолчанию `False`) и флаг CLI
+  `--include-module-index`: runner вызывает шесть сканеров модулей и
+  добавляет их записи в post-run report.
+- `RunObjectKind`: десять значений `module_<module_kind>`.
+- `run_report.module_object_kind()` и `run_report.module_read_status()`:
+  `ok` → `complete`; `empty`, `whitespace_only` → `partial`; `missing`,
+  `read_error` → `failed` со стадией `modules` и `reason_code`,
+  равным значению статуса чтения. Идентификатор объекта — `relative_path`.
+- Фатальная ошибка `modules_failed`: отказ любого сканера, частичные
+  записи модулей в отчёт не попадают.
+- `tests/test_module_index_runner_issue208.py`; разделы в
+  `docs/runner.md` и `docs/run_report.md`.
+
+### Не изменялось
+
+- `schema_version = 1` и ключи верхнего уровня отчёта; формы, общие модули
+  и СКД; поведение без `--include-module-index`; `modules`, сканеры
+  модулей, корневые импорты `v8unpack_agent`, CI.
+
 ## Сканирование модулей менеджеров значений констант и модулей HTTP-/Web-сервисов (#337)
 
 ### Добавлено
