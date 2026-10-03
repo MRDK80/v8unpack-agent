@@ -495,7 +495,10 @@ def test_scanner_does_not_import_form_pipeline() -> None:
         elif isinstance(node, ast.Import):
             imported.update(alias.name for alias in node.names)
     project = {name for name in imported if name.startswith("v8unpack_agent")}
-    assert project == {"v8unpack_agent.modules"}
+    assert project == {
+        "v8unpack_agent._exact_names",
+        "v8unpack_agent.modules",
+    }
 
 
 def test_combines_with_configuration_modules(tmp_path: Path) -> None:

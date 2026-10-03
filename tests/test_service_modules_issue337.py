@@ -468,7 +468,10 @@ def test_scanner_imports_only_module_contract() -> None:
         elif isinstance(node, ast.Import):
             imported.update(alias.name for alias in node.names)
     project = {name for name in imported if name.startswith("v8unpack_agent")}
-    assert project == {"v8unpack_agent.modules"}
+    assert project == {
+        "v8unpack_agent._exact_names",
+        "v8unpack_agent.modules",
+    }
 
 
 def test_combines_with_other_scanners(tmp_path: Path) -> None:

@@ -20,6 +20,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from types import MappingProxyType
 
+from v8unpack_agent._exact_names import exact_child, exact_child_or_none
 from v8unpack_agent.modules import (
     ModuleEntry,
     ModuleIndex,
@@ -113,8 +114,8 @@ def _subdirs(parent: Path) -> list[Path]:
 def _type_dir(
     export_root: Path, resolved_root: Path, name: str
 ) -> Path | None:
-    type_dir = export_root / name
-    if not _is_real_dir(type_dir):
+    type_dir = exact_child_or_none(export_root, name)
+    if type_dir is None or not _is_real_dir(type_dir):
         return None
     if not _resolves_into(type_dir, resolved_root):
         return None
@@ -173,8 +174,8 @@ def _object_commands(
     file_name = f"{container}{_MODULE_SUFFIX}"
     commands: list[_Command] = []
     for owner_dir in _subdirs(type_dir):
-        container_dir = owner_dir / container
-        if not _is_real_dir(container_dir):
+        container_dir = exact_child_or_none(owner_dir, container)
+        if container_dir is None or not _is_real_dir(container_dir):
             continue
         if not _resolves_into(container_dir, owner_dir.resolve()):
             continue
@@ -212,7 +213,14 @@ def _entry(
 
 
 def _scan_module(command: _Command) -> ModuleEntry:
-    path = command.directory / command.relative_path.rsplit("/", 1)[1]
+    file_name = command.relative_path.rsplit("/", 1)[1]
+    try:
+        found = exact_child(command.directory, file_name)
+    except OSError:
+        return _entry(command, "read_error")
+    if found is None:
+        return _entry(command, "missing")
+    path = found
     try:
         info = path.lstat()
     except FileNotFoundError:

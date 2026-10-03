@@ -15,6 +15,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from types import MappingProxyType
 
+from v8unpack_agent._exact_names import exact_child
 from v8unpack_agent.modules import (
     ModuleEntry,
     ModuleIndex,
@@ -55,7 +56,13 @@ def _scan_one(
     module_kind: ModuleKind,
     file_name: str,
 ) -> ModuleEntry | None:
-    path = root / file_name
+    try:
+        found = exact_child(root, file_name)
+    except OSError:
+        return _entry(module_kind, file_name, "read_error")
+    if found is None:
+        return None
+    path = found
     try:
         info = path.lstat()
     except FileNotFoundError:
