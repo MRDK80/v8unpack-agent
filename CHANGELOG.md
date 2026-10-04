@@ -1,5 +1,364 @@
 # Changelog
 
+## Модули объекта внешних обработок и отчётов в индексе модулей (#351)
+
+### Добавлено
+
+- `v8unpack_agent.external_object_modules.scan_external_object_modules()` —
+  записи `module_kind="object"` с `owner_kind` `external_data_processor` /
+  `external_report` для `<артефакт>/ExternalDataProcessor.obj.bsl`
+  распаковки внешних обработок и отчётов. Имя владельца — поле `name`
+  файла `ExternalDataProcessor.json`; отчёт — по контейнеру `ReportForm`,
+  иначе по суффиксу `.erf` / `.epf`; без имени или вида и при неоднозначном
+  владельце записи нет. Отсутствующий файл модуля — `missing`.
+- Runner в режиме `mode="external"` с `include_module_index=True`
+  добавляет эти записи в индекс модулей и `summary.modules`; группы
+  `--module-group` (#346) на сканер не действуют, режим `config` не
+  меняется.
+- `tests/test_external_object_modules_issue351.py`; сквозные проверки
+  external-режима в `tests/test_bsl_coverage_matrix_issue209.py`.
+- Строка матрицы и раздел «Внешние обработки и отчёты (#351)» в
+  `docs/bsl_coverage_matrix.md` вместо строки остатка; раздел в
+  `docs/modules.md`.
+
+### Не изменялось
+
+- схема `module_index/1`, `scan_forms`, CLI, CI, сканеры режима `config`.
+
+## Итоговая матрица BSL-покрытия и сквозная верификация (#209)
+
+### Добавлено
+
+- `docs/bsl_coverage_matrix.md` — матрица видов BSL-модулей: `module_kind`,
+  `owner_kind`, layout, сканер, тесты, объект отчёта, ограничения; таблица
+  статусов runner и post-run report; результаты замера на трёх выгрузках
+  конфигураций (по два идентичных прогона); явный остаток необработанных
+  BSL-файлов с причиной и решением. Пороги по `missing` не вводятся.
+- `tests/test_bsl_coverage_matrix_issue209.py` — сквозной синтетический
+  fixture со всеми доказанными layout, формой, общим модулем, граничными
+  статусами и неподдержанными файлами; проверки согласованности
+  `summary.modules` с объектами, однократного учёта форм и общих модулей,
+  повторяемости и обезличенности матрицы.
+- Разделы о матрице в `docs/modules.md` и `docs/IMPLEMENTATION_STATUS.md`;
+  ссылки на модель модулей, матрицу и исследование #202 в README.
+
+### Не изменялось
+
+- runtime-код, схема отчёта и `module_index/1`, CLI, CI.
+
+## LLM-проекция модуля по ModuleEntry (#345)
+
+### Добавлено
+
+- `v8unpack_agent.module_projection`: `to_llm_module_fragment()` и
+  неизменяемый `ModuleProjection` (`status`, `text`, `truncated`,
+  `original_chars`) — детерминированная проекция `ModuleEntry` и текста
+  модуля для LLM по образцу `to_llm_prompt_fragment` для форм. Заголовок:
+  вид модуля, вид и имя владельца, относительный путь; абсолютные пути и
+  исключения не включаются. Символьный бюджет `max_chars` (`-1` без
+  лимита): `len(text) <= max_chars`, усечение отражено в `truncated` и
+  маркере в конце текста. Статусы `empty`, `whitespace_only`, `missing`,
+  `read_error` не дают текста и различимы по `status`. Переводы строк и
+  ведущий BOM нормализуются, вывод одинаков на Linux и Windows.
+- Раздел «LLM-проекция модуля (#345)» в `docs/modules.md`;
+  `tests/test_module_projection_issue345.py` — синтетические тесты.
+
+### Не изменялось
+
+- `v8unpack_agent.modules` (схема `module_index/1`), сканеры модулей,
+  runner, CLI, post-run report, API форм и общих модулей, корневые импорты
+  `v8unpack_agent`, CI. Провайдер LLM, токенный бюджет, RAG и анализ BSL
+  не добавлялись.
+
+## Выбор групп модулей при включении индекса модулей (#346)
+
+### Добавлено
+
+- Флаги CLI `--module-group` и `--skip-module-group` (повторяемые) и
+  `RunOptions.module_groups`: индекс модулей строится только по выбранным
+  группам `configuration`, `metadata`, `record-sets`, `commands`,
+  `value-managers`, `services`. Константа `runner.MODULE_GROUPS`.
+- Ошибки использования дают код 2 без отчёта и без повтора введённых
+  значений: групповой флаг без `--include-module-index`, неизвестная группа,
+  одновременное включение и исключение, исключение всех групп.
+- `tests/test_module_groups_issue346.py`; разделы в `docs/runner.md` и
+  `docs/run_report.md`.
+
+### Не изменялось
+
+- Сканеры модулей, схема отчёта, ключи верхнего уровня, CI, поведение без
+  новых флагов и без `--include-module-index`.
+
+## Тест независимости отчёта от порядка обхода каталогов (#208)
+
+### Добавлено
+
+- `tests/test_report_order_independence_issue208.py` — 3 теста: JSON
+  post-run report при `--include-module-index` не зависит от порядка
+  записей, которые возвращают `os.scandir()` и `os.listdir()`, и совпадает
+  между повторными прогонами (без учёта `started_at` и `finished_at`).
+
+### Не изменялось
+
+- runtime-код, схема отчёта, CLI, CI.
+
+## Строгий регистр имён в сканерах модулей (#208)
+
+### Исправлено
+
+- Шесть сканеров модулей (`configuration_modules`, `metadata_modules`,
+  `record_set_modules`, `service_modules`, `value_manager_modules`,
+  `command_modules`) искали каталоги типов, контейнеры команд и файлы
+  модулей прямым обращением `parent / name`, поэтому результат зависел от
+  регистронезависимости файловой системы: каталог `catalog` находился как
+  `Catalog` на Windows и macOS, но не на Linux. Теперь имя сравнивается
+  побайтово с результатом `os.scandir()`, и результат одинаков на всех ОС:
+  каталог типа или контейнера с неточным регистром не находится, файл
+  модуля с неточным регистром даёт `missing`. Статус `read_error` при
+  нечитаемом каталоге сохранён.
+
+### Добавлено
+
+- `v8unpack_agent._exact_names` (внутренний модуль, не часть публичного
+  API): `exact_child()` и `exact_child_or_none()`.
+- `tests/test_exact_case_names_issue208.py` — 18 тестов; раздел «Регистр
+  имён в выгрузке» в `docs/modules.md`.
+
+### Изменено
+
+- В охранных тестах импортов сканеров (#205, #206, #207, #337) допустимое
+  множество проектных импортов расширено на `v8unpack_agent._exact_names`;
+  запрет на связь сканеров с остальным проектом сохранён.
+
+### Не изменялось
+
+- Схема `module_index/1`, формула `module_id`, публичные сигнатуры
+  сканеров, runner, CLI, CI. Имена владельцев читаются с диска как есть;
+  нормализация Юникода (NFC и NFD) не выполняется.
+
+## Интеграция ModuleIndex в runner и post-run report (#208)
+
+### Добавлено
+
+- `RunOptions.include_module_index` (по умолчанию `False`) и флаг CLI
+  `--include-module-index`: runner вызывает шесть сканеров модулей и
+  добавляет их записи в post-run report.
+- `RunObjectKind`: десять значений `module_<module_kind>`.
+- `run_report.module_object_kind()` и `run_report.module_read_status()`:
+  `ok` → `complete`; `empty`, `whitespace_only`, `missing` → `excluded`
+  (модуль учтён, текста для LLM нет; прогон не degraded, код 0);
+  `read_error` → `failed` (degraded, код 3). Для всех неуспешных
+  статусов стадия — `modules`, `reason_code` равен значению статуса
+  чтения. Идентификатор объекта — `relative_path`.
+- `summary.modules` (расширение внутри `summary`, только при
+  `--include-module-index`): таблица `module_kind` × статус
+  чтения со столбцом «владельцев проверено» и разбивкой `record_set`
+  по `metadata_type`; сноска: «missing — файл модуля отсутствует в
+  выгрузке. Это не доказывает отсутствие модуля и не считается
+  дефектом выгрузки».
+- Фатальная ошибка `modules_failed`: отказ любого сканера, частичные
+  записи модулей в отчёт не попадают.
+- `tests/test_module_index_runner_issue208.py`; разделы в
+  `docs/runner.md` и `docs/run_report.md`.
+
+### Не изменялось
+
+- `schema_version = 1` и ключи верхнего уровня отчёта; формы, общие модули
+  и СКД; поведение без `--include-module-index`; `modules`, сканеры
+  модулей, корневые импорты `v8unpack_agent`, CI.
+
+## Сканирование модулей менеджеров значений констант и модулей HTTP-/Web-сервисов (#337)
+
+### Добавлено
+
+- `v8unpack_agent.value_manager_modules`: `scan_value_manager_modules()` и
+  `VALUE_MANAGER_MODULE_FILES` — обнаружение и чтение модулей менеджеров
+  значений констант в normalized-выгрузке v8unpack по единственной
+  доказанной строке #202 (`designer_content_match_A`):
+  `Constant/{Name}/Constant.obj.bsl`. Возвращает `ModuleIndex` из #203 с
+  `module_kind="value_manager"`, `owner_kind="metadata_object"`,
+  `metadata_type="Constant"`; модуль константы не классифицируется как
+  `object`, `manager` или `form`.
+- `v8unpack_agent.service_modules`: `scan_service_modules()` и
+  `SERVICE_MODULE_FILES` — обнаружение и чтение модулей HTTP- и
+  Web-сервисов по двум доказанным строкам #202
+  (`designer_content_match_A`): `HTTPService/{Name}/HTTPService.obj.bsl` и
+  `WebService/{Name}/WebService.obj.bsl`. `module_kind="service"`;
+  различие HTTP и Web хранится в поле записи `metadata_type`
+  (`HTTPService` / `WebService`), входит в `module_id` и JSON
+  `module_index/1`, поэтому одноимённые сервисы разных типов не
+  конфликтуют. Новые значения закрытых наборов, поля и версия схемы не
+  вводились.
+- Для обоих сканеров: статусы `ok` / `empty` / `whitespace_only` /
+  `missing` / `read_error`, `size_bytes` и `sha256`, без BSL-текста;
+  `missing` выдаётся только для существующего каталога константы или
+  сервиса доказанного типа. Недоказанные типы, вложенные каталоги,
+  расширения и raw-layout не классифицируются. Только чтение: symlink не
+  обходятся, `scan_forms()` не вызывается, сервисы не исполняются.
+- `docs/value_manager_modules.md`, `docs/service_modules.md` — контракты
+  сканеров; `tests/test_value_manager_modules_issue337.py`,
+  `tests/test_service_modules_issue337.py` — синтетические тесты.
+
+### Не изменялось
+
+- `v8unpack_agent.modules` (схема `module_index/1` и формула `module_id`),
+  `configuration_modules`, `metadata_modules`, `record_set_modules`,
+  `command_modules`, `common_modules`, API форм, `scan_forms`, корневые
+  импорты `v8unpack_agent`, CI.
+
+## Сканирование модулей команд (#207)
+
+### Добавлено
+
+- `v8unpack_agent.command_modules`: `scan_command_modules()`,
+  `COMMON_COMMAND_TYPE`, `COMMON_COMMAND_MODULE_FILE` и
+  `OBJECT_COMMAND_CONTAINERS` — обнаружение и чтение модулей общих команд
+  и команд объектов в normalized-выгрузке v8unpack по шести доказанным
+  строкам #202 (`designer_content_match_A`): `CommonCommand` и
+  `<Type>Command` для `Catalog`, `DataProcessor`, `Document`,
+  `InformationRegister`, `Report`. Возвращает `ModuleIndex` из #203 с
+  `module_kind="command"` отдельно от вида владельца (`common_command` /
+  `metadata_object_command`); `owner_name` команды объекта —
+  `<Объект>.<Команда>`, поэтому одноимённые команды разных владельцев не
+  конфликтуют. Статусы `ok` / `empty` / `whitespace_only` / `missing` /
+  `read_error`, `size_bytes` и `sha256`, без BSL-текста. `missing`
+  выдаётся только для существующего каталога команды доказанного класса;
+  каталог объекта без команд записей не создаёт. Недоказанные типы,
+  контейнеры с чужим именем, расширения и raw-layout не классифицируются.
+  Только чтение: symlink не обходятся, `scan_forms()` не вызывается.
+- `docs/command_modules.md` — контракт сканера;
+  `tests/test_command_modules_issue207.py` — синтетические тесты.
+
+### Не изменялось
+
+- `v8unpack_agent.modules` (схема `module_index/1` и формула `module_id`),
+  `configuration_modules`, `metadata_modules`, `record_set_modules`,
+  `common_modules`, API форм, `scan_forms`, корневые импорты
+  `v8unpack_agent`, CI.
+
+## Сканирование модулей наборов записей регистров (#206)
+
+### Добавлено
+
+- `v8unpack_agent.record_set_modules`: `scan_record_set_modules()` и
+  `RECORD_SET_MODULE_FILES` — обнаружение и чтение модулей наборов записей
+  регистров в normalized-выгрузке v8unpack по двум доказанным строкам #202
+  (`designer_content_match_A`): `InformationRegister.obj.bsl` и
+  `AccumulationRegister.obj.bsl`. Возвращает `ModuleIndex` из #203 с
+  `module_kind="record_set"`, отдельным от `object` и `manager`;
+  `metadata_type` обязателен, статусы `ok` / `empty` / `whitespace_only` /
+  `missing` / `read_error`, `size_bytes` и `sha256`, без BSL-текста.
+  `missing` выдаётся только для существующего каталога регистра доказанного
+  типа. Unresolved-строки #202 (`AccountingRegister`, `Sequences`) и
+  `CalculationRegister` не классифицируются. Только чтение: symlink не
+  обходятся, `scan_forms()` не вызывается.
+- `docs/record_set_modules.md` — контракт сканера;
+  `tests/test_record_set_modules_issue206.py` — синтетические тесты.
+
+### Не изменялось
+
+- `v8unpack_agent.modules`, `configuration_modules`, `metadata_modules`
+  (включая `METADATA_OBJECT_MODULE_LAYOUTS`), `common_modules`, API форм,
+  `scan_forms`, корневые импорты `v8unpack_agent`, CI. Расширения, внешние
+  обработки и отчёты и raw-layout не поддержаны: в #202 они не доказаны.
+
+## Сканирование модулей объектов и менеджеров метаданных (#205)
+
+### Добавлено
+
+- `v8unpack_agent.metadata_modules`: `scan_metadata_object_modules()` и
+  `METADATA_OBJECT_MODULE_LAYOUTS` — обнаружение и чтение объектных и
+  менеджерских модулей прикладных объектов в normalized-выгрузке v8unpack по
+  17 доказанным парам #202 (`designer_content_match_A`), включая
+  `Enum.obj.bsl` как модуль менеджера. Возвращает `ModuleIndex` из #203:
+  объектный и менеджерский модули владельца — отдельные записи,
+  `metadata_type` обязателен, статусы `ok` / `empty` / `whitespace_only` /
+  `missing` / `read_error`, `size_bytes` и `sha256`, без BSL-текста.
+  `missing` выдаётся только для существующего каталога объекта доказанного
+  типа и применимого к нему вида модуля. Модули форм, `record_set`,
+  `value_manager`, `service` и unresolved-строки #202 (`Sequences`, `obj` у
+  `ChartOfAccounts` / `ChartOfCalculationTypes` / `AccountingRegister`) не
+  классифицируются. Только чтение: symlink не обходятся, `scan_forms()` не
+  вызывается.
+- `docs/metadata_modules.md` — контракт сканера;
+  `tests/test_metadata_modules_issue205.py` — синтетические тесты.
+
+### Не изменялось
+
+- `v8unpack_agent.modules`, `configuration_modules`, `common_modules`, API
+  форм, `scan_forms`, корневые импорты `v8unpack_agent`, CI. Внешние
+  обработки и отчёты, расширения и raw-layout не поддержаны: в #202 они не
+  доказаны.
+
+## Сканирование модулей уровня конфигурации (#204)
+
+### Добавлено
+
+- `v8unpack_agent.configuration_modules`: `scan_configuration_modules()` и
+  `CONFIGURATION_MODULE_FILES` — обнаружение и чтение модулей обычного и
+  управляемого приложения, сеанса и внешнего соединения
+  (`Configuration.802.bsl` / `.app.bsl` / `.seance.bsl` / `.con.bsl` в
+  корне normalized-выгрузки) по доказанным строкам #202. Возвращает
+  `ModuleIndex` из #203 со статусами `ok` / `empty` / `whitespace_only` /
+  `missing` / `read_error`, `size_bytes` и `sha256`, без BSL-текста.
+  `missing` выдаётся только для опознанной выгрузки конфигурации (есть хотя
+  бы один из четырёх файлов). Только чтение: symlink и не-обычные файлы дают
+  `read_error`, `scan_forms()` не вызывается.
+- `docs/configuration_modules.md` — контракт сканера;
+  `tests/test_configuration_modules_issue204.py` — синтетические тесты.
+
+### Не изменялось
+
+- `v8unpack_agent.modules`, `common_modules`, API форм, `scan_forms`,
+  корневые импорты `v8unpack_agent`, CI. Raw-layout и модули расширения не
+  поддержаны: в #202 они не доказаны.
+
+## Универсальные ModuleEntry и ModuleIndex (#203)
+
+### Добавлено
+
+- `v8unpack_agent.modules`: неизменяемые `ModuleEntry` и `ModuleIndex` —
+  общая модель BSL-модулей эпика #201, независимая от `FormContext` и
+  файлового layout. Закрытые наборы `ModuleKind` (12), `OwnerKind` (10) и
+  `ModuleReadStatus` (`ok` / `empty` / `whitespace_only` / `missing` /
+  `read_error`) взяты из результата #202; `missing` означает отсутствие
+  файла, а не модуля. `metadata_type` различает смысл суффикса `obj`.
+  Стабильный `module_id` не зависит от пути; дубликаты `module_id` и
+  `relative_path` без учёта регистра отклоняются. Относительный POSIX-путь
+  проверяется по семантике POSIX и Windows независимо от ОС. Сортировка
+  OS-нейтральна, JSON (`module_index/1`) детерминирован и не содержит
+  BSL-текста. Индекс не читает и не пишет файлы. Добавлены
+  `classify_bsl_bytes()` и адаптер `module_entry_from_common_module()`.
+- `docs/modules.md` — публичный контракт; `tests/test_modules_issue203.py` —
+  синтетические тесты, включая Ubuntu/Windows semantics путей.
+
+### Не изменялось
+
+- `common_modules` (`CommonModuleEntry`, `CommonModuleIndex`,
+  `CommonModuleContext`, `scan_common_modules`), API форм, `scan_forms`,
+  корневые импорты `v8unpack_agent`, CI; сканеры конкретных видов модулей
+  (#204–#207) не реализованы.
+
+## Инвентаризация BSL-модулей и layout выгрузок v8unpack (#202)
+
+### Добавлено
+
+- `docs/research/bsl_module_inventory_issue202.md` и
+  `docs/research/bsl_module_inventory_issue202.json`: обезличенная матрица
+  «вид модуля → владелец → шаблон пути → наличие BSL → поведение агента» на
+  трёх независимых выгрузках конфигураций (A/B/C) и расширении. На выгрузке
+  Конфигуратором доказано: `.802.bsl` — модуль обычного приложения,
+  `.app.bsl` — модуль управляемого приложения; `Enum.obj.bsl` — модуль
+  менеджера перечисления; `obj` регистров — модуль набора записей, `obj`
+  констант — модуль менеджера значения. Предложены закрытые наборы
+  `module_kind` и `owner_kind` для #203, статусы
+  supported / ignored / not_detected и список unresolved. Два прогона каждой
+  выгрузки дали одинаковые BSL-агрегаты.
+
+### Не изменялось
+
+- runtime-код, публичные API, тесты, `examples/`, CI.
+
 ## Корректировка документационных контрактов (#317)
 
 ### Исправлено

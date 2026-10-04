@@ -41,6 +41,7 @@ python -m v8unpack_agent.cli <корень_выгрузки> --report-path <пу
 | `--mode` | `config` или `external`; режим сканирования форм |
 | `--skip-common-modules` | не обнаруживать общие модули |
 | `--skip-skd` | не извлекать артефакты СКД |
+| `--include-module-index` | добавить в отчёт индекс BSL-модулей (#208); по умолчанию выключен |
 | `--max-prompt-chars` | лимит длины промпт-фрагмента; `-1` без ограничения |
 
 Каталог-родитель для `--report-path` должен существовать заранее: writer
@@ -50,9 +51,9 @@ python -m v8unpack_agent.cli <корень_выгрузки> --report-path <пу
 
 | Код | Условие | Отчёт |
 | --- | --- | --- |
-| 0 | все объекты `complete` | записан, `completed=true` |
+| 0 | нет `partial` и `failed`; допускаются `complete` и `excluded` | записан, `completed=true` |
 | 2 | ошибка аргументов или `export_root` не каталог | не создаётся |
-| 3 | degraded: есть `partial` или `failed` | записан, `completed=true` |
+| 3 | degraded: есть `partial` или `failed` (для модулей — `read_error`) | записан, `completed=true` |
 | 4 | управляемая фатальная ошибка пайплайна | записан, `completed=false` и `fatal_error` |
 | 5 | ошибка записи отчёта | запись не гарантируется |
 | 6 | фатальная ошибка и ошибка записи одновременно | не записан |
@@ -104,6 +105,46 @@ Degraded считается неуспешным завершением проц
 результатов со статусом `excluded`: обнаружение не выполняется, поэтому
 таких объектов в отчёте просто нет.
 
+## Индекс BSL-модулей (#208)
+
+С флагом `--include-module-index` (`RunOptions.include_module_index`) runner
+вызывает шесть сканеров: `scan_configuration_modules`,
+`scan_metadata_object_modules`, `scan_record_set_modules`,
+`scan_command_modules`, `scan_value_manager_modules`, `scan_service_modules`.
+Без флага модули не обнаруживаются, и отчёт совпадает с прежним.
+
+Вид объекта в отчёте — `module_<module_kind>`: `module_command`,
+`module_external_connection`, `module_managed_application`, `module_manager`,
+`module_object`, `module_ordinary_application`, `module_record_set`,
+`module_service`, `module_session`, `module_value_manager`. Идентификатор
+объекта — `relative_path` записи `ModuleEntry`.
+
+| `read_status` | Статус | `stage` | `reason_code` |
+| --- | --- | --- | --- |
+| `ok` | `complete` | — | — |
+| `empty` | `excluded` | `modules` | `empty` |
+| `whitespace_only` | `excluded` | `modules` | `whitespace_only` |
+| `missing` | `excluded` | `modules` | `missing` |
+| `read_error` | `failed` | `modules` | `read_error` |
+
+Состояния `empty`, `whitespace_only` и `missing` не считаются
+деградацией: модуль учтён в отчёте, текста для LLM нет, код возврата
+не меняется. `missing` означает только отсутствие файла модуля в
+выгрузке и не доказывает отсутствия модуля. Деградацию даёт
+только `read_error`.
+
+Записи всех сканеров собираются в `ModuleIndex`: дубль `module_id`
+или `relative_path` (без учёта регистра) даёт фатальную ошибку
+`modules_failed` и код 4 без частичных записей модулей. Общие
+модули и формы индекс модулей не дублирует: они остаются в своих
+стадиях.
+
+При включённом флаге в отчёт добавляется `summary.modules` — таблица
+`module_kind × status` с числом проверенных владельцев и разбивкой
+`record_set` по `metadata_type`; подробности — в [run_report.md](run_report.md).
+Без флага ключа `modules` нет. Схема отчёта (`schema_version = 1`) и
+ключи верхнего уровня не менялись.
+
 ## Фатальные ошибки
 
 | `reason_code` | Когда возникает |
@@ -111,6 +152,7 @@ Degraded считается неуспешным завершением проц
 | `scan_failed` | отказ стадии обнаружения форм |
 | `common_modules_failed` | отказ обнаружения общих модулей |
 | `skd_failed` | отказ пакетного извлечения СКД |
+| `modules_failed` | отказ любого сканера индекса модулей или дубль идентификатора модуля (#208) |
 
 Поле `error_type` получается из имени класса исключения и приводится к
 машинному коду. Граница слов вставляется после строчной буквы или цифры,
@@ -181,3 +223,25 @@ write_post_run_report(outcome.report, Path("post-run.json"))
 Пути строятся через `pathlib`, текст читается и записывается как UTF-8,
 стандартные потоки CLI переводятся в UTF-8. Сценарий пригоден для POSIX-
 и NT-сред, включая конфигурации без GPU.
+
+## Выбор групп модулей (#346)
+
+Работает только вместе с `--include-module-index`; без него групповые флаги
+дают ошибку использования (код 2, отчёт не создаётся).
+
+| Флаг | Действие |
+| --- | --- |
+| `--module-group <имя>` | сканировать только указанные группы (повторяемый) |
+| `--skip-module-group <имя>` | сканировать все группы, кроме указанных (повторяемый) |
+
+Группы: `configuration`, `metadata`, `record-sets`, `commands`,
+`value-managers`, `services` (по одной на сканер модулей).
+
+Код 2 также дают: неизвестное имя группы, одновременное использование
+`--module-group` и `--skip-module-group`, исключение всех групп. Введённые
+значения в сообщении не повторяются. Порядок флагов и повторы не влияют на
+результат; отключённая группа не сканируется и не создаёт записей, поэтому
+`summary.modules` отражает только выбранные группы. Общие модули и формы
+группами не управляются. Библиотечный вызов: `RunOptions.module_groups`
+(`None` — все группы; значение вне набора или без индекса даёт `ValueError`).
+

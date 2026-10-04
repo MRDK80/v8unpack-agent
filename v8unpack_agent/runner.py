@@ -15,6 +15,12 @@
    ``complete`` от ``partial`` по признаку ``elem_index_ok``.
 4. ``scan_common_modules`` и ``build_common_module_context`` — общие модули.
 5. ``extract_all_skd_queries`` — артефакты СКД.
+6. ``scan_*_modules`` (issue #208) — опциональный индекс BSL-модулей
+   конфигурации, объектов, наборов записей, команд, констант и сервисов;
+   по умолчанию выключен (``include_module_index``). В режиме
+   ``mode="external"`` к ним добавляется ``scan_external_object_modules``
+   (issue #351) — модули объекта внешних обработок и отчётов; группы
+   ``module_groups`` на него не действуют.
 
 Границы деградации
 ------------------
@@ -23,6 +29,12 @@
 ``partial`` либо ``failed``. Управляемая фатальная ошибка стадии обнаружения
 даёт ``completed=false`` и ``fatal_error``. Отсутствие ``object_attributes``,
 owner-уровня и BSL у elem-only формы деградацией не считается.
+
+Для индекса модулей (issue #208) деградацию даёт только
+``read_error``. Состояния ``empty``, ``whitespace_only`` и ``missing`` — допустимые
+состояния выгрузки: модуль учтён в отчёте со статусом ``excluded``
+(текста для LLM нет) и не меняют exit code. Сбой сканера или дубль
+идентификатора модуля — фатальная ошибка ``modules_failed``.
 
 Пропуск группы объектов (``include_skd``/``include_common_modules``) не
 создаёт результатов: обнаружение не выполняется, поэтому в отчёте таких
@@ -48,23 +60,31 @@ owner-уровня и BSL у elem-only формы деградацией не с
 from __future__ import annotations
 
 import re
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Literal
 
 from v8unpack_agent._safe_paths import sanitize_diagnostic
+from v8unpack_agent.command_modules import scan_command_modules
 from v8unpack_agent.common_modules import (
     build_common_module_context,
     scan_common_modules,
 )
+from v8unpack_agent.configuration_modules import scan_configuration_modules
 from v8unpack_agent.elem_parser import parse_elem_json
+from v8unpack_agent.external_object_modules import scan_external_object_modules
 from v8unpack_agent.form_context import (
     FormContext,
     build_form_context,
     to_llm_prompt_fragment,
 )
+from v8unpack_agent.metadata_modules import scan_metadata_object_modules
+from v8unpack_agent.modules import ModuleEntry, ModuleIndex
+from v8unpack_agent.record_set_modules import scan_record_set_modules
 from v8unpack_agent.run_report import (
+    ModuleStatusTable,
     ObjectRunResult,
     PostRunReport,
     RunFatalError,
@@ -73,14 +93,19 @@ from v8unpack_agent.run_report import (
     RunReportValidationError,
     RunSummary,
     common_module_status,
+    module_object_kind,
+    module_read_status,
     scan_warning_reason_code,
     skd_status,
     unindexed_reason_code,
 )
 from v8unpack_agent.scan_forms import FormEntry, FormScanIndex, scan_forms
+from v8unpack_agent.service_modules import scan_service_modules
 from v8unpack_agent.skd_extractor import extract_all_skd_queries
+from v8unpack_agent.value_manager_modules import scan_value_manager_modules
 
 __all__ = [
+    "MODULE_GROUPS",
     "SCHEMA_VERSION",
     "RunOptions",
     "RunOutcome",
@@ -89,11 +114,22 @@ __all__ = [
 
 SCHEMA_VERSION = 1
 
+# Группы индекса модулей (issue #346): по одной на сканер, порядок фиксирован.
+MODULE_GROUPS: tuple[str, ...] = (
+    "configuration",
+    "metadata",
+    "record-sets",
+    "commands",
+    "value-managers",
+    "services",
+)
+
 STAGE_SCAN = "scan"
 STAGE_BUILD_CONTEXT = "build_context"
 STAGE_PARSE_ELEM = "parse_elem"
 STAGE_COMMON_MODULES = "common_modules"
 STAGE_SKD = "skd"
+STAGE_MODULES = "modules"
 
 REASON_CONTEXT_BUILD_ERROR = "context_build_error"
 REASON_PROMPT_BUILD_ERROR = "prompt_build_error"
@@ -102,10 +138,12 @@ REASON_SCAN_WARNING_UNCLASSIFIED = "scan_warning_unclassified"
 REASON_COMMON_MODULE_CONTEXT_ERROR = "common_module_context_error"
 REASON_COMMON_MODULE_UNCLASSIFIED = "common_module_unclassified"
 REASON_SKD_UNCLASSIFIED = "skd_unclassified"
+REASON_MODULE_UNCLASSIFIED = "module_unclassified"
 
 FATAL_SCAN_FAILED = "scan_failed"
 FATAL_COMMON_MODULES_FAILED = "common_modules_failed"
 FATAL_SKD_FAILED = "skd_failed"
+FATAL_MODULES_FAILED = "modules_failed"
 FATAL_INTERNAL_ERROR = "internal_error"
 FATAL_ERROR_TYPE_FALLBACK = "runtime_error"
 
@@ -134,6 +172,15 @@ class RunOptions:
         ``False`` полностью отключает извлечение артефактов СКД.
     max_prompt_chars:
         Лимит длины промпт-фрагмента; ``-1`` — без ограничения.
+    include_module_index:
+        ``True`` включает индекс BSL-модулей (issue #208). По умолчанию
+        выключен: прежние отчёты не меняются.
+    module_groups:
+        Группы индекса модулей (issue #346), подмножество MODULE_GROUPS.
+        ``None`` — все группы. Допустимо только при
+        ``include_module_index=True``. После конструирования значение
+        нормализовано: без повторов, в фиксированном порядке групп.
+        Ошибка значения даёт ``ValueError`` без повтора введённых данных.
     """
 
     export_root: Path
@@ -141,6 +188,25 @@ class RunOptions:
     include_common_modules: bool = True
     include_skd: bool = True
     max_prompt_chars: int = -1
+    include_module_index: bool = False
+    module_groups: tuple[str, ...] | None = None
+
+    def __post_init__(self) -> None:
+        groups = self.module_groups
+        if groups is None:
+            return
+        if not self.include_module_index:
+            raise ValueError("module_groups требует include_module_index=True")
+        if not isinstance(groups, (tuple, list)) or not groups:
+            raise ValueError("module_groups: нужен непустой набор групп")
+        valid = all(
+            isinstance(item, str) and item in MODULE_GROUPS for item in groups
+        )
+        if not valid:
+            raise ValueError("module_groups: недопустимое имя группы модулей")
+        selected = frozenset(groups)
+        normalized = tuple(name for name in MODULE_GROUPS if name in selected)
+        object.__setattr__(self, "module_groups", normalized)
 
 
 @dataclass(frozen=True)
@@ -212,6 +278,7 @@ def _run_pipeline(options: RunOptions, started_at: str) -> RunOutcome:
     scan_warnings: list[str] = []
     prompt_chars = 0
     fatal: RunFatalError | None = None
+    module_table: ModuleStatusTable | None = None
 
     try:
         index = scan_forms(
@@ -231,6 +298,14 @@ def _run_pipeline(options: RunOptions, started_at: str) -> RunOutcome:
         if fatal is None and options.include_common_modules:
             fatal = _process_common_modules(export_root, objects)
 
+        if fatal is None and options.include_module_index:
+            fatal, module_table = _process_module_index(
+                export_root,
+                objects,
+                options.module_groups,
+                mode=options.mode,
+            )
+
         if fatal is None and options.include_skd:
             fatal = _process_skd(export_root, objects)
 
@@ -243,6 +318,7 @@ def _run_pipeline(options: RunOptions, started_at: str) -> RunOutcome:
         summary=RunSummary.from_objects(ordered),
         objects=ordered,
         fatal_error=fatal,
+        modules=module_table,
     )
     return RunOutcome(
         report=report,
@@ -417,6 +493,80 @@ def _process_skd(
         )
 
     return None
+
+
+def _module_scanners(
+    groups: tuple[str, ...] | None = None,
+) -> tuple[Callable[[Path], Iterable[ModuleEntry]], ...]:
+    """Сканеры индекса модулей выбранных групп (issue #346).
+
+    Собираются при вызове, чтобы их можно было подменить. Порядок
+    фиксирован и не зависит от порядка ``groups``; ``None`` — все группы.
+    """
+    available: dict[str, Callable[[Path], Iterable[ModuleEntry]]] = {
+        "configuration": scan_configuration_modules,
+        "metadata": scan_metadata_object_modules,
+        "record-sets": scan_record_set_modules,
+        "commands": scan_command_modules,
+        "value-managers": scan_value_manager_modules,
+        "services": scan_service_modules,
+    }
+    selected = frozenset(MODULE_GROUPS if groups is None else groups)
+    return tuple(available[name] for name in MODULE_GROUPS if name in selected)
+
+
+def _process_module_index(
+    export_root: Path,
+    objects: list[ObjectRunResult],
+    module_groups: tuple[str, ...] | None = None,
+    *,
+    mode: str = "config",
+) -> tuple[RunFatalError | None, ModuleStatusTable | None]:
+    """Обработать индекс BSL-модулей (issue #208).
+
+    Записи всех сканеров собираются через :meth:`ModuleIndex.from_entries`:
+    дубли ``module_id`` и ``relative_path`` между сканерами дают
+    ``modules_failed``. Результаты добавляются в отчёт атомарно: при
+    отказе любого сканера частичные записи не попадают, а возвращается
+    фатальная ошибка. Таблица статусов возвращается только при успехе.
+    В режиме ``mode="external"`` дополнительно работает сканер модулей
+    объекта внешних обработок и отчётов (issue #351), вне ``module_groups``.
+    """
+    results: list[ObjectRunResult] = []
+    try:
+        entries: list[ModuleEntry] = []
+        scanners = (
+            _module_scanners()
+            if module_groups is None
+            else _module_scanners(module_groups)
+        )
+        for scanner in scanners:
+            entries.extend(scanner(export_root))
+        if mode == "external":
+            entries.extend(scan_external_object_modules(export_root))
+        module_index = ModuleIndex.from_entries(entries)
+        for entry in module_index:
+            results.append(_module_result(entry))
+    except Exception as exc:  # noqa: BLE001
+        return _fatal_error(FATAL_MODULES_FAILED, exc), None
+
+    objects.extend(results)
+    return None, ModuleStatusTable.from_entries(module_index)
+
+
+def _module_result(entry: ModuleEntry) -> ObjectRunResult:
+    """Собрать результат одного BSL-модуля; идентификатор — относительный путь."""
+    kind = module_object_kind(entry.module_kind)
+    status, reason_code = module_read_status(entry.read_status)
+    if status is RunObjectStatus.COMPLETE:
+        return _object_result(entry.relative_path, kind, status)
+    return _object_result(
+        entry.relative_path,
+        kind,
+        status,
+        stage=STAGE_MODULES,
+        reason_code=_machine_code(reason_code, REASON_MODULE_UNCLASSIFIED),
+    )
 
 
 def _probe_elem_index(context: FormContext, export_root: Path) -> tuple[bool, str]:

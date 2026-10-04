@@ -51,7 +51,12 @@ from pathlib import Path
 
 from v8unpack_agent._safe_paths import sanitize_diagnostic
 from v8unpack_agent.run_report import RunReportWriteError, write_post_run_report
-from v8unpack_agent.runner import RunOptions, RunOutcome, run_pipeline
+from v8unpack_agent.runner import (
+    MODULE_GROUPS,
+    RunOptions,
+    RunOutcome,
+    run_pipeline,
+)
 
 __all__ = [
     "EXIT_BAD_INPUT",
@@ -110,6 +115,31 @@ def build_parser() -> argparse.ArgumentParser:
         help="не извлекать артефакты СКД",
     )
     parser.add_argument(
+        "--include-module-index",
+        action="store_true",
+        help="добавить в отчёт индекс BSL-модулей (issue #208)",
+    )
+    parser.add_argument(
+        "--module-group",
+        action="append",
+        default=None,
+        metavar="GROUP",
+        help=(
+            "включить только эту группу модулей, флаг повторяемый "
+            f"({', '.join(MODULE_GROUPS)}); требует --include-module-index"
+        ),
+    )
+    parser.add_argument(
+        "--skip-module-group",
+        action="append",
+        default=None,
+        metavar="GROUP",
+        help=(
+            "исключить группу модулей, флаг повторяемый; "
+            "требует --include-module-index"
+        ),
+    )
+    parser.add_argument(
         "--max-prompt-chars",
         type=int,
         default=-1,
@@ -129,6 +159,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     try:
         args = parser.parse_args(argv)
+        module_groups = _resolve_module_groups(parser, args)
     except SystemExit as exc:
         return _exit_code_from_system_exit(exc)
 
@@ -146,6 +177,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         mode=args.mode,
         include_common_modules=not args.skip_common_modules,
         include_skd=not args.skip_skd,
+        include_module_index=args.include_module_index,
+        module_groups=module_groups,
         max_prompt_chars=args.max_prompt_chars,
     )
 
@@ -163,6 +196,38 @@ def main(argv: Sequence[str] | None = None) -> int:
             file=sys.stderr,
         )
         return EXIT_FATAL
+
+
+def _resolve_module_groups(
+    parser: argparse.ArgumentParser,
+    args: argparse.Namespace,
+) -> tuple[str, ...] | None:
+    """Свести флаги групп к итоговому набору (issue #346).
+
+    Любая ошибка использования даёт ``parser.error`` (код 2, отчёт не
+    создаётся). Введённые значения в сообщении не повторяются: в них может
+    оказаться путь.
+    """
+    include = args.module_group
+    skip = args.skip_module_group
+    if include is None and skip is None:
+        return None
+    if not args.include_module_index:
+        parser.error("группы модулей требуют --include-module-index")
+    if include is not None and skip is not None:
+        parser.error("--module-group и --skip-module-group несовместимы")
+    names = include if include is not None else skip
+    if any(name not in MODULE_GROUPS for name in names):
+        parser.error(
+            "неизвестная группа модулей; допустимые: " + ", ".join(MODULE_GROUPS)
+        )
+    chosen = frozenset(names)
+    if include is not None:
+        return tuple(name for name in MODULE_GROUPS if name in chosen)
+    rest = tuple(name for name in MODULE_GROUPS if name not in chosen)
+    if not rest:
+        parser.error("исключены все группы модулей")
+    return rest
 
 
 def _write_report(outcome: RunOutcome, report_path: Path) -> RunReportWriteError | None:

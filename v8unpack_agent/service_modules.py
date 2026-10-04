@@ -1,0 +1,207 @@
+"""Сканер модулей HTTP- и Web-сервисов 1С (issue #337).
+
+Обнаруживает модули HTTP-сервисов и Web-сервисов в normalized-layout
+v8unpack и возвращает общий контракт ``ModuleIndex`` из #203 с
+``module_kind="service"``. Различие HTTP и Web хранится в данных записи:
+``metadata_type`` равен ``HTTPService`` или ``WebService``. Обе строки
+взяты из исследования #202 (``docs/research/bsl_module_inventory_issue202.md``)
+со статусом ``designer_content_match_A``: текст файлов v8unpack совпал с
+``HTTPServices/{Name}/Ext/Module.bsl`` и ``WebServices/{Name}/Ext/Module.bsl``
+выгрузки Конфигуратором. Сканер только читает: он не создаёт и не изменяет
+файлы, не вызывает ``scan_forms()`` и не исполняет сервисы.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import stat
+from collections.abc import Mapping
+from dataclasses import dataclass
+from pathlib import Path
+from types import MappingProxyType
+
+from v8unpack_agent._exact_names import exact_child, exact_child_or_none
+from v8unpack_agent.modules import (
+    ModuleEntry,
+    ModuleIndex,
+    ModuleReadStatus,
+    classify_bsl_bytes,
+    validate_relative_module_path,
+)
+
+__all__ = [
+    "SERVICE_MODULE_FILES",
+    "scan_service_modules",
+]
+
+_FILES: dict[str, str] = {
+    "HTTPService": "HTTPService.obj.bsl",
+    "WebService": "WebService.obj.bsl",
+}
+
+SERVICE_MODULE_FILES: Mapping[str, str] = MappingProxyType(dict(_FILES))
+"""Доказанные в #202 пары «metadata_type → имя файла модуля сервиса».
+
+Файл лежит непосредственно в каталоге сервиса:
+``<metadata_type>/<owner_name>/<имя файла>``. ``metadata_type`` сохраняет
+различие HTTP- и Web-сервиса в записи индекса.
+"""
+
+
+@dataclass(frozen=True)
+class _Owner:
+    metadata_type: str
+    name: str
+    directory: Path
+    resolved: Path
+
+
+def _validated_root(root: Path) -> Path:
+    if not root.exists():
+        raise FileNotFoundError(root)
+    if not root.is_dir():
+        raise NotADirectoryError(root)
+    return root
+
+
+def _is_real_dir(path: Path) -> bool:
+    try:
+        info = path.lstat()
+    except OSError:
+        return False
+    return stat.S_ISDIR(info.st_mode)
+
+
+def _resolves_into(path: Path, expected_parent: Path) -> bool:
+    try:
+        return path.resolve().parent == expected_parent
+    except OSError:
+        return False
+
+
+def _relative_path(metadata_type: str, owner_name: str, file_name: str) -> str:
+    return f"{metadata_type}/{owner_name}/{file_name}"
+
+
+def _is_valid_owner_name(
+    metadata_type: str, owner_name: str, file_name: str
+) -> bool:
+    if not owner_name.isidentifier():
+        return False
+    try:
+        validate_relative_module_path(
+            _relative_path(metadata_type, owner_name, file_name)
+        )
+    except ValueError:
+        return False
+    return True
+
+
+def _owners(
+    export_root: Path,
+    resolved_root: Path,
+    metadata_type: str,
+    file_name: str,
+) -> list[_Owner]:
+    type_dir = exact_child_or_none(export_root, metadata_type)
+    if type_dir is None or not _is_real_dir(type_dir):
+        return []
+    if not _resolves_into(type_dir, resolved_root):
+        return []
+    type_resolved = type_dir.resolve()
+    owners: list[_Owner] = []
+    for child in type_dir.iterdir():
+        if not _is_real_dir(child):
+            continue
+        if not _resolves_into(child, type_resolved):
+            continue
+        if not _is_valid_owner_name(metadata_type, child.name, file_name):
+            continue
+        owners.append(
+            _Owner(
+                metadata_type=metadata_type,
+                name=child.name,
+                directory=child,
+                resolved=child.resolve(),
+            )
+        )
+    return sorted(owners, key=lambda o: (o.name.casefold(), o.name))
+
+
+def _entry(
+    owner: _Owner,
+    file_name: str,
+    read_status: ModuleReadStatus,
+    *,
+    size_bytes: int | None = None,
+    sha256: str | None = None,
+) -> ModuleEntry:
+    return ModuleEntry(
+        module_kind="service",
+        owner_kind="metadata_object",
+        metadata_type=owner.metadata_type,
+        owner_name=owner.name,
+        relative_path=_relative_path(
+            owner.metadata_type, owner.name, file_name
+        ),
+        read_status=read_status,
+        size_bytes=size_bytes,
+        sha256=sha256,
+    )
+
+
+def _scan_module(owner: _Owner, file_name: str) -> ModuleEntry:
+    try:
+        found = exact_child(owner.directory, file_name)
+    except OSError:
+        return _entry(owner, file_name, "read_error")
+    if found is None:
+        return _entry(owner, file_name, "missing")
+    path = found
+    try:
+        info = path.lstat()
+    except FileNotFoundError:
+        return _entry(owner, file_name, "missing")
+    except OSError:
+        return _entry(owner, file_name, "read_error")
+    if not stat.S_ISREG(info.st_mode):
+        return _entry(owner, file_name, "read_error")
+    try:
+        if path.resolve().parent != owner.resolved:
+            return _entry(owner, file_name, "read_error")
+        data = path.read_bytes()
+    except OSError:
+        return _entry(owner, file_name, "read_error")
+    return _entry(
+        owner,
+        file_name,
+        classify_bsl_bytes(data),
+        size_bytes=len(data),
+        sha256=hashlib.sha256(data).hexdigest(),
+    )
+
+
+def scan_service_modules(root: Path) -> ModuleIndex:
+    """Построить индекс модулей HTTP- и Web-сервисов выгрузки v8unpack.
+
+    Владелец — существующий обычный каталог ``HTTPService/<имя>`` или
+    ``WebService/<имя>``. Для каждого владельца создаётся ровно одна запись
+    ``service`` с ``metadata_type`` его типа, поэтому HTTP- и Web-сервисы
+    различимы в индексе, а одноимённые сервисы разных типов получают разные
+    ``module_id``. Отсутствующий файл получает статус ``missing`` («файла
+    нет», а не «модуля нет»). Каталоги других типов записей не создают.
+
+    Symlink и иные не-обычные каталоги типов и владельцев не обходятся.
+    Symlink, каталог или иной не-обычный файл на месте модуля, выход за
+    каталог владельца и ``OSError`` дают ``read_error`` без чтения
+    содержимого. Остальные статусы задаёт ``classify_bsl_bytes()``.
+    """
+    export_root = _validated_root(Path(root))
+    resolved_root = export_root.resolve()
+    entries: list[ModuleEntry] = []
+    for metadata_type in sorted(_FILES):
+        file_name = _FILES[metadata_type]
+        owners = _owners(export_root, resolved_root, metadata_type, file_name)
+        for owner in owners:
+            entries.append(_scan_module(owner, file_name))
+    return ModuleIndex.from_entries(entries)
