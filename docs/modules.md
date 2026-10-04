@@ -287,6 +287,22 @@ Windows. Некорректные аргументы: `max_chars` не `int` (в
 выгрузках и явный остаток необработанных файлов сведены в
 [`bsl_coverage_matrix.md`](bsl_coverage_matrix.md).
 
+## Модули объекта внешних обработок и отчётов (#351)
+
+`scan_external_object_modules(root)` из
+`v8unpack_agent.external_object_modules` возвращает записи
+`module_kind="object"` с `owner_kind` `external_data_processor`
+(`metadata_type="ExternalDataProcessor"`) или `external_report`
+(`metadata_type="ExternalReport"`). Артефакт — подкаталог корня (или
+`External/`) с файлом `ExternalDataProcessor.json`; модуль объекта —
+`<артефакт>/ExternalDataProcessor.obj.bsl` у обоих видов. `owner_name` —
+поле `name` файла метаданных, а не имя каталога. Отчёт определяется по
+контейнеру `ReportForm`, без него — по суффиксу каталога `.erf` / `.epf`.
+Если имя или вид установить нельзя, а также при совпадении `module_id`
+двух артефактов запись не создаётся. Отсутствующий файл модуля даёт
+`missing`; в #351 доказано, что так распаковываются артефакты с пустым
+модулем объекта. Runner вызывает сканер только при `mode="external"`.
+
 ## Нерешённое в #202
 
 Модель не фиксирует спорные соответствия как доказанные:

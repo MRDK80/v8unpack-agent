@@ -14,7 +14,8 @@ report и ограничения. Остаток, который агент не
 
 ## Матрица поддержанных видов
 
-`{Name}` — имя владельца, `{Cmd}` — имя команды, `{Form}` — имя формы.
+`{Name}` — имя владельца, `{Cmd}` — имя команды, `{Form}` — имя формы,
+`{Artifact}` — каталог распакованной внешней обработки или отчёта.
 
 | `module_kind` | `owner_kind` | Layout (относительный путь) | Сканер | Тесты | Объект отчёта | Ограничения |
 |---|---|---|---|---|---|---|
@@ -29,6 +30,7 @@ report и ограничения. Остаток, который агент не
 | `command` | `metadata_object_command` | `{Type}/{Name}/{Type}Command/{Cmd}/{Type}Command.obj.bsl` для `Catalog`, `DataProcessor`, `Document`, `InformationRegister`, `Report` | `scan_command_modules` (#207) | те же | `module_command` | команды других типов в #202 не встретились |
 | `value_manager` | `metadata_object` | `Constant/{Name}/Constant.obj.bsl` | `scan_value_manager_modules` (#337) | `test_value_manager_modules_issue337.py`, `test_bsl_coverage_matrix_issue209.py` | `module_value_manager` | — |
 | `service` | `metadata_object` | `HTTPService/{Name}/HTTPService.obj.bsl`, `WebService/{Name}/WebService.obj.bsl` | `scan_service_modules` (#337) | `test_service_modules_issue337.py`, `test_bsl_coverage_matrix_issue209.py` | `module_service` | HTTP-сервис наблюдался только в одной выгрузке |
+| `object` | `external_data_processor`, `external_report` | `{Artifact}/ExternalDataProcessor.obj.bsl` (или `External/{Artifact}/...`), только `mode="external"` | `scan_external_object_modules` (#351) | `test_external_object_modules_issue351.py`, `test_bsl_coverage_matrix_issue209.py` | `module_object` | имя владельца — поле `name` из `{Artifact}/ExternalDataProcessor.json`; отчёт — по контейнеру `ReportForm`, иначе по суффиксу `.erf` / `.epf`; без имени или вида записи нет |
 | `common_module` | `common_module` | `CommonModule/{Name}/CommonModule.obj.bsl` | `scan_common_modules` (#151) | `test_common_modules_issue151.py`, `test_module_index_mixed_issue208.py` | `common_module` (отдельная стадия) | в индекс модулей не входит; прежние статусы `common_modules` |
 | `form` | `metadata_object_form`, `common_form` | `{Type}/{Name}/{Type}Form/{Form}/{Type}Form.obj.bsl`, `DataProcessor/{Name}/Form/{Form}/Form.obj.bsl`, `CommonForm/{Form}/CommonForm.obj.bsl` | `scan_forms` (form-pipeline) | `test_scan_forms.py`, `test_module_index_mixed_issue208.py`, `test_bsl_coverage_matrix_issue209.py` | `form` (отдельная стадия) | в индекс модулей не входит; часть форм без файла модуля (elem-only) |
 
@@ -116,7 +118,24 @@ C в #202: совпадает число общих модулей (651 / 4 / 24
 Дополнительно просмотрены выгрузка расширения и каталог распакованных
 внешних обработок и отчётов (только чтение): в расширении BSL-файлов нет; во
 внешних — 20 BSL-файлов: 6 модулей объекта внешней обработки и 14 модулей
-форм.
+форм. После #351 модули объекта обрабатывает `scan_external_object_modules`
+(раздел «Внешние обработки и отчёты (#351)»).
+
+## Внешние обработки и отчёты (#351)
+
+Семантика доказана сверкой с Конфигуратором (выгрузки `.epf` / `.erf` в
+файлы у Конфигуратора нет, эталон — текст модуля, сохранённый в файл):
+текст `ExternalDataProcessor.obj.bsl` совпал с модулем объекта побайтно у
+внешней обработки и у внешнего отчёта. Файл с тем же именем у обоих видов:
+upstream распаковывает `.erf` тем же классом, что и `.epf`; файла
+`ExternalReport.obj.bsl` нет. На каталоге из 14 артефактов (8 `.epf`, 6
+`.erf`) файл объекта отсутствовал у 8, и у всех 8 модуль объекта в
+Конфигураторе пуст, поэтому такая запись получает `missing` по общему
+правилу. Имя каталога артефакта задаётся при распаковке и не является
+именем объекта; имя берётся из поля `name` файла
+`ExternalDataProcessor.json` (сверено с Конфигуратором). Сканер
+запускается только при `mode="external"` и не входит в группы
+`--module-group` (#346). Модули форм остаются в `scan_forms`.
 
 ## Остаток: необработанные BSL-файлы
 
@@ -126,7 +145,6 @@ C в #202: совпадает число общих модулей (651 / 4 / 24
 | `ChartOfAccounts/{Name}/ChartOfAccounts.obj.bsl` | E3: 1 | в #202 только upstream `ext_code` и аналогия layout | вне индекса до сверки с Конфигуратором |
 | `ChartOfCalculationTypes/{Name}/ChartOfCalculationTypes.obj.bsl` | E3: 1 | то же | вне индекса до сверки с Конфигуратором |
 | `AccountingRegister/{Name}/AccountingRegister.obj.bsl` | E3: 1 | то же | вне индекса до сверки с Конфигуратором |
-| `{Name}/ExternalDataProcessor.obj.bsl` | внешние обработки: 6 | layout внешних обработок не входит в эпик #201, семантика с Конфигуратором не сверена | новый вид для индекса; follow-up issue по решению владельца |
 | модули форм внешних обработок и отчётов | внешние: 14 | обрабатываются `scan_forms` в режиме `mode="external"`, а не индексом модулей | без изменений |
 | модули расширения (`ConfigurationExtension`) | расширение: 0 файлов | артефакта с BSL нет | not_detected; проверить при появлении артефакта |
 | raw-layout и выгрузка Конфигуратором в файлы | — | исследован только normalized-layout | вне scope |

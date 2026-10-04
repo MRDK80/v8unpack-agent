@@ -17,7 +17,10 @@
 5. ``extract_all_skd_queries`` — артефакты СКД.
 6. ``scan_*_modules`` (issue #208) — опциональный индекс BSL-модулей
    конфигурации, объектов, наборов записей, команд, констант и сервисов;
-   по умолчанию выключен (``include_module_index``).
+   по умолчанию выключен (``include_module_index``). В режиме
+   ``mode="external"`` к ним добавляется ``scan_external_object_modules``
+   (issue #351) — модули объекта внешних обработок и отчётов; группы
+   ``module_groups`` на него не действуют.
 
 Границы деградации
 ------------------
@@ -71,6 +74,7 @@ from v8unpack_agent.common_modules import (
 )
 from v8unpack_agent.configuration_modules import scan_configuration_modules
 from v8unpack_agent.elem_parser import parse_elem_json
+from v8unpack_agent.external_object_modules import scan_external_object_modules
 from v8unpack_agent.form_context import (
     FormContext,
     build_form_context,
@@ -299,6 +303,7 @@ def _run_pipeline(options: RunOptions, started_at: str) -> RunOutcome:
                 export_root,
                 objects,
                 options.module_groups,
+                mode=options.mode,
             )
 
         if fatal is None and options.include_skd:
@@ -514,6 +519,8 @@ def _process_module_index(
     export_root: Path,
     objects: list[ObjectRunResult],
     module_groups: tuple[str, ...] | None = None,
+    *,
+    mode: str = "config",
 ) -> tuple[RunFatalError | None, ModuleStatusTable | None]:
     """Обработать индекс BSL-модулей (issue #208).
 
@@ -522,6 +529,8 @@ def _process_module_index(
     ``modules_failed``. Результаты добавляются в отчёт атомарно: при
     отказе любого сканера частичные записи не попадают, а возвращается
     фатальная ошибка. Таблица статусов возвращается только при успехе.
+    В режиме ``mode="external"`` дополнительно работает сканер модулей
+    объекта внешних обработок и отчётов (issue #351), вне ``module_groups``.
     """
     results: list[ObjectRunResult] = []
     try:
@@ -533,6 +542,8 @@ def _process_module_index(
         )
         for scanner in scanners:
             entries.extend(scanner(export_root))
+        if mode == "external":
+            entries.extend(scan_external_object_modules(export_root))
         module_index = ModuleIndex.from_entries(entries)
         for entry in module_index:
             results.append(_module_result(entry))

@@ -7,6 +7,7 @@ Fixture содержит все доказанные в #202 layout индекс
 
 from __future__ import annotations
 
+import json
 import re
 from collections import Counter
 from pathlib import Path
@@ -60,7 +61,6 @@ UNSUPPORTED_DOC_PATTERNS = (
     "ChartOfAccounts.obj.bsl",
     "ChartOfCalculationTypes.obj.bsl",
     "AccountingRegister.obj.bsl",
-    "ExternalDataProcessor.obj.bsl",
 )
 
 UUID_RE = re.compile(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
@@ -238,6 +238,62 @@ def test_matrix_is_impersonal() -> None:
     assert UUID_RE.search(text) is None
     for line in text.splitlines():
         assert not line.strip().startswith("/")
+
+
+EXTERNAL_PROCESSOR = "Обработка.epf/ExternalDataProcessor.obj.bsl"
+EXTERNAL_REPORT = "Отчёт.erf/ExternalDataProcessor.obj.bsl"
+
+
+def _metadata(name: str) -> bytes:
+    return json.dumps({"uuid": "u", "name": name}, ensure_ascii=False).encode("utf-8")
+
+
+def _build_external(root: Path) -> None:
+    _write(root, "Обработка.epf/ExternalDataProcessor.json", _metadata("Обработка1"))
+    _write(root, EXTERNAL_PROCESSOR, BSL)
+    _write(root, "Обработка.epf/Form/Форма/Form.obj.bsl", BSL)
+    _write(root, "Отчёт.erf/ExternalDataProcessor.json", _metadata("Отчет1"))
+    _write(root, "Отчёт.erf/ReportForm/Форма/ReportForm.obj.bsl", BSL)
+
+
+def _run_external(root: Path) -> RunOutcome:
+    return run_pipeline(
+        RunOptions(
+            export_root=root,
+            mode="external",
+            include_skd=False,
+            include_module_index=True,
+        )
+    )
+
+
+def test_external_mode_end_to_end(tmp_path: Path) -> None:
+    _build_external(tmp_path)
+    outcome = _run_external(tmp_path)
+    assert outcome.completed
+    assert _module_objects(outcome) == {
+        EXTERNAL_PROCESSOR: ("module_object", "complete", None),
+        EXTERNAL_REPORT: ("module_object", "excluded", "missing"),
+    }
+    table: Any = outcome.report.to_dict()["summary"]["modules"]
+    assert table["by_kind"]["object"]["total"] == 2
+    assert table["by_kind"]["object"]["missing"] == 1
+    ids = [item.object for item in outcome.report.objects]
+    assert len(ids) == len(set(ids))
+    assert not any("/Form/" in path or "/ReportForm/" in path for path in _module_objects(outcome))
+    assert _without_time(_run_external(tmp_path)) == _without_time(_run_external(tmp_path))
+
+
+def test_config_mode_ignores_external_artifacts(tmp_path: Path) -> None:
+    _build_external(tmp_path)
+    assert _module_objects(_run(tmp_path)) == {}
+
+
+def test_matrix_lists_external_object_modules() -> None:
+    text = MATRIX.read_text(encoding="utf-8")
+    assert "`external_data_processor`" in text
+    assert "`external_report`" in text
+    assert "scan_external_object_modules" in text
 
 
 def test_readme_links_to_matrix() -> None:
