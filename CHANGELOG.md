@@ -1,5 +1,30 @@
 # Changelog
 
+## Модули объекта внешних обработок и отчётов в индексе модулей (#351)
+
+### Добавлено
+
+- `v8unpack_agent.external_object_modules.scan_external_object_modules()` —
+  записи `module_kind="object"` с `owner_kind` `external_data_processor` /
+  `external_report` для `<артефакт>/ExternalDataProcessor.obj.bsl`
+  распаковки внешних обработок и отчётов. Имя владельца — поле `name`
+  файла `ExternalDataProcessor.json`; отчёт — по контейнеру `ReportForm`,
+  иначе по суффиксу `.erf` / `.epf`; без имени или вида и при неоднозначном
+  владельце записи нет. Отсутствующий файл модуля — `missing`.
+- Runner в режиме `mode="external"` с `include_module_index=True`
+  добавляет эти записи в индекс модулей и `summary.modules`; группы
+  `--module-group` (#346) на сканер не действуют, режим `config` не
+  меняется.
+- `tests/test_external_object_modules_issue351.py`; сквозные проверки
+  external-режима в `tests/test_bsl_coverage_matrix_issue209.py`.
+- Строка матрицы и раздел «Внешние обработки и отчёты (#351)» в
+  `docs/bsl_coverage_matrix.md` вместо строки остатка; раздел в
+  `docs/modules.md`.
+
+### Не изменялось
+
+- схема `module_index/1`, `scan_forms`, CLI, CI, сканеры режима `config`.
+
 ## Итоговая матрица BSL-покрытия и сквозная верификация (#209)
 
 ### Добавлено
