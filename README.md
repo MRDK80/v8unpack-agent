@@ -194,6 +194,7 @@ POSIX-пути, одинаковые на POSIX и NT.
 | `form_rag` | `FormRagIndex`, `RagBuildError`, `RagQueryError`, `RagLoadError` | [form_rag](docs/form_rag.md) |
 | `form_dispatcher` | `FormDispatcher`: роутер, при промахе — RAG | [form_router](docs/form_router.md) |
 | `common_modules` | `scan_common_modules`, `build_common_module_context` | [common_modules](docs/common_modules.md) |
+| `modules` и сканеры модулей | `ModuleEntry`, `ModuleIndex`, `scan_*_modules`, `to_llm_module_fragment` | [modules](docs/modules.md) |
 | `managed_forms` | `discover_elem_forms`, `ElemFormEntry` | [managed_forms_structure](docs/managed_forms_structure.md) |
 | `skd_extractor` | `extract_skd_queries`, `extract_all_skd_queries` | [skd_extractor](docs/skd_extractor.md) |
 | `drift_checker` | `check_drift`, `DriftReport` | [drift_checker](docs/drift_checker.md) |
@@ -229,6 +230,8 @@ POSIX-пути, одинаковые на POSIX и NT.
 - [Реквизиты объекта из raw-секции `header`](docs/object_decoder.md)
 - [Разрешение `data_path`](docs/catalog_resolver.md)
 - [Общие модули](docs/common_modules.md)
+- [Модель BSL-модулей `ModuleEntry` и `ModuleIndex`](docs/modules.md)
+- [Итоговая матрица BSL-покрытия](docs/bsl_coverage_matrix.md)
 - [Контроль дрейфа](docs/drift_checker.md)
 
 ### Исследования
@@ -242,6 +245,7 @@ POSIX-пути, одинаковые на POSIX и NT.
 - [Пустые реквизиты объекта](docs/research/missing_object_attributes_issue163.md)
 - [Структура `Form.bin`](docs/research/form_bin_issue150.md)
 - [Валидация на третьей выгрузке](docs/research/third_configuration_validation.md)
+- [Инвентаризация BSL-модулей](docs/research/bsl_module_inventory_issue202.md)
 
 ### Примеры и политики
 
@@ -258,6 +262,11 @@ POSIX-пути, одинаковые на POSIX и NT.
 - Индекс ссылочных типов строится только для видов метаданных с доказанной
   ссылочной формой; остальные UUID остаются `Ref#<uuid>`.
 - В режиме `mode="external"` индекс ссылочных типов не собирается.
+- Индекс BSL-модулей (`--include-module-index`) покрывает только доказанные
+  layout normalized-выгрузки конфигурации. Остаток — последовательности,
+  `obj` планов счетов, планов видов расчёта и регистров бухгалтерии,
+  расширения и модули объектов внешних обработок — перечислен в
+  [матрице покрытия](docs/bsl_coverage_matrix.md).
 - Распаковщики из `examples/` и тестов — заглушки и не читают бинарный
   формат.
 
