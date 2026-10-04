@@ -101,6 +101,7 @@ from v8unpack_agent.skd_extractor import extract_all_skd_queries
 from v8unpack_agent.value_manager_modules import scan_value_manager_modules
 
 __all__ = [
+    "MODULE_GROUPS",
     "SCHEMA_VERSION",
     "RunOptions",
     "RunOutcome",
@@ -108,6 +109,16 @@ __all__ = [
 ]
 
 SCHEMA_VERSION = 1
+
+# Группы индекса модулей (issue #346): по одной на сканер, порядок фиксирован.
+MODULE_GROUPS: tuple[str, ...] = (
+    "configuration",
+    "metadata",
+    "record-sets",
+    "commands",
+    "value-managers",
+    "services",
+)
 
 STAGE_SCAN = "scan"
 STAGE_BUILD_CONTEXT = "build_context"
@@ -160,6 +171,12 @@ class RunOptions:
     include_module_index:
         ``True`` включает индекс BSL-модулей (issue #208). По умолчанию
         выключен: прежние отчёты не меняются.
+    module_groups:
+        Группы индекса модулей (issue #346), подмножество MODULE_GROUPS.
+        ``None`` — все группы. Допустимо только при
+        ``include_module_index=True``. После конструирования значение
+        нормализовано: без повторов, в фиксированном порядке групп.
+        Ошибка значения даёт ``ValueError`` без повтора введённых данных.
     """
 
     export_root: Path
@@ -168,6 +185,24 @@ class RunOptions:
     include_skd: bool = True
     max_prompt_chars: int = -1
     include_module_index: bool = False
+    module_groups: tuple[str, ...] | None = None
+
+    def __post_init__(self) -> None:
+        groups = self.module_groups
+        if groups is None:
+            return
+        if not self.include_module_index:
+            raise ValueError("module_groups требует include_module_index=True")
+        if not isinstance(groups, (tuple, list)) or not groups:
+            raise ValueError("module_groups: нужен непустой набор групп")
+        valid = all(
+            isinstance(item, str) and item in MODULE_GROUPS for item in groups
+        )
+        if not valid:
+            raise ValueError("module_groups: недопустимое имя группы модулей")
+        selected = frozenset(groups)
+        normalized = tuple(name for name in MODULE_GROUPS if name in selected)
+        object.__setattr__(self, "module_groups", normalized)
 
 
 @dataclass(frozen=True)
@@ -260,7 +295,11 @@ def _run_pipeline(options: RunOptions, started_at: str) -> RunOutcome:
             fatal = _process_common_modules(export_root, objects)
 
         if fatal is None and options.include_module_index:
-            fatal, module_table = _process_module_index(export_root, objects)
+            fatal, module_table = _process_module_index(
+                export_root,
+                objects,
+                options.module_groups,
+            )
 
         if fatal is None and options.include_skd:
             fatal = _process_skd(export_root, objects)
@@ -451,21 +490,30 @@ def _process_skd(
     return None
 
 
-def _module_scanners() -> tuple[Callable[[Path], Iterable[ModuleEntry]], ...]:
-    """Сканеры индекса модулей; собираются при вызове, чтобы их можно было подменить."""
-    return (
-        scan_configuration_modules,
-        scan_metadata_object_modules,
-        scan_record_set_modules,
-        scan_command_modules,
-        scan_value_manager_modules,
-        scan_service_modules,
-    )
+def _module_scanners(
+    groups: tuple[str, ...] | None = None,
+) -> tuple[Callable[[Path], Iterable[ModuleEntry]], ...]:
+    """Сканеры индекса модулей выбранных групп (issue #346).
+
+    Собираются при вызове, чтобы их можно было подменить. Порядок
+    фиксирован и не зависит от порядка ``groups``; ``None`` — все группы.
+    """
+    available: dict[str, Callable[[Path], Iterable[ModuleEntry]]] = {
+        "configuration": scan_configuration_modules,
+        "metadata": scan_metadata_object_modules,
+        "record-sets": scan_record_set_modules,
+        "commands": scan_command_modules,
+        "value-managers": scan_value_manager_modules,
+        "services": scan_service_modules,
+    }
+    selected = frozenset(MODULE_GROUPS if groups is None else groups)
+    return tuple(available[name] for name in MODULE_GROUPS if name in selected)
 
 
 def _process_module_index(
     export_root: Path,
     objects: list[ObjectRunResult],
+    module_groups: tuple[str, ...] | None = None,
 ) -> tuple[RunFatalError | None, ModuleStatusTable | None]:
     """Обработать индекс BSL-модулей (issue #208).
 
@@ -478,7 +526,12 @@ def _process_module_index(
     results: list[ObjectRunResult] = []
     try:
         entries: list[ModuleEntry] = []
-        for scanner in _module_scanners():
+        scanners = (
+            _module_scanners()
+            if module_groups is None
+            else _module_scanners(module_groups)
+        )
+        for scanner in scanners:
             entries.extend(scanner(export_root))
         module_index = ModuleIndex.from_entries(entries)
         for entry in module_index:

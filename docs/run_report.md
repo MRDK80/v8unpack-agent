@@ -241,3 +241,11 @@ completed = payload["run"]["completed"]
   "record_set_by_metadata_type": {}
 }
 ```
+
+## Группы модулей и `summary.modules` (#346)
+
+При выборе групп (`--module-group`, `--skip-module-group`) записи и
+`summary.modules.by_kind` строятся только по выбранным группам; схема отчёта
+и ключи верхнего уровня не меняются. Дубли между отключёнными группами не
+проверяются: их записи не создаются.
+
