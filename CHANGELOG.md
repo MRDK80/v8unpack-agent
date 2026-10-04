@@ -1,5 +1,29 @@
 # Changelog
 
+## LLM-проекция модуля по ModuleEntry (#345)
+
+### Добавлено
+
+- `v8unpack_agent.module_projection`: `to_llm_module_fragment()` и
+  неизменяемый `ModuleProjection` (`status`, `text`, `truncated`,
+  `original_chars`) — детерминированная проекция `ModuleEntry` и текста
+  модуля для LLM по образцу `to_llm_prompt_fragment` для форм. Заголовок:
+  вид модуля, вид и имя владельца, относительный путь; абсолютные пути и
+  исключения не включаются. Символьный бюджет `max_chars` (`-1` без
+  лимита): `len(text) <= max_chars`, усечение отражено в `truncated` и
+  маркере в конце текста. Статусы `empty`, `whitespace_only`, `missing`,
+  `read_error` не дают текста и различимы по `status`. Переводы строк и
+  ведущий BOM нормализуются, вывод одинаков на Linux и Windows.
+- Раздел «LLM-проекция модуля (#345)» в `docs/modules.md`;
+  `tests/test_module_projection_issue345.py` — синтетические тесты.
+
+### Не изменялось
+
+- `v8unpack_agent.modules` (схема `module_index/1`), сканеры модулей,
+  runner, CLI, post-run report, API форм и общих модулей, корневые импорты
+  `v8unpack_agent`, CI. Провайдер LLM, токенный бюджет, RAG и анализ BSL
+  не добавлялись.
+
 ## Выбор групп модулей при включении индекса модулей (#346)
 
 ### Добавлено
