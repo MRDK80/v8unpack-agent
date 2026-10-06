@@ -1,0 +1,694 @@
+{
+  "issue": 321,
+  "schema": "search_eval/1",
+  "synthetic": true,
+  "protocol": {
+    "status": "согласовано владельцем в чате #321 (2026-10-06); в GitHub не записано",
+    "unit": "artifact_id; fragment_id = artifact_id#procedure",
+    "aggregation": "max similarity over fragments per artifact, dedupe, ranked by score",
+    "top_k": {
+      "recall": 5,
+      "mrr": 10,
+      "ndcg": 10
+    },
+    "exact": {
+      "accuracy_at_1": 1.0,
+      "ambiguous_set_recall": 1.0,
+      "negative_false_exact": 0
+    },
+    "semantic_metrics": [
+      "hit@1",
+      "recall@5",
+      "mrr@10",
+      "ndcg@10"
+    ],
+    "thresholds_free": {
+      "recall@5": 0.8,
+      "mrr@10": 0.6
+    },
+    "fragment_rule": "choose fragments if recall@5 not worse than whole by more than 0.05 and better on large bodies",
+    "negative": "report similarity distribution only; no calibrated refusal threshold"
+  },
+  "artifacts": [
+    {
+      "id": "configuration:-:Configuration:ordinary_application",
+      "module_kind": "ordinary_application",
+      "owner_kind": "configuration",
+      "metadata_type": null,
+      "owner_name": "Configuration",
+      "form_name": null,
+      "synonym": "Модуль обычного приложения",
+      "large": false,
+      "procedures": [
+        {
+          "name": "ПриНачалеРаботыСистемы",
+          "text": "// Запуск обычного приложения и проверка версии платформы\nПроцедура ПриНачалеРаботыСистемы()\n    Возврат;\nКонецПроцедуры"
+        }
+      ]
+    },
+    {
+      "id": "configuration:-:Configuration:managed_application",
+      "module_kind": "managed_application",
+      "owner_kind": "configuration",
+      "metadata_type": null,
+      "owner_name": "Configuration",
+      "form_name": null,
+      "synonym": "Модуль управляемого приложения",
+      "large": false,
+      "procedures": [
+        {
+          "name": "ПередНачаломРаботыСистемы",
+          "text": "// Подготовка клиента перед открытием окна управляемого приложения\nПроцедура ПередНачаломРаботыСистемы()\n    Возврат;\nКонецПроцедуры"
+        }
+      ]
+    },
+    {
+      "id": "configuration:-:Configuration:external_connection",
+      "module_kind": "external_connection",
+      "owner_kind": "configuration",
+      "metadata_type": null,
+      "owner_name": "Configuration",
+      "form_name": null,
+      "synonym": "Модуль внешнего соединения",
+      "large": false,
+      "procedures": [
+        {
+          "name": "ПриНачалеРаботыСистемыВнешнееСоединение",
+          "text": "// Инициализация сервера при подключении внешнего соединения\nПроцедура ПриНачалеРаботыСистемыВнешнееСоединение()\n    Возврат;\nКонецПроцедуры"
+        }
+      ]
+    },
+    {
+      "id": "configuration:-:Configuration:session",
+      "module_kind": "session",
+      "owner_kind": "configuration",
+      "metadata_type": null,
+      "owner_name": "Configuration",
+      "form_name": null,
+      "synonym": "Модуль сеанса",
+      "large": false,
+      "procedures": [
+        {
+          "name": "УстановкаПараметровСеанса",
+          "text": "// Заполнение параметров сеанса при старте\nПроцедура УстановкаПараметровСеанса()\n    Возврат;\nКонецПроцедуры"
+        }
+      ]
+    },
+    {
+      "id": "metadata_object:Document:РеализацияТоваров:object",
+      "module_kind": "object",
+      "owner_kind": "metadata_object",
+      "metadata_type": "Document",
+      "owner_name": "РеализацияТоваров",
+      "form_name": null,
+      "synonym": "Реализация товаров",
+      "large": true,
+      "procedures": [
+        {
+          "name": "ПередЗаписью",
+          "text": "// Проверка заполнения шапки перед записью\nПроцедура ПередЗаписью()\n    Возврат;\nКонецПроцедуры"
+        },
+        {
+          "name": "РасчетСкидкиДок",
+          "text": "// Служебная операция РасчетСкидки\nПроцедура РасчетСкидкиДок()\n    Возврат;\nКонецПроцедуры"
+        },
+        {
+          "name": "ПроверкаПравДок",
+          "text": "// Служебная операция ПроверкаПрав\nПроцедура ПроверкаПравДок()\n    Возврат;\nКонецПроцедуры"
+        },
+        {
+          "name": "ФормированиеПроводокДок",
+          "text": "// Служебная операция ФормированиеПроводок\nПроцедура ФормированиеПроводокДок()\n    Возврат;\nКонецПроцедуры"
+        },
+        {
+          "name": "ЗаполнениеРеквизитовДок",
+          "text": "// Служебная операция ЗаполнениеРеквизитов\nПроцедура ЗаполнениеРеквизитовДок()\n    Возврат;\nКонецПроцедуры"
+        },
+        {
+          "name": "ОбновлениеКурсовДок",
+          "text": "// Служебная операция ОбновлениеКурсов\nПроцедура ОбновлениеКурсовДок()\n    Возврат;\nКонецПроцедуры"
+        },
+        {
+          "name": "ЗаписьОтладкиДок",
+          "text": "// Служебная операция ЗаписьОтладки\nПроцедура ЗаписьОтладкиДок()\n    Возврат;\nКонецПроцедуры"
+        },
+        {
+          "name": "РасчетНалогаДок",
+          "text": "// Служебная операция РасчетНалога\nПроцедура РасчетНалогаДок()\n    Возврат;\nКонецПроцедуры"
+        },
+        {
+          "name": "ПечатьНакладнойДок",
+          "text": "// Служебная операция ПечатьНакладной\nПроцедура ПечатьНакладнойДок()\n    Возврат;\nКонецПроцедуры"
+        },
+        {
+          "name": "ОтправкаУведомленияДок",
+          "text": "// Служебная операция ОтправкаУведомления\nПроцедура ОтправкаУведомленияДок()\n    Возврат;\nКонецПроцедуры"
+        },
+        {
+          "name": "ОчисткаВременныхДанныхДок",
+          "text": "// Служебная операция ОчисткаВременныхДанных\nПроцедура ОчисткаВременныхДанныхДок()\n    Возврат;\nКонецПроцедуры"
+        },
+        {
+          "name": "ПриПроведенииКонтрольОстатков",
+          "text": "// Контроль остатков товара на складе при проведении, блокировка при нехватке\nПроцедура ПриПроведенииКонтрольОстатков()\n    Возврат;\nКонецПроцедуры"
+        }
+      ]
+    },
+    {
+      "id": "metadata_object:Catalog:Контрагенты:object",
+      "module_kind": "object",
+      "owner_kind": "metadata_object",
+      "metadata_type": "Catalog",
+      "owner_name": "Контрагенты",
+      "form_name": null,
+      "synonym": "Контрагенты",
+      "large": false,
+      "procedures": [
+        {
+          "name": "ПриЗаписи",
+          "text": "// Проверка уникальности ИНН контрагента\nПроцедура ПриЗаписи()\n    Возврат;\nКонецПроцедуры"
+        }
+      ]
+    },
+    {
+      "id": "metadata_object:Catalog:Контрагенты:manager",
+      "module_kind": "manager",
+      "owner_kind": "metadata_object",
+      "metadata_type": "Catalog",
+      "owner_name": "Контрагенты",
+      "form_name": null,
+      "synonym": "Контрагенты",
+      "large": false,
+      "procedures": [
+        {
+          "name": "НайтиПоИНН",
+          "text": "// Найти контрагента по ИНН, налоговому номеру\nПроцедура НайтиПоИНН()\n    Возврат;\nКонецПроцедуры"
+        }
+      ]
+    },
+    {
+      "id": "metadata_object:InformationRegister:ЦеныНоменклатуры:record_set",
+      "module_kind": "record_set",
+      "owner_kind": "metadata_object",
+      "metadata_type": "InformationRegister",
+      "owner_name": "ЦеныНоменклатуры",
+      "form_name": null,
+      "synonym": "Цены номенклатуры",
+      "large": false,
+      "procedures": [
+        {
+          "name": "ПолучитьЦенуНаДату",
+          "text": "// Получить цену товара на заданную дату по срезу последних\nПроцедура ПолучитьЦенуНаДату()\n    Возврат;\nКонецПроцедуры"
+        }
+      ]
+    },
+    {
+      "id": "metadata_object:InformationRegister:ЦеныНоменклатуры:manager",
+      "module_kind": "manager",
+      "owner_kind": "metadata_object",
+      "metadata_type": "InformationRegister",
+      "owner_name": "ЦеныНоменклатуры",
+      "form_name": null,
+      "synonym": "Цены номенклатуры",
+      "large": false,
+      "procedures": [
+        {
+          "name": "СоздатьЗапросСрезаЦен",
+          "text": "// Сформировать запрос среза последних цен номенклатуры\nПроцедура СоздатьЗапросСрезаЦен()\n    Возврат;\nКонецПроцедуры"
+        }
+      ]
+    },
+    {
+      "id": "metadata_object_command:Catalog:Контрагенты.ОткрытьКарточку:command",
+      "module_kind": "command",
+      "owner_kind": "metadata_object_command",
+      "metadata_type": "Catalog",
+      "owner_name": "Контрагенты.ОткрытьКарточку",
+      "form_name": null,
+      "synonym": "Открыть карточку",
+      "large": false,
+      "procedures": [
+        {
+          "name": "ОбработкаКоманды",
+          "text": "// Открыть карточку контрагента по кнопке команды\nПроцедура ОбработкаКоманды()\n    Возврат;\nКонецПроцедуры"
+        }
+      ]
+    },
+    {
+      "id": "metadata_object:Constant:ВалютаУчета:value_manager",
+      "module_kind": "value_manager",
+      "owner_kind": "metadata_object",
+      "metadata_type": "Constant",
+      "owner_name": "ВалютаУчета",
+      "form_name": null,
+      "synonym": "Валюта учета",
+      "large": false,
+      "procedures": [
+        {
+          "name": "ПриЗаписи",
+          "text": "// Проверка допустимости выбранной валюты учета\nПроцедура ПриЗаписи()\n    Возврат;\nКонецПроцедуры"
+        }
+      ]
+    },
+    {
+      "id": "metadata_object:HTTPService:ОбменЗаказами:service",
+      "module_kind": "service",
+      "owner_kind": "metadata_object",
+      "metadata_type": "HTTPService",
+      "owner_name": "ОбменЗаказами",
+      "form_name": null,
+      "synonym": "Обмен заказами",
+      "large": false,
+      "procedures": [
+        {
+          "name": "ПринятьЗаказ",
+          "text": "// Принять заказ от внешней системы по HTTP и создать документ\nПроцедура ПринятьЗаказ()\n    Возврат;\nКонецПроцедуры"
+        }
+      ]
+    },
+    {
+      "id": "common_module:CommonModule:ОбщегоНазначенияСервер:common_module",
+      "module_kind": "common_module",
+      "owner_kind": "common_module",
+      "metadata_type": "CommonModule",
+      "owner_name": "ОбщегоНазначенияСервер",
+      "form_name": null,
+      "synonym": "Общего назначения (сервер)",
+      "large": false,
+      "procedures": [
+        {
+          "name": "ЗаписатьВЖурналРегистрации",
+          "text": "// Записать событие в журнал регистрации\nПроцедура ЗаписатьВЖурналРегистрации()\n    Возврат;\nКонецПроцедуры"
+        }
+      ]
+    },
+    {
+      "id": "form:Document/РеализацияТоваров/DocumentForm/ФормаДокумента",
+      "module_kind": "form",
+      "owner_kind": "metadata_object_form",
+      "metadata_type": "Document",
+      "owner_name": "РеализацияТоваров",
+      "form_name": "ФормаДокумента",
+      "synonym": "Форма документа",
+      "large": true,
+      "procedures": [
+        {
+          "name": "РасчетСкидкиФорма",
+          "text": "// Служебная операция РасчетСкидки\nПроцедура РасчетСкидкиФорма()\n    Возврат;\nКонецПроцедуры"
+        },
+        {
+          "name": "ПроверкаПравФорма",
+          "text": "// Служебная операция ПроверкаПрав\nПроцедура ПроверкаПравФорма()\n    Возврат;\nКонецПроцедуры"
+        },
+        {
+          "name": "ФормированиеПроводокФорма",
+          "text": "// Служебная операция ФормированиеПроводок\nПроцедура ФормированиеПроводокФорма()\n    Возврат;\nКонецПроцедуры"
+        },
+        {
+          "name": "ЗаполнениеРеквизитовФорма",
+          "text": "// Служебная операция ЗаполнениеРеквизитов\nПроцедура ЗаполнениеРеквизитовФорма()\n    Возврат;\nКонецПроцедуры"
+        },
+        {
+          "name": "ОбновлениеКурсовФорма",
+          "text": "// Служебная операция ОбновлениеКурсов\nПроцедура ОбновлениеКурсовФорма()\n    Возврат;\nКонецПроцедуры"
+        },
+        {
+          "name": "ЗаписьОтладкиФорма",
+          "text": "// Служебная операция ЗаписьОтладки\nПроцедура ЗаписьОтладкиФорма()\n    Возврат;\nКонецПроцедуры"
+        },
+        {
+          "name": "РасчетНалогаФорма",
+          "text": "// Служебная операция РасчетНалога\nПроцедура РасчетНалогаФорма()\n    Возврат;\nКонецПроцедуры"
+        },
+        {
+          "name": "ПечатьНакладнойФорма",
+          "text": "// Служебная операция ПечатьНакладной\nПроцедура ПечатьНакладнойФорма()\n    Возврат;\nКонецПроцедуры"
+        },
+        {
+          "name": "ОтправкаУведомленияФорма",
+          "text": "// Служебная операция ОтправкаУведомления\nПроцедура ОтправкаУведомленияФорма()\n    Возврат;\nКонецПроцедуры"
+        },
+        {
+          "name": "ОчисткаВременныхДанныхФорма",
+          "text": "// Служебная операция ОчисткаВременныхДанных\nПроцедура ОчисткаВременныхДанныхФорма()\n    Возврат;\nКонецПроцедуры"
+        },
+        {
+          "name": "КонтрагентПриИзменении",
+          "text": "// Подставить договор по умолчанию при смене контрагента в форме\nПроцедура КонтрагентПриИзменении()\n    Возврат;\nКонецПроцедуры"
+        }
+      ]
+    },
+    {
+      "id": "form:Catalog/Контрагенты/CatalogForm/ФормаСписка",
+      "module_kind": "form",
+      "owner_kind": "metadata_object_form",
+      "metadata_type": "Catalog",
+      "owner_name": "Контрагенты",
+      "form_name": "ФормаСписка",
+      "synonym": "Форма списка",
+      "large": false,
+      "procedures": [
+        {
+          "name": "ПриСозданииНаСервере",
+          "text": "// Настроить отбор списка по ответственному\nПроцедура ПриСозданииНаСервере()\n    Возврат;\nКонецПроцедуры"
+        }
+      ]
+    },
+    {
+      "id": "external_data_processor:ExternalDataProcessor:ЗагрузкаЦен:object",
+      "module_kind": "object",
+      "owner_kind": "external_data_processor",
+      "metadata_type": "ExternalDataProcessor",
+      "owner_name": "ЗагрузкаЦен",
+      "form_name": null,
+      "synonym": "Загрузка цен",
+      "large": false,
+      "procedures": [
+        {
+          "name": "ЗагрузитьЦеныИзФайла",
+          "text": "// Загрузить прайс из файла и записать цены\nПроцедура ЗагрузитьЦеныИзФайла()\n    Возврат;\nКонецПроцедуры"
+        }
+      ]
+    },
+    {
+      "id": "external_report:ExternalReport:ОтчетПоЦенам:object",
+      "module_kind": "object",
+      "owner_kind": "external_report",
+      "metadata_type": "ExternalReport",
+      "owner_name": "ОтчетПоЦенам",
+      "form_name": null,
+      "synonym": "Отчет по ценам",
+      "large": false,
+      "procedures": [
+        {
+          "name": "СформироватьОтчетПоЦенам",
+          "text": "// Сформировать отчет по ценам за период\nПроцедура СформироватьОтчетПоЦенам()\n    Возврат;\nКонецПроцедуры"
+        }
+      ]
+    }
+  ],
+  "queries": [
+    {
+      "id": "e1",
+      "class": "exact",
+      "text": "ВалютаУчета",
+      "gold": [
+        "metadata_object:Constant:ВалютаУчета:value_manager"
+      ],
+      "gold_fragments": [],
+      "expect_status": "found"
+    },
+    {
+      "id": "e2",
+      "class": "exact",
+      "text": "ОбменЗаказами",
+      "gold": [
+        "metadata_object:HTTPService:ОбменЗаказами:service"
+      ],
+      "gold_fragments": [],
+      "expect_status": "found"
+    },
+    {
+      "id": "e3",
+      "class": "exact",
+      "text": "общегоназначениясервер",
+      "gold": [
+        "common_module:CommonModule:ОбщегоНазначенияСервер:common_module"
+      ],
+      "gold_fragments": [],
+      "expect_status": "found"
+    },
+    {
+      "id": "e4",
+      "class": "exact",
+      "text": "Загрузка Цен",
+      "gold": [
+        "external_data_processor:ExternalDataProcessor:ЗагрузкаЦен:object"
+      ],
+      "gold_fragments": [],
+      "expect_status": "found"
+    },
+    {
+      "id": "e5",
+      "class": "exact",
+      "text": "ФормаДокумента",
+      "gold": [
+        "form:Document/РеализацияТоваров/DocumentForm/ФормаДокумента"
+      ],
+      "gold_fragments": [],
+      "expect_status": "found"
+    },
+    {
+      "id": "e6",
+      "class": "exact",
+      "text": "ОтчетПоЦенам",
+      "gold": [
+        "external_report:ExternalReport:ОтчетПоЦенам:object"
+      ],
+      "gold_fragments": [],
+      "expect_status": "found"
+    },
+    {
+      "id": "a1",
+      "class": "ambiguous",
+      "text": "РеализацияТоваров",
+      "gold": [
+        "metadata_object:Document:РеализацияТоваров:object",
+        "form:Document/РеализацияТоваров/DocumentForm/ФормаДокумента"
+      ],
+      "gold_fragments": [],
+      "expect_status": "ambiguous"
+    },
+    {
+      "id": "a2",
+      "class": "ambiguous",
+      "text": "ЦеныНоменклатуры",
+      "gold": [
+        "metadata_object:InformationRegister:ЦеныНоменклатуры:record_set",
+        "metadata_object:InformationRegister:ЦеныНоменклатуры:manager"
+      ],
+      "gold_fragments": [],
+      "expect_status": "ambiguous"
+    },
+    {
+      "id": "a3",
+      "class": "ambiguous",
+      "text": "Контрагенты",
+      "gold": [
+        "metadata_object:Catalog:Контрагенты:object",
+        "metadata_object:Catalog:Контрагенты:manager",
+        "form:Catalog/Контрагенты/CatalogForm/ФормаСписка"
+      ],
+      "gold_fragments": [],
+      "expect_status": "ambiguous"
+    },
+    {
+      "id": "f1",
+      "class": "free",
+      "text": "блокировать проведение если не хватает товара на складе",
+      "gold": [
+        "metadata_object:Document:РеализацияТоваров:object"
+      ],
+      "gold_fragments": [
+        "metadata_object:Document:РеализацияТоваров:object#ПриПроведенииКонтрольОстатков"
+      ],
+      "expect_status": "found"
+    },
+    {
+      "id": "f2",
+      "class": "free",
+      "text": "при смене контрагента подставить договор",
+      "gold": [
+        "form:Document/РеализацияТоваров/DocumentForm/ФормаДокумента"
+      ],
+      "gold_fragments": [
+        "form:Document/РеализацияТоваров/DocumentForm/ФормаДокумента#КонтрагентПриИзменении"
+      ],
+      "expect_status": "found"
+    },
+    {
+      "id": "f3",
+      "class": "free",
+      "text": "узнать цену товара на конкретную дату",
+      "gold": [
+        "metadata_object:InformationRegister:ЦеныНоменклатуры:record_set"
+      ],
+      "gold_fragments": [
+        "metadata_object:InformationRegister:ЦеныНоменклатуры:record_set#ПолучитьЦенуНаДату"
+      ],
+      "expect_status": "found"
+    },
+    {
+      "id": "f4",
+      "class": "free",
+      "text": "найти контрагента по налоговому номеру",
+      "gold": [
+        "metadata_object:Catalog:Контрагенты:manager"
+      ],
+      "gold_fragments": [
+        "metadata_object:Catalog:Контрагенты:manager#НайтиПоИНН"
+      ],
+      "expect_status": "found"
+    },
+    {
+      "id": "f5",
+      "class": "free",
+      "text": "принять заказ от внешней системы по HTTP",
+      "gold": [
+        "metadata_object:HTTPService:ОбменЗаказами:service"
+      ],
+      "gold_fragments": [
+        "metadata_object:HTTPService:ОбменЗаказами:service#ПринятьЗаказ"
+      ],
+      "expect_status": "found"
+    },
+    {
+      "id": "f6",
+      "class": "free",
+      "text": "записать событие в журнал регистрации",
+      "gold": [
+        "common_module:CommonModule:ОбщегоНазначенияСервер:common_module"
+      ],
+      "gold_fragments": [
+        "common_module:CommonModule:ОбщегоНазначенияСервер:common_module#ЗаписатьВЖурналРегистрации"
+      ],
+      "expect_status": "found"
+    },
+    {
+      "id": "f7",
+      "class": "free",
+      "text": "открыть карточку контрагента по кнопке",
+      "gold": [
+        "metadata_object_command:Catalog:Контрагенты.ОткрытьКарточку:command"
+      ],
+      "gold_fragments": [
+        "metadata_object_command:Catalog:Контрагенты.ОткрытьКарточку:command#ОбработкаКоманды"
+      ],
+      "expect_status": "found"
+    },
+    {
+      "id": "f8",
+      "class": "free",
+      "text": "загрузить прайс из файла",
+      "gold": [
+        "external_data_processor:ExternalDataProcessor:ЗагрузкаЦен:object"
+      ],
+      "gold_fragments": [
+        "external_data_processor:ExternalDataProcessor:ЗагрузкаЦен:object#ЗагрузитьЦеныИзФайла"
+      ],
+      "expect_status": "found"
+    },
+    {
+      "id": "f9",
+      "class": "free",
+      "text": "параметры сеанса при старте",
+      "gold": [
+        "configuration:-:Configuration:session"
+      ],
+      "gold_fragments": [
+        "configuration:-:Configuration:session#УстановкаПараметровСеанса"
+      ],
+      "expect_status": "found"
+    },
+    {
+      "id": "m1",
+      "class": "mixed",
+      "text": "РеализацияТоваров контроль остатков при проведении",
+      "gold": [
+        "metadata_object:Document:РеализацияТоваров:object"
+      ],
+      "gold_fragments": [
+        "metadata_object:Document:РеализацияТоваров:object#ПриПроведенииКонтрольОстатков"
+      ],
+      "expect_status": "found"
+    },
+    {
+      "id": "m2",
+      "class": "mixed",
+      "text": "в форме документа реализации подобрать договор при выборе контрагента",
+      "gold": [
+        "form:Document/РеализацияТоваров/DocumentForm/ФормаДокумента"
+      ],
+      "gold_fragments": [
+        "form:Document/РеализацияТоваров/DocumentForm/ФормаДокумента#КонтрагентПриИзменении"
+      ],
+      "expect_status": "found"
+    },
+    {
+      "id": "m3",
+      "class": "mixed",
+      "text": "ЦеныНоменклатуры срез последних цен запрос",
+      "gold": [
+        "metadata_object:InformationRegister:ЦеныНоменклатуры:manager"
+      ],
+      "gold_fragments": [
+        "metadata_object:InformationRegister:ЦеныНоменклатуры:manager#СоздатьЗапросСрезаЦен"
+      ],
+      "expect_status": "found"
+    },
+    {
+      "id": "m4",
+      "class": "mixed",
+      "text": "менеджер Контрагенты поиск по ИНН",
+      "gold": [
+        "metadata_object:Catalog:Контрагенты:manager"
+      ],
+      "gold_fragments": [
+        "metadata_object:Catalog:Контрагенты:manager#НайтиПоИНН"
+      ],
+      "expect_status": "found"
+    },
+    {
+      "id": "m5",
+      "class": "mixed",
+      "text": "ЗагрузкаЦен чтение файла прайса",
+      "gold": [
+        "external_data_processor:ExternalDataProcessor:ЗагрузкаЦен:object"
+      ],
+      "gold_fragments": [
+        "external_data_processor:ExternalDataProcessor:ЗагрузкаЦен:object#ЗагрузитьЦеныИзФайла"
+      ],
+      "expect_status": "found"
+    },
+    {
+      "id": "n1",
+      "class": "negative",
+      "text": "модуль последовательности Sequences",
+      "gold": [],
+      "gold_fragments": [],
+      "expect_status": "none"
+    },
+    {
+      "id": "n2",
+      "class": "negative",
+      "text": "объектный модуль плана счетов",
+      "gold": [],
+      "gold_fragments": [],
+      "expect_status": "none"
+    },
+    {
+      "id": "n3",
+      "class": "negative",
+      "text": "модуль плана видов расчета",
+      "gold": [],
+      "gold_fragments": [],
+      "expect_status": "none"
+    },
+    {
+      "id": "n4",
+      "class": "negative",
+      "text": "ЗарплатаНачисление",
+      "gold": [],
+      "gold_fragments": [],
+      "expect_status": "none"
+    },
+    {
+      "id": "n5",
+      "class": "negative",
+      "text": "выгрузка остатков в стороннюю бухгалтерию",
+      "gold": [],
+      "gold_fragments": [],
+      "expect_status": "none"
+    }
+  ]
+}
