@@ -246,6 +246,7 @@ POSIX-пути, одинаковые на POSIX и NT.
 - [Структура `Form.bin`](docs/research/form_bin_issue150.md)
 - [Валидация на третьей выгрузке](docs/research/third_configuration_validation.md)
 - [Инвентаризация BSL-модулей](docs/research/bsl_module_inventory_issue202.md)
+- [Поисковое представление форм и модулей, eval-набор (#321)](docs/research/search_representation_issue321.md)
 
 ### Примеры и политики
 
