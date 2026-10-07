@@ -1,5 +1,20 @@
 # Changelog
 
+## Усиленный eval-набор и результаты прогона для поискового представления (#321)
+
+### Добавлено
+
+- Усиленный синтетический набор `docs/research/search_eval_issue321_hard.json`: теги `paraphrase`, `tail`, `distractor`.
+- Тест целостности `tests/test_search_eval_issue321_hard.py`.
+
+### Изменено
+
+- Отчёт `docs/research/search_representation_issue321.md`: результаты прогона, ревизия модели, `max_chars`, выбранное представление и ограничения.
+
+### Не изменялось
+
+- Runtime, публичные API, CI и схемы.
+
 ## Поисковое представление форм и модулей, eval-набор (#321)
 
 ### Добавлено
