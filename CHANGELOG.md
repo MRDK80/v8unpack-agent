@@ -1,5 +1,32 @@
 # Changelog
 
+## Типизированный контракт общего поиска (#322)
+
+### Добавлено
+
+- `v8unpack_agent.search_contract`: неизменяемые `OwnerRef`, `ArtifactRef`,
+  `TextSpan`, `SearchDocument`, `SearchDocumentSet`, `SearchFilters`,
+  `SearchQuery`, `SearchHit`, `SearchError`, `SearchResult`, `OwnerLink`.
+  Id модуля равен `ModuleEntry.module_id`, id формы —
+  `form:<object_type>/<object_name>/<container_name>/<form_name>` с
+  экранированием `%`, `/`, `:`, `#` в сегментах формы, фрагменты —
+  `<id>#<процедура>` и `<id>#L<начало>-<конец>`. Сравнение id без учёта
+  регистра (NFC + `casefold`). Состояния `exact`, `ambiguous`, `semantic`,
+  `empty`, `error`; происхождение и `similarity` разделены, `similarity`
+  не является вероятностью. Абсолютные и небезопасные источники,
+  некорректные координаты и id отклоняются; JSON детерминирован, текст
+  документа сериализуется только по явному `include_text=True`. Схема
+  `search_contract/1`.
+- `docs/search_contract.md`; строки в README; синтетические тесты
+  `tests/test_search_contract_issue322.py`.
+
+### Не изменялось
+
+- `modules` (`module_index/1`), `scan_forms`, `form_rag`, `form_router`,
+  `form_dispatcher` и другие API форм, корневые импорты `v8unpack_agent`,
+  eval-наборы #321, CLI, CI. Выбор модели эмбеддингов, индекс, хранение и
+  адаптеры не добавлялись.
+
 ## Усиленный eval-набор и результаты прогона для поискового представления (#321)
 
 ### Добавлено
