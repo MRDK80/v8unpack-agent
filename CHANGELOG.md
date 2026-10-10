@@ -1,5 +1,34 @@
 # Changelog
 
+## Адаптеры форм и модулей, карточки владельцев (#323)
+
+### Добавлено
+
+- `v8unpack_agent.search_corpus`: `build_search_corpus()`,
+  `build_form_inputs()`, `read_module_text()`, неизменяемые `SearchCorpus`,
+  `CorpusReport`, `CorpusItem`, `ModuleText`, `FormReadFailure`. Корпус
+  строится из `ModuleIndex`, `CommonModuleIndex` и `FormContext` без новых
+  обходов выгрузки: текст модуля читается по `relative_path` записи сканера
+  с проверкой границы корня и `sha256`. Документ создаётся только из
+  непустого текста; `empty`, `whitespace_only`, `missing`, `read_error`,
+  `unsafe_path`, `content_changed`, дубликаты и модуль формы из
+  `ModuleIndex` видны в детерминированном отчёте с причиной (схема
+  `search_corpus/1`). Модуль формы учитывается один раз, как артефакт
+  формы; общий модуль — один раз при повторе во входах.
+- Связи владельцев: `module_entry` для модулей, `form_key` для форм
+  4-уровневого layout, доказанного относительным путём формы; общие и
+  внешние формы — `unconfirmed`. Карточки владельцев содержат только
+  подтверждённые связи, без синонима и абсолютных путей.
+- `docs/search_corpus.md`; ссылки в README и `docs/search_contract.md`;
+  синтетические тесты `tests/test_search_corpus_issue323.py`.
+
+### Не изменялось
+
+- контракт `search_contract/1` (#322), `module_index/1`, `scan_forms`,
+  `FormContext`, сканеры модулей, корневые импорты `v8unpack_agent`,
+  eval-наборы #321, CLI, CI. Эмбеддинги, индекс, хранение и фрагментация
+  процедур (#324) не добавлялись.
+
 ## Типизированный контракт общего поиска (#322)
 
 ### Добавлено
