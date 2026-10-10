@@ -196,6 +196,7 @@ POSIX-пути, одинаковые на POSIX и NT.
 | `common_modules` | `scan_common_modules`, `build_common_module_context` | [common_modules](docs/common_modules.md) |
 | `modules` и сканеры модулей | `ModuleEntry`, `ModuleIndex`, `scan_*_modules`, `to_llm_module_fragment` | [modules](docs/modules.md) |
 | `search_contract` | `ArtifactRef`, `SearchDocument`, `SearchQuery`, `SearchResult`, `OwnerLink` | [search_contract](docs/search_contract.md) |
+| `search_corpus` | `build_search_corpus`, `build_form_inputs`, `read_module_text`, `SearchCorpus` | [search_corpus](docs/search_corpus.md) |
 | `managed_forms` | `discover_elem_forms`, `ElemFormEntry` | [managed_forms_structure](docs/managed_forms_structure.md) |
 | `skd_extractor` | `extract_skd_queries`, `extract_all_skd_queries` | [skd_extractor](docs/skd_extractor.md) |
 | `drift_checker` | `check_drift`, `DriftReport` | [drift_checker](docs/drift_checker.md) |
@@ -234,6 +235,7 @@ POSIX-пути, одинаковые на POSIX и NT.
 - [Модель BSL-модулей `ModuleEntry` и `ModuleIndex`](docs/modules.md)
 - [Итоговая матрица BSL-покрытия](docs/bsl_coverage_matrix.md)
 - [Контракт общего поиска по формам и модулям](docs/search_contract.md)
+- [Поисковый корпус: адаптеры форм и модулей](docs/search_corpus.md)
 - [Контроль дрейфа](docs/drift_checker.md)
 
 ### Исследования
