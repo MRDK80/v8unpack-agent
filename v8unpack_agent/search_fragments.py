@@ -474,6 +474,8 @@ def verify_fragmentation(result: FragmentationResult, sources: Mapping[str, str]
         fragments = by_artifact.pop(item.artifact.artifact_id, [])
         if _hash(text) != item.source_sha256 or len(text) != item.source_chars or len(lines) != item.total_lines:
             raise ValueError("source fingerprint mismatch")
+        if item.fallback != any(fragment.fallback for fragment in fragments):
+            raise ValueError("fallback report mismatch")
         reasons: set[FragmentReason] = set()
         for fragment in fragments:
             document = fragment.document

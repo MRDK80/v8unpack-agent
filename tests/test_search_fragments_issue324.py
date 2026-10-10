@@ -287,3 +287,23 @@ def test_docs_changelog_and_root_surface() -> None:
     doc = (root / "docs" / "search_fragments.md").read_text(encoding="utf-8")
     assert all(name in doc for name in ("fragment_module", "fragment_corpus", "verify_fragmentation"))
     assert "(#324)" in (root / "CHANGELOG.md").read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize("source_kind", ["empty_module", "owner_card"])
+def test_verifier_rejects_forged_report_fallback(source_kind: str) -> None:
+    if source_kind == "empty_module":
+        result = fragment_module(ARTIFACT, "")
+        sources = {ARTIFACT.artifact_id: ""}
+    else:
+        artifact = ArtifactRef.owner_card(OWNER)
+        text = "OWNER\nowner: Demo\n"
+        corpus = SearchCorpus(
+            SearchDocumentSet((SearchDocument(artifact, text),)), (), CorpusReport()
+        )
+        result = fragment_corpus(corpus)
+        sources = {artifact.artifact_id: text}
+    verify_fragmentation(result, sources)
+    assert not any(fragment.fallback for fragment in result.fragments)
+    bad = replace(result, items=(replace(result.items[0], fallback=True),))
+    with pytest.raises(ValueError, match="fallback report mismatch"):
+        verify_fragmentation(bad, sources)
