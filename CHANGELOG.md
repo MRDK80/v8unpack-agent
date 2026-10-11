@@ -1,5 +1,29 @@
 # Changelog
 
+## Общий точный поиск и диспетчер смыслового fallback (#326)
+
+### Добавлено
+
+- `v8unpack_agent.search_dispatch`: `ExactCatalog`, `ExactResolution`,
+  `SearchDispatcher`, `DispatchResult`. Точное разрешение запроса целиком по
+  `identity_key`: сначала `artifact_id`, затем `form_name` и `owner_name`;
+  карточка владельца — только по id, подстрока не считается совпадением.
+  Неоднозначность возвращает всех кандидатов без `top_k`; точный результат
+  не вызывает эмбеддер.
+- Режимы `auto`, `exact`, `semantic`: fallback на `query_index` только после
+  точного промаха (в том числе из-за фильтров), без fallback при `ambiguous`.
+  Без индекса или эмбеддера — `index_not_ready`; `stale`/`incompatible` —
+  `incompatible_index`; статус индекса (`IndexStatus`) виден в `DispatchResult`.
+- `docs/search_dispatch.md`, строки в README, тесты
+  `tests/test_search_dispatch_issue326.py`.
+
+### Не изменялось
+
+- Контракты `search_contract/1`, `search_corpus/1`, `search_fragments/1`,
+  `search_index/1` и формат снимка; `query_index`, `FormRouter`,
+  `FormDispatcher`, `FormRagIndex`, корневые импорты, eval-наборы #321.
+  Расхождение e4 (синоним) зафиксировано для #329.
+
 ## Уникальность артефактов в выдаче query_index (#362)
 
 ### Исправлено
