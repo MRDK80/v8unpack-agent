@@ -198,6 +198,7 @@ POSIX-пути, одинаковые на POSIX и NT.
 | `search_contract` | `ArtifactRef`, `SearchDocument`, `SearchQuery`, `SearchResult`, `OwnerLink` | [search_contract](docs/search_contract.md) |
 | `search_corpus` | `build_search_corpus`, `build_form_inputs`, `read_module_text`, `SearchCorpus` | [search_corpus](docs/search_corpus.md) |
 | `search_fragments` | `fragment_module`, `fragment_corpus`, `verify_fragmentation` | [search_fragments](docs/search_fragments.md) |
+| `search_index` | `build_index`, `query_index`, `save_index`, `load_index`, `EmbedderIdentity` | [search_index](docs/search_index.md) |
 | `managed_forms` | `discover_elem_forms`, `ElemFormEntry` | [managed_forms_structure](docs/managed_forms_structure.md) |
 | `skd_extractor` | `extract_skd_queries`, `extract_all_skd_queries` | [skd_extractor](docs/skd_extractor.md) |
 | `drift_checker` | `check_drift`, `DriftReport` | [drift_checker](docs/drift_checker.md) |
@@ -238,6 +239,7 @@ POSIX-пути, одинаковые на POSIX и NT.
 - [Контракт общего поиска по формам и модулям](docs/search_contract.md)
 - [Поисковый корпус: адаптеры форм и модулей](docs/search_corpus.md)
 - [Фрагментация и поисковая подготовка текста](docs/search_fragments.md)
+- [Общий смысловой индекс и снимок](docs/search_index.md)
 - [Контроль дрейфа](docs/drift_checker.md)
 
 ### Исследования
