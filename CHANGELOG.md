@@ -1,5 +1,26 @@
 # Changelog
 
+## Общий смысловой индекс с версионированным снимком (#325)
+
+### Добавлено
+
+- `v8unpack_agent.search_index`: `build_index()`, `query_index()`,
+  `save_index()`, `load_index()`, `EmbedderIdentity`, `SearchIndex`,
+  `IndexStatus`. Эмбеддер передаётся явно; сети, ChromaDB и скрытой
+  пересборки нет.
+- Снимок `search_index/1`: `document_id`, координаты, три хэша, векторы,
+  `representation_version` из #324 и схема корпуса; исходный текст не хранится.
+- Независимые оси совместимости и свежести; `incompatible` и `stale`
+  блокируют запросы кодом `incompatible_index`.
+- Проверка векторов, контрольная сумма, атомарная запись, фильтры до top-k.
+- `docs/search_index.md`, ссылки в README, тесты
+  `tests/test_search_index_issue325.py`.
+
+### Не изменялось
+
+- Контракты `search_contract/1`, `search_corpus/1`, `search_fragments/1`;
+  агрегация по артефакту остаётся за #326.
+
 ## Детерминированная фрагментация и поисковая подготовка текста (#324)
 
 ### Добавлено
