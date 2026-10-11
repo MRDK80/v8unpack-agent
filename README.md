@@ -200,6 +200,7 @@ POSIX-пути, одинаковые на POSIX и NT.
 | `search_fragments` | `fragment_module`, `fragment_corpus`, `verify_fragmentation` | [search_fragments](docs/search_fragments.md) |
 | `search_index` | `build_index`, `query_index`, `save_index`, `load_index`, `EmbedderIdentity` | [search_index](docs/search_index.md) |
 | `search_dispatch` | `SearchDispatcher`, `ExactCatalog`, `DispatchResult` | [search_dispatch](docs/search_dispatch.md) |
+| `search_context` | `build_search_context`, `SearchContext` | [search_context](docs/search_context.md) |
 | `managed_forms` | `discover_elem_forms`, `ElemFormEntry` | [managed_forms_structure](docs/managed_forms_structure.md) |
 | `skd_extractor` | `extract_skd_queries`, `extract_all_skd_queries` | [skd_extractor](docs/skd_extractor.md) |
 | `drift_checker` | `check_drift`, `DriftReport` | [drift_checker](docs/drift_checker.md) |
@@ -242,6 +243,7 @@ POSIX-пути, одинаковые на POSIX и NT.
 - [Фрагментация и поисковая подготовка текста](docs/search_fragments.md)
 - [Общий смысловой индекс и снимок](docs/search_index.md)
 - [Точный поиск и диспетчер смыслового fallback](docs/search_dispatch.md)
+- [Контекст результатов поиска и бюджет LLM (#327)](docs/search_context.md)
 - [Контроль дрейфа](docs/drift_checker.md)
 
 ### Исследования
