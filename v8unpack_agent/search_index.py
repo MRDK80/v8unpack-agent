@@ -4,6 +4,7 @@
 передаётся явно; сеть и пересборка не выполняются. Исходный текст в снимке
 не хранится: только document_id, координаты, три хэша и векторы.
 Контракты search_contract/1, search_corpus/1, search_fragments/1 не меняются.
+Выдача query_index содержит не более одного попадания на артефакт (#362).
 """
 from __future__ import annotations
 
@@ -354,13 +355,25 @@ def load_index(path: str | os.PathLike[str]) -> SearchIndex:
         raise SearchIndexError("corrupt_snapshot", "duplicate document_id") from None
 
 
+def _rank(row: tuple[float, str, IndexEntry]) -> tuple[float, str]:
+    """Ключ порядка: убывание оценки, при равенстве — ``document_id``."""
+    return (-row[0], row[1])
+
+
 def query_index(
     index: SearchIndex,
     query: SearchQuery,
     embedder: Embedder,
     fragmentation: FragmentationResult | None = None,
 ) -> SearchResult:
-    """Запрос; несовместимый или устаревший индекс блокирует выдачу."""
+    """Запрос; несовместимый или устаревший индекс блокирует выдачу.
+
+    Фильтры применяются к каждой записи; для каждого артефакта остаётся его
+    лучший фрагмент (наибольшая оценка, при равенстве — меньший
+    ``document_id``). Затем отбираются до ``top_k`` разных артефактов по
+    убыванию оценки, при равенстве — по ``document_id`` лучшего фрагмента
+    (#362).
+    """
     status = index.assess(embedder.identity, fragmentation)
     if not status.queryable:
         return SearchResult.failed(query, "incompatible_index")
@@ -376,17 +389,21 @@ def query_index(
     if vector is None:
         return SearchResult.failed(query, "invalid_vector")
     norm = math.sqrt(sum(v * v for v in vector))
-    scored: list[tuple[float, str, IndexEntry]] = []
+    best: dict[str, tuple[float, str, IndexEntry]] = {}
     for entry in index.entries:
         if not query.filters.matches(entry.artifact):
             continue
         entry_norm = math.sqrt(sum(v * v for v in entry.vector))
         dot = sum(a * b for a, b in zip(vector, entry.vector, strict=True))
-        scored.append((dot / (norm * entry_norm), entry.document_id, entry))
-    scored.sort(key=lambda row: (-row[0], row[1]))
+        row = (dot / (norm * entry_norm), entry.document_id, entry)
+        key = entry.artifact.identity
+        current = best.get(key)
+        if current is None or _rank(row) < _rank(current):
+            best[key] = row
+    ranked = sorted(best.values(), key=_rank)
     hits = [
         SearchHit(e.artifact, "semantic", document_id=e.document_id, similarity=s)
-        for s, _, e in scored[: query.top_k]
+        for s, _, e in ranked[: query.top_k]
     ]
     if not hits:
         return SearchResult.empty(query)
