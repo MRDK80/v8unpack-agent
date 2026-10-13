@@ -1,5 +1,42 @@
 # Changelog
 
+## Библиотечный вход общего поиска search_api ([#366](https://github.com/MRDK80/v8unpack-agent/issues/366))
+
+### Добавлено
+
+- `v8unpack_agent.search_api` (часть A задачи #328): `collect_search_corpus`,
+  `build_search_snapshot`, `search_with_context`,
+  `HashedBagOfWordsDemoEmbedder`, `SearchCorpusError`, `DEMO_EMBEDDER_NAME` —
+  тонкая композиция корпуса (#323), фрагментации (#324), индекса (#325),
+  диспетчера (#326) и контекста (#327) без изменения их логики.
+- `collect_search_corpus` собирает корпус теми же вызовами, что runner:
+  формы — `scan_forms` и `build_form_context`, общие модули —
+  `scan_common_modules`, индекс модулей — `runner._module_scanners`
+  (группы #346 проверяются правилами `RunOptions`), в режиме `external` —
+  также `scan_external_object_modules` (#351). Сбой стадии —
+  `SearchCorpusError` с кодом `scan_failed`, `common_modules_failed` или
+  `modules_failed`; текст ошибки без путей.
+- `search_with_context` собирает `SearchQuery` с умолчаниями контракта,
+  затем `ExactCatalog.from_fragmentation` → `SearchDispatcher` →
+  `build_search_context`; без индекса или эмбеддера смысловой шаг даёт
+  `index_not_ready`, точный поиск работает.
+- `HashedBagOfWordsDemoEmbedder` (`hashed-bow-demo`): детерминированный
+  хэшированный мешок слов размерности 256, идентичность
+  `v8unpack-agent-hashed-bow-demo` версии `1`, хэш параметров включает
+  размерность и версию токенизации. Механика для проверки цепочки, а не
+  качество поиска; передаётся только явно, сети и загрузки моделей нет.
+- `tests/test_search_api_issue328.py`: совпадение модулей корпуса с
+  runner на синтетической выгрузке, группы, режимы, коды сбоев, эмбеддер,
+  снимок, согласованность с ручной композицией слоёв.
+
+### Не изменялось
+
+- `runner`, `run_report`, `cli.py`, корневые экспорты `v8unpack_agent`,
+  `pyproject.toml`, слои #322–#327 и #362, схемы `search_contract/1`,
+  `search_corpus/1`, `search_fragments/1`, `search_index/1`,
+  `search_context/1`. CLI (#367), документация и пример (#368) не
+  добавлялись.
+
 ## Контекст результатов общего поиска ([#327](https://github.com/MRDK80/v8unpack-agent/issues/327))
 
 ### Добавлено
