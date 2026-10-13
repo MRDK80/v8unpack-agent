@@ -1,5 +1,48 @@
 # Changelog
 
+## Opt-in CLI общего поиска search_cli ([#367](https://github.com/MRDK80/v8unpack-agent/issues/367))
+
+### Добавлено
+
+- `python -m v8unpack_agent.search_cli {build,query}` (часть B задачи #328) —
+  тонкая оболочка над `search_api` (#366). `build` собирает корпус и
+  фрагментацию выгрузки, строит и атомарно сохраняет снимок `search_index/1`
+  (`--snapshot` и `--embedder` обязательны). `query` пересобирает корпус из
+  `export_root`, при `--snapshot` загружает снимок и вызывает
+  `search_with_context` с `--search-mode`, `--top-k`, фильтрами
+  `--artifact-kind`, `--module-kind`, `--owner-kind`, `--metadata-type`,
+  `--owner-name` и бюджетом `--max-chars`. Выбор корпуса — `--mode`,
+  `--skip-common-modules`, `--module-group` / `--skip-module-group`
+  (семантика #346; индекс модулей строится всегда).
+- Машинный результат — один канонический JSON схемы `search_cli/1` на
+  stdout: `schema`, `command`, `status` (`ok` / `degraded` / `error`),
+  `error`; у `build` — `corpus`, `fragments`, `snapshot`; у `query` —
+  `snapshot` (`provided`, `loaded`, `error_code`, `compatibility`,
+  `freshness`) и `context` — `SearchContext.to_dict()`. Абсолютных путей нет,
+  исходный текст — только с `--include-text`. Сбой снимка
+  (`snapshot_not_found`, `corrupt_snapshot`) виден в `snapshot.error_code` и
+  не прерывает точный поиск.
+- Коды выхода — константы `cli.py`: 0 — успех; 2 — ошибка аргументов или
+  `export_root` не каталог (без JSON); 3 — `index_not_ready`,
+  `incompatible_index`, сбой, несовместимость или устаревание указанного
+  снимка, `insufficient_budget`; 4 — `embedder_failed`, `invalid_vector`,
+  `internal`, сбой корпуса, внутренняя ошибка; 5 — `snapshot_write_failed`.
+  stderr — одна санитизированная строка без traceback и текста исключений.
+- `--embedder hashed-bow-demo` — единственное значение, в help помечено как
+  механика, а не качество поиска. Без него смысловой шаг даёт
+  `index_not_ready`, точный поиск работает. Пользовательский код не
+  импортируется, сети и загрузки моделей нет.
+- `tests/test_search_cli_issue328.py`: схема, коды выхода, совпадение
+  `context` с `search_with_context(...).to_dict()` на одном снимке, сбои и
+  устаревание снимка, фильтры, бюджет, санитизация stderr.
+
+### Не изменялось
+
+- `cli.py`, `v8unpack-agent-run`, его parser, defaults и коды выхода,
+  `pyproject.toml` (console script не добавлен), `runner`, `run_report`,
+  `search_api`, корневые экспорты `v8unpack_agent`, схемы `search_*/1`.
+  Документация и пример (#368) не добавлялись.
+
 ## Библиотечный вход общего поиска search_api ([#366](https://github.com/MRDK80/v8unpack-agent/issues/366))
 
 ### Добавлено
