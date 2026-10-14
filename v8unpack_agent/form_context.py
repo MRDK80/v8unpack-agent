@@ -591,7 +591,7 @@ def _build_summary(
         )
         return summary, [_form_status(DATA_PATH_REASON_FORM_DIR_MISSING)]
 
-    elem_result = parse_elem_json(form_dir)
+    elem_result = parse_elem_json(form_dir, write_index=False)
     summary = _anonymize_summary(
         build_form_summary_from_elem_index(elem_result), root
     )

@@ -186,7 +186,7 @@ def _compute_elem_sha256(form_dir: Path) -> str | None:
         from v8unpack_agent.elem_parser import (
             parse_elem_json,  # local import — избегаем цикл
         )
-        result = parse_elem_json(form_dir)
+        result = parse_elem_json(form_dir, write_index=False)
         if not result.elem_index_ok or not result.elements:
             return None
         structural = [
