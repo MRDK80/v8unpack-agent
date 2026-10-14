@@ -37,7 +37,7 @@ def build_form_summary(form_dir: Path) -> FormSummary:
     ``parse_elem_json`` and only maps normalized elements to summary buckets.
     """
 
-    result = parse_elem_json(Path(form_dir))
+    result = parse_elem_json(Path(form_dir), write_index=False)
     return build_form_summary_from_elem_index(result)
 
 

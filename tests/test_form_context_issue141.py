@@ -110,7 +110,8 @@ def _status_lines(fragment: str) -> list[str]:
 def _fake_unindexed(monkeypatch) -> None:
     """Парсер не смог прочитать структуру: ветка ``elem_index_ok=False``."""
 
-    def _parse(_form_dir):
+    def _parse(_form_dir, *, write_index=True):
+        assert write_index is False
         return ElemIndexResult(False, [], ["синтетический отказ разбора"])
 
     monkeypatch.setattr(form_context_module, "parse_elem_json", _parse)

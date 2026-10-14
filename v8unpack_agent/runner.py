@@ -585,7 +585,7 @@ def _probe_elem_index(context: FormContext, export_root: Path) -> tuple[bool, st
         return False, REASON_ELEM_INDEX_UNAVAILABLE
 
     try:
-        result = parse_elem_json(form_dir)
+        result = parse_elem_json(form_dir, write_index=False)
     except Exception:  # noqa: BLE001
         return False, REASON_ELEM_INDEX_UNAVAILABLE
 

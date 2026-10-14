@@ -1,5 +1,22 @@
 # Changelog
 
+## Читающие пути не перезаписывают индекс элементов ([#375](https://github.com/MRDK80/v8unpack-agent/issues/375))
+
+### Исправлено
+
+- `parse_elem_json(..., *, write_index=True)` обратно совместим с прежней
+  записью индекса; `write_index=False` отключает только побочную запись.
+- `scan_forms`, `build_form_summary`, `build_form_context` и классификация
+  runner читают структуру без создания и изменения `form_elements_index.json`.
+  Корпус поиска и CLI build/query сохраняют исходное дерево при внешнем
+  размещении явно запрошенных выходных файлов.
+- Формула `elem_sha256` и алгоритм разбора не изменены; pipeline явно
+  сохраняет индекс после распаковки каждой формы. Новых флагов runner нет.
+- Регрессии проверяют пути, размер, mtime и содержимое файлов: индекс
+  отсутствует или заранее существует; config/common/external формы;
+  сохранение default API, отказ записи, классификацию и pipeline.
+- Тестовая подмена parser в #141 принимает keyword-only управление записью.
+
 ## Opt-in CLI общего поиска search_cli ([#367](https://github.com/MRDK80/v8unpack-agent/issues/367))
 
 ### Добавлено
