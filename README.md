@@ -244,6 +244,7 @@ POSIX-пути, одинаковые на POSIX и NT.
 - [Общий смысловой индекс и снимок](docs/search_index.md)
 - [Точный поиск и диспетчер смыслового fallback](docs/search_dispatch.md)
 - [Контекст результатов поиска и бюджет LLM (#327)](docs/search_context.md)
+- [Общий поиск: CLI, JSON и офлайн-пример (#328)](docs/search_cli.md)
 - [Контроль дрейфа](docs/drift_checker.md)
 
 ### Исследования

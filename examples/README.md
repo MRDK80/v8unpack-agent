@@ -32,6 +32,7 @@ README и код не расходились. Соответствие пров�
 | `form_bindings.py` | подтверждённые привязки `data_path` элементов |
 | `form_context.py` | `FormContext` и компактный фрагмент для промпта |
 | `form_rag_dispatch.py` | полный офлайн-цикл `FormContext` → `FormRagIndex` → `FormDispatcher` с учебным эмбеддером (#312) |
+| `unified_search.py` | синтетический общий поиск по формам и нескольким видам модулей (#368) |
 | `reference_types.py` | резолюция `Ref#uuid` через индекс выгрузки и платформенную таблицу (#165), fallback для неизвестного UUID |
 | `unindexed_forms_report.py` | отчёт по неиндексируемым формам |
 | `zero_binding_reasons.py` | машиночитаемые причины нулевой привязки |
@@ -42,7 +43,7 @@ README и код не расходились. Соответствие пров�
 for f in examples/basic_usage.py examples/chain_form_bindings.py \
          examples/coverage_metric.py examples/form_bindings.py \
          examples/form_context.py examples/form_rag_dispatch.py \
-         examples/reference_types.py \
+         examples/reference_types.py examples/unified_search.py \
          examples/unindexed_forms_report.py examples/zero_binding_reasons.py; do
     python "$f" > /dev/null || echo "FAIL $f"
 done
@@ -91,6 +92,20 @@ python examples/form_rag_dispatch.py; echo "RC=$?"
 завершается с RC=1. Детерминизм и обезличенность stdout в CI проверяет
 `tests/test_examples_determinism_issue251.py`. Режима работы с реальной
 выгрузкой нет.
+
+### `unified_search.py` (issue #368)
+
+```bash
+python examples/unified_search.py
+```
+
+Корпус в памяти: две формы и модули object/manager/record_set/common_module.
+Публичные типы и API поиска, не scanner и не проверка layout выгрузки.
+Показаны снимок build/load, exact, ambiguous, semantic, фильтр, нулевой
+бюджет и index_not_ready без эмбеддера. Снимки удаляются; сети и внешних
+данных нет. hashed-bow-demo — механика, не качество поиска.
+Самопроверка: RC=0/1; повторяемость stdout — тест #251.
+CLI, JSON и exit codes: [search_cli](../docs/search_cli.md).
 
 ## Требующие реальной выгрузки
 

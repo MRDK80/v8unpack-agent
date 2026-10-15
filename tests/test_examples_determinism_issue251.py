@@ -24,6 +24,7 @@ SELF_CONTAINED = (
     "form_bindings.py",
     "form_context.py",
     "form_rag_dispatch.py",
+    "unified_search.py",
     "reference_types.py",
     "zero_binding_reasons.py",
     "unindexed_forms_report.py",
