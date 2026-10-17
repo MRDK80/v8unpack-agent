@@ -194,8 +194,8 @@ class MechanicalTests(unittest.TestCase):
                 with self.assertRaises(r.ResearchError):
                     r.model_snapshot(spec)
                 (snap / "1_Pooling").mkdir()
-                (snap / "sentence_bert_config.json").write_text('{"max_seq_length":512}')
-                (snap / "1_Pooling/config.json").write_text('{"word_embedding_dimension":384,"pooling_mode_mean_tokens":true}')
+                (snap / "sentence_bert_config.json").write_bytes(b'{"max_seq_length":512}')
+                (snap / "1_Pooling/config.json").write_bytes(b'{"word_embedding_dimension":384,"pooling_mode_mean_tokens":true}')
                 hashes = {path.relative_to(snap).as_posix(): r.digest(path.read_bytes()) for path in snap.rglob("*") if path.is_file()}
                 with patch.object(r, "MODEL_FILE_HASHES", {spec["revision"]: hashes}):
                     self.assertEqual(r.model_snapshot(spec), snap)
@@ -280,7 +280,7 @@ class MechanicalTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[1]
         results_path = root / "docs" / "research" / "search_embedding_issue357_results.json"
         report_path = root / "docs" / "research" / "search_embedding_issue357.md"
-        raw = results_path.read_bytes()
+        raw = results_path.read_bytes().replace(b"\r\n", b"\n")
         self.assertEqual(r.digest(raw), "e56e3add2b869e5697baaa2a8c88c216fea3f07e98dd409c6ae9087bcf9899cb")
         payload = json.loads(raw)
         self.assertEqual(payload["schema"], r.SCHEMA)
@@ -296,5 +296,5 @@ class MechanicalTests(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    print(Path(__file__).name + " v3", flush=True)
+    print(Path(__file__).name + " v4", flush=True)
     unittest.main()
