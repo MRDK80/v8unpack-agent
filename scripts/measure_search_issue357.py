@@ -349,7 +349,7 @@ def atomic_json(out: Path, report: dict[str, Any]) -> None:
             stream.write(raw)
             stream.flush()
             os.fsync(stream.fileno())
-        os.link(temp, out)
+        os.replace(temp, out)
     finally:
         if temp is not None:
             temp.unlink(missing_ok=True)

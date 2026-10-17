@@ -156,10 +156,10 @@ class MechanicalTests(unittest.TestCase):
             out = directory / "result.json"
             with redirect_stdout(io.StringIO()):
                 r.atomic_json(out, {"END": "test"})
-            self.assertEqual(json.loads(out.read_text())["END"], "test")
+            self.assertEqual(json.loads(out.read_text(encoding="utf-8"))["END"], "test")
             with self.assertRaises(r.ResearchError):
                 r.atomic_json(out, {})
-            with patch.object(r.os, "link", side_effect=OSError("private")), self.assertRaises(OSError):
+            with patch.object(r.os, "replace", side_effect=OSError("private")), self.assertRaises(OSError):
                 r.atomic_json(directory / "failure.json", {})
             self.assertFalse(list(directory.glob(".research357-*")))
             with self.assertRaises(r.ResearchError):
@@ -179,8 +179,9 @@ class MechanicalTests(unittest.TestCase):
                 r.load_data(Path(name))
             with patch.object(r.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, b"{}", b"")), self.assertRaises(r.ResearchError):
                 r.load_data(Path(name))
+            missing = Path(name) / "missing"
         with self.assertRaises(r.ResearchError):
-            r.load_data(Path(name) / "missing")
+            r.load_data(missing)
 
     def test_model_metadata_guard_without_loading_weights(self):
         with tempfile.TemporaryDirectory() as name:
@@ -224,16 +225,18 @@ class MechanicalTests(unittest.TestCase):
             with redirect_stdout(io.StringIO()), patch.object(r, "load_data", return_value=(self.artifacts, self.queries, {})):
                 rc = r.main(["--repo", name, "--out", str(out), "--baseline-only"])
             self.assertEqual(rc, 0)
-            self.assertEqual(json.loads(out.read_text())["status"], "baseline_only")
+            self.assertEqual(json.loads(out.read_text(encoding="utf-8"))["status"], "baseline_only")
             self.assertNotIn("sentence_transformers", sys.modules)
             with redirect_stdout(io.StringIO()):
                 self.assertEqual(r.main(["--repo", name, "--out", str(out), "--baseline-only"]), 1)
                 self.assertEqual(r.main(["--repo", name, "--out", str(directory / "model.json"), "--run-models"]), 1)
             capture = io.StringIO()
-            with redirect_stdout(capture), patch.object(r, "load_data", side_effect=OSError("private path")):
-                self.assertEqual(r.main(["--repo", name, "--out", str(directory / "error.json"), "--baseline-only"]), 1)
+            err_out = directory / "error.json"
+            with redirect_stdout(capture), patch.object(r, "load_data", side_effect=OSError("private path")), patch.object(r, "atomic_json") as write_err:
+                self.assertEqual(r.main(["--repo", name, "--out", str(err_out), "--baseline-only"]), 1)
             self.assertNotIn("private path", capture.getvalue())
-            self.assertEqual(json.loads((directory / "error.json").read_text())["reason"], "OSError")
+            write_err.assert_called_once()
+            self.assertEqual(write_err.call_args[0][1]["reason"], "OSError")
 
 
     @unittest.skipUnless(sys.platform.startswith("linux"), "Linux-only /proc and process-group watchdog")
@@ -256,7 +259,7 @@ class MechanicalTests(unittest.TestCase):
             r.run_models(Path("."))
         def child(args, **kwargs):
             path = Path(args[args.index("--out") + 1])
-            path.write_text(json.dumps({"status": "worker_ok", "END": "research357_worker", "result": {"mechanical_fixture": True}}))
+            path.write_text(json.dumps({"status": "worker_ok", "END": "research357_worker", "result": {"mechanical_fixture": True}}), encoding="utf-8")
             child_proc = Mock()
             child_proc.poll.return_value = 0
             child_proc.returncode = 0
@@ -273,7 +276,7 @@ class MechanicalTests(unittest.TestCase):
                 rc = r.main(["--repo", name, "--out", str(out), "--worker", "0", "--protocol", r.PROTOCOL_SHA256])
             self.assertEqual(rc, 0)
             worker.assert_called_once()
-            self.assertEqual(json.loads(out.read_text())["status"], "worker_ok")
+            self.assertEqual(json.loads(out.read_text(encoding="utf-8"))["status"], "worker_ok")
 
 
     def test_saved_research_artifacts_integrity_and_privacy(self):
@@ -296,5 +299,5 @@ class MechanicalTests(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    print(Path(__file__).name + " v4", flush=True)
+    print(Path(__file__).name + " v5", flush=True)
     unittest.main()
