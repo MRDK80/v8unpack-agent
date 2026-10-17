@@ -1,5 +1,40 @@
 # Changelog
 
+## Выбор оценочной модели эмбеддингов и повторный замер на наборах #321 ([#357](https://github.com/MRDK80/v8unpack-agent/issues/357))
+
+### Добавлено
+
+- `docs/research/search_embedding_issue357.md` и
+  `docs/research/search_embedding_issue357_results.json`: протокол,
+  реконструкция деталей #321, точные ревизии, декларации лицензий,
+  размеры и SHA-256 весов, результаты по `free`, `mixed`, `free+mixed`,
+  формам, `module_kind`, `large`, тегам усиленного набора, `negative` и
+  отдельному контрактному разбору `exact`/`ambiguous` для реконструированного
+  BM25, `intfloat/multilingual-e5-small`,
+  `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` и
+  `BAAI/bge-m3`.
+- Выбрана оценочная модель для #370: `BAAI/bge-m3`
+  (`5617a9f61b028005a4858fdac845db406aefb181`, dense-only, CLS, 1024, L2,
+  без префиксов, `max_seq_length=8192`, CPU/float32, `batch_size=4`,
+  `threads=4`, `inter_op_threads=1`, `seed=0`); `multilingual-e5-small`
+  сохранена как более быстрая контрольная альтернатива. Зафиксированы
+  ограничения: малые срезы, низкий `hit@1` фрагментов на `paraphrase`
+  при `recall@5=1.0`, высокая CPU-цена и отсутствие оценочных запросов
+  для части групп.
+- `scripts/measure_search_issue357.py` и
+  `tests/test_search_research_issue357.py`: автономный офлайн-runner и
+  механические тесты валидации, подготовки, BM25, агрегации, метрик,
+  явного сопоставления `configuration:-:Configuration:<kind>` →
+  `configuration:::<kind>` и целостности сохранённых исследовательских
+  артефактов без загрузки весов в `pytest`/CI.
+
+### Не изменялось
+
+- Runtime-код `v8unpack_agent/`, публичные API, CLI, `pyproject.toml`,
+  зависимости ядра, CI, схемы `search_*/1` и исходные файлы
+  `docs/research/search_eval_issue321*.json`; производственный эмбеддер по
+  умолчанию не выбирался.
+
 ## Документация и офлайн-пример общего поиска ([#368](https://github.com/MRDK80/v8unpack-agent/issues/368))
 
 ### Добавлено
