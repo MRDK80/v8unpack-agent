@@ -271,7 +271,6 @@ def test_filters_narrow_ambiguity_to_exact() -> None:
     [
         "форма ФормаСписка контрагента",
         "Контрагенты ИНН",
-        "Валюта Учета",
         "ЗарплатаНачисление",
         "ФормаСпис",
     ],
@@ -529,3 +528,197 @@ def test_docs_and_changelog_reference_issue() -> None:
     assert "(#326)" in changelog
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
     assert "docs/search_dispatch.md" in readme
+
+
+# --- нормализация разделителей (#385) -------------------------------------------
+
+
+@pytest.mark.parametrize("text", ["Валюта Учета", "валюта_учета", "ВАЛЮТА-УЧЕТА"])
+def test_issue385_owner_separators_without_embedder(text: str) -> None:
+    dispatcher, embedder, *_ = setup()
+    out = dispatcher.search(q(text))
+    assert out.result.status == "exact"
+    assert ids(out) == [CONST.artifact_id]
+    assert out.result.hits[0].matched_field == "owner_name"
+    assert out.path == ("exact",) and embedder.calls == 0
+
+
+@pytest.mark.parametrize("text", ["Общая Форма", "Общая_Форма", "Общая-Форма"])
+def test_issue385_form_without_owner(text: str) -> None:
+    out = SearchDispatcher(ExactCatalog.from_artifacts([COMMON_FORM])).search(q(text))
+    assert out.result.status == "exact"
+    assert ids(out) == [COMMON_FORM.artifact_id]
+    assert out.result.hits[0].matched_field == "form_name"
+
+
+def test_issue385_e4_without_synonym() -> None:
+    artifact = _module(
+        "external_data_processor", "ExternalDataProcessor", "ЗагрузкаЦен", "object"
+    )
+    out = SearchDispatcher(ExactCatalog.from_artifacts([artifact])).search(
+        q("Загрузка Цен", mode="exact")
+    )
+    assert out.result.status == "exact"
+    assert ids(out) == [artifact.artifact_id]
+    assert out.result.hits[0].method == "exact_name"
+
+
+def test_issue385_strict_names_win_before_filters() -> None:
+    strict = _module("metadata_object", "Catalog", "Общая_Форма", "object")
+    catalog = ExactCatalog.from_artifacts([COMMON_FORM, strict])
+    dispatcher = SearchDispatcher(catalog)
+    out = dispatcher.search(q("Общая_Форма"))
+    assert ids(out) == [strict.artifact_id]
+    assert out.result.status == "exact"
+    filtered = dispatcher.search(q(
+        "Общая_Форма", mode="exact",
+        filters=SearchFilters(artifact_kinds=("form",)),
+    ))
+    assert filtered.result.status == "empty"
+    assert filtered.exact_filtered_out == 1
+
+
+def test_issue385_id_priority_over_normalized_name() -> None:
+    clash = ArtifactRef.form(
+        "CommonForm", "", "CommonForm", CONST.artifact_id.replace(":", ": ")
+    )
+    out = SearchDispatcher(ExactCatalog.from_artifacts([clash, CONST])).search(
+        q(CONST.artifact_id)
+    )
+    assert ids(out) == [CONST.artifact_id]
+    assert out.result.hits[0].method == "exact_id"
+
+
+def test_issue385_separator_collision_is_complete_and_deterministic() -> None:
+    forms = [
+        ArtifactRef.form("CommonForm", "", "CommonForm", name)
+        for name in ("Форма-Списка", "Форма_Списка", "Форма Списка")
+    ]
+    expected = [a.artifact_id for a in sorted(forms, key=ArtifactRef.sort_key)]
+    for order in (forms, list(reversed(forms))):
+        dispatcher = SearchDispatcher(ExactCatalog.from_artifacts(order))
+        out = dispatcher.search(q("ФормаСписка", top_k=1))
+        assert out.result.status == "ambiguous"
+        assert ids(out) == expected
+        assert out.path == ("exact",) and not out.semantic_used
+        strict = dispatcher.search(q("Форма_Списка"))
+        assert strict.result.status == "exact"
+        assert ids(strict) == [forms[1].artifact_id]
+
+
+def test_issue385_filters_and_owner_cards() -> None:
+    dispatcher = SearchDispatcher(ExactCatalog.from_artifacts(
+        [CAT_OBJ, CAT_MGR, DOC_OBJ, CAT_FORM, CARD]
+    ))
+    out = dispatcher.search(q(
+        "Контра-генты", filters=SearchFilters(artifact_kinds=("form",)),
+    ))
+    assert out.result.status == "exact" and ids(out) == [CAT_FORM.artifact_id]
+    assert out.exact_filtered_out == 3
+    out = dispatcher.search(q("Валюта Учета", mode="exact"))
+    assert out.result.status == "empty" and out.exact_filtered_out == 0
+    card = dispatcher.search(q(CARD.artifact_id))
+    assert ids(card) == [CARD.artifact_id]
+    assert card.result.hits[0].method == "exact_id"
+
+
+def test_issue385_filtered_normalized_miss_falls_back() -> None:
+    dispatcher, embedder, *_ = setup()
+    filters = SearchFilters(metadata_types=("Document",))
+    out = dispatcher.search(q("Валюта-Учета", filters=filters))
+    assert out.exact_filtered_out == 1
+    assert out.path == ("exact", "semantic") and embedder.calls == 1
+    assert all(filters.matches(hit.artifact) for hit in out.result.hits)
+
+
+@pytest.mark.parametrize("text", ["Общая.Форма", "Общая\tФорма", "Общая\u00a0Форма"])
+def test_issue385_other_characters_not_removed(text: str) -> None:
+    out = SearchDispatcher(ExactCatalog.from_artifacts([COMMON_FORM])).search(
+        q(text, mode="exact")
+    )
+    assert out.result.status == "empty"
+
+
+def test_issue385_empty_normalized_key() -> None:
+    artifact = ArtifactRef.form("CommonForm", "", "CommonForm", "_")
+    dispatcher = SearchDispatcher(ExactCatalog.from_artifacts([artifact]))
+    assert dispatcher.search(q("-", mode="exact")).result.status == "empty"
+    assert dispatcher.search(q("_", mode="exact")).result.status == "exact"
+
+
+def test_issue385_artifact_id_not_separator_normalized() -> None:
+    artifact = _module("metadata_object", "Catalog", "Демо_Объект", "object")
+    dispatcher = SearchDispatcher(ExactCatalog.from_artifacts([artifact]))
+    out = dispatcher.search(q(artifact.artifact_id.replace("_", ""), mode="exact"))
+    assert out.result.status == "empty"
+    assert dispatcher.search(q(artifact.artifact_id)).result.status == "exact"
+
+
+def _saved_catalog_issue385(datasets: list[dict[str, Any]]) -> ExactCatalog:
+    artifacts = []
+    for dataset in datasets:
+        for item in dataset["artifacts"]:
+            artifact_id = item.get("artifact_id") or item["id"]
+            if artifact_id.startswith("form:"):
+                parts = artifact_id.removeprefix("form:").split("/")
+                assert len(parts) == 4
+                owner = (
+                    _owner(parts[0], parts[1])
+                    if parts[0] not in (
+                        "CommonForm", "ExternalDataProcessor", "ExternalReport"
+                    ) else None
+                )
+                artifact = ArtifactRef.form(*parts, owner=owner)
+            else:
+                owner_kind, metadata_type, owner_name, module_kind = (
+                    artifact_id.split(":")
+                )
+                owner = (
+                    OwnerRef("configuration", None, None)
+                    if owner_kind == "configuration"
+                    else OwnerRef(owner_kind, metadata_type, owner_name)
+                )
+                artifact = ArtifactRef("module", owner, module_kind)
+                if owner_kind == "configuration":
+                    artifact_id = "configuration:::" + module_kind
+            assert artifact.artifact_id == artifact_id
+            artifacts.append(artifact)
+    return ExactCatalog.from_artifacts(artifacts)
+
+
+@pytest.mark.parametrize(
+    ("filenames", "expected_counts"),
+    [
+        (("search_eval_issue321.json", "search_eval_issue321_hard.json"), (8, 4, 7)),
+        (("search_eval_issue329_paraphrase.json",), (0, 8, 8)),
+    ],
+)
+def test_issue385_saved_controls(
+    filenames: tuple[str, ...], expected_counts: tuple[int, int, int],
+) -> None:
+    datasets = [
+        json.loads((REPO_ROOT / "docs" / "research" / name).read_text("utf-8"))
+        for name in filenames
+    ]
+    dispatcher = SearchDispatcher(_saved_catalog_issue385(datasets))
+    counts = {"exact": 0, "ambiguous": 0, "negative": 0}
+    for dataset in datasets:
+        for query in dataset["queries"]:
+            kind = query["class"]
+            if kind not in counts:
+                continue
+            counts[kind] += 1
+            out = dispatcher.search(q(query["text"], mode="exact", top_k=1))
+            if kind == "exact":
+                assert out.result.status == "exact", query["id"]
+                assert len(ids(out)) == 1 and ids(out)[0] in query["gold"]
+            elif kind == "ambiguous":
+                assert out.result.status == "ambiguous", query["id"]
+                assert set(ids(out)) == set(query["gold"])
+                assert len(ids(out)) == len(set(query["gold"]))
+            else:
+                assert out.result.status == "empty", query["id"]
+            assert out.path == ("exact",) and not out.semantic_used
+    assert tuple(counts[k] for k in ("exact", "ambiguous", "negative")) == (
+        expected_counts
+    )
