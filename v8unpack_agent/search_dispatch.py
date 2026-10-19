@@ -113,7 +113,10 @@ class ExactCatalog:
         проверяются. Иначе ``form_name`` формы, затем ``owner_name`` модуля или
         формы с установленным владельцем (``exact_name``). Карточка владельца
         находится только по ``artifact_id``. Подстрока и токены совпадением не
-        считаются. Фильтры запроса применяются к найденным кандидатам.
+        считаются. При отсутствии строгих именных кандидатов имена повторно
+        сравниваются без пробелов U+0020, ``_`` и ``-`` (#385). Пустой ключ
+        не используется. Фильтры применяются после выбора прохода; отсеивание
+        строгого совпадения не разрешает нормализованный проход.
         """
         if not isinstance(query, SearchQuery):
             raise TypeError("query must be SearchQuery")
@@ -127,19 +130,37 @@ class ExactCatalog:
             candidates = [
                 hit for hit in (_name_hit(a, key) for a in self.artifacts) if hit
             ]
+        if not candidates:
+            name_key = _separator_name_key(key)
+            if name_key:
+                candidates = [
+                    hit
+                    for hit in (
+                        _name_hit(a, name_key, normalize_separators=True)
+                        for a in self.artifacts
+                    )
+                    if hit
+                ]
         passed = tuple(h for h in candidates if query.filters.matches(h.artifact))
         return ExactResolution(passed, len(candidates) - len(passed))
 
 
-def _name_hit(artifact: ArtifactRef, key: str) -> SearchHit | None:
+def _separator_name_key(value: str) -> str:
+    return identity_key(value).replace(" ", "").replace("_", "").replace("-", "")
+
+
+def _name_hit(
+    artifact: ArtifactRef, key: str, *, normalize_separators: bool = False
+) -> SearchHit | None:
     if artifact.artifact_kind == "owner":
         return None
+    name_key = _separator_name_key if normalize_separators else identity_key
     form_key = artifact.form_key
-    if form_key is not None and identity_key(form_key[3]) == key:
+    if form_key is not None and name_key(form_key[3]) == key:
         return SearchHit(artifact, "exact_name", matched_field="form_name")
     owner = artifact.owner
     if owner is not None and owner.owner_name is not None and (
-        identity_key(owner.owner_name) == key
+        name_key(owner.owner_name) == key
     ):
         return SearchHit(artifact, "exact_name", matched_field="owner_name")
     return None
