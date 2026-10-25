@@ -61,10 +61,10 @@
 | `service` / `metadata_object` (HTTPService, WebService) | `scan_service_modules` (#337) | включается | `artifact_id`; `owner_name` | да | `module_entry` | #323; #328 и #371 (`HTTPService/Api`, `HTTPService/Rate`) | issue369: HTTPService 1.0000 / 0.8542, WebService 0.8750 / 0.6042 (по 8) |
 | `object` / `external_data_processor`, `external_report` | `scan_external_object_modules` (#351), только `mode="external"` | включается | `artifact_id`; `owner_name` из `ExternalDataProcessor.json` | да | `module_entry` | `test_search_corpus_issue323.py::test_external_object_module_and_form`; `test_search_api_issue328.py::test_external_scanner_only_in_external_mode` | issue369: 1.0000 / 0.8750 и 1.0000 / 0.9375 (по 8) |
 | `common_module` / `common_module` | `scan_common_modules` (#151) | включается; повтор из `ModuleIndex` — `duplicate_artifact` | `artifact_id`; `owner_name` | да | `module_entry` | `test_common_module_counted_once`; #328/#371 (`CommonModule/Shared`) | issue369: **0.7500** / 0.6146 (n=8) — ниже порога `recall@5`; issue321: 1.0000 / 0.6000 (n=2) |
-| `form` / `metadata_object_form` (4-уровневый layout) | `scan_forms` + `FormContext` | включается при непустом `bsl_text`; elem-only — `missing` | `artifact_id` `form:<T>/<N>/<C>/<F>`; `form_name`; `owner_name` | да | `form_key` | `test_owner_links_and_cards`, `test_form_statuses_and_read_failure`, `test_form_module_is_not_second_instance`; пример `unified_search.py` (exact по id формы, ambiguous по `ФормаКарточки`) | issue369: 1.0000 / 0.7917 (n=8); issue321: 1.0000 / 1.0000 (n=2) |
-| `form` / `common_form` (`CommonForm/<Форма>`) | `scan_forms` | включается | `artifact_id` `form:CommonForm//CommonForm/<Форма>`; `form_name`; по `owner_name` не находится | да | `unconfirmed`; в карточки не входит | `test_owner_links_and_cards` | issue369: 0.8750 / 0.7991 (n=8) |
-| `form` внешних обработок (`Form/<Форма>`) | `scan_forms` (`mode="external"`) | включается | `artifact_id`; `form_name`; по `owner_name` не находится | да | `unconfirmed` к владельцу #351 | `test_external_object_module_and_form` | issue369: 0.8750 / **0.3917** (n=8) — ниже порога `mrr@10` |
-| `form` внешних отчётов (`ReportForm/<Форма>`) | `scan_forms` (`mode="external"`) | включается | как у внешних обработок | да | `unconfirmed` | структурно как выше; отдельного теста формы отчёта нет | issue369: 1.0000 / **0.4875** (n=8) — ниже порога `mrr@10` |
+| `form` / `metadata_object_form` (4-уровневый layout) | `scan_forms` + `FormContext` | включается при непустом `bsl_text`; elem-only — `missing` | `artifact_id` `form:<T>/<N>/<C>/<F>`; `form_name`; `owner_name` | да | `form_key` | `test_owner_links_and_cards`, `test_form_statuses_and_read_failure`, `test_form_module_is_not_second_instance`; `test_search_forms_e2e_issue384.py` (сквозной exact/ambiguous/semantic); пример `unified_search.py` (exact по id формы, ambiguous по `ФормаКарточки`) | issue369: 1.0000 / 0.7917 (n=8); issue321: 1.0000 / 1.0000 (n=2) |
+| `form` / `common_form` (`CommonForm/<Форма>`) | `scan_forms` | включается | `artifact_id` `form:CommonForm//CommonForm/<Форма>`; `form_name`; по `owner_name` не находится | да | `unconfirmed`; в карточки не входит | `test_owner_links_and_cards`; `test_search_forms_e2e_issue384.py` | issue369: 0.8750 / 0.7991 (n=8) |
+| `form` внешних обработок (`Form/<Форма>`) | `scan_forms` (`mode="external"`) | включается | `artifact_id`; `form_name`; по `owner_name` не находится | да | `unconfirmed` к владельцу #351 | `test_external_object_module_and_form`; `test_search_forms_e2e_issue384.py` | issue369: 0.8750 / **0.3917** (n=8) — ниже порога `mrr@10` |
+| `form` внешних отчётов (`ReportForm/<Форма>`) | `scan_forms` (`mode="external"`) | включается | как у внешних обработок | да | `unconfirmed` | `test_search_forms_e2e_issue384.py` | issue369: 1.0000 / **0.4875** (n=8) — ниже порога `mrr@10` |
 | карточка владельца `owner:<kind>:<type>:<name>` | строится корпусом | включается для владельцев с подтверждённой связью | только `artifact_id` | да | — | `test_owner_links_and_cards`; #371 (`owner_name` фильтр) | отдельно не измерялась |
 
 ## Не поддержано и не проверено
@@ -78,14 +78,15 @@
   повышается документацией; карточек владельца для них нет.
 - Exact по синониму не поддержан: запрос e4 набора #321 остаётся в
   знаменателе (7/8).
-- Сквозная проверка форм через `scan_forms → collect_search_corpus →
-  search_cli` на синтетической выгрузке не выполнялась: корпус #371
-  содержал модули и owner-карточки, формы в нём не создавались; фильтр
-  `--artifact-kind form`, исключающий модуль, не доказывает успешный поиск
-  формы. Доказательства форм: #323 (включение, статусы, связи) и
-  офлайн-пример (exact по id формы, ambiguous по имени на корпусе,
-  построенном в памяти). Предложение: отдельная test-задача на сквозной
-  сценарий с формами (конфигурационной, `CommonForm`, внешней).
+- Сквозная проверка форм `scan_forms → collect_search_corpus →
+  fragment_corpus → снимок → search_api/search_cli → контекст` выполнена
+  на синтетических выгрузках в #384 (`test_search_forms_e2e_issue384.py`)
+  для формы объекта конфигурации, `CommonForm`, формы внешней обработки и
+  формы внешнего отчёта: обнаружение из файлов, исключение пустого BSL,
+  exact по id и по уникальному `form_name`, полный набор при коллизии
+  имени, semantic с фильтром `form` (уникальность и `top_k`), совпадение
+  Library и CLI, координаты и бюджет контекста. Эмбеддер демонстрационный:
+  проверена механика, а не качество ранжирования форм.
 - Негативный порог отказа semantic не задан: пустой gold не требует
   `empty`; распределение top-1 similarity на negative — диагностика.
 - Данные #370 синтетические; процедуры заданы комментариями, пары одного
