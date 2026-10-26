@@ -113,7 +113,7 @@ def unpack_all_forms(
             artifact = replace(artifact, form_id=source.form_id, source=source)
 
         elem_result: ElemIndexResult = parse_elem_json(
-            form_root(unpacked_root, artifact.form_id)
+            form_root(unpacked_root, artifact.form_id), write_index=True
         )
 
         if elem_result.elem_index_ok or elem_result.warnings:

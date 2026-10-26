@@ -195,6 +195,12 @@ POSIX-пути, одинаковые на POSIX и NT.
 | `form_dispatcher` | `FormDispatcher`: роутер, при промахе — RAG | [form_router](docs/form_router.md) |
 | `common_modules` | `scan_common_modules`, `build_common_module_context` | [common_modules](docs/common_modules.md) |
 | `modules` и сканеры модулей | `ModuleEntry`, `ModuleIndex`, `scan_*_modules`, `to_llm_module_fragment` | [modules](docs/modules.md) |
+| `search_contract` | `ArtifactRef`, `SearchDocument`, `SearchQuery`, `SearchResult`, `OwnerLink` | [search_contract](docs/search_contract.md) |
+| `search_corpus` | `build_search_corpus`, `build_form_inputs`, `read_module_text`, `SearchCorpus` | [search_corpus](docs/search_corpus.md) |
+| `search_fragments` | `fragment_module`, `fragment_corpus`, `verify_fragmentation` | [search_fragments](docs/search_fragments.md) |
+| `search_index` | `build_index`, `query_index`, `save_index`, `load_index`, `EmbedderIdentity` | [search_index](docs/search_index.md) |
+| `search_dispatch` | `SearchDispatcher`, `ExactCatalog`, `DispatchResult` | [search_dispatch](docs/search_dispatch.md) |
+| `search_context` | `build_search_context`, `SearchContext` | [search_context](docs/search_context.md) |
 | `managed_forms` | `discover_elem_forms`, `ElemFormEntry` | [managed_forms_structure](docs/managed_forms_structure.md) |
 | `skd_extractor` | `extract_skd_queries`, `extract_all_skd_queries` | [skd_extractor](docs/skd_extractor.md) |
 | `drift_checker` | `check_drift`, `DriftReport` | [drift_checker](docs/drift_checker.md) |
@@ -232,6 +238,14 @@ POSIX-пути, одинаковые на POSIX и NT.
 - [Общие модули](docs/common_modules.md)
 - [Модель BSL-модулей `ModuleEntry` и `ModuleIndex`](docs/modules.md)
 - [Итоговая матрица BSL-покрытия](docs/bsl_coverage_matrix.md)
+- [Контракт общего поиска по формам и модулям](docs/search_contract.md)
+- [Поисковый корпус: адаптеры форм и модулей](docs/search_corpus.md)
+- [Фрагментация и поисковая подготовка текста](docs/search_fragments.md)
+- [Общий смысловой индекс и снимок](docs/search_index.md)
+- [Точный поиск и диспетчер смыслового fallback](docs/search_dispatch.md)
+- [Контекст результатов поиска и бюджет LLM (#327)](docs/search_context.md)
+- [Общий поиск: CLI, JSON и офлайн-пример (#328)](docs/search_cli.md)
+- [Матрица поискового покрытия видов артефактов (#372)](docs/search_coverage.md)
 - [Контроль дрейфа](docs/drift_checker.md)
 
 ### Исследования
@@ -246,6 +260,7 @@ POSIX-пути, одинаковые на POSIX и NT.
 - [Структура `Form.bin`](docs/research/form_bin_issue150.md)
 - [Валидация на третьей выгрузке](docs/research/third_configuration_validation.md)
 - [Инвентаризация BSL-модулей](docs/research/bsl_module_inventory_issue202.md)
+- [Поисковое представление форм и модулей, eval-набор (#321)](docs/research/search_representation_issue321.md)
 
 ### Примеры и политики
 
@@ -263,10 +278,12 @@ POSIX-пути, одинаковые на POSIX и NT.
   ссылочной формой; остальные UUID остаются `Ref#<uuid>`.
 - В режиме `mode="external"` индекс ссылочных типов не собирается.
 - Индекс BSL-модулей (`--include-module-index`) покрывает только доказанные
-  layout normalized-выгрузки конфигурации. Остаток — последовательности,
+  layout normalized-выгрузки конфигурации и модули объектов внешних
+  обработок и отчётов в режиме `external` (#351). Остаток — последовательности,
   `obj` планов счетов, планов видов расчёта и регистров бухгалтерии,
-  расширения и модули объектов внешних обработок — перечислен в
-  [матрице покрытия](docs/bsl_coverage_matrix.md).
+  расширения — перечислен в [матрице покрытия](docs/bsl_coverage_matrix.md).
+- Общий поиск: покрытие по видам артефактов, пробелы и измеренные группы
+  ниже планки — в [матрице поискового покрытия](docs/search_coverage.md).
 - Распаковщики из `examples/` и тестов — заглушки и не читают бинарный
   формат.
 

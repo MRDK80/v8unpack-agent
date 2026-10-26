@@ -955,7 +955,14 @@ def _find_legacy_form_json(form_root: Path) -> Path | None:
     )
 
 
-def parse_elem_json(form_root: Path) -> ElemIndexResult:
+def parse_elem_json(
+    form_root: Path, *, write_index: bool = True,
+) -> ElemIndexResult:
+    """Parse form elements; the legacy default also writes the derived index.
+
+    Readers pass ``write_index=False`` to avoid creating or modifying files.
+    The parsing algorithm and returned element structure are unchanged.
+    """
     warnings: list[str] = []
 
     elem_path = _find_elem_json(form_root)
@@ -1040,15 +1047,16 @@ def parse_elem_json(form_root: Path) -> ElemIndexResult:
     _warn_unresolved_group_hierarchy(elements, warnings)
     _attach_handlers_from_bsl(form_root, elements, warnings)
 
-    index_path = form_root / "form_elements_index.json"
-    try:
-        index_path.write_text(
-            json.dumps({"form": form_root.name, "elements": elements}, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
-    except Exception as exc:  # noqa: BLE001 — best-effort контракт: сбой превращается в диагностику
-        warnings.append(f"Не удалось записать {safe_path_ref(index_path)}: "
-            f"{safe_error_text(exc, index_path)}")
+    if write_index:
+        index_path = form_root / "form_elements_index.json"
+        try:
+            index_path.write_text(
+                json.dumps({"form": form_root.name, "elements": elements}, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+        except Exception as exc:  # noqa: BLE001 — best-effort контракт: сбой превращается в диагностику
+            warnings.append(f"Не удалось записать {safe_path_ref(index_path)}: "
+                f"{safe_error_text(exc, index_path)}")
 
     return ElemIndexResult(True, elements, warnings)
 
