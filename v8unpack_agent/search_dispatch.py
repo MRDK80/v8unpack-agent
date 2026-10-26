@@ -97,10 +97,16 @@ class ExactCatalog:
 
     @classmethod
     def from_fragmentation(cls, result: FragmentationResult) -> ExactCatalog:
-        """Артефакты фрагментов #324."""
+        """Артефакты фрагментов #324.
+
+        Каталог строится один раз на результат фрагментации и
+        переиспользуется последующими запросами (#397).
+        """
         if not isinstance(result, FragmentationResult):
             raise TypeError("result must be FragmentationResult")
-        return cls.from_documents(result.documents)
+        return result.derived(
+            "exact_catalog", lambda: cls.from_documents(result.documents)
+        )
 
     def __len__(self) -> int:
         return len(self.artifacts)
