@@ -45,6 +45,14 @@ for fragment in result.fragments:
   `owner_links`; `documents` возвращает `SearchDocumentSet`,
   `representation_version` — версию правил. `to_dict()`/`to_json()` не включают
   ни исходный, ни поисковый текст без явного `include_text=True`.
+  Производные индексы (#397) строятся один раз при первом обращении и
+  переиспользуются последующими запросами: `documents` (кэшируется),
+  `documents_by_identity()`, `documents_by_id()`, `owner_links_by_artifact()`
+  и общий `derived(key, build)`, через который `ExactCatalog.from_fragmentation()`
+  хранит каталог точного поиска. Кэш не участвует в сравнении, `repr` и
+  сериализации; поэтому повторные запросы к одному результату фрагментации не
+  пересобирают набор документов и не перебирают все фрагменты. Однократный
+  запрос CLI не ускоряется: процесс выполняет один запрос.
 - `FragmentationItem` — отпечаток источника, баланс строк, причины и fallback.
   `FragmentReason` — enum диагностики, `UNKNOWN` зарезервирован, не выдаётся как успех.
 

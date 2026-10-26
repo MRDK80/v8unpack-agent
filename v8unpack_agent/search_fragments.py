@@ -9,10 +9,10 @@ import hashlib
 import re
 import unicodedata
 from collections import Counter
-from collections.abc import Mapping
-from dataclasses import dataclass
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Literal
+from typing import Any, Literal, TypeVar
 
 from v8unpack_agent.search_contract import (
     ArtifactRef,
@@ -24,6 +24,8 @@ from v8unpack_agent.search_contract import (
     to_canonical_json,
 )
 from v8unpack_agent.search_corpus import CorpusReport, SearchCorpus
+
+_T = TypeVar("_T")
 
 __all__ = [
     "SEARCH_FRAGMENTS_SCHEMA",
@@ -228,6 +230,11 @@ class FragmentationResult:
     items: tuple[FragmentationItem, ...]
     corpus_report: CorpusReport | None = None
     owner_links: tuple[OwnerLink, ...] = ()
+    # Производные индексы неизменяемого результата (#397): строятся один раз
+    # при первом обращении и не участвуют в сравнении, repr и сериализации.
+    _derived: dict[str, Any] = field(
+        default_factory=dict, init=False, repr=False, compare=False
+    )
 
     def __post_init__(self) -> None:
         if not isinstance(self.parameters, FragmentParameters):
@@ -244,7 +251,53 @@ class FragmentationResult:
 
     @property
     def documents(self) -> SearchDocumentSet:
-        return SearchDocumentSet(tuple(f.document for f in self.fragments))
+        cached = self._derived.get("documents")
+        if cached is None:
+            cached = SearchDocumentSet(tuple(f.document for f in self.fragments))
+            self._derived["documents"] = cached
+        return cached
+
+    def derived(self, key: str, build: Callable[[], _T]) -> _T:
+        """Вернуть производное значение, построив его один раз (#397).
+
+        Результат фрагментации неизменяем, поэтому значения, вычисленные по
+        нему (каталог точного поиска, индексы фрагментов), переиспользуются
+        между запросами. ``build`` вызывается только при первом обращении.
+        """
+        if key not in self._derived:
+            self._derived[key] = build()
+        return self._derived[key]  # type: ignore[no-any-return]
+
+    def documents_by_identity(self) -> Mapping[str, tuple[SearchDocument, ...]]:
+        """Документы фрагментов по ``artifact.identity`` в порядке фрагментов."""
+        def build() -> Mapping[str, tuple[SearchDocument, ...]]:
+            grouped: dict[str, list[SearchDocument]] = {}
+            for fragment in self.fragments:
+                grouped.setdefault(fragment.document.artifact.identity, []).append(
+                    fragment.document
+                )
+            return {key: tuple(value) for key, value in grouped.items()}
+        return self.derived("documents_by_identity", build)
+
+    def documents_by_id(self) -> Mapping[str, tuple[SearchDocument, ...]]:
+        """Документы фрагментов по ``document_id`` в порядке фрагментов."""
+        def build() -> Mapping[str, tuple[SearchDocument, ...]]:
+            grouped: dict[str, list[SearchDocument]] = {}
+            for fragment in self.fragments:
+                grouped.setdefault(fragment.document.document_id, []).append(
+                    fragment.document
+                )
+            return {key: tuple(value) for key, value in grouped.items()}
+        return self.derived("documents_by_id", build)
+
+    def owner_links_by_artifact(self) -> Mapping[ArtifactRef, tuple[OwnerLink, ...]]:
+        """Связи владельцев по артефакту в исходном порядке ``owner_links``."""
+        def build() -> Mapping[ArtifactRef, tuple[OwnerLink, ...]]:
+            grouped: dict[ArtifactRef, list[OwnerLink]] = {}
+            for link in self.owner_links:
+                grouped.setdefault(link.artifact, []).append(link)
+            return {key: tuple(value) for key, value in grouped.items()}
+        return self.derived("owner_links_by_artifact", build)
 
     @property
     def representation_version(self) -> str:

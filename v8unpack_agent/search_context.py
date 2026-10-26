@@ -222,11 +222,16 @@ def _plan(
 ) -> tuple[tuple[_Unit, ...], tuple[ContextOmission, ...]]:
     units: list[_Unit] = []
     missing: list[ContextOmission] = []
-    fragments = () if fragmentation is None else fragmentation.fragments
-    all_links = () if fragmentation is None else fragmentation.owner_links
+    # Индексы строятся по требованию один раз на результат фрагментации
+    # (#397) и дают тот же набор и порядок документов/связей, что прежний
+    # полный перебор.
     for hit in dispatch.result.hits:
         links = tuple(sorted(
-            (link for link in all_links if link.artifact == hit.artifact),
+            (
+                ()
+                if fragmentation is None
+                else fragmentation.owner_links_by_artifact().get(hit.artifact, ())
+            ),
             key=lambda link: _json(link.to_dict()),
         ))
         if dispatch.result.status == "ambiguous":
@@ -234,14 +239,14 @@ def _plan(
                 hit, (), None, "", links, candidate_only=True
             ), ()))
             continue
-        documents = tuple(
-            f.document for f in fragments
-            if (
-                f.document.document_id == hit.document_id
-                if hit.document_id is not None
-                else f.document.artifact.identity == hit.artifact.identity
+        if fragmentation is None:
+            documents: tuple[SearchDocument, ...] = ()
+        elif hit.document_id is not None:
+            documents = fragmentation.documents_by_id().get(hit.document_id, ())
+        else:
+            documents = fragmentation.documents_by_identity().get(
+                hit.artifact.identity, ()
             )
-        )
         if not documents:
             ids = () if hit.document_id is None else (hit.document_id,)
             missing.append(ContextOmission(hit, ids, None, "source_missing"))
