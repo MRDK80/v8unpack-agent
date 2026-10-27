@@ -722,6 +722,15 @@ Production-код, схема, `examples/*.py`, workflow и `pyproject.toml` н�
 Результаты: Ruff RC=0, Mypy RC=0 на 25 файлах, pytest 1118 passed
 (1111 baseline и 7 новых проверок).
 
+## Issue #393 — релиз 0.2.0
+
+Выпущена стабильная версия `0.2.0` (эпики #81, #201, #320): опубликована в
+production PyPI и является версией по умолчанию для `pip install
+v8unpack-agent`. Тег `v0.2.0` указывает на release commit `main`
+`479b4faf6c40b1a78189ca9c285a33837ed74db3`; release run `40448320083`
+успешен, артефакты workflow и PyPI побайтно совпадают (SHA-256 — в
+CHANGELOG). Точная и непинованная установки в чистом окружении дают `0.2.0`.
+
 ## Issue #149 — подготовка публикации в PyPI
 
 Выпущена стабильная версия `0.1.0`: она опубликована в production PyPI и
