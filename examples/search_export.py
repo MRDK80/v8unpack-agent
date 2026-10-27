@@ -20,7 +20,9 @@ python examples/search_export.py /path/to/external_export --mode external
 Входные данные: EXPORT_ROOT — корень уже распакованной выгрузки
 (конфигурация или, с ``--mode external``, внешние обработки и отчёты).
 Ожидаемый результат: обезличенный агрегат в stdout и RC=0; RC=1 —
-нарушена проверка механики поиска или выгрузка изменилась.
+нарушена проверка механики поиска или выгрузка изменилась
+(``export_changes`` показывает, что именно). ``package_source`` сообщает,
+выполнялся ли пакет из этого клона или установленный в окружении.
 Поведение без данных: штатная ошибка argparse (RC=2) — это ожидаемое
 поведение, а не дефект; в автоматический прогон файл не входит.
 """
@@ -37,6 +39,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+import v8unpack_agent
 from v8unpack_agent.search_api import (
     HashedBagOfWordsDemoEmbedder,
     build_search_snapshot,
@@ -62,6 +65,28 @@ def _state(root: Path) -> dict[str, tuple[int, int]]:
             info = path.lstat()
             state[path.relative_to(root).as_posix()] = (info.st_size, info.st_mtime_ns)
     return state
+
+
+def _changes(before: dict[str, tuple[int, int]], after: dict[str, tuple[int, int]]) -> dict[str, int]:
+    """Обезличенная сводка изменений: имя файла только для служебных индексов."""
+    changed = (after.keys() - before.keys()) | {
+        key for key in before.keys() & after.keys() if before[key] != after[key]
+    }
+    summary: Counter[str] = Counter()
+    for key in changed:
+        name = key.rsplit("/", 1)[-1]
+        tag = name if name == "form_elements_index.json" else "other"
+        summary[f"{tag}:{'added' if key not in before else 'changed'}"] += 1
+    if before.keys() - after.keys():
+        summary["removed"] = len(before.keys() - after.keys())
+    return dict(sorted(summary.items()))
+
+
+def _package_source() -> str:
+    """Откуда импортирован пакет: из этого клона или установленный."""
+    repo = Path(__file__).resolve().parents[1]
+    module = Path(str(v8unpack_agent.__file__)).resolve()
+    return "this_repo" if module.is_relative_to(repo) else "installed"
 
 
 def _sample(fragmentation: FragmentationResult) -> list[Any]:
@@ -207,7 +232,9 @@ def main(argv: list[str] | None = None) -> int:
     report = build_report(root, args.mode)
     after = _state(root)
     unchanged = before == after
+    report["package_source"] = _package_source()
     report["export_unchanged"] = unchanged
+    report["export_changes"] = _changes(before, after)
     ok = unchanged and _checks_ok(report)
     report["checks"] = "ok" if ok else "failed"
     print(json.dumps(report, ensure_ascii=True, indent=2, sort_keys=True))

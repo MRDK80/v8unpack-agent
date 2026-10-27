@@ -103,6 +103,8 @@ def test_example_runs_on_export(
     report: dict[str, Any] = json.loads(first.stdout)
     assert report["checks"] == "ok"
     assert report["export_unchanged"] is True
+    assert report["export_changes"] == {}
+    assert report["package_source"] == "this_repo"
     assert report["mode"] == mode
     assert {key.split(":")[0] for key in report["corpus"]} == kinds
     assert report["sample"] > 0
@@ -145,6 +147,7 @@ def test_changed_export_fails(
     assert module.main([str(root)]) == 1
     report = json.loads(capsys.readouterr().out)
     assert report["export_unchanged"] is False
+    assert report["export_changes"] == {"other:added": 1}
     assert report["checks"] == "failed"
 
 
