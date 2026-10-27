@@ -5,10 +5,7 @@
 форм и компактный контекст для LLM.
 
 Задача пакета — дать агенту достоверные сведения о формах и модулях без
-угадывания. С версии `0.2.0` пакет также строит индекс всех BSL-модулей
-конфигурации и общий поиск по формам и модулям: точный по имени или
-идентификатору и смысловой по явно переданному эмбеддеру, с контекстом под
-бюджет LLM. Где данные нечитаемы, результат помечается как неполный, а не
+угадывания. С `0.2.0` — индекс BSL-модулей и общий поиск. Где данные нечитаемы, результат помечается как неполный, а не
 достраивается догадками.
 
 Практический разбор проверки такого конвейера опубликован на Инфостарте:
@@ -35,27 +32,13 @@
 
 ## Установка
 
-Основная установка из PyPI (текущая стабильная версия — `0.2.0`):
+Основная установка из PyPI (текущая версия — `0.2.0`):
 
 ```bash
 pip install v8unpack-agent
 ```
 
-Закрепить версию:
-
-```bash
-pip install v8unpack-agent==0.2.0
-```
-
-Исторический pre-release `0.1.0rc1` остаётся доступным в PyPI и по умолчанию
-не выбирается резолверами (нужен явный pin или `--pre`):
-
-```bash
-pip install v8unpack-agent==0.1.0rc1
-```
-
-Установка актуального состояния `main` напрямую из Git остаётся вариантом для
-проверки ещё не опубликованных изменений:
+Неопубликованное состояние `main` — из Git:
 
 ```bash
 pip install git+https://github.com/MRDK80/v8unpack-agent.git
@@ -67,8 +50,7 @@ pip install git+https://github.com/MRDK80/v8unpack-agent.git
 pip install -e ".[test]"
 ```
 
-upstream `v8unpack` нужен для фактического извлечения текстов, включая
-поддержку внешних отчётов `.erf`.
+upstream `v8unpack` нужен для извлечения текстов, включая `.erf`.
 
 ## Быстрый старт: CLI
 
@@ -98,21 +80,12 @@ Degraded — неуспешное завершение: неполный кон�
 
 ## Быстрый старт: общий поиск
 
-Opt-in CLI поиска по формам и модулям уже распакованной выгрузки. Точный
-поиск работает без эмбеддера; для смыслового нужен снимок, построенный тем же
-эмбеддером. Встроен только демонстрационный `hashed-bow-demo`: он показывает
-механику, а не качество поиска.
-
 ```bash
-python -m v8unpack_agent.search_cli build <корень_выгрузки> --snapshot index.json --embedder hashed-bow-demo
-python -m v8unpack_agent.search_cli query <корень_выгрузки> --query "ФормаЭлемента" --snapshot index.json --embedder hashed-bow-demo
+python -m v8unpack_agent.search_cli build <корень> --snapshot index.json --embedder hashed-bow-demo
+python -m v8unpack_agent.search_cli query <корень> --query "Форма" --snapshot index.json --embedder hashed-bow-demo
 ```
 
-Вывод — JSON `search_cli/1`; библиотечный вход — `v8unpack_agent.search_api`
-(`collect_search_corpus`, `build_search_snapshot`, `search_with_context`).
-Подробности, коды возврата и офлайн-пример — в
-[`docs/search_cli.md`](docs/search_cli.md), покрытие видов артефактов — в
-[`docs/search_coverage.md`](docs/search_coverage.md).
+`hashed-bow-demo` — механика, не качество; см. [`docs/search_cli.md`](docs/search_cli.md).
 
 ## Быстрый старт: Python
 
@@ -171,8 +144,6 @@ index.save(Path("forms_index.json"))
 | индекс актуальности | `update_forms_index()` | `FormsIndex` с ключом `form_id` |
 | контроль дрейфа | `check_drift()` | `DriftReport` по хешам |
 | контекст для LLM | `build_form_context()` | `FormContext` и промпт-фрагмент |
-| индекс BSL-модулей | `scan_*_modules()`, `ModuleIndex` | все модули конфигурации и внешних объектов |
-| общий поиск | `search_with_context()`, `search_cli` | точный и смысловой поиск с контекстом под бюджет |
 
 ## Ключевые возможности
 
@@ -188,10 +159,6 @@ index.save(Path("forms_index.json"))
   архитектурным паттерном платформы.
 - Дрейф детектируется по хешам модуля и структуры, а не только по времени
   изменения файла.
-- Поиск и сканирование только читают выгрузку: вспомогательный
-  `form_elements_index.json` пишется лишь явным шагом пайплайна (#375).
-- Повторные запросы к одному корпусу переиспользуют подготовленный каталог
-  точного поиска (#397).
 - Сериализация индексов переносима: в файлы пишутся только относительные
 POSIX-пути, одинаковые на POSIX и NT.
 
@@ -234,7 +201,7 @@ POSIX-пути, одинаковые на POSIX и NT.
 | `search_index` | `build_index`, `query_index`, `save_index`, `load_index`, `EmbedderIdentity` | [search_index](docs/search_index.md) |
 | `search_dispatch` | `SearchDispatcher`, `ExactCatalog`, `DispatchResult` | [search_dispatch](docs/search_dispatch.md) |
 | `search_context` | `build_search_context`, `SearchContext` | [search_context](docs/search_context.md) |
-| `search_api`, `search_cli` | `collect_search_corpus`, `build_search_snapshot`, `search_with_context`, `HashedBagOfWordsDemoEmbedder`; CLI `build`/`query` | [search_cli](docs/search_cli.md) |
+| `search_api`, `search_cli` | `collect_search_corpus`, `search_with_context` | [search_cli](docs/search_cli.md) |
 | `managed_forms` | `discover_elem_forms`, `ElemFormEntry` | [managed_forms_structure](docs/managed_forms_structure.md) |
 | `skd_extractor` | `extract_skd_queries`, `extract_all_skd_queries` | [skd_extractor](docs/skd_extractor.md) |
 | `drift_checker` | `check_drift`, `DriftReport` | [drift_checker](docs/drift_checker.md) |
@@ -318,10 +285,7 @@ POSIX-пути, одинаковые на POSIX и NT.
   расширения — перечислен в [матрице покрытия](docs/bsl_coverage_matrix.md).
 - Общий поиск: покрытие по видам артефактов, пробелы и измеренные группы
   ниже планки — в [матрице поискового покрытия](docs/search_coverage.md).
-  Качество смыслового поиска оценено на синтетических наборах; на реальных
-  выгрузках не измерялось. Production-эмбеддер не выбран и не поставляется.
-  Связи `CommonForm` и внешних форм — `unconfirmed`. Смысловой снимок крупной
-  конфигурации занимает сотни мегабайт и больше; размер исследуется в #398.
+  Качество оценено на синтетике; эмбеддер не поставляется; размер снимка — #398.
 - Распаковщики из `examples/` и тестов — заглушки и не читают бинарный
   формат.
 
