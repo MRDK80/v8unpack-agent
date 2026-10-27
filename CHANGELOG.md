@@ -1,5 +1,21 @@
 # Changelog
 
+## Отключение атрибуции Claude Code ([#409](https://github.com/MRDK80/v8unpack-agent/issues/409))
+
+### Инфраструктура
+
+- `.claude/settings.json`: ключ `attribution` с пустыми `commit` и `pr` и
+  `sessionUrl: false` — облачные сессии Claude Code с этим репозиторием не
+  добавляют атрибуцию и ссылку на сессию в коммиты и описания PR.
+
+### Ограничения
+
+- Не влияет на тела issue и комментарии и на уже существующие коммиты.
+
+### Не изменялось
+
+- Runtime/API, схемы, CI и версия пакета.
+
 ## Пример общего поиска на реальной выгрузке ([#404](https://github.com/MRDK80/v8unpack-agent/issues/404))
 
 ### Документация
