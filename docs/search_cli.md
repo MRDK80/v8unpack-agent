@@ -2,8 +2,8 @@
 
 Вход: `python -m v8unpack_agent.search_cli {build,query}`.
 Это отдельный модуль: `v8unpack-agent-run`, его parser, defaults и exit codes
-не меняются; console script поиска не добавлен. Контур #328 находится в
-`epic/320-unified-search`, что не обещает наличия поиска в релизе `0.1.0`.
+не меняются; console script поиска не добавлен. Поиск входит в `main` и
+опубликован в релизе `0.2.0` (#393); в `0.1.0` его нет.
 
 ## Офлайн-пример
 
