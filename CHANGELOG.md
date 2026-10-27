@@ -1,9 +1,23 @@
 # Changelog
 
-## 0.2.0 — подготовка релиза ([#393](https://github.com/MRDK80/v8unpack-agent/issues/393))
+## 0.2.0 — 2026-10-27 ([#393](https://github.com/MRDK80/v8unpack-agent/issues/393))
 
-Вторая стабильная версия после `0.1.0`. Дата публикации и SHA-256 артефактов
-фиксируются отдельной записью после выпуска.
+Вторая стабильная версия после `0.1.0`.
+
+- Опубликована в production PyPI существующим `release.yml` по тегу `v0.2.0`
+  (аннотированный, на release commit `main`
+  `479b4faf6c40b1a78189ca9c285a33837ed74db3`); run `40448320083` успешен,
+  включая восемь install smoke: wheel и sdist × Python 3.10/3.12 ×
+  Ubuntu/Windows. Публикация — после ручного approval окружения `pypi`.
+- Артефакты workflow и PyPI побайтно совпадают:
+  wheel `sha256 a1078425b9929c4781000316e5b7010b9b42267cbe4372a98f80b749c1eb71aa`,
+  sdist `sha256 26a9d6c9211d614962893196e4fab13eea34f4d36ced98ed0f84ac89cec7ca2b`.
+- Точная `pip install v8unpack-agent==0.2.0` и непинованная
+  `pip install v8unpack-agent` в чистом окружении дают `0.2.0`; `pip check`,
+  импорт из `site-packages`, `v8unpack-agent-run --help`, `search_cli --help`,
+  офлайн-smoke пайплайна и поиска успешны.
+- README актуализирован под `0.2.0`: индекс модулей, общий поиск и его
+  быстрый старт, ограничения поиска.
 
 - `project.version` повышена до `0.2.0`; тег релиза — `v0.2.0`. Packaging-контракт
   `tests/test_packaging_issue149.py` ожидает `0.2.0`.

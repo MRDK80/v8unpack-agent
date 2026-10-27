@@ -5,7 +5,7 @@
 форм и компактный контекст для LLM.
 
 Задача пакета — дать агенту достоверные сведения о формах и модулях без
-угадывания. Где данные нечитаемы, результат помечается как неполный, а не
+угадывания. С `0.2.0` — индекс BSL-модулей и общий поиск. Где данные нечитаемы, результат помечается как неполный, а не
 достраивается догадками.
 
 Практический разбор проверки такого конвейера опубликован на Инфостарте:
@@ -32,21 +32,13 @@
 
 ## Установка
 
-Основная установка из PyPI:
+Основная установка из PyPI (текущая версия — `0.2.0`):
 
 ```bash
 pip install v8unpack-agent
 ```
 
-Исторический pre-release `0.1.0rc1` остаётся доступным в PyPI и по умолчанию
-не выбирается резолверами (нужен явный pin или `--pre`):
-
-```bash
-pip install v8unpack-agent==0.1.0rc1
-```
-
-Установка актуального состояния `main` напрямую из Git остаётся вариантом для
-проверки ещё не опубликованных изменений:
+Неопубликованное состояние `main` — из Git:
 
 ```bash
 pip install git+https://github.com/MRDK80/v8unpack-agent.git
@@ -58,8 +50,7 @@ pip install git+https://github.com/MRDK80/v8unpack-agent.git
 pip install -e ".[test]"
 ```
 
-upstream `v8unpack` нужен для фактического извлечения текстов, включая
-поддержку внешних отчётов `.erf`.
+upstream `v8unpack` нужен для извлечения текстов, включая `.erf`.
 
 ## Быстрый старт: CLI
 
@@ -86,6 +77,15 @@ Degraded — неуспешное завершение: неполный кон�
 успехом для автоматизации. Полное описание аргументов, стадий и кодов причин —
 в [`docs/runner.md`](docs/runner.md), схема отчёта — в
 [`docs/run_report.md`](docs/run_report.md).
+
+## Быстрый старт: общий поиск
+
+```bash
+python -m v8unpack_agent.search_cli build <корень> --snapshot index.json --embedder hashed-bow-demo
+python -m v8unpack_agent.search_cli query <корень> --query "Форма" --snapshot index.json --embedder hashed-bow-demo
+```
+
+`hashed-bow-demo` — механика, не качество; см. [`docs/search_cli.md`](docs/search_cli.md).
 
 ## Быстрый старт: Python
 
@@ -201,6 +201,7 @@ POSIX-пути, одинаковые на POSIX и NT.
 | `search_index` | `build_index`, `query_index`, `save_index`, `load_index`, `EmbedderIdentity` | [search_index](docs/search_index.md) |
 | `search_dispatch` | `SearchDispatcher`, `ExactCatalog`, `DispatchResult` | [search_dispatch](docs/search_dispatch.md) |
 | `search_context` | `build_search_context`, `SearchContext` | [search_context](docs/search_context.md) |
+| `search_api`, `search_cli` | `collect_search_corpus`, `search_with_context` | [search_cli](docs/search_cli.md) |
 | `managed_forms` | `discover_elem_forms`, `ElemFormEntry` | [managed_forms_structure](docs/managed_forms_structure.md) |
 | `skd_extractor` | `extract_skd_queries`, `extract_all_skd_queries` | [skd_extractor](docs/skd_extractor.md) |
 | `drift_checker` | `check_drift`, `DriftReport` | [drift_checker](docs/drift_checker.md) |
@@ -284,6 +285,7 @@ POSIX-пути, одинаковые на POSIX и NT.
   расширения — перечислен в [матрице покрытия](docs/bsl_coverage_matrix.md).
 - Общий поиск: покрытие по видам артефактов, пробелы и измеренные группы
   ниже планки — в [матрице поискового покрытия](docs/search_coverage.md).
+  Качество оценено на синтетике; эмбеддер не поставляется; размер снимка — #398.
 - Распаковщики из `examples/` и тестов — заглушки и не читают бинарный
   формат.
 
