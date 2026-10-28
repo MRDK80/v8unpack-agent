@@ -38,6 +38,7 @@ from v8unpack_agent.search_corpus import (
 from v8unpack_agent.search_dispatch import ExactCatalog, SearchDispatcher
 from v8unpack_agent.search_fragments import FragmentationResult
 from v8unpack_agent.search_index import (
+    SEARCH_INDEX_SCHEMA,
     Embedder,
     EmbedderIdentity,
     SearchIndex,
@@ -142,10 +143,16 @@ def build_search_snapshot(
     fragmentation: FragmentationResult,
     embedder: Embedder,
     path: str | os.PathLike[str],
+    *,
+    schema: str = SEARCH_INDEX_SCHEMA,
 ) -> SearchIndex:
-    """Построить индекс по явно переданному эмбеддеру и атомарно сохранить."""
+    """Построить индекс по явно переданному эмбеддеру и атомарно сохранить.
+
+    ``schema`` — формат снимка: ``search_index/1`` (по умолчанию) или
+    ``search_index/2`` (#413).
+    """
     index = build_index(fragmentation, embedder)
-    save_index(index, path)
+    save_index(index, path, schema=schema)
     return index
 
 

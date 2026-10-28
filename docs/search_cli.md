@@ -37,6 +37,10 @@ python -m v8unpack_agent.search_cli query --help
 build: обязательны export_root, `--snapshot PATH`,
 `--embedder hashed-bow-demo`. Корпус → fragment_corpus → построение и
 атомарное сохранение снимка. Каталог-родитель должен существовать.
+`--snapshot-format 1|2` (default 1): `1` — `search_index/1`, один JSON;
+`2` — `search_index/2` (#413), метаданные по PATH и файл векторов
+`PATH.<hash>.vec` рядом. `query --snapshot` читает оба формата;
+`snapshot.schema` в JSON build — схема записанного снимка.
 Без --embedder — код 2, не скрытый выбор модели.
 
 query: обязательны export_root и `--query TEXT`.

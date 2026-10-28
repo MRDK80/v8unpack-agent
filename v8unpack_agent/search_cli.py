@@ -88,7 +88,13 @@ from v8unpack_agent.search_contract import (
     to_canonical_json,
 )
 from v8unpack_agent.search_fragments import FragmentationResult, fragment_corpus
-from v8unpack_agent.search_index import SearchIndex, SearchIndexError, load_index
+from v8unpack_agent.search_index import (
+    SEARCH_INDEX_SCHEMA,
+    SEARCH_INDEX_SCHEMA_V2,
+    SearchIndex,
+    SearchIndexError,
+    load_index,
+)
 
 __all__ = ["SEARCH_CLI_SCHEMA", "build_parser", "main"]
 
@@ -97,6 +103,7 @@ SEARCH_CLI_SCHEMA = "search_cli/1"
 _PROGRAM = "python -m v8unpack_agent.search_cli"
 _MODES = ("config", "external")
 _SEARCH_MODES = ("auto", "exact", "semantic")
+_SNAPSHOT_FORMATS = {"1": SEARCH_INDEX_SCHEMA, "2": SEARCH_INDEX_SCHEMA_V2}
 _DEGRADED_SEARCH_ERRORS = frozenset({"incompatible_index", "index_not_ready"})
 _OK_CONTEXT = frozenset({"built", "truncated"})
 _SNAPSHOT_NOT_FOUND = "snapshot_not_found"
@@ -195,6 +202,15 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         required=True,
         help="путь к JSON-файлу снимка; каталог должен существовать",
+    )
+    build.add_argument(
+        "--snapshot-format",
+        choices=tuple(_SNAPSHOT_FORMATS),
+        default="1",
+        help=(
+            "1 — search_index/1, один JSON (по умолчанию); 2 — search_index/2: "
+            "метаданные и файл векторов рядом (#413)"
+        ),
     )
     _add_embedder_argument(build, required=True)
 
@@ -342,8 +358,10 @@ def _run_build(
     payload["corpus"] = _corpus_summary(fragmentation)
     payload["fragments"] = len(fragmentation.fragments)
     try:
+        schema = _SNAPSHOT_FORMATS[args.snapshot_format]
         index = build_search_snapshot(
-            fragmentation, HashedBagOfWordsDemoEmbedder(), Path(args.snapshot)
+            fragmentation, HashedBagOfWordsDemoEmbedder(), Path(args.snapshot),
+            schema=schema,
         )
     except SearchIndexError as exc:
         if exc.code not in ("embedder_failed", "invalid_vector"):
@@ -352,7 +370,7 @@ def _run_build(
     except OSError:
         return _fail(payload, _SNAPSHOT_WRITE_FAILED, EXIT_WRITE_ERROR)
     payload["snapshot"] = {
-        "schema": index.schema,
+        "schema": schema,
         "representation_version": index.representation_version,
         "embedder": index.embedder.to_dict(),
         "entries": len(index.entries),
