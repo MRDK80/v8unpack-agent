@@ -5,16 +5,19 @@
 не хранится: только document_id, координаты, три хэша и векторы.
 Контракты search_contract/1, search_corpus/1, search_fragments/1 не меняются.
 Выдача query_index содержит не более одного попадания на артефакт (#362).
+Повторные запросы не пересчитывают сигнатуру свежести и, при установленном
+numpy, ранжируют подготовленной матрицей с тем же результатом (#406).
 """
 from __future__ import annotations
 
 import hashlib
+import importlib
 import json
 import math
 import os
 import tempfile
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal, Protocol
 
@@ -44,6 +47,20 @@ __all__ = [
     "save_index",
 ]
 SEARCH_INDEX_SCHEMA = "search_index/1"
+# Запас отбора кандидатов матрицей float32: заведомо больше её погрешности
+# косинуса (~1e-6); окончательные оценки считаются прежним путём (#406).
+_CANDIDATE_MARGIN = 1e-4
+
+
+def _load_numpy() -> Any:
+    """numpy — опциональная зависимость (extra ``fast``); без неё прежний путь."""
+    try:
+        return importlib.import_module("numpy")
+    except ImportError:
+        return None
+
+
+_np: Any = _load_numpy()
 Compatibility = Literal["compatible", "incompatible"]
 Freshness = Literal["fresh", "stale", "unverified"]
 
@@ -207,6 +224,11 @@ def _dump(data: object) -> str:
 
 
 def _signature(result: FragmentationResult) -> dict[str, tuple[str, str, str]]:
+    """Сигнатура свежести; строится один раз на результат фрагментации (#406)."""
+    return result.derived("search_index_signature", lambda: _compute_signature(result))
+
+
+def _compute_signature(result: FragmentationResult) -> dict[str, tuple[str, str, str]]:
     sources = {i.artifact.identity: i.source_sha256 for i in result.items}
     return {
         f.document.document_id: (
@@ -227,6 +249,10 @@ class SearchIndex:
     embedder: EmbedderIdentity
     entries: tuple[IndexEntry, ...]
     schema: str = SEARCH_INDEX_SCHEMA
+    # Производные значения (#406): не входят в равенство, repr и снимок.
+    _cache: dict[str, Any] = field(
+        default_factory=dict, init=False, repr=False, compare=False
+    )
 
     def __post_init__(self) -> None:
         ids = [e.document_id for e in self.entries]
@@ -238,7 +264,34 @@ class SearchIndex:
         embedder: EmbedderIdentity,
         fragmentation: FragmentationResult | None = None,
     ) -> IndexStatus:
-        """Совместимость и свежесть; без fragmentation свежесть — unverified."""
+        """Совместимость и свежесть; без fragmentation свежесть — unverified.
+
+        Индекс и результат фрагментации неизменяемы, поэтому итог для той же
+        идентичности эмбеддера и того же объекта фрагментации переиспользуется
+        (#406).
+        """
+        cached = self._cache.get("assess")
+        if cached is not None and cached[0] == embedder and cached[1] is fragmentation:
+            return cached[2]  # type: ignore[no-any-return]
+        status = self._assess(embedder, fragmentation)
+        self._cache["assess"] = (embedder, fragmentation, status)
+        return status
+
+    def _stored_signature(self) -> dict[str, tuple[str, str, str]]:
+        stored = self._cache.get("signature")
+        if stored is None:
+            stored = {
+                e.document_id: (e.text_sha256, e.search_sha256, e.source_sha256)
+                for e in self.entries
+            }
+            self._cache["signature"] = stored
+        return stored  # type: ignore[no-any-return]
+
+    def _assess(
+        self,
+        embedder: EmbedderIdentity,
+        fragmentation: FragmentationResult | None,
+    ) -> IndexStatus:
         reasons: list[str] = []
         if self.schema != SEARCH_INDEX_SCHEMA:
             reasons.append("index_schema")
@@ -254,10 +307,7 @@ class SearchIndex:
         if fragmentation is None:
             return IndexStatus(compatibility, "unverified", tuple(reasons))
         current = _signature(fragmentation)
-        stored = {
-            e.document_id: (e.text_sha256, e.search_sha256, e.source_sha256)
-            for e in self.entries
-        }
+        stored = self._stored_signature()
         freshness: Freshness = "fresh" if current == stored else "stale"
         if freshness == "stale":
             reasons.append("corpus_changed")
@@ -355,6 +405,62 @@ def load_index(path: str | os.PathLike[str]) -> SearchIndex:
         raise SearchIndexError("corrupt_snapshot", "duplicate document_id") from None
 
 
+def _prepared(index: SearchIndex) -> tuple[Any, Any, Any, tuple[ArtifactRef, ...]]:
+    """Матрица float32, нормы строк, номер артефакта строки и артефакты (#406)."""
+    prepared = index._cache.get("matrix")
+    if prepared is None:
+        np = _np
+        matrix = np.asarray([e.vector for e in index.entries], dtype=np.float32)
+        matrix = matrix.reshape(len(index.entries), index.embedder.dimension)
+        numbers: dict[str, int] = {}
+        artifacts: list[ArtifactRef] = []
+        rows: list[int] = []
+        for entry in index.entries:
+            key = entry.artifact.identity
+            if key not in numbers:
+                numbers[key] = len(artifacts)
+                artifacts.append(entry.artifact)
+            rows.append(numbers[key])
+        norms = np.linalg.norm(matrix, axis=1)
+        prepared = (matrix, norms, np.asarray(rows, dtype=np.intp), tuple(artifacts))
+        index._cache["matrix"] = prepared
+    return prepared  # type: ignore[no-any-return]
+
+
+def _candidates(
+    index: SearchIndex, query: SearchQuery, vector: tuple[float, ...]
+) -> Sequence[IndexEntry]:
+    """Записи, среди которых заведомо есть вся выдача прежнего алгоритма.
+
+    Матрица float32 даёт приближённые оценки с погрешностью меньше
+    ``_CANDIDATE_MARGIN``. Порог — оценка ``top_k``-го артефакта по лучшему
+    фрагменту минус запас: каждый фрагмент, который прежний алгоритм может
+    выбрать (включая равенства по ``document_id``), проходит порог. Оценки и
+    порядок затем считаются прежним путём, поэтому результат совпадает
+    побитово. Без numpy или для пустого индекса — все записи.
+    """
+    np = _np
+    if np is None or not index.entries:
+        return index.entries
+    matrix, norms, rows, artifacts = _prepared(index)
+    allowed = np.fromiter(
+        (query.filters.matches(a) for a in artifacts), dtype=bool, count=len(artifacts)
+    )
+    if not allowed.any():
+        return ()
+    q = np.asarray(vector, dtype=np.float32)
+    scores = (matrix @ q) / (norms * np.linalg.norm(q))
+    scores = np.where(allowed[rows], scores, -np.inf)
+    best = np.full(len(artifacts), -np.inf, dtype=scores.dtype)
+    np.maximum.at(best, rows, scores)
+    best = best[allowed]
+    k = min(query.top_k, best.size)
+    threshold = np.partition(best, best.size - k)[best.size - k]
+    chosen = np.flatnonzero(scores >= threshold - _CANDIDATE_MARGIN)
+    entries = index.entries
+    return [entries[i] for i in chosen.tolist()]
+
+
 def _rank(row: tuple[float, str, IndexEntry]) -> tuple[float, str]:
     """Ключ порядка: убывание оценки, при равенстве — ``document_id``."""
     return (-row[0], row[1])
@@ -372,7 +478,8 @@ def query_index(
     лучший фрагмент (наибольшая оценка, при равенстве — меньший
     ``document_id``). Затем отбираются до ``top_k`` разных артефактов по
     убыванию оценки, при равенстве — по ``document_id`` лучшего фрагмента
-    (#362).
+    (#362). При установленном numpy кандидаты отбираются подготовленной
+    матрицей, а оценки считаются тем же кодом; результат не меняется (#406).
     """
     status = index.assess(embedder.identity, fragmentation)
     if not status.queryable:
@@ -390,7 +497,7 @@ def query_index(
         return SearchResult.failed(query, "invalid_vector")
     norm = math.sqrt(sum(v * v for v in vector))
     best: dict[str, tuple[float, str, IndexEntry]] = {}
-    for entry in index.entries:
+    for entry in _candidates(index, query, vector):
         if not query.filters.matches(entry.artifact):
             continue
         entry_norm = math.sqrt(sum(v * v for v in entry.vector))
