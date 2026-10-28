@@ -39,6 +39,15 @@
   и объединение точного и смыслового путей — в `search_dispatch` (#326,
   [`search_dispatch.md`](search_dispatch.md)).
 
+## Два уровня (#407)
+
+`object_level(fragmentation)` — уровень объектов: первый фрагмент каждого
+артефакта, те же `items` и версия представления; строится один раз на
+результат фрагментации. `query_two_level(fragment_index, object_index, query,
+embedder, fragmentation)` сливает ранги артефактов двух уровней (RRF, k = 60,
+глубина `max(5·top_k, 50)`), запрос векторизуется один раз; подробности —
+[search_local_model](search_local_model.md).
+
 ## Формат хранения search_index/2 (#413)
 
 Решение владельца по итогам #399: векторы — отдельным двоичным файлом,

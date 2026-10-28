@@ -1,5 +1,45 @@
 # Changelog
 
+## Адаптер локальной модели эмбеддингов ([#407](https://github.com/MRDK80/v8unpack-agent/issues/407))
+
+### Возможности
+
+- `search_local_model.SentenceTransformerEmbedder` — опциональный адаптер
+  `sentence-transformers` (extra `local-model`): локальные веса без сети
+  (`HF_HUB_OFFLINE`/`TRANSFORMERS_OFFLINE`, `local_files_only`), выбор
+  устройства `auto|cpu|cuda`, точность `fp32|fp16` (fp16 — только cuda),
+  пакеты из текстов, отсортированных по длине, предел `--max-tokens`,
+  прогресс с оценкой времени, возобновляемый кэш векторов частями `.npz`.
+- `EmbedderIdentity` модели не зависит от пути: имя, ревизия, параметры и
+  хеши конфигурационных файлов (веса — по размеру).
+- Два уровня (решение владельца 2B): `object_level`, `build_object_snapshot`,
+  `query_two_level` — слияние рангов RRF (k = 60) уровня фрагментов и уровня
+  объектов; `SearchDispatcher(object_index=...)`,
+  `search_with_context(object_index=...)`.
+- `search_cli`: `--embedder sentence-transformers` с `--model`,
+  `--model-name`, `--model-revision`, `--device`, `--max-tokens`,
+  `--batch-size`, `--precision`, `--cache-dir`, `--progress`; `--object-snapshot` в `build`
+  и `query`; для локальной модели снимок по умолчанию `search_index/2`. Поле
+  `object_snapshot` в JSON — только при `--object-snapshot`.
+- Новые коды ошибок `embedder_unavailable`, `model_load_failed` (код 4).
+
+### Документация
+
+- `docs/search_local_model.md`; `docs/search_cli.md`, `docs/search_index.md`.
+
+### Тесты
+
+- `tests/test_search_local_model_issue407.py`: подмена `sentence_transformers`
+  и `torch` без весов и без сети — офлайн-режим, устройство, параметры,
+  идентичность, пакеты и прогресс, возобновление после прерывания, кэш;
+  слияние рангов против эталонного расчёта; CLI для двух уровней и ошибок.
+  Мутационная проверка: 18 из 18 мутаций обнаружены.
+
+### Не изменялось
+
+- Production default эмбеддера, `hashed-bow-demo`, формат вывода без новых
+  флагов, контракты поиска, CI и версия пакета.
+
 ## Формат снимка search_index/2 ([#413](https://github.com/MRDK80/v8unpack-agent/issues/413))
 
 ### Возможности

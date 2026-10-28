@@ -28,6 +28,7 @@ from v8unpack_agent.search_index import (
     IndexStatus,
     SearchIndex,
     query_index,
+    query_two_level,
 )
 
 __all__ = [
@@ -238,13 +239,16 @@ class SearchDispatcher:
 
     Без индекса или эмбеддера смысловой шаг даёт ``error/index_not_ready``;
     ``stale``/``incompatible`` дают ``error/incompatible_index`` из
-    ``query_index``. Входы и результаты не изменяются.
+    ``query_index``. С ``object_index`` смысловой шаг сливает ранги уровня
+    фрагментов и уровня объектов (``query_two_level``, #407); ``index_status``
+    — статус уровня фрагментов. Входы и результаты не изменяются.
     """
 
     catalog: ExactCatalog
     index: SearchIndex | None = None
     embedder: Embedder | None = None
     fragmentation: FragmentationResult | None = None
+    object_index: SearchIndex | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.catalog, ExactCatalog):
@@ -255,6 +259,10 @@ class SearchDispatcher:
             self.fragmentation, FragmentationResult
         ):
             raise TypeError("fragmentation must be FragmentationResult or None")
+        if self.object_index is not None and not isinstance(
+            self.object_index, SearchIndex
+        ):
+            raise TypeError("object_index must be SearchIndex or None")
 
     def search(self, query: SearchQuery) -> DispatchResult:
         """Выполнить запрос по режиму ``query.mode``."""
@@ -286,5 +294,11 @@ class SearchDispatcher:
             failed = SearchResult.failed(query, "index_not_ready")
             return DispatchResult(failed, path, None, filtered_out)
         status = self.index.assess(self.embedder.identity, self.fragmentation)
-        result = query_index(self.index, query, self.embedder, self.fragmentation)
+        if self.object_index is not None:
+            result = query_two_level(
+                self.index, self.object_index, query, self.embedder,
+                self.fragmentation,
+            )
+        else:
+            result = query_index(self.index, query, self.embedder, self.fragmentation)
         return DispatchResult(result, path, status, filtered_out)

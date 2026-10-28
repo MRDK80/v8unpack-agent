@@ -37,6 +37,7 @@ from v8unpack_agent.search_corpus import SEARCH_CORPUS_SCHEMA
 from v8unpack_agent.search_fragments import FragmentationResult
 
 __all__ = [
+    "RRF_K",
     "SEARCH_INDEX_SCHEMA",
     "SEARCH_INDEX_SCHEMA_V2",
     "SNAPSHOT_SCHEMAS",
@@ -50,7 +51,9 @@ __all__ = [
     "SearchIndexError",
     "build_index",
     "load_index",
+    "object_level",
     "query_index",
+    "query_two_level",
     "save_index",
 ]
 SEARCH_INDEX_SCHEMA = "search_index/1"
@@ -720,6 +723,94 @@ def _candidates(
     chosen = np.flatnonzero(scores >= threshold - _CANDIDATE_MARGIN)
     entries = index.entries
     return [entries[i] for i in chosen.tolist()]
+
+
+RRF_K = 60
+
+
+def object_level(fragmentation: FragmentationResult) -> FragmentationResult:
+    """Уровень объектов (#407): первый фрагмент каждого артефакта.
+
+    Строится один раз на результат фрагментации; ``items`` и версия
+    представления прежние, поэтому совместимость и свежесть индекса уровня
+    объектов проверяются тем же ``assess``.
+    """
+    def build() -> FragmentationResult:
+        seen: set[str] = set()
+        first = []
+        for fragment in fragmentation.fragments:
+            key = fragment.document.artifact.identity
+            if key not in seen:
+                seen.add(key)
+                first.append(fragment)
+        return FragmentationResult(
+            fragmentation.parameters, tuple(first), fragmentation.items,
+            fragmentation.corpus_report, fragmentation.owner_links,
+        )
+    return fragmentation.derived("search_index_object_level", build)
+
+
+class _OnceEmbedder:
+    """Один вызов ``embed`` запроса на оба уровня."""
+
+    def __init__(self, embedder: Embedder) -> None:
+        self._embedder = embedder
+        self._raw: Any = None
+
+    @property
+    def identity(self) -> EmbedderIdentity:
+        return self._embedder.identity
+
+    def embed(self, texts: Sequence[str]) -> Sequence[Sequence[float]]:
+        if self._raw is None:
+            self._raw = self._embedder.embed(texts)
+        return self._raw  # type: ignore[no-any-return]
+
+
+def query_two_level(
+    fragment_index: SearchIndex,
+    object_index: SearchIndex,
+    query: SearchQuery,
+    embedder: Embedder,
+    fragmentation: FragmentationResult | None = None,
+) -> SearchResult:
+    """Слияние рангов артефактов двух уровней (#407, решение владельца 2B).
+
+    Каждый уровень ранжируется ``query_index`` (до ``max(5·top_k, 50)``
+    артефактов). Оценка артефакта — сумма ``1/(RRF_K + ранг)`` по уровням, где
+    он найден; это ``similarity`` попадания (шкала слияния, не косинус).
+    Попадание указывает лучший фрагмент уровня фрагментов, а если артефакт
+    найден только на уровне объектов — его фрагмент. Порядок — по убыванию
+    оценки, при равенстве — порядок контракта ``search_contract/1``.
+    Несовместимый или устаревший индекс любого уровня блокирует выдачу.
+    """
+    if query.mode == "exact":
+        return SearchResult.empty(query)
+    depth = max(query.top_k * 5, 50)
+    wide = SearchQuery(query.text, mode="semantic", top_k=depth, filters=query.filters)
+    once = _OnceEmbedder(embedder)
+    objects = None if fragmentation is None else object_level(fragmentation)
+    levels = (
+        query_index(fragment_index, wide, once, fragmentation),
+        query_index(object_index, wide, once, objects),
+    )
+    for result in levels:
+        if result.status == "error" and result.error is not None:
+            return SearchResult.failed(query, result.error.code)
+    scores: dict[str, float] = {}
+    chosen: dict[str, SearchHit] = {}
+    for result in levels:
+        for rank, hit in enumerate(result.hits, start=1):
+            key = hit.artifact.identity
+            scores[key] = scores.get(key, 0.0) + 1.0 / (RRF_K + rank)
+            chosen.setdefault(key, hit)
+    ranked = sorted(scores, key=lambda key: (-scores[key], key))[: query.top_k]
+    hits = [
+        SearchHit(chosen[key].artifact, "semantic",
+                  document_id=chosen[key].document_id, similarity=scores[key])
+        for key in ranked
+    ]
+    return SearchResult.semantic(query, hits) if hits else SearchResult.empty(query)
 
 
 def _rank(row: tuple[float, str, IndexEntry]) -> tuple[float, str]:

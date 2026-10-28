@@ -48,10 +48,12 @@ stdout — один канонический JSON (``to_canonical_json``) схе
 Эмбеддер
 --------
 
-``--embedder hashed-bow-demo`` — единственное значение: демонстрационная
-механика построения и запроса индекса, а не качество поиска. Без
-``--embedder`` смысловой шаг даёт ``index_not_ready``, точный поиск работает.
-Пользовательский код не импортируется, сети и загрузки моделей нет.
+``--embedder hashed-bow-demo`` — демонстрационная механика построения и
+запроса индекса, а не качество поиска. ``--embedder sentence-transformers``
+(#407, extra ``local-model``) — локальная модель из каталога ``--model``,
+без сети и скачивания весов. Без ``--embedder`` смысловой шаг даёт
+``index_not_ready``, точный поиск работает. ``--object-snapshot`` добавляет
+уровень объектов: смысловой шаг сливает ранги двух уровней.
 """
 
 from __future__ import annotations
@@ -76,6 +78,7 @@ from v8unpack_agent.search_api import (
     DEMO_EMBEDDER_NAME,
     HashedBagOfWordsDemoEmbedder,
     SearchCorpusError,
+    build_object_snapshot,
     build_search_snapshot,
     collect_search_corpus,
     search_with_context,
@@ -91,9 +94,18 @@ from v8unpack_agent.search_fragments import FragmentationResult, fragment_corpus
 from v8unpack_agent.search_index import (
     SEARCH_INDEX_SCHEMA,
     SEARCH_INDEX_SCHEMA_V2,
+    Embedder,
     SearchIndex,
     SearchIndexError,
     load_index,
+    object_level,
+)
+from v8unpack_agent.search_local_model import (
+    DEVICES,
+    LOCAL_MODEL_EMBEDDER_NAME,
+    PRECISIONS,
+    LocalModelError,
+    SentenceTransformerEmbedder,
 )
 
 __all__ = ["SEARCH_CLI_SCHEMA", "build_parser", "main"]
@@ -112,6 +124,8 @@ _INTERNAL_ERROR = "internal_error"
 _MESSAGES = {
     "common_modules_failed": "common module discovery failed",
     "embedder_failed": "embedder failed",
+    "embedder_unavailable": "local model extra is not installed",
+    "model_load_failed": "local model could not be loaded",
     "internal_error": "internal error",
     "invalid_vector": "embedder returned an invalid vector",
     "modules_failed": "module discovery failed",
@@ -175,14 +189,35 @@ def _add_embedder_argument(
 ) -> None:
     parser.add_argument(
         "--embedder",
-        choices=(DEMO_EMBEDDER_NAME,),
+        choices=(DEMO_EMBEDDER_NAME, LOCAL_MODEL_EMBEDDER_NAME),
         default=None,
         required=required,
         help=(
             f"{DEMO_EMBEDDER_NAME}: демонстрационный хэшированный мешок слов; "
-            "механика построения и запроса индекса, а не качество поиска"
+            "механика построения и запроса индекса, а не качество поиска. "
+            f"{LOCAL_MODEL_EMBEDDER_NAME}: локальная модель (--model), extra "
+            "local-model, без сети"
         ),
     )
+    group = parser.add_argument_group("локальная модель (#407)")
+    group.add_argument("--model", type=Path, default=None,
+                       help="каталог локальной модели sentence-transformers")
+    group.add_argument("--model-name", default=None,
+                       help="имя модели для идентичности снимка, например BAAI/bge-m3")
+    group.add_argument("--model-revision", default=None,
+                       help="ревизия модели для идентичности снимка")
+    group.add_argument("--device", choices=DEVICES, default="auto",
+                       help="auto — cuda при наличии, иначе cpu")
+    group.add_argument("--precision", choices=PRECISIONS, default="fp32",
+                       help="fp16 — только cuda; входит в идентичность снимка")
+    group.add_argument("--max-tokens", type=int, default=512,
+                       help="предел длины фрагмента в токенах модели")
+    group.add_argument("--batch-size", type=int, default=32,
+                       help="размер пакета векторизации")
+    group.add_argument("--cache-dir", type=Path, default=None,
+                       help="каталог возобновляемого кэша векторов")
+    group.add_argument("--progress", action="store_true",
+                       help="печатать устройство и прогресс векторизации в stderr")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -204,12 +239,19 @@ def build_parser() -> argparse.ArgumentParser:
         help="путь к JSON-файлу снимка; каталог должен существовать",
     )
     build.add_argument(
+        "--object-snapshot",
+        type=Path,
+        default=None,
+        help="дополнительно снимок уровня объектов (первый фрагмент артефакта, #407)",
+    )
+    build.add_argument(
         "--snapshot-format",
         choices=tuple(_SNAPSHOT_FORMATS),
-        default="1",
+        default=None,
         help=(
-            "1 — search_index/1, один JSON (по умолчанию); 2 — search_index/2: "
-            "метаданные и файл векторов рядом (#413)"
+            "1 — search_index/1, один JSON; 2 — search_index/2: метаданные и "
+            "файл векторов рядом (#413). По умолчанию 1, для "
+            f"{LOCAL_MODEL_EMBEDDER_NAME} — 2"
         ),
     )
     _add_embedder_argument(build, required=True)
@@ -224,6 +266,12 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=None,
         help="снимок, построенный командой build; необязателен",
+    )
+    query.add_argument(
+        "--object-snapshot",
+        type=Path,
+        default=None,
+        help="снимок уровня объектов: слияние рангов двух уровней (#407)",
     )
     query.add_argument(
         "--search-mode",
@@ -270,6 +318,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         args = parser.parse_args(argv)
         module_groups = _resolve_module_groups(parser, args)
+        _check_embedder_arguments(parser, args)
         filters = _resolve_query(parser, args) if args.command == "query" else None
     except SystemExit as exc:
         return _exit_code_from_system_exit(exc)
@@ -358,11 +407,22 @@ def _run_build(
     payload["corpus"] = _corpus_summary(fragmentation)
     payload["fragments"] = len(fragmentation.fragments)
     try:
-        schema = _SNAPSHOT_FORMATS[args.snapshot_format]
+        embedder = _make_embedder(args)
+    except LocalModelError as exc:
+        return _fail(payload, exc.code, EXIT_FATAL)
+    fmt = args.snapshot_format or (
+        "2" if args.embedder == LOCAL_MODEL_EMBEDDER_NAME else "1"
+    )
+    schema = _SNAPSHOT_FORMATS[fmt]
+    try:
         index = build_search_snapshot(
-            fragmentation, HashedBagOfWordsDemoEmbedder(), Path(args.snapshot),
-            schema=schema,
+            fragmentation, embedder, Path(args.snapshot), schema=schema,
         )
+        object_index = None
+        if args.object_snapshot is not None:
+            object_index = build_object_snapshot(
+                fragmentation, embedder, Path(args.object_snapshot), schema=schema,
+            )
     except SearchIndexError as exc:
         if exc.code not in ("embedder_failed", "invalid_vector"):
             raise
@@ -375,6 +435,11 @@ def _run_build(
         "embedder": index.embedder.to_dict(),
         "entries": len(index.entries),
     }
+    if object_index is not None:
+        payload["object_snapshot"] = {
+            "schema": schema,
+            "entries": len(object_index.entries),
+        }
     return EXIT_OK
 
 
@@ -403,9 +468,30 @@ def _run_query(
 
     snapshot_path = None if args.snapshot is None else Path(args.snapshot)
     index, error_code = _load_snapshot(snapshot_path)
-    embedder = (
-        HashedBagOfWordsDemoEmbedder() if args.embedder is not None else None
+    try:
+        embedder = _make_embedder(args) if args.embedder is not None else None
+    except LocalModelError as exc:
+        return _fail(payload, exc.code, EXIT_FATAL)
+    object_index, object_error = _load_snapshot(
+        None if args.object_snapshot is None else Path(args.object_snapshot)
     )
+    object_degraded = False
+    if args.object_snapshot is not None:
+        object_status: dict[str, Any] = {
+            "loaded": object_index is not None,
+            "error_code": object_error,
+            "compatibility": None,
+            "freshness": None,
+        }
+        if object_index is not None and embedder is not None:
+            ostatus = object_index.assess(embedder.identity, object_level(fragmentation))
+            object_status["compatibility"] = ostatus.compatibility
+            object_status["freshness"] = ostatus.freshness
+        payload["object_snapshot"] = object_status
+        object_degraded = object_error is not None or (
+            object_status["compatibility"] == "incompatible"
+            or object_status["freshness"] == "stale"
+        )
     compatibility: str | None = None
     freshness: str | None = None
     if index is not None and embedder is not None:
@@ -427,6 +513,7 @@ def _run_query(
         filters=filters,
         index=index,
         embedder=embedder,
+        object_index=object_index,
         max_chars=args.max_chars,
     )
     payload["context"] = context.to_dict(include_text=args.include_text)
@@ -442,7 +529,7 @@ def _run_query(
             code = EXIT_DEGRADED
         else:
             code = EXIT_FATAL
-    snapshot_degraded = error_code is not None or (
+    snapshot_degraded = object_degraded or error_code is not None or (
         compatibility == "incompatible" or freshness == "stale"
     )
     if code == EXIT_OK and (snapshot_degraded or context.status not in _OK_CONTEXT):
@@ -472,6 +559,46 @@ def _report(payload: dict[str, Any], code: int) -> None:
     print(
         f"{_PROGRAM}: {payload['status']}: {', '.join(reasons)}",
         file=sys.stderr,
+    )
+
+
+_LOCAL_FLAGS = ("model", "model_name", "model_revision", "cache_dir")
+
+
+def _check_embedder_arguments(
+    parser: argparse.ArgumentParser, args: argparse.Namespace
+) -> None:
+    """Параметры локальной модели — только с её эмбеддером (код 2)."""
+    if args.embedder == LOCAL_MODEL_EMBEDDER_NAME:
+        if args.model is None or args.model_name is None:
+            parser.error("--embedder sentence-transformers требует --model и --model-name")
+        if not Path(args.model).is_dir():
+            parser.error("каталог --model не найден")
+        if args.max_tokens < 1 or args.batch_size < 1:
+            parser.error("--max-tokens и --batch-size: ожидается число >= 1")
+        return
+    if (any(getattr(args, name) is not None for name in _LOCAL_FLAGS) or args.progress
+            or args.precision != "fp32"):
+        parser.error("параметры локальной модели допустимы только с --embedder sentence-transformers")
+
+
+def _make_embedder(args: argparse.Namespace) -> Embedder:
+    if args.embedder != LOCAL_MODEL_EMBEDDER_NAME:
+        return HashedBagOfWordsDemoEmbedder()
+
+    def progress(line: str) -> None:
+        print(f"{_PROGRAM}: {sanitize_diagnostic(line)}", file=sys.stderr, flush=True)
+
+    return SentenceTransformerEmbedder(
+        args.model,
+        model_name=args.model_name,
+        model_revision=args.model_revision,
+        device=args.device,
+        max_tokens=args.max_tokens,
+        batch_size=args.batch_size,
+        precision=args.precision,
+        cache_dir=args.cache_dir,
+        progress=progress if args.progress else None,
     )
 
 

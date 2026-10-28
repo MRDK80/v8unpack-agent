@@ -37,7 +37,10 @@ python -m v8unpack_agent.search_cli query --help
 build: обязательны export_root, `--snapshot PATH`,
 `--embedder hashed-bow-demo`. Корпус → fragment_corpus → построение и
 атомарное сохранение снимка. Каталог-родитель должен существовать.
-`--snapshot-format 1|2` (default 1): `1` — `search_index/1`, один JSON;
+`--object-snapshot PATH` — дополнительно снимок уровня объектов (#407).
+`--embedder sentence-transformers` с `--model DIR --model-name NAME` —
+локальная модель, см. [search_local_model](search_local_model.md).
+`--snapshot-format 1|2` (default 1, для локальной модели 2): `1` — `search_index/1`, один JSON;
 `2` — `search_index/2` (#413), метаданные по PATH и файл векторов
 `PATH.<hash>.vec` рядом. `query --snapshot` читает оба формата;
 `snapshot.schema` в JSON build — схема записанного снимка.
@@ -48,7 +51,8 @@ query: обязательны export_root и `--query TEXT`.
 | Аргумент | Default / действие |
 |---|---|
 | --snapshot PATH | не задан; загрузить снимок |
-| --embedder hashed-bow-demo | не задан; эмбеддер только явно |
+| --embedder hashed-bow-demo\|sentence-transformers | не задан; эмбеддер только явно; параметры локальной модели — [search_local_model](search_local_model.md) |
+| --object-snapshot PATH | не задан; слияние рангов уровня фрагментов и объектов (#407) |
 | --search-mode | auto; варианты auto, exact, semantic |
 | --top-k N | 5; положительное число смысловых кандидатов |
 | --max-chars N | -1 — без ограничения; допустимо N >= 0 |
@@ -159,7 +163,9 @@ token_count_failed — только library. Фатальная ошибка п�
 common_modules_failed — common module discovery failed; modules_failed —
 module discovery failed; embedder_failed при build — embedder failed;
 invalid_vector при build — embedder returned an invalid vector;
-snapshot_write_failed — snapshot could not be written; internal_error —
+snapshot_write_failed — snapshot could not be written; embedder_unavailable —
+local model extra is not installed; model_load_failed — local model could not
+be loaded; internal_error —
 internal error. Для ошибки поиска message берётся из SearchError.message,
 не из build только из-за одинакового кода.
 
