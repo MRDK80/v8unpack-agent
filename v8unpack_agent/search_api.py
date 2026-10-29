@@ -181,6 +181,7 @@ def search_with_context(
     index: SearchIndex | None = None,
     embedder: Embedder | None = None,
     object_index: SearchIndex | None = None,
+    fusion: bool = False,
     max_chars: int,
     max_tokens: int | None = None,
     count_tokens: Callable[[str], int] | None = None,
@@ -189,7 +190,8 @@ def search_with_context(
 
     Без ``index`` или ``embedder`` смысловой шаг даёт ``index_not_ready``;
     точный поиск работает без эмбеддера. ``object_index`` — индекс уровня
-    объектов (#407): смысловой шаг сливает ранги двух уровней.
+    объектов (#407); ранги двух уровней сливаются только при ``fusion=True``
+    (#423), иначе ранжирование — по уровню фрагментов.
     """
     query = SearchQuery(
         text,
@@ -203,6 +205,7 @@ def search_with_context(
         embedder,
         fragmentation,
         object_index,
+        fusion,
     )
     return build_search_context(
         dispatcher.search(query),

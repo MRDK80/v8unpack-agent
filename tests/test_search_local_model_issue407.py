@@ -396,13 +396,19 @@ def test_object_level_and_context(fake_st: type[FakeModel], model_dir: Path,
     obj_index = build_object_snapshot(fragmentation, embedder, tmp_path / "o.json")
     assert obj_index.assess(embedder.identity, objects).freshness == "fresh"
     assert load_index(tmp_path / "o.json") == obj_index
+    query = SearchQuery("цена", mode="semantic", top_k=3)
     context = search_with_context(
+        fragmentation, "цена", search_mode="semantic", top_k=3, index=frag_index,
+        embedder=embedder, object_index=obj_index, fusion=True, max_chars=-1,
+    )
+    assert context.dispatch.result == query_two_level(
+        frag_index, obj_index, query, embedder, fragmentation)
+    # #423: без fusion ранжирование — по уровню фрагментов.
+    plain = search_with_context(
         fragmentation, "цена", search_mode="semantic", top_k=3, index=frag_index,
         embedder=embedder, object_index=obj_index, max_chars=-1,
     )
-    expected = query_two_level(frag_index, obj_index,
-                               SearchQuery("цена", mode="semantic", top_k=3), embedder, fragmentation)
-    assert context.dispatch.result == expected
+    assert plain.dispatch.result == query_index(frag_index, query, embedder, fragmentation)
     assert context.dispatch.index_status is not None
     assert context.dispatch.index_status.freshness == "fresh"
 

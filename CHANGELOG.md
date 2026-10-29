@@ -1,5 +1,34 @@
 # Changelog
 
+## Слияние рангов двух уровней — только по флагу ([#423](https://github.com/MRDK80/v8unpack-agent/issues/423))
+
+### Изменения поведения
+
+- `search_cli query --object-snapshot` без нового флага ранжирует по уровню
+  фрагментов (как без снимка объектов); снимок объектов используется для
+  сигнала `--min-score` и статуса `object_snapshot`. Сбой снимка объектов без
+  слияния даёт degraded (код 3), выдача по фрагментам не блокируется.
+- Слияние рангов RRF (#407) — флаг `--rank-fusion` (требует
+  `--object-snapshot`, иначе код 2); библиотека: `SearchDispatcher(fusion=...)`,
+  `search_with_context(fusion=...)`, default `False`. `query_two_level` не
+  изменён.
+
+### Исследование
+
+- `docs/research/two_level_fusion_issue423.md`,
+  `scripts/measure_two_level_issue423.py`: на 60 запросах #408 слияние меняет
+  лидера в 44 из 60, лидер фрагментов выпадает из топ-5 в 30 из 60;
+  вытесняются крупные артефакты (медиана 76 фрагментов против 17,5).
+
+### Документация
+
+- `docs/search_cli.md`, `docs/search_local_model.md`, `docs/search_index.md`.
+
+### Тесты
+
+- `tests/test_search_fusion_issue423.py`; `test_search_local_model_issue407.py`
+  проверяет оба режима.
+
 ## README обновляется в release-PR ([#421](https://github.com/MRDK80/v8unpack-agent/issues/421))
 
 - `docs/RELEASING.md`: README (текущая версия и состав) обновляется в том же

@@ -239,9 +239,11 @@ class SearchDispatcher:
 
     Без индекса или эмбеддера смысловой шаг даёт ``error/index_not_ready``;
     ``stale``/``incompatible`` дают ``error/incompatible_index`` из
-    ``query_index``. С ``object_index`` смысловой шаг сливает ранги уровня
-    фрагментов и уровня объектов (``query_two_level``, #407); ``index_status``
-    — статус уровня фрагментов. Входы и результаты не изменяются.
+    ``query_index``. Ранжирование — по уровню фрагментов; ``object_index``
+    сливает ранги уровня фрагментов и уровня объектов (``query_two_level``,
+    #407) только при ``fusion=True``: по замеру #423 слияние вытесняет крупные
+    артефакты с одним релевантным фрагментом. ``index_status`` — статус уровня
+    фрагментов. Входы и результаты не изменяются.
     """
 
     catalog: ExactCatalog
@@ -249,6 +251,7 @@ class SearchDispatcher:
     embedder: Embedder | None = None
     fragmentation: FragmentationResult | None = None
     object_index: SearchIndex | None = None
+    fusion: bool = False
 
     def __post_init__(self) -> None:
         if not isinstance(self.catalog, ExactCatalog):
@@ -263,6 +266,10 @@ class SearchDispatcher:
             self.object_index, SearchIndex
         ):
             raise TypeError("object_index must be SearchIndex or None")
+        if not isinstance(self.fusion, bool):
+            raise TypeError("fusion must be bool")
+        if self.fusion and self.object_index is None:
+            raise ValueError("fusion requires object_index")
 
     def search(self, query: SearchQuery) -> DispatchResult:
         """Выполнить запрос по режиму ``query.mode``."""
@@ -294,7 +301,7 @@ class SearchDispatcher:
             failed = SearchResult.failed(query, "index_not_ready")
             return DispatchResult(failed, path, None, filtered_out)
         status = self.index.assess(self.embedder.identity, self.fragmentation)
-        if self.object_index is not None:
+        if self.fusion and self.object_index is not None:
             result = query_two_level(
                 self.index, self.object_index, query, self.embedder,
                 self.fragmentation,

@@ -56,15 +56,23 @@ stderr CLI оставался однострочным. Нет каталога 
 
 Решение владельца (2B): `build --object-snapshot PATH` дополнительно строит
 снимок уровня объектов — первый фрагмент каждого артефакта
-(`search_index.object_level`). `query --snapshot S --object-snapshot O`
-сливает ранги артефактов двух уровней (`query_two_level`): каждый уровень
+(`search_index.object_level`). С #423 `query --snapshot S --object-snapshot O`
+ранжирует по уровню фрагментов, а уровень объектов даёт сигнал `--min-score`
+(#408) и статус `object_snapshot`. Слияние рангов включается явно флагом
+`--rank-fusion` (библиотека: `SearchDispatcher(..., fusion=True)`,
+`search_with_context(..., fusion=True)`). Замер #423
+([отчёт](research/two_level_fusion_issue423.md)): слияние вытесняет крупные
+артефакты, у которых релевантен один фрагмент, а первый — нет.
+
+Слияние (`query_two_level`): каждый уровень
 ранжирует до `max(5·top_k, 50)` артефактов, оценка — сумма
 `1/(60 + ранг)` по уровням (RRF, k = 60). Это `similarity` попадания — шкала
 слияния, не косинус. Попадание указывает лучший фрагмент уровня фрагментов,
 а если артефакт найден только на уровне объектов — его фрагмент. В JSON
 `query` появляется `object_snapshot: {loaded, error_code, compatibility,
-freshness}`; несовместимый или устаревший снимок любого уровня даёт
-`incompatible_index`.
+freshness}`; при `--rank-fusion` несовместимый или устаревший снимок любого
+уровня даёт `incompatible_index`, без него сбой снимка объектов делает
+результат degraded (код 3), но не блокирует выдачу по фрагментам.
 
 ## Пример
 
@@ -76,7 +84,7 @@ python -m v8unpack_agent.search_cli build EXPORT_ROOT \
 python -m v8unpack_agent.search_cli query EXPORT_ROOT --query "расчет себестоимости" \
   --snapshot S.json --object-snapshot O.json \
   --embedder sentence-transformers --model MODEL_DIR \
-  --model-name BAAI/bge-m3 --model-revision REV
+  --model-name BAAI/bge-m3 --model-revision REV --min-score 0.54
 ```
 
 Для локальной модели снимок по умолчанию пишется в `search_index/2`
