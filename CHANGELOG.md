@@ -1,5 +1,11 @@
 # Changelog
 
+## README обновляется в release-PR ([#421](https://github.com/MRDK80/v8unpack-agent/issues/421))
+
+- `docs/RELEASING.md`: README (текущая версия и состав) обновляется в том же
+  release-PR, что и версия и CHANGELOG, — PyPI показывает README из release
+  commit (`0.3.0` вышла с README, где указана `0.2.0`).
+
 ## 0.3.0 — 2026-10-29 ([#416](https://github.com/MRDK80/v8unpack-agent/issues/416))
 
 Третья стабильная версия после `0.2.0`.
