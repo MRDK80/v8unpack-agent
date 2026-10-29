@@ -1,9 +1,24 @@
 # Changelog
 
-## 0.3.0 — подготовка релиза ([#416](https://github.com/MRDK80/v8unpack-agent/issues/416))
+## 0.3.0 — 2026-10-29 ([#416](https://github.com/MRDK80/v8unpack-agent/issues/416))
 
-Третья стабильная версия после `0.2.0`. Дата публикации и SHA-256 артефактов
-фиксируются отдельной записью после выпуска.
+Третья стабильная версия после `0.2.0`.
+
+- Опубликована в production PyPI существующим `release.yml` по тегу `v0.3.0`
+  (аннотированный, на release commit `main`
+  `e1bb9378bc6984a64f5b406199933a40ee5abc39`); run `40940215711` успешен,
+  включая восемь install smoke: wheel и sdist × Python 3.10/3.12 ×
+  Ubuntu/Windows. Публикация — после ручного approval окружения `pypi`.
+- Артефакты workflow, PyPI и GitHub Release `v0.3.0` побайтно совпадают:
+  wheel `sha256 cacee9847726018febd445b5a7a28276a312765a7dec36393eeb163a4b97a7ba`,
+  sdist `sha256 88f4006199bdbda914673032e9ea50c59fd723370a937dce597fa3520f341022`.
+- Точная `pip install v8unpack-agent==0.3.0` и непинованная
+  `pip install v8unpack-agent` в чистом окружении дают `0.3.0`; `pip check`,
+  импорт из `site-packages`, `v8unpack-agent-run --help`, `search_cli --help`
+  успешны.
+- GitHub Release `v0.2.0`, пропущенный при выпуске `0.2.0`, создан с файлами
+  из PyPI; их SHA-256 совпали с записью `0.2.0` ниже.
+- README: текущая версия `0.3.0`, ссылка на локальную модель и `--min-score`.
 
 - `project.version` повышена до `0.3.0`; тег релиза — `v0.3.0`. Packaging-контракт
   `tests/test_packaging_issue149.py` ожидает `0.3.0`.
