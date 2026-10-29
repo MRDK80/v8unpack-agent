@@ -1,5 +1,31 @@
 # Changelog
 
+## Сигнал «низкая уверенность» смыслового поиска ([#408](https://github.com/MRDK80/v8unpack-agent/issues/408))
+
+### Возможности
+
+- `search_relevance.relevance_signal`: наибольший косинус лучшего артефакта
+  уровня объектов (или фрагментов) против порога `min_score`; результат
+  `RelevanceSignal{level,min_score,max_similarity,low_confidence}`. Выдача,
+  порядок и оценки не меняются; порог без default.
+- `search_cli query --min-score X`: поле `relevance` в JSON только при флаге;
+  вектор запроса вычисляется один раз (`MemoEmbedder`).
+
+### Исследование
+
+- `docs/research/relevance_signal_issue408.md` и
+  `scripts/measure_relevance_issue408.py`: 60 размеченных запросов на реальной
+  конфигурации владельца (обезличено), BAAI/bge-m3 fp16 — косинус лучшего
+  объекта AUC 0.985, порог ≈0.54, ошибок LOO 6/50; отрыв и z-оценка хуже.
+
+### Документация
+
+- `docs/search_cli.md`: `--min-score` и поле `relevance`.
+
+### Тесты
+
+- `tests/test_search_relevance_issue408.py`.
+
 ## Адаптер локальной модели эмбеддингов ([#407](https://github.com/MRDK80/v8unpack-agent/issues/407))
 
 ### Возможности

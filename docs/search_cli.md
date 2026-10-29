@@ -55,6 +55,7 @@ query: обязательны export_root и `--query TEXT`.
 | --object-snapshot PATH | не задан; слияние рангов уровня фрагментов и объектов (#407) |
 | --search-mode | auto; варианты auto, exact, semantic |
 | --top-k N | 5; положительное число смысловых кандидатов |
+| --min-score X | не задан; порог сигнала низкой уверенности (#408), число от -1 до 1 |
 | --max-chars N | -1 — без ограничения; допустимо N >= 0 |
 | --include-text | выключен; исходный текст только явно |
 | --artifact-kind VALUE | повторяемый; form, module, owner |
@@ -64,7 +65,8 @@ query: обязательны export_root и `--query TEXT`.
 | --owner-name VALUE | повторяемый фильтр имени |
 
 Фильтры передаются в SearchFilters. Неверные значения, пустой запрос,
-управляющие символы, top_k < 1 или max_chars < -1 — код 2 без JSON.
+управляющие символы, top_k < 1, max_chars < -1 или --min-score вне [-1, 1] —
+код 2 без JSON.
 
 Общие флаги корпуса: `--mode config|external` (default config),
 `--skip-common-modules` (выключен), повторяемые --module-group
@@ -128,6 +130,15 @@ null/compatible/incompatible; freshness — null/fresh/stale.
 context равен SearchContext.to_dict(include_text=...): dispatch с path,
 index_status, exact_filtered_out, сведения о кандидатах, включениях,
 warnings и omitted. Поиск и сборка контекста имеют независимые состояния.
+Поле relevance — только при `--min-score`: {level,min_score,max_similarity,
+low_confidence} (#408). level — objects при `--object-snapshot`, иначе
+fragments; max_similarity — наибольший косинус лучшего артефакта уровня с
+фильтрами запроса (отдельный запрос к уровню: оценка двухуровневой выдачи —
+шкала RRF, не косинус); low_confidence — max_similarity < min_score, true при
+пустом уровне. Без снимка, эмбеддера, при несовместимом или устаревшем снимке
+и в exact оба поля null. Сигнал не меняет context, status и exit code; порог
+зависит от модели, default нет. Исследование для BAAI/bge-m3:
+[relevance_signal_issue408](research/relevance_signal_issue408.md).
 Подробности: [search_context](search_context.md),
 [search_dispatch](search_dispatch.md), [search_contract](search_contract.md).
 
