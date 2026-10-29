@@ -107,6 +107,11 @@ from v8unpack_agent.search_local_model import (
     LocalModelError,
     SentenceTransformerEmbedder,
 )
+from v8unpack_agent.search_relevance import (
+    MemoEmbedder,
+    check_min_score,
+    relevance_signal,
+)
 
 __all__ = ["SEARCH_CLI_SCHEMA", "build_parser", "main"]
 
@@ -297,6 +302,16 @@ def build_parser() -> argparse.ArgumentParser:
             help=help_text + "; флаг повторяемый",
         )
     query.add_argument(
+        "--min-score",
+        type=float,
+        default=None,
+        help=(
+            "порог сигнала низкой уверенности (#408): косинус лучшего артефакта "
+            "уровня объектов (если задан --object-snapshot) или фрагментов; "
+            "выдачу не меняет; по умолчанию сигнал не считается"
+        ),
+    )
+    query.add_argument(
         "--max-chars",
         type=int,
         default=-1,
@@ -469,7 +484,9 @@ def _run_query(
     snapshot_path = None if args.snapshot is None else Path(args.snapshot)
     index, error_code = _load_snapshot(snapshot_path)
     try:
-        embedder = _make_embedder(args) if args.embedder is not None else None
+        embedder = (
+            MemoEmbedder(_make_embedder(args)) if args.embedder is not None else None
+        )
     except LocalModelError as exc:
         return _fail(payload, exc.code, EXIT_FATAL)
     object_index, object_error = _load_snapshot(
@@ -517,6 +534,17 @@ def _run_query(
         max_chars=args.max_chars,
     )
     payload["context"] = context.to_dict(include_text=args.include_text)
+    if args.min_score is not None:
+        payload["relevance"] = relevance_signal(
+            args.query,
+            min_score=args.min_score,
+            index=index,
+            embedder=embedder,
+            fragmentation=fragmentation,
+            object_index=object_index,
+            filters=filters,
+            search_mode=args.search_mode,
+        ).to_dict()
 
     code = EXIT_OK
     search_error = context.dispatch.result.error
@@ -654,6 +682,11 @@ def _resolve_query(
     """Проверить запрос, фильтры и бюджет до сбора корпуса (код 2)."""
     if args.max_chars < -1:
         parser.error("--max-chars: ожидается -1 или неотрицательное число")
+    if args.min_score is not None:
+        try:
+            check_min_score(args.min_score)
+        except (TypeError, ValueError):
+            parser.error("--min-score: ожидается конечное число от -1 до 1")
     artifact_kinds = _values(
         parser, args.artifact_kind, ARTIFACT_KINDS, "--artifact-kind"
     )
