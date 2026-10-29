@@ -30,7 +30,7 @@ Release validator продолжает блокировать direct/VCS и ло
 1. Дождаться публикации upstream dependency и подтвердить её функциональным probe.
 2. Заменить VCS dependency на проверенную индексную версию.
 3. Установить `project.version` равным выпускаемой версии, например `0.1.0` или `0.1.0rc1`.
-4. Обновить CHANGELOG и release notes.
+4. Обновить CHANGELOG и release notes, а также README (текущая версия и состав) в том же release-PR: PyPI показывает README из release commit, и опубликованную версию исправить нельзя (`0.3.0` вышла с README, где указана `0.2.0`; #421).
 5. Собрать wheel и sdist локально.
 6. Выполнить `twine check` и install smoke из обоих artifacts.
 7. Запустить Ruff, Mypy и полный Pytest.
