@@ -276,7 +276,15 @@ def build_parser() -> argparse.ArgumentParser:
         "--object-snapshot",
         type=Path,
         default=None,
-        help="снимок уровня объектов: слияние рангов двух уровней (#407)",
+        help=(
+            "снимок уровня объектов (#407): сигнал --min-score по объектам; "
+            "слияние рангов — только с --rank-fusion (#423)"
+        ),
+    )
+    query.add_argument(
+        "--rank-fusion",
+        action="store_true",
+        help="сливать ранги уровня фрагментов и объектов (RRF); требует --object-snapshot",
     )
     query.add_argument(
         "--search-mode",
@@ -531,6 +539,7 @@ def _run_query(
         index=index,
         embedder=embedder,
         object_index=object_index,
+        fusion=args.rank_fusion and object_index is not None,
         max_chars=args.max_chars,
     )
     payload["context"] = context.to_dict(include_text=args.include_text)
@@ -682,6 +691,8 @@ def _resolve_query(
     """Проверить запрос, фильтры и бюджет до сбора корпуса (код 2)."""
     if args.max_chars < -1:
         parser.error("--max-chars: ожидается -1 или неотрицательное число")
+    if args.rank_fusion and args.object_snapshot is None:
+        parser.error("--rank-fusion требует --object-snapshot")
     if args.min_score is not None:
         try:
             check_min_score(args.min_score)

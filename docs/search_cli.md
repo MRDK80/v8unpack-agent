@@ -38,7 +38,8 @@ python -m v8unpack_agent.search_cli query --help
 build: обязательны export_root, `--snapshot PATH`,
 `--embedder hashed-bow-demo`. Корпус → fragment_corpus → построение и
 атомарное сохранение снимка. Каталог-родитель должен существовать.
-`--object-snapshot PATH` — дополнительно снимок уровня объектов (#407).
+`--object-snapshot PATH` — дополнительно снимок уровня объектов (#407);
+в query ранжирование по нему — только с `--rank-fusion` (#423).
 `--embedder sentence-transformers` с `--model DIR --model-name NAME` —
 локальная модель, см. [search_local_model](search_local_model.md).
 `--snapshot-format 1|2` (default 1, для локальной модели 2): `1` — `search_index/1`, один JSON;
@@ -53,7 +54,8 @@ query: обязательны export_root и `--query TEXT`.
 |---|---|
 | --snapshot PATH | не задан; загрузить снимок |
 | --embedder hashed-bow-demo\|sentence-transformers | не задан; эмбеддер только явно; параметры локальной модели — [search_local_model](search_local_model.md) |
-| --object-snapshot PATH | не задан; слияние рангов уровня фрагментов и объектов (#407) |
+| --object-snapshot PATH | не задан; снимок уровня объектов (#407): сигнал `--min-score` по объектам |
+| --rank-fusion | выключен; слияние рангов фрагментов и объектов (RRF), требует `--object-snapshot` (#423) |
 | --search-mode | auto; варианты auto, exact, semantic |
 | --top-k N | 5; положительное число смысловых кандидатов |
 | --min-score X | не задан; порог сигнала низкой уверенности (#408), число от -1 до 1 |
