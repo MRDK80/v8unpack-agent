@@ -1,5 +1,21 @@
 # Changelog
 
+## Запись `skd_queries.json` в выгрузку — в каталоге CLI и документации ([#428](https://github.com/MRDK80/v8unpack-agent/issues/428))
+
+### Документация и контракт
+
+- Каталог `--describe-cli` указывает для `v8unpack-agent-run` побочную
+  запись `skd_queries.json` в `export_root`, отключаемую `--skip-skd`.
+  Поведение существовало и до эпика #254; сам пайплайн не меняется.
+- `docs/runner.md` больше не утверждает, что прогон не пишет файлы;
+  `AGENTS.md` и `docs/cli_introspection.md` называют эту запись.
+
+### Тесты
+
+- `tests/test_skd_side_effect_issue428.py`: реальный вызов CLI на
+  синтетической выгрузке с `Template.bin` пишет `skd_queries.json`, с
+  `--skip-skd` — нет; каталог совпадает с наблюдаемым.
+
 ## Интроспекция CLI `--describe-cli` ([#259](https://github.com/MRDK80/v8unpack-agent/issues/259))
 
 ### Новое

@@ -34,6 +34,10 @@ stderr пуст. Выгрузка не читается, файлы не пиш�
 | `usage_error` | `exit_code` 2, `source` `argparse` — общая ошибка разбора для всех команд |
 | `commands` | конечные формы команд, сортировка по имени |
 
+Побочные эффекты перечисляются полностью, включая запись в выгрузку:
+`v8unpack-agent-run` пишет `skd_queries.json` в `export_root`, если не задан
+`--skip-skd` (#428).
+
 Запись команды: `name`, `invocation` (argv-префикс), `parameters`,
 `side_effects`, `exit_codes`, `json_mode` (`flag` и `error_codes` либо
 `null`, если JSON-режима нет).
