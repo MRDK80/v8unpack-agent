@@ -45,6 +45,7 @@ Degraded считается неуспешным завершением проц
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -77,6 +78,39 @@ EXIT_FATAL_AND_WRITE_ERROR = 6
 
 _PROGRAM = "v8unpack-agent-run"
 _INTERNAL_ERROR_CODE = "internal_error"
+_JSON_FLAG = "--json"
+_DESCRIBE_FLAG = "--describe-cli"
+
+#: Версия формы JSON-envelope режима ``--json`` (#258); см. docs/cli_json.md.
+JSON_SCHEMA_VERSION = "1.0"
+JSON_KIND = "v8unpack-agent-run.result"
+
+#: Машинные коды ошибок envelope. Классифицируются по месту отказа и типу
+#: исключения, а не по тексту сообщения.
+ERROR_ARGUMENTS_INVALID = "arguments_invalid"
+ERROR_EXPORT_ROOT_INVALID = "export_root_invalid"
+ERROR_PIPELINE_FATAL = "pipeline_fatal"
+ERROR_REPORT_WRITE_FAILED = "report_write_failed"
+ERROR_PIPELINE_FATAL_AND_REPORT_WRITE_FAILED = "pipeline_fatal_and_report_write_failed"
+ERROR_INTERNAL = _INTERNAL_ERROR_CODE
+
+JSON_ERROR_CODES = (
+    ERROR_ARGUMENTS_INVALID,
+    ERROR_EXPORT_ROOT_INVALID,
+    ERROR_INTERNAL,
+    ERROR_PIPELINE_FATAL,
+    ERROR_PIPELINE_FATAL_AND_REPORT_WRITE_FAILED,
+    ERROR_REPORT_WRITE_FAILED,
+)
+
+_STATUS_BY_EXIT = {
+    0: "ok",
+    2: "bad_input",
+    3: "degraded",
+    4: "fatal",
+    5: "write_error",
+    6: "fatal_and_write_error",
+}
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -145,6 +179,14 @@ def build_parser() -> argparse.ArgumentParser:
         default=-1,
         help="лимит длины промпт-фрагмента; -1 без ограничения",
     )
+    parser.add_argument(
+        _JSON_FLAG,
+        action="store_true",
+        help=(
+            "печатать в stdout один JSON-объект результата "
+            "(schema_version 1.0) вместо текстовой сводки"
+        ),
+    )
     return parser
 
 
@@ -156,13 +198,26 @@ def main(argv: Sequence[str] | None = None) -> int:
     """
     _configure_output()
     parser = build_parser()
+    raw_args = list(sys.argv[1:] if argv is None else argv)
+    if raw_args == [_DESCRIBE_FLAG]:
+        # Интроспекция (#259) обрабатывается до argparse: --help не меняется,
+        # выгрузка не читается, файлы не пишутся.
+        from v8unpack_agent._cli_catalog import render_catalog
+
+        sys.stdout.write(render_catalog())
+        return EXIT_OK
+    json_requested = _JSON_FLAG in raw_args
 
     try:
-        args = parser.parse_args(argv)
+        args = parser.parse_args(raw_args)
         module_groups = _resolve_module_groups(parser, args)
     except SystemExit as exc:
-        return _exit_code_from_system_exit(exc)
+        code = _exit_code_from_system_exit(exc)
+        if json_requested and code != EXIT_OK:
+            _emit_json(code, error_code=ERROR_ARGUMENTS_INVALID)
+        return code
 
+    json_mode = bool(args.json)
     export_root = Path(args.export_root)
     if not export_root.is_dir():
         print(
@@ -170,6 +225,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             f"{export_root.name}",
             file=sys.stderr,
         )
+        if json_mode:
+            _emit_json(EXIT_BAD_INPUT, error_code=ERROR_EXPORT_ROOT_INVALID)
         return EXIT_BAD_INPUT
 
     options = RunOptions(
@@ -184,10 +241,20 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     try:
         outcome = run_pipeline(options)
-        write_error = _write_report(outcome, Path(args.report_path))
+        report_path = Path(args.report_path)
+        write_error = _write_report(outcome, report_path)
 
-        _print_summary(outcome, write_error=write_error)
-        return _resolve_exit_code(outcome, write_error=write_error)
+        code = _resolve_exit_code(outcome, write_error=write_error)
+        if json_mode:
+            _print_fatal(outcome)
+            _emit_json(
+                code,
+                error_code=_error_code_for(code),
+                data=_json_data(outcome, report_path, write_error=write_error),
+            )
+        else:
+            _print_summary(outcome, write_error=write_error)
+        return code
     except Exception as exc:  # noqa: BLE001 — внешняя fail-closed граница CLI
         # str/repr исключения не печатается: в нём может быть путь.
         print(
@@ -195,6 +262,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             f"({type(exc).__name__})",
             file=sys.stderr,
         )
+        if json_mode:
+            _emit_json(EXIT_FATAL, error_code=ERROR_INTERNAL)
         return EXIT_FATAL
 
 
@@ -281,6 +350,14 @@ def _print_summary(
     print(f"промпт-символов: {outcome.prompt_chars}")
     print(f"предупреждений сканера: {len(outcome.scan_warnings)}")
 
+    _print_fatal(outcome)
+
+    if write_error is None:
+        print("отчёт записан")
+
+
+def _print_fatal(outcome: RunOutcome) -> None:
+    """Напечатать в stderr код фатальной ошибки прогона, если она есть."""
     fatal_error = outcome.report.fatal_error
     if fatal_error is not None:
         print(
@@ -289,8 +366,72 @@ def _print_summary(
             file=sys.stderr,
         )
 
-    if write_error is None:
-        print("отчёт записан")
+
+def _error_code_for(exit_code: int) -> str | None:
+    """Машинный код ошибки по уже вычисленному exit code прогона."""
+    return {
+        EXIT_FATAL: ERROR_PIPELINE_FATAL,
+        EXIT_WRITE_ERROR: ERROR_REPORT_WRITE_FAILED,
+        EXIT_FATAL_AND_WRITE_ERROR: ERROR_PIPELINE_FATAL_AND_REPORT_WRITE_FAILED,
+    }.get(exit_code)
+
+
+def _json_data(
+    outcome: RunOutcome,
+    report_path: Path,
+    *,
+    write_error: RunReportWriteError | None,
+) -> dict[str, object]:
+    """Данные прогона для envelope: счётчики и метаданные без путей."""
+    summary = outcome.report.summary
+    fatal_error = outcome.report.fatal_error
+    return {
+        "completed": outcome.completed,
+        "degraded": outcome.degraded,
+        "summary": {
+            "found": summary.found,
+            "complete": summary.complete,
+            "partial": summary.partial,
+            "failed": summary.failed,
+            "excluded": summary.excluded,
+        },
+        "prompt_chars": outcome.prompt_chars,
+        "scan_warnings": len(outcome.scan_warnings),
+        "fatal_error": (
+            None
+            if fatal_error is None
+            else {
+                "reason_code": fatal_error.reason_code,
+                "error_type": fatal_error.error_type,
+            }
+        ),
+        "report": {
+            "file_name": report_path.name,
+            "written": write_error is None,
+            "schema_version": outcome.report.schema_version,
+        },
+    }
+
+
+def _emit_json(
+    exit_code: int,
+    *,
+    error_code: str | None,
+    data: dict[str, object] | None = None,
+) -> None:
+    """Напечатать в stdout ровно один JSON-объект envelope."""
+    envelope = {
+        "schema_version": JSON_SCHEMA_VERSION,
+        "kind": JSON_KIND,
+        "ok": exit_code == EXIT_OK,
+        "status": _STATUS_BY_EXIT.get(exit_code, "fatal"),
+        "exit_code": exit_code,
+        "error": None if error_code is None else {"code": error_code},
+        "data": data,
+    }
+    sys.stdout.write(
+        json.dumps(envelope, ensure_ascii=False, sort_keys=True) + "\n"
+    )
 
 
 def _exit_code_from_system_exit(exc: SystemExit) -> int:

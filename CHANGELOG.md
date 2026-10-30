@@ -1,5 +1,81 @@
 # Changelog
 
+## Запись `skd_queries.json` в выгрузку — в каталоге CLI и документации ([#428](https://github.com/MRDK80/v8unpack-agent/issues/428))
+
+### Документация и контракт
+
+- Каталог `--describe-cli` указывает для `v8unpack-agent-run` побочную
+  запись `skd_queries.json` в `export_root`, отключаемую `--skip-skd`.
+  Поведение существовало и до эпика #254; сам пайплайн не меняется.
+- `docs/runner.md` больше не утверждает, что прогон не пишет файлы;
+  `AGENTS.md` и `docs/cli_introspection.md` называют эту запись.
+
+### Тесты
+
+- `tests/test_skd_side_effect_issue428.py`: реальный вызов CLI на
+  синтетической выгрузке с `Template.bin` пишет `skd_queries.json`, с
+  `--skip-skd` — нет; каталог совпадает с наблюдаемым.
+
+## Интроспекция CLI `--describe-cli` ([#259](https://github.com/MRDK80/v8unpack-agent/issues/259))
+
+### Новое
+
+- `v8unpack-agent-run --describe-cli` печатает каталог CLI-контракта
+  (`schema_version` `1.0`, `kind` `v8unpack-agent.cli-catalog`): команды
+  `v8unpack-agent-run`, `search_cli build`, `search_cli query`, их
+  параметры из фактических parser, побочные эффекты, exit codes, коды
+  ошибок JSON-режима и версия envelope #258. Флаг обрабатывается до
+  argparse: `--help`, вывод и exit codes существующих команд не меняются,
+  Library API не расширяется (модуль `_cli_catalog` внутренний).
+
+### Документация
+
+- `docs/cli_introspection.md` — интерфейс, отклонённые альтернативы,
+  форма каталога, пример для агента; ссылка в `AGENTS.md`.
+
+### Тесты
+
+- `tests/test_cli_catalog_issue259.py`: эквивалентность параметров
+  поведению parser, exit codes и коды JSON-режима реальными вызовами,
+  обход parser на новые команды, отсутствие побочных эффектов,
+  детерминированность в разных каталогах и локалях.
+
+## JSON-режим `v8unpack-agent-run --json` ([#258](https://github.com/MRDK80/v8unpack-agent/issues/258))
+
+### Новое
+
+- Флаг `--json`: stdout — один JSON-объект envelope (`schema_version`
+  `1.0`, `kind` `v8unpack-agent-run.result`) со статусом, exit code,
+  машинным кодом ошибки и счётчиками прогона без путей. Реестр кодов —
+  `cli.JSON_ERROR_CODES`. Без флага вывод, `--help` (кроме нового флага) и
+  exit codes не меняются; `search_cli` не затронут — его stdout уже JSON
+  `search_cli/1`.
+
+### Документация
+
+- `docs/cli_json.md` — envelope, коды ошибок, версионирование и
+  совместимость; ссылки в `README.md` и `AGENTS.md`.
+
+### Тесты
+
+- `tests/test_cli_json_issue258.py`: characterization текстового вывода,
+  все коды ошибок, отсутствие путей, Unicode-имена, детерминированность.
+
+## Корневой AGENTS.md для AI coding agents ([#257](https://github.com/MRDK80/v8unpack-agent/issues/257))
+
+### Документация
+
+- `AGENTS.md` в корне: назначение и граница пакета, CLI-команды и коды
+  выхода, stdout/stderr, local gate, поддерживаемые Python и ОС,
+  обезличенность, ветвление, действия без автоматического выполнения и
+  границы гарантий — со ссылками на канонические документы.
+
+### Тесты
+
+- `tests/test_agents_md_issue257.py`: семантические documentation contract
+  tests для `AGENTS.md` (gate, ветвление, обезличенность, ссылки, коды
+  выхода, Python/ОС, объём, отсутствующие возможности).
+
 ## Слияние рангов двух уровней — только по флагу ([#423](https://github.com/MRDK80/v8unpack-agent/issues/423))
 
 ### Изменения поведения
