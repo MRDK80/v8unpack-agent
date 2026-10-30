@@ -1,5 +1,29 @@
 # Changelog
 
+## Интроспекция CLI `--describe-cli` ([#259](https://github.com/MRDK80/v8unpack-agent/issues/259))
+
+### Новое
+
+- `v8unpack-agent-run --describe-cli` печатает каталог CLI-контракта
+  (`schema_version` `1.0`, `kind` `v8unpack-agent.cli-catalog`): команды
+  `v8unpack-agent-run`, `search_cli build`, `search_cli query`, их
+  параметры из фактических parser, побочные эффекты, exit codes, коды
+  ошибок JSON-режима и версия envelope #258. Флаг обрабатывается до
+  argparse: `--help`, вывод и exit codes существующих команд не меняются,
+  Library API не расширяется (модуль `_cli_catalog` внутренний).
+
+### Документация
+
+- `docs/cli_introspection.md` — интерфейс, отклонённые альтернативы,
+  форма каталога, пример для агента; ссылка в `AGENTS.md`.
+
+### Тесты
+
+- `tests/test_cli_catalog_issue259.py`: эквивалентность параметров
+  поведению parser, exit codes и коды JSON-режима реальными вызовами,
+  обход parser на новые команды, отсутствие побочных эффектов,
+  детерминированность в разных каталогах и локалях.
+
 ## JSON-режим `v8unpack-agent-run --json` ([#258](https://github.com/MRDK80/v8unpack-agent/issues/258))
 
 ### Новое

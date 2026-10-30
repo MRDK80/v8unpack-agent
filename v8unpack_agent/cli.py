@@ -79,6 +79,7 @@ EXIT_FATAL_AND_WRITE_ERROR = 6
 _PROGRAM = "v8unpack-agent-run"
 _INTERNAL_ERROR_CODE = "internal_error"
 _JSON_FLAG = "--json"
+_DESCRIBE_FLAG = "--describe-cli"
 
 #: Версия формы JSON-envelope режима ``--json`` (#258); см. docs/cli_json.md.
 JSON_SCHEMA_VERSION = "1.0"
@@ -198,6 +199,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     _configure_output()
     parser = build_parser()
     raw_args = list(sys.argv[1:] if argv is None else argv)
+    if raw_args == [_DESCRIBE_FLAG]:
+        # Интроспекция (#259) обрабатывается до argparse: --help не меняется,
+        # выгрузка не читается, файлы не пишутся.
+        from v8unpack_agent._cli_catalog import render_catalog
+
+        sys.stdout.write(render_catalog())
+        return EXIT_OK
     json_requested = _JSON_FLAG in raw_args
 
     try:
