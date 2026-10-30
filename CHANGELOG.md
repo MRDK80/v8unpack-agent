@@ -1,5 +1,26 @@
 # Changelog
 
+## JSON-режим `v8unpack-agent-run --json` ([#258](https://github.com/MRDK80/v8unpack-agent/issues/258))
+
+### Новое
+
+- Флаг `--json`: stdout — один JSON-объект envelope (`schema_version`
+  `1.0`, `kind` `v8unpack-agent-run.result`) со статусом, exit code,
+  машинным кодом ошибки и счётчиками прогона без путей. Реестр кодов —
+  `cli.JSON_ERROR_CODES`. Без флага вывод, `--help` (кроме нового флага) и
+  exit codes не меняются; `search_cli` не затронут — его stdout уже JSON
+  `search_cli/1`.
+
+### Документация
+
+- `docs/cli_json.md` — envelope, коды ошибок, версионирование и
+  совместимость; ссылки в `README.md` и `AGENTS.md`.
+
+### Тесты
+
+- `tests/test_cli_json_issue258.py`: characterization текстового вывода,
+  все коды ошибок, отсутствие путей, Unicode-имена, детерминированность.
+
 ## Корневой AGENTS.md для AI coding agents ([#257](https://github.com/MRDK80/v8unpack-agent/issues/257))
 
 ### Документация

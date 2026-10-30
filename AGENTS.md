@@ -74,7 +74,9 @@ python -m v8unpack_agent.search_cli query --help
 ## stdout, stderr и артефакты запуска
 
 - `v8unpack-agent-run`: stdout — краткая человекочитаемая сводка без путей и
-  доменных данных; полный результат — JSON-отчёт по `--report-path`
+  доменных данных; с флагом `--json` — один JSON-объект envelope
+  `schema_version` 1.0 ([docs/cli_json.md](docs/cli_json.md)). Полный
+  результат — JSON-отчёт по `--report-path`
   ([docs/run_report.md](docs/run_report.md)). Сообщения об ошибках — в stderr.
 - `search_cli`: stdout — один канонический JSON схемы `search_cli/1`; при
   ошибке аргументов JSON не выводится. stderr — однострочные
