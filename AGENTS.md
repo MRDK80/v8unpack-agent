@@ -23,8 +23,10 @@
   `docs/`. Часть возможностей существует только как library API и в CLI не
   встроена: например, `FormRagIndex` и `FormDispatcher`
   ([docs/form_rag.md](docs/form_rag.md)).
-- **CLI** — две точки входа, перечисленные ниже. Флаги сверяйте с `--help`
-  текущей версии, а не с этим файлом.
+- **CLI** — две точки входа, перечисленные ниже. Машиночитаемый каталог
+  команд, параметров и кодов выхода — `v8unpack-agent-run --describe-cli`
+  ([docs/cli_introspection.md](docs/cli_introspection.md)); флаги сверяйте с
+  ним или с `--help` текущей версии, а не с этим файлом.
 
 Отсутствующие возможности не заявляются и не используются: MCP-сервер,
 hosted service, FastAPI-сервис, адаптеры LangChain/LlamaIndex, функции
