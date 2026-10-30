@@ -82,6 +82,12 @@ COMMANDS: tuple[CommandSpec, ...] = (
         side_effects=(
             SideEffect("read", "export_root", "дерево выгрузки"),
             SideEffect("write", "--report-path", "JSON-отчёт run_report"),
+            SideEffect(
+                "write",
+                "export_root",
+                "skd_queries.json в каталоге отчёта выгрузки, где найдены "
+                "запросы СКД; отключается --skip-skd",
+            ),
         ),
         json_mode=True,
     ),
