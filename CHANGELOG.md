@@ -1,5 +1,20 @@
 # Changelog
 
+## Корневой AGENTS.md для AI coding agents ([#257](https://github.com/MRDK80/v8unpack-agent/issues/257))
+
+### Документация
+
+- `AGENTS.md` в корне: назначение и граница пакета, CLI-команды и коды
+  выхода, stdout/stderr, local gate, поддерживаемые Python и ОС,
+  обезличенность, ветвление, действия без автоматического выполнения и
+  границы гарантий — со ссылками на канонические документы.
+
+### Тесты
+
+- `tests/test_agents_md_issue257.py`: семантические documentation contract
+  tests для `AGENTS.md` (gate, ветвление, обезличенность, ссылки, коды
+  выхода, Python/ОС, объём, отсутствующие возможности).
+
 ## Слияние рангов двух уровней — только по флагу ([#423](https://github.com/MRDK80/v8unpack-agent/issues/423))
 
 ### Изменения поведения
