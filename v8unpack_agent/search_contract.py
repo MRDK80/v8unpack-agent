@@ -28,6 +28,7 @@ from v8unpack_agent.modules import (
     ModuleEntry,
     ModuleKind,
     OwnerKind,
+    extension_id_prefix,
 )
 
 __all__ = [
@@ -199,6 +200,16 @@ def _check_keys(data: Mapping[str, Any], expected: frozenset[str], what: str) ->
         raise ValueError(f"{what} keys do not match schema")
 
 
+def _check_keys_optional(
+    data: Mapping[str, Any], expected: frozenset[str], what: str
+) -> None:
+    """Как :func:`_check_keys`, но допускает необязательный ключ ``extension`` (#435)."""
+    if isinstance(data, Mapping) and "extension" in data:
+        _check_keys(data, expected | {"extension"}, what)
+    else:
+        _check_keys(data, expected, what)
+
+
 def _check_identifier(value: object, what: str) -> str:
     if not isinstance(value, str) or not value.isidentifier():
         raise ValueError(f"{what} must be a 1C identifier")
@@ -249,10 +260,13 @@ class OwnerRef:
     owner_kind: OwnerKind
     metadata_type: str | None
     owner_name: str | None
+    extension: str | None = None
 
     def __post_init__(self) -> None:
         if self.owner_kind not in OWNER_KINDS:
             raise ValueError(f"unknown owner_kind: {self.owner_kind!r}")
+        if self.extension is not None:
+            _check_identifier(self.extension, "extension")
         if self.owner_kind == "configuration":
             if self.metadata_type is not None or self.owner_name is not None:
                 raise ValueError(
@@ -275,11 +289,15 @@ class OwnerRef:
 
     @property
     def owner_id(self) -> str:
-        """``owner:<owner_kind>:<metadata_type>:<owner_name>``."""
+        """``owner:<owner_kind>:<metadata_type>:<owner_name>``.
+
+        У владельца из расширения (#435) после ``owner:`` стоит
+        ``extension:<имя>/``.
+        """
         return ":".join(
             [
                 OWNER_ID_PREFIX,
-                self.owner_kind,
+                extension_id_prefix(self.extension) + self.owner_kind,
                 self.metadata_type or "",
                 self.owner_name or "",
             ]
@@ -294,25 +312,30 @@ class OwnerRef:
             owner_kind=entry.owner_kind,
             metadata_type=entry.metadata_type,
             owner_name=entry.owner_name,
+            extension=entry.extension,
         )
 
     def to_dict(self) -> dict[str, Any]:
-        """Сериализуемое представление."""
-        return {
+        """Сериализуемое представление; ``extension`` — только у расширения."""
+        result: dict[str, Any] = {
             "owner_id": self.owner_id,
             "owner_kind": self.owner_kind,
             "metadata_type": self.metadata_type,
             "owner_name": self.owner_name,
         }
+        if self.extension is not None:
+            result["extension"] = self.extension
+        return result
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> OwnerRef:
         """Восстановить из ``to_dict()`` со строгой проверкой ключей и id."""
-        _check_keys(data, _OWNER_KEYS, "owner")
+        _check_keys_optional(data, _OWNER_KEYS, "owner")
         owner = cls(
             owner_kind=data["owner_kind"],
             metadata_type=data["metadata_type"],
             owner_name=data["owner_name"],
+            extension=data.get("extension"),
         )
         if owner.owner_id != data["owner_id"]:
             raise ValueError("owner_id does not match owner fields")
@@ -368,9 +391,16 @@ class ArtifactRef:
     module_kind: ModuleKind | None = None
     form_key: FormKey | None = None
     source_path: str | None = None
+    extension: str | None = None
 
     def __post_init__(self) -> None:
         kind = self.artifact_kind
+        if self.extension is not None:
+            _check_identifier(self.extension, "extension")
+        if self.owner is not None and isinstance(self.owner, OwnerRef) and (
+            self.owner.extension != self.extension
+        ):
+            raise ValueError("artifact and owner must belong to the same extension")
         if kind not in ARTIFACT_KINDS:
             raise ValueError(f"unknown artifact_kind: {kind!r}")
         if self.owner is not None and not isinstance(self.owner, OwnerRef):
@@ -404,7 +434,7 @@ class ArtifactRef:
             module_kind = self.module_kind
             if owner is None or module_kind is None:
                 raise RuntimeError("module artifact invariant violated")
-            return ":".join(
+            return extension_id_prefix(self.extension) + ":".join(
                 [
                     owner.owner_kind,
                     owner.metadata_type or "",
@@ -416,7 +446,7 @@ class ArtifactRef:
             form_key = self.form_key
             if form_key is None:
                 raise RuntimeError("form artifact invariant violated")
-            return FORM_ID_PREFIX + ":" + "/".join(
+            return FORM_ID_PREFIX + ":" + extension_id_prefix(self.extension) + "/".join(
                 encode_id_segment(part) for part in form_key
             )
         if owner is None:
@@ -440,6 +470,7 @@ class ArtifactRef:
             owner=OwnerRef.from_module_entry(entry),
             module_kind=entry.module_kind,
             source_path=entry.relative_path,
+            extension=entry.extension,
         )
 
     @classmethod
@@ -452,6 +483,7 @@ class ArtifactRef:
         *,
         owner: OwnerRef | None = None,
         source_path: str | None = None,
+        extension: str | None = None,
     ) -> ArtifactRef:
         """Артефакт формы по ключу ``FormRagIndex`` / ``form_key``."""
         return cls(
@@ -459,6 +491,7 @@ class ArtifactRef:
             owner=owner,
             form_key=(object_type, object_name, container_name, form_name),
             source_path=source_path,
+            extension=extension,
         )
 
     @classmethod
@@ -466,11 +499,16 @@ class ArtifactRef:
         cls, owner: OwnerRef, *, source_path: str | None = None
     ) -> ArtifactRef:
         """Артефакт карточки владельца."""
-        return cls(artifact_kind="owner", owner=owner, source_path=source_path)
+        return cls(
+            artifact_kind="owner",
+            owner=owner,
+            source_path=source_path,
+            extension=owner.extension,
+        )
 
     def to_dict(self) -> dict[str, Any]:
         """Сериализуемое представление без текста и абсолютных путей."""
-        return {
+        result: dict[str, Any] = {
             "artifact_id": self.artifact_id,
             "artifact_kind": self.artifact_kind,
             "owner": None if self.owner is None else self.owner.to_dict(),
@@ -478,11 +516,14 @@ class ArtifactRef:
             "form_key": None if self.form_key is None else list(self.form_key),
             "source_path": self.source_path,
         }
+        if self.extension is not None:
+            result["extension"] = self.extension
+        return result
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> ArtifactRef:
         """Восстановить из ``to_dict()`` со строгой проверкой ключей и id."""
-        _check_keys(data, _ARTIFACT_KEYS, "artifact")
+        _check_keys_optional(data, _ARTIFACT_KEYS, "artifact")
         raw_owner = data["owner"]
         raw_key = data["form_key"]
         if raw_key is not None and not isinstance(raw_key, list):
@@ -493,6 +534,7 @@ class ArtifactRef:
             module_kind=data["module_kind"],
             form_key=None if raw_key is None else _checked_form_key(tuple(raw_key)),
             source_path=data["source_path"],
+            extension=data.get("extension"),
         )
         if artifact.artifact_id != data["artifact_id"]:
             raise ValueError("artifact_id does not match artifact fields")

@@ -74,6 +74,7 @@ from v8unpack_agent.common_modules import (
 )
 from v8unpack_agent.configuration_modules import scan_configuration_modules
 from v8unpack_agent.elem_parser import parse_elem_json
+from v8unpack_agent.extension_modules import apply_extension
 from v8unpack_agent.external_object_modules import scan_external_object_modules
 from v8unpack_agent.form_context import (
     FormContext,
@@ -544,6 +545,13 @@ def _process_module_index(
             entries.extend(scanner(export_root))
         if mode == "external":
             entries.extend(scan_external_object_modules(export_root))
+        entries = apply_extension(
+            export_root,
+            entries,
+            include_extension_modules=(
+                module_groups is None or "configuration" in module_groups
+            ),
+        )
         module_index = ModuleIndex.from_entries(entries)
         for entry in module_index:
             results.append(_module_result(entry))

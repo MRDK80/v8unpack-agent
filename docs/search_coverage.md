@@ -70,8 +70,10 @@
 
 ## Не поддержано и не проверено
 
-- Вне индекса модулей: модули уровня расширения (`ConfigurationExtension.app.bsl`,
-  `.ssn.bsl`) и raw-layout; эти файлы не попадают в корпус и в поиск.
+- Вне индекса модулей: raw-layout. Модули расширения индексируются с #435:
+  их `artifact_id` (модули, формы, общие модули, карточки владельцев)
+  начинаются с `extension:<имя>/`; замер качества поиска по ним не
+  проводился.
   `Sequences`, `obj` у `ChartOfAccounts`, `ChartOfCalculationTypes`,
   `AccountingRegister` индексируются с #434 и находятся exact и semantic
   (`test_confirmed_module_kinds_issue434.py`); замер качества поиска по ним
