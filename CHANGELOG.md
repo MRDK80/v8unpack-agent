@@ -1,5 +1,21 @@
 # Changelog
 
+## Группы поиска ниже порога: диагностика и замер ([#437](https://github.com/MRDK80/v8unpack-agent/issues/437))
+
+### Исследование
+
+- `scripts/measure_search_issue437.py`: сборщик замера #370 с явным
+  `--sha`, проверкой дерева исходников по `git archive` и эмуляцией связи
+  `layout` (#436). Эталоны, модель и метрики — те же.
+- `docs/research/search_groups_issue437.md` и
+  `search_groups_issue437_summary.json`: «было → стало» на `6d798c0` и
+  `5b6e1bd`. `common_module` и формы внешних отчётов — выше порогов; формы
+  внешних обработок и `external_connection` — ниже, причина доказана по
+  запросам, ограничение задокументировано (решение владельца). Код поиска
+  не меняется.
+- `docs/search_coverage.md`: раздел о повторном замере.
+- `tests/test_search_research_issue437.py`.
+
 ## Связь владельца для общих и внешних форм ([#436](https://github.com/MRDK80/v8unpack-agent/issues/436))
 
 ### Изменение контракта
