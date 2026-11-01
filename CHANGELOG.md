@@ -1,5 +1,32 @@
 # Changelog
 
+## Сканеры для видов, подтверждённых сверкой с Конфигуратором ([#434](https://github.com/MRDK80/v8unpack-agent/issues/434))
+
+### Новое
+
+- `scan_record_set_modules`: `AccountingRegister.obj.bsl` и
+  `Sequences.obj.bsl` дают записи `record_set` (`RECORD_SET_MODULE_FILES`).
+- `scan_metadata_object_modules`: `ChartOfAccounts.obj.bsl` и
+  `ChartOfCalculationTypes.obj.bsl` дают записи `object`
+  (`METADATA_OBJECT_MODULE_LAYOUTS`, 19 пар).
+- Новые модули попадают в `summary.modules`, корпус поиска и находятся
+  exact и semantic через `search_cli`. Существующие `module_kind`,
+  `artifact_id`, exit codes и каталог `--describe-cli` не меняются.
+
+### Документация
+
+- `docs/bsl_coverage_matrix.md`, `docs/record_set_modules.md`,
+  `docs/metadata_modules.md`, `docs/modules.md`, `docs/search_coverage.md`:
+  новые пары и остаток; `docs/research/configurator_check_issue433.md` —
+  дополнение: модули расширения сверены с XML-выгрузкой Конфигуратора.
+
+### Тесты
+
+- `tests/test_confirmed_module_kinds_issue434.py`: статусы `ok`, `empty`,
+  `whitespace_only`, `missing`, `read_error` для каждого нового типа,
+  runner и `search_cli` exact/semantic; тесты #205, #206, #209 учитывают
+  пары #433.
+
 ## Сверка необработанных BSL-файлов с Конфигуратором ([#433](https://github.com/MRDK80/v8unpack-agent/issues/433))
 
 ### Документация

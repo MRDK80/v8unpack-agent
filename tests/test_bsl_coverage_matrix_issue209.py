@@ -48,19 +48,18 @@ BOUNDARY: dict[str, tuple[str, bytes | None, str]] = {
 }
 
 UNSUPPORTED = (
-    "Sequences/Alpha/Sequences.obj.bsl",
-    "ChartOfAccounts/Alpha/ChartOfAccounts.obj.bsl",
-    "ChartOfCalculationTypes/Alpha/ChartOfCalculationTypes.obj.bsl",
-    "AccountingRegister/Alpha/AccountingRegister.obj.bsl",
+    "Sequences/Alpha/Sequences.mgr.bsl",
+    "ChartOfAccounts/Alpha/ChartOfAccounts.mgr.bsl",
+    "ChartOfCalculationTypes/Alpha/ChartOfCalculationTypes.mgr.bsl",
+    "AccountingRegister/Alpha/AccountingRegister.mgr.bsl",
     "BusinessProcess/Alpha/BusinessProcess.mgr.bsl",
     "ConfigurationExtension.app.bsl",
+    "ConfigurationExtension.ssn.bsl",
 )
 
 UNSUPPORTED_DOC_PATTERNS = (
-    "Sequences.obj.bsl",
-    "ChartOfAccounts.obj.bsl",
-    "ChartOfCalculationTypes.obj.bsl",
-    "AccountingRegister.obj.bsl",
+    "ConfigurationExtension.app.bsl",
+    "ConfigurationExtension.ssn.bsl",
 )
 
 UUID_RE = re.compile(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
@@ -140,7 +139,7 @@ def _without_time(outcome: RunOutcome) -> dict[str, Any]:
 def test_fixture_covers_every_proven_layout() -> None:
     kinds = set(_supported().values())
     assert kinds == set(MODULE_KINDS) - {"form", "common_module"}
-    assert len(_supported()) == 32
+    assert len(_supported()) == 36
 
 
 def test_end_to_end_module_statuses(tmp_path: Path) -> None:

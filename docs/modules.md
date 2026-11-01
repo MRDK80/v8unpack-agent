@@ -307,9 +307,10 @@ Windows. Некорректные аргументы: `max_chars` не `int` (в
 
 Модель не фиксирует спорные соответствия как доказанные:
 
-- семантика `Sequences/{Name}/Sequences.obj.bsl`;
-- `obj` у `ChartOfAccounts`, `ChartOfCalculationTypes`, `AccountingRegister`
-  (сверено только с upstream `ext_code`, не с Конфигуратором);
+- семантика `Sequences/{Name}/Sequences.obj.bsl` и `obj` у
+  `ChartOfAccounts`, `ChartOfCalculationTypes`, `AccountingRegister` —
+  закрыто сверкой с Конфигуратором в #433 и поддержано в #434
+  (`record_set` и `object`);
 - 1 176 модулей форм без пары у Конфигуратора (связь с #150).
 
 Закрытые наборы от этих случаев не зависят. Сканер, который включает такие
