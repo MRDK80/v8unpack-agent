@@ -1,5 +1,138 @@
 # Changelog
 
+## Итоговые матрицы и замер эпика #431 ([#438](https://github.com/MRDK80/v8unpack-agent/issues/438))
+
+### Документация
+
+- `docs/bsl_coverage_matrix.md`: замер владельца на E1–E4 «было» `main`
+  `6d798c0` → «стало» `16116e2`: BSL-файлов без обработчика 0 / 0 / 6 / 2
+  → 0 / 0 / 0 / 0, оригиналы не изменены, распределение по видам.
+- `docs/search_coverage.md`: состояние на финальном коде эпика.
+- Остаток с причиной: каталог внешних обработок и отчётов только с BSL
+  (без `ExternalDataProcessor.json`) — 466 модулей объекта вне индекса,
+  формы обрабатываются.
+
+### Тесты
+
+- `tests/test_coverage_matrices_issue438.py`: матрицы соответствуют коду,
+  у каждой строки остатка есть причина, баланс замера и неизменность
+  оригиналов.
+
+## Группы поиска ниже порога: диагностика и замер ([#437](https://github.com/MRDK80/v8unpack-agent/issues/437))
+
+### Исследование
+
+- `scripts/measure_search_issue437.py`: сборщик замера #370 с явным
+  `--sha`, проверкой дерева исходников по `git archive` и эмуляцией связи
+  `layout` (#436). Эталоны, модель и метрики — те же.
+- `docs/research/search_groups_issue437.md` и
+  `search_groups_issue437_summary.json`: «было → стало» на `6d798c0` и
+  `5b6e1bd`. `common_module` и формы внешних отчётов — выше порогов; формы
+  внешних обработок и `external_connection` — ниже, причина доказана по
+  запросам, ограничение задокументировано (решение владельца). Код поиска
+  не меняется.
+- `docs/search_coverage.md`: раздел о повторном замере.
+- `tests/test_search_research_issue437.py`.
+
+## Связь владельца для общих и внешних форм ([#436](https://github.com/MRDK80/v8unpack-agent/issues/436))
+
+### Изменение контракта
+
+- `LinkBasis`: новое значение `layout` — связь, доказанная раскладкой
+  выгрузки. Общая форма `CommonForm/<Форма>` — владелец сама себе; форма
+  внешней обработки или отчёта принадлежит владельцу модуля объекта (#351)
+  из того же каталога артефакта. `OwnerLink` проверяет, что владелец
+  совпадает с `ArtifactRef.owner` формы.
+
+### Поведение
+
+- Корпус поиска подтверждает такие связи вместо `unconfirmed`: у формы
+  задан `ArtifactRef.owner`, она входит в карточку владельца и находится
+  фильтром `owner_names`. Идентификаторы артефактов не меняются.
+
+### Документация и тесты
+
+- `docs/search_corpus.md`, `search_contract.md`, `search_dispatch.md`,
+  `search_fragments.md`, `search_coverage.md`.
+- `tests/test_form_owner_links_issue436.py`; тесты #323 и #384 переведены
+  с `unconfirmed` на `layout`, добавлен поиск по `owner_name`.
+
+## Модули расширений ([#435](https://github.com/MRDK80/v8unpack-agent/issues/435))
+
+### Новое
+
+- `v8unpack_agent.extension_modules`: распакованный `.cfe` распознаётся по
+  `ConfigurationExtension.json`; `extension_name`, `scan_extension_modules`,
+  `apply_extension`. Модули уровня расширения
+  `ConfigurationExtension.app.bsl` / `.ssn.bsl` — `managed_application` /
+  `session` с `owner_kind="extension"`.
+- Runner и `search_cli` / `collect_search_corpus` помечают записи
+  расширения и не выдают для него `missing`.
+
+### Изменение контракта
+
+- `ModuleEntry`, `OwnerRef`, `ArtifactRef`: необязательное поле
+  `extension`. У модулей, форм, общих модулей и карточек владельцев
+  расширения `module_id` / `owner_id` / `artifact_id` получают префикс
+  `extension:<имя>/`; ключ `extension` сериализуется только у них.
+  Идентификаторы, JSON и схемы для конфигурации не меняются.
+
+### Документация и тесты
+
+- `docs/modules.md`, `docs/bsl_coverage_matrix.md`,
+  `docs/search_coverage.md`, `README.md`.
+- `tests/test_extension_modules_issue435.py`: распознавание и ошибки
+  метаданных, статусы модулей уровня расширения, отсутствие `missing`,
+  группы модулей, префиксы id и отсутствие коллизий с конфигурацией,
+  сериализация.
+
+## Сканеры для видов, подтверждённых сверкой с Конфигуратором ([#434](https://github.com/MRDK80/v8unpack-agent/issues/434))
+
+### Новое
+
+- `scan_record_set_modules`: `AccountingRegister.obj.bsl` и
+  `Sequences.obj.bsl` дают записи `record_set` (`RECORD_SET_MODULE_FILES`).
+- `scan_metadata_object_modules`: `ChartOfAccounts.obj.bsl` и
+  `ChartOfCalculationTypes.obj.bsl` дают записи `object`
+  (`METADATA_OBJECT_MODULE_LAYOUTS`, 19 пар).
+- Новые модули попадают в `summary.modules`, корпус поиска и находятся
+  exact и semantic через `search_cli`. Существующие `module_kind`,
+  `artifact_id`, exit codes и каталог `--describe-cli` не меняются.
+
+### Документация
+
+- `docs/bsl_coverage_matrix.md`, `docs/record_set_modules.md`,
+  `docs/metadata_modules.md`, `docs/modules.md`, `docs/search_coverage.md`:
+  новые пары и остаток; `docs/research/configurator_check_issue433.md` —
+  дополнение: модули расширения сверены с XML-выгрузкой Конфигуратора.
+
+### Тесты
+
+- `tests/test_confirmed_module_kinds_issue434.py`: статусы `ok`, `empty`,
+  `whitespace_only`, `missing`, `read_error` для каждого нового типа,
+  runner и `search_cli` exact/semantic; тесты #205, #206, #209 учитывают
+  пары #433.
+
+## Сверка необработанных BSL-файлов с Конфигуратором ([#433](https://github.com/MRDK80/v8unpack-agent/issues/433))
+
+### Документация
+
+- `docs/research/configurator_check_issue433.md`: для каждого шаблона
+  остатка #432 установлен модуль Конфигуратора — `AccountingRegister.obj`
+  и `Sequences.obj` — набор записей, `ChartOfAccounts.obj` и
+  `ChartOfCalculationTypes.obj` — модуль объекта, `.app.bsl` и `.ssn.bsl`
+  расширения — модуль приложения и модуль сеанса; нормализация `v8unpack`
+  (BOM, CRLF). Код пакета не меняется.
+
+## Инвентаризация необработанных BSL-файлов ([#432](https://github.com/MRDK80/v8unpack-agent/issues/432))
+
+### Документация
+
+- `docs/research/bsl_remainder_issue432.md`: баланс `.bsl` по обработчикам
+  на трёх конфигурациях и расширении (XML Конфигуратора и распакованный
+  `.cfe`), шаблоны необработанных файлов, layout расширения и список для
+  сверки с Конфигуратором (#433). Код пакета не меняется.
+
 ## Запись `skd_queries.json` в выгрузку — в каталоге CLI и документации ([#428](https://github.com/MRDK80/v8unpack-agent/issues/428))
 
 ### Документация и контракт

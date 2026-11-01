@@ -34,6 +34,9 @@ DATA = TEXT.encode("utf-8")
 MARKER = "МаркерТекстаКоторогоНетВИндексе"
 BS = chr(92)
 PROVEN = "designer_content_match_A"
+# Подтверждены сверкой с Конфигуратором в #433
+# (docs/research/configurator_check_issue433.md).
+ISSUE433 = ("AccountingRegister", "Sequences")
 
 
 def put(
@@ -89,8 +92,10 @@ def test_files_match_issue202_proven_record_set_rows() -> None:
         metadata_type: f"{metadata_type}/{{Name}}/{file_name}"
         for metadata_type, file_name in RECORD_SET_MODULE_FILES.items()
     }
-    assert actual == proven
     assert sorted(proven) == ["AccumulationRegister", "InformationRegister"]
+    for metadata_type in ISSUE433:
+        proven[metadata_type] = f"{metadata_type}/{{Name}}/{metadata_type}.obj.bsl"
+    assert actual == proven
 
 
 def test_unresolved_record_set_rows_are_excluded() -> None:
@@ -101,7 +106,7 @@ def test_unresolved_record_set_rows_are_excluded() -> None:
         and row["semantic_evidence"] != PROVEN
     }
     assert {"AccountingRegister", "Sequences"} <= unresolved
-    assert not unresolved & set(RECORD_SET_MODULE_FILES)
+    assert not (unresolved - set(ISSUE433)) & set(RECORD_SET_MODULE_FILES)
     assert "CalculationRegister" not in RECORD_SET_MODULE_FILES
 
 
@@ -147,8 +152,8 @@ def test_each_proven_register_type_is_detected(
 def test_register_obj_is_record_set_not_object(tmp_path: Path) -> None:
     populate(tmp_path)
     index = scan_record_set_modules(tmp_path)
-    assert index.total == 2
-    assert index.filter(module_kind="record_set").total == 2
+    assert index.total == len(RECORD_SET_MODULE_FILES)
+    assert index.filter(module_kind="record_set").total == len(RECORD_SET_MODULE_FILES)
     assert index.filter(module_kind="object").total == 0
     assert index.filter(module_kind="manager").total == 0
 
@@ -184,7 +189,6 @@ def test_manager_form_and_command_files_are_not_scanned(
 @pytest.mark.parametrize(
     "metadata_type",
     [
-        "AccountingRegister",
         "BusinessProcess",
         "CalculationRegister",
         "Catalog",
@@ -199,7 +203,6 @@ def test_manager_form_and_command_files_are_not_scanned(
         "ExchangePlan",
         "HTTPService",
         "Report",
-        "Sequences",
         "Task",
         "WebService",
     ],
@@ -212,11 +215,11 @@ def test_unproven_owner_types_give_no_entries(
     assert scan_record_set_modules(tmp_path) == ModuleIndex()
 
 
-def test_accounting_register_is_not_guessed(tmp_path: Path) -> None:
-    put(tmp_path, "AccountingRegister", "Alpha", "AccountingRegister.obj.bsl")
-    put(tmp_path, "InformationRegister", "Beta", "InformationRegister.obj.bsl")
+def test_calculation_register_is_not_guessed(tmp_path: Path) -> None:
+    put(tmp_path, "CalculationRegister", "Alpha", "CalculationRegister.obj.bsl")
+    put(tmp_path, "AccountingRegister", "Beta", "AccountingRegister.obj.bsl")
     index = scan_record_set_modules(tmp_path)
-    assert {entry.metadata_type for entry in index} == {"InformationRegister"}
+    assert {entry.metadata_type for entry in index} == {"AccountingRegister"}
 
 
 # --- правило missing -------------------------------------------------------
@@ -235,7 +238,7 @@ def test_existing_owner_without_file_is_missing(tmp_path: Path) -> None:
     for metadata_type in RECORD_SET_MODULE_FILES:
         (tmp_path / metadata_type / "Alpha").mkdir(parents=True)
     index = scan_record_set_modules(tmp_path)
-    assert index.total == 2
+    assert index.total == len(RECORD_SET_MODULE_FILES)
     for entry in index:
         assert entry.read_status == "missing"
         assert entry.module_kind == "record_set"
@@ -400,7 +403,7 @@ def test_traversal_order_does_not_change_index(
     reordered = scan_record_set_modules(tmp_path)
     assert reordered == baseline
     assert reordered.to_json() == baseline.to_json()
-    assert baseline.total == 4 * 2 + 1
+    assert baseline.total == 4 * len(RECORD_SET_MODULE_FILES) + 1
 
 
 def test_repeated_scan_is_identical_and_read_only(tmp_path: Path) -> None:
@@ -466,7 +469,7 @@ def test_combines_with_metadata_object_modules(tmp_path: Path) -> None:
     assert managers.filter(module_kind="record_set").total == 0
     assert managers.filter(module_kind="manager").total == 2
     combined = ModuleIndex.from_entries([*record_sets, *managers])
-    assert combined.total == 4
+    assert combined.total == len(RECORD_SET_MODULE_FILES) + 2
     record_set = combined.get(
         "metadata_object:InformationRegister:Alpha:record_set"
     )

@@ -13,7 +13,7 @@
 Статусы разведены намеренно: «обнаруживается» (сканер), «включается в
 корпус» (есть документ с текстом), «exact» (точное разрешение по ключам),
 «semantic» (смысловой путь через явно переданный эмбеддер), «связь
-владельца» (`module_entry` / `form_key` / `unconfirmed`) и «измерено»
+владельца» (`module_entry` / `form_key` / `layout` / `unconfirmed`) и «измерено»
 (#370). Принятие ключей конструкторами не доказывает извлечение сканером;
 индексация не означает прохождение порога качества; зелёный CI не
 доказывает релевантность; отсутствие теста не доказывает отсутствие
@@ -63,20 +63,27 @@
 | `object` / `external_data_processor`, `external_report` | `scan_external_object_modules` (#351), только `mode="external"` | включается | `artifact_id`; `owner_name` из `ExternalDataProcessor.json` | да | `module_entry` | `test_search_corpus_issue323.py::test_external_object_module_and_form`; `test_search_api_issue328.py::test_external_scanner_only_in_external_mode` | issue369: 1.0000 / 0.8750 и 1.0000 / 0.9375 (по 8) |
 | `common_module` / `common_module` | `scan_common_modules` (#151) | включается; повтор из `ModuleIndex` — `duplicate_artifact` | `artifact_id`; `owner_name` | да | `module_entry` | `test_common_module_counted_once`; #328/#371 (`CommonModule/Shared`) | issue369: **0.7500** / 0.6146 (n=8) — ниже порога `recall@5`; issue321: 1.0000 / 0.6000 (n=2) |
 | `form` / `metadata_object_form` (4-уровневый layout) | `scan_forms` + `FormContext` | включается при непустом `bsl_text`; elem-only — `missing` | `artifact_id` `form:<T>/<N>/<C>/<F>`; `form_name`; `owner_name` | да | `form_key` | `test_owner_links_and_cards`, `test_form_statuses_and_read_failure`, `test_form_module_is_not_second_instance`; `test_search_forms_e2e_issue384.py` (сквозной exact/ambiguous/semantic); пример `unified_search.py` (exact по id формы, ambiguous по `ФормаКарточки`) | issue369: 1.0000 / 0.7917 (n=8); issue321: 1.0000 / 1.0000 (n=2) |
-| `form` / `common_form` (`CommonForm/<Форма>`) | `scan_forms` | включается | `artifact_id` `form:CommonForm//CommonForm/<Форма>`; `form_name`; по `owner_name` не находится | да | `unconfirmed`; в карточки не входит | `test_owner_links_and_cards`; `test_search_forms_e2e_issue384.py` | issue369: 0.8750 / 0.7991 (n=8) |
-| `form` внешних обработок (`Form/<Форма>`) | `scan_forms` (`mode="external"`) | включается | `artifact_id`; `form_name`; по `owner_name` не находится | да | `unconfirmed` к владельцу #351 | `test_external_object_module_and_form`; `test_search_forms_e2e_issue384.py` | issue369: 0.8750 / **0.3917** (n=8) — ниже порога `mrr@10` |
-| `form` внешних отчётов (`ReportForm/<Форма>`) | `scan_forms` (`mode="external"`) | включается | как у внешних обработок | да | `unconfirmed` | `test_search_forms_e2e_issue384.py` | issue369: 1.0000 / **0.4875** (n=8) — ниже порога `mrr@10` |
+| `form` / `common_form` (`CommonForm/<Форма>`) | `scan_forms` | включается | `artifact_id` `form:CommonForm//CommonForm/<Форма>`; `form_name`; `owner_name` (#436) | да | `layout` (#436); входит в карточку | `test_owner_links_and_cards`; `test_search_forms_e2e_issue384.py`; `test_form_owner_links_issue436.py` | issue369: 0.8750 / 0.7991 (n=8) |
+| `form` внешних обработок (`Form/<Форма>`) | `scan_forms` (`mode="external"`) | включается | `artifact_id`; `form_name`; `owner_name` (#436) | да | `layout` к владельцу #351 (#436) | `test_external_object_module_and_form`; `test_search_forms_e2e_issue384.py` | issue369: 0.8750 / **0.3917** (n=8) — ниже порога `mrr@10` |
+| `form` внешних отчётов (`ReportForm/<Форма>`) | `scan_forms` (`mode="external"`) | включается | как у внешних обработок | да | `layout` (#436) | `test_search_forms_e2e_issue384.py` | issue369: 1.0000 / **0.4875** (n=8) — ниже порога `mrr@10` |
 | карточка владельца `owner:<kind>:<type>:<name>` | строится корпусом | включается для владельцев с подтверждённой связью | только `artifact_id` | да | — | `test_owner_links_and_cards`; #371 (`owner_name` фильтр) | отдельно не измерялась |
 
 ## Не поддержано и не проверено
 
-- Вне индекса модулей (остаток #209): `Sequences`, `obj` у
-  `ChartOfAccounts`, `ChartOfCalculationTypes`, `AccountingRegister`;
-  модули расширений; raw-layout. Эти файлы не попадают в корпус и в поиск.
+- Вне индекса модулей: raw-layout. Модули расширения индексируются с #435:
+  их `artifact_id` (модули, формы, общие модули, карточки владельцев)
+  начинаются с `extension:<имя>/`; замер качества поиска по ним не
+  проводился.
+  `Sequences`, `obj` у `ChartOfAccounts`, `ChartOfCalculationTypes`,
+  `AccountingRegister` индексируются с #434 и находятся exact и semantic
+  (`test_confirmed_module_kinds_issue434.py`); замер качества поиска по ним
+  не проводился.
 - Внешний отчёт без форм и без суффикса `.erf` неотличим от обработки:
   записи нет (#351).
-- Связи `CommonForm` и внешних форм остаются `unconfirmed`; статус не
-  повышается документацией; карточек владельца для них нет.
+- Связи `CommonForm` и внешних форм с #436 подтверждены основанием
+  `layout` (тест на синтетике повторяет layout; факт выгрузки — общая
+  форма распакованного расширения и 14 внешних артефактов #351). Замеры
+  качества поиска ниже сделаны до #436.
 - Exact по синониму не поддержан. В измерении #370 запрос e4 набора #321
   оставался в знаменателе (7/8); после #385 он находится по имени с
   нормализацией разделителей, exact 8/8 на текущем runtime подтверждён
@@ -110,10 +117,38 @@ issue321 вид артефакта восстановлен из `gold` (`form:`
 сегмент `module_id`), поэтому срезы по виду пересчитаны по этому правилу,
 а не взяты из сводок отчёта. Отчёт и первичный JSON не изменялись.
 
+## Состояние на финальном коде эпика #431 (#438)
+
+Пересчёт по коду `roadmap/431-coverage-closure` `16116e2` (эпик #431):
+
+- индекс модулей и корпус включают `record_set` у `AccountingRegister` и
+  `Sequences`, `object` у `ChartOfAccounts` и `ChartOfCalculationTypes`
+  (#434) и модули расширения с префиксом `extension:<имя>/` в
+  `artifact_id` (#435); на E1–E4 замера #438 BSL-файлов без обработчика нет
+  ([`bsl_coverage_matrix.md`](bsl_coverage_matrix.md));
+- связи общих и внешних форм — `layout` (#436), строки матрицы выше
+  обновлены;
+- качество поиска по новым видам и модулям расширения отдельно не
+  измерялось; повторный замер групп ниже порога — следующий раздел (#437).
+
+## Повторный замер групп ниже порога (#437)
+
+Тем же эталоном, моделью и метриками, сборщиком
+`scripts/measure_search_issue437.py` (производная от #370 с явным SHA и
+связью `layout` #436), «было» `main` `6d798c0` → «стало» после #436
+`5b6e1bd`, free n=8: `common_module` 0.750 / 0.615 → 0.875 / 0.681 и формы
+внешних отчётов 1.000 / 0.488 → 1.000 / 0.654 — выше порогов; формы
+внешних обработок 0.875 / 0.392 → 0.875 / 0.480 — ниже порога `mrr@10`;
+`external_connection` 1.000 / 0.654 → 0.750 / 0.646 — ниже порога
+`recall@5` (два запроса сдвинулись с 5-го на 6-е место). Причины по
+запросам и ограничения — [`research/search_groups_issue437.md`](research/search_groups_issue437.md);
+итоговый пересчёт матрицы — #438. Значения в таблице выше относятся к
+замеру #370.
+
 ## Границы приёмки
 
 Документ фиксирует покрытие на указанном SHA. Группы ниже планки на
 срезах с n ≤ 8 приняты как известное ограничение решением владельца
 в #383 (правило Б); пробел сквозной проверки форм закрыт в #384.
-`unconfirmed` связи `CommonForm` и внешних форм остаются ограничением.
+Связи `CommonForm` и внешних форм подтверждены в #436.
 Пороги и эталоны не менялись.

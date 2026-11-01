@@ -19,6 +19,7 @@ from typing import Any, Literal, get_args
 from v8unpack_agent.common_modules import CommonModuleEntry
 
 __all__ = [
+    "EXTENSION_ID_PREFIX",
     "MODULE_INDEX_SCHEMA",
     "MODULE_KINDS",
     "MODULE_READ_STATUSES",
@@ -29,6 +30,7 @@ __all__ = [
     "ModuleReadStatus",
     "OwnerKind",
     "classify_bsl_bytes",
+    "extension_id_prefix",
     "module_entry_from_common_module",
     "validate_relative_module_path",
 ]
@@ -156,6 +158,16 @@ def _validate_owner_name(value: str) -> None:
             )
 
 
+EXTENSION_ID_PREFIX = "extension"
+
+
+def extension_id_prefix(extension: str | None) -> str:
+    """Префикс id артефактов расширения (#435): ``extension:<имя>/`` или ``""``."""
+    if extension is None:
+        return ""
+    return f"{EXTENSION_ID_PREFIX}:{extension}/"
+
+
 def classify_bsl_bytes(data: bytes) -> ModuleReadStatus:
     """Классифицировать прочитанное содержимое BSL-файла.
 
@@ -186,6 +198,7 @@ class ModuleEntry:
     read_status: ModuleReadStatus
     size_bytes: int | None = None
     sha256: str | None = None
+    extension: str | None = None
 
     def __post_init__(self) -> None:
         if self.module_kind not in MODULE_KINDS:
@@ -229,11 +242,18 @@ class ModuleEntry:
             self.size_bytes is not None or self.sha256 is not None
         ):
             raise ValueError("missing module must not have size or sha256")
+        if self.extension is not None and (
+            not isinstance(self.extension, str) or not self.extension.isidentifier()
+        ):
+            raise ValueError("extension must be a 1C identifier or None")
 
     @property
     def module_id(self) -> str:
-        """Стабильный идентификатор, не зависящий от layout и ОС."""
-        return ":".join(
+        """Стабильный идентификатор, не зависящий от layout и ОС.
+
+        У модуля расширения (#435) id начинается с ``extension:<имя>/``.
+        """
+        base = ":".join(
             [
                 self.owner_kind,
                 self.metadata_type or "",
@@ -241,6 +261,7 @@ class ModuleEntry:
                 self.module_kind,
             ]
         )
+        return extension_id_prefix(self.extension) + base
 
     @property
     def path(self) -> PurePosixPath:
@@ -253,7 +274,7 @@ class ModuleEntry:
 
     def to_dict(self) -> dict[str, Any]:
         """Сериализуемое представление без BSL-текста."""
-        return {
+        result: dict[str, Any] = {
             "module_id": self.module_id,
             "module_kind": self.module_kind,
             "owner_kind": self.owner_kind,
@@ -264,12 +285,19 @@ class ModuleEntry:
             "size_bytes": self.size_bytes,
             "sha256": self.sha256,
         }
+        if self.extension is not None:
+            result["extension"] = self.extension
+        return result
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> ModuleEntry:
-        """Восстановить запись из ``to_dict()`` со строгой проверкой ключей."""
+        """Восстановить запись из ``to_dict()`` со строгой проверкой ключей.
+
+        Ключ ``extension`` необязателен (#435): записи конфигурации его не
+        содержат.
+        """
         keys = frozenset(data)
-        if keys != _ENTRY_KEYS:
+        if keys != _ENTRY_KEYS and keys != _ENTRY_KEYS | {"extension"}:
             raise ValueError("module entry keys do not match schema")
         entry = cls(
             module_kind=data["module_kind"],
@@ -280,6 +308,7 @@ class ModuleEntry:
             read_status=data["read_status"],
             size_bytes=data["size_bytes"],
             sha256=data["sha256"],
+            extension=data.get("extension"),
         )
         if entry.module_id != data["module_id"]:
             raise ValueError("module_id does not match entry fields")

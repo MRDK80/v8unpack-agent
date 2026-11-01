@@ -23,9 +23,9 @@ report и ограничения. Остаток, который агент не
 | `managed_application` | `configuration` | `Configuration.app.bsl` | `scan_configuration_modules` (#204) | те же | `module_managed_application` | — |
 | `external_connection` | `configuration` | `Configuration.con.bsl` | `scan_configuration_modules` (#204) | те же | `module_external_connection` | — |
 | `session` | `configuration` | `Configuration.seance.bsl` | `scan_configuration_modules` (#204) | те же | `module_session` | — |
-| `object` | `metadata_object` | `{Type}/{Name}/{Type}.obj.bsl` для `BusinessProcess`, `Catalog`, `ChartOfCharacteristicType`, `DataProcessor`, `Document`, `ExchangePlan`, `Report`, `Task` | `scan_metadata_object_modules` (#205) | `test_metadata_modules_issue205.py`, `test_bsl_coverage_matrix_issue209.py` | `module_object` | только пары, доказанные в #202 |
+| `object` | `metadata_object` | `{Type}/{Name}/{Type}.obj.bsl` для `BusinessProcess`, `Catalog`, `ChartOfAccounts`, `ChartOfCalculationTypes`, `ChartOfCharacteristicType`, `DataProcessor`, `Document`, `ExchangePlan`, `Report`, `Task` | `scan_metadata_object_modules` (#205, #434) | `test_metadata_modules_issue205.py`, `test_confirmed_module_kinds_issue434.py`, `test_bsl_coverage_matrix_issue209.py` | `module_object` | только пары, доказанные в #202 и #433; `ChartOfAccounts`, `ChartOfCalculationTypes` — на одной выгрузке |
 | `manager` | `metadata_object` | `{Type}/{Name}/{Type}.mgr.bsl` для `AccumulationRegister`, `Catalog`, `DataProcessor`, `Document`, `DocumentJournal`, `ExchangePlan`, `InformationRegister`, `Report`; `Enum/{Name}/Enum.obj.bsl` | `scan_metadata_object_modules` (#205) | те же | `module_manager` | `Enum.obj.bsl` — модуль менеджера |
-| `record_set` | `metadata_object` | `AccumulationRegister/{Name}/AccumulationRegister.obj.bsl`, `InformationRegister/{Name}/InformationRegister.obj.bsl` | `scan_record_set_modules` (#206) | `test_record_set_modules_issue206.py`, `test_bsl_coverage_matrix_issue209.py` | `module_record_set` | разбивка по `metadata_type` в `summary.modules` |
+| `record_set` | `metadata_object` | `AccountingRegister/{Name}/AccountingRegister.obj.bsl`, `AccumulationRegister/{Name}/AccumulationRegister.obj.bsl`, `InformationRegister/{Name}/InformationRegister.obj.bsl`, `Sequences/{Name}/Sequences.obj.bsl` | `scan_record_set_modules` (#206, #434) | `test_record_set_modules_issue206.py`, `test_confirmed_module_kinds_issue434.py`, `test_bsl_coverage_matrix_issue209.py` | `module_record_set` | разбивка по `metadata_type` в `summary.modules`; `AccountingRegister`, `Sequences` — по #433, на одной выгрузке |
 | `command` | `common_command` | `CommonCommand/{Cmd}/CommonCommand.obj.bsl` | `scan_command_modules` (#207) | `test_command_modules_issue207.py`, `test_bsl_coverage_matrix_issue209.py` | `module_command` | — |
 | `command` | `metadata_object_command` | `{Type}/{Name}/{Type}Command/{Cmd}/{Type}Command.obj.bsl` для `Catalog`, `DataProcessor`, `Document`, `InformationRegister`, `Report` | `scan_command_modules` (#207) | те же | `module_command` | команды других типов в #202 не встретились |
 | `value_manager` | `metadata_object` | `Constant/{Name}/Constant.obj.bsl` | `scan_value_manager_modules` (#337) | `test_value_manager_modules_issue337.py`, `test_bsl_coverage_matrix_issue209.py` | `module_value_manager` | — |
@@ -139,17 +139,93 @@ upstream распаковывает `.erf` тем же классом, что и
 
 ## Остаток: необработанные BSL-файлы
 
+После #434 шаблоны `Sequences.obj`, `ChartOfAccounts.obj`,
+`ChartOfCalculationTypes.obj` и `AccountingRegister.obj` («6 без
+обработчика» E3 в замере выше) берутся индексом модулей по сверке #433
+([`research/configurator_check_issue433.md`](research/configurator_check_issue433.md)).
+Модули менеджера этих типов ни в одной выгрузке не встречались и записей не
+дают. Пересчёт замера на финальном SHA эпика — #438.
+
 | Шаблон | Где встретился | Причина | Решение |
 |---|---|---|---|
-| `Sequences/{Name}/Sequences.obj.bsl` | E3: 3 | семантика в #202 unresolved | вне индекса до сверки с выгрузкой Конфигуратором |
-| `ChartOfAccounts/{Name}/ChartOfAccounts.obj.bsl` | E3: 1 | в #202 только upstream `ext_code` и аналогия layout | вне индекса до сверки с Конфигуратором |
-| `ChartOfCalculationTypes/{Name}/ChartOfCalculationTypes.obj.bsl` | E3: 1 | то же | вне индекса до сверки с Конфигуратором |
-| `AccountingRegister/{Name}/AccountingRegister.obj.bsl` | E3: 1 | то же | вне индекса до сверки с Конфигуратором |
 | модули форм внешних обработок и отчётов | внешние: 14 | обрабатываются `scan_forms` в режиме `mode="external"`, а не индексом модулей | без изменений |
-| модули расширения (`ConfigurationExtension`) | расширение: 0 файлов | артефакта с BSL нет | not_detected; проверить при появлении артефакта |
+| `{Artifact}/ExternalDataProcessor.obj.bsl` без `ExternalDataProcessor.json` | каталог внешних обработок и отчётов только с BSL: 466 | в каталоге нет файла метаданных, имя владельца (#351) установить нельзя; модули форм (972) берёт `scan_forms` | вне индекса; нужна полная распаковка `v8unpack` |
+| заимствованный или собственный объект расширения | распакованный `.cfe` | признак в JSON `v8unpack` не подтверждён | модули индексируются без различия (#435) |
 | raw-layout и выгрузка Конфигуратором в файлы | — | исследован только normalized-layout | вне scope |
 
 Unresolved-случаи не классифицируются догадкой и не дают записей, в том
-числе `missing`. На выгрузке расширения сканер объектов и менеджеров
-создаёт `missing` для заимствованных объектов без модулей (2 + 2): это
-следствие общего правила missing, а не поддержка расширений.
+числе `missing`.
+
+## Модули расширения (#435)
+
+Распакованный `.cfe` (корень `ConfigurationExtension.json`) индексируется
+теми же сканерами; записи получают поле `extension`, а их `module_id` и
+`artifact_id` поиска — префикс `extension:<имя>/`, поэтому не совпадают с
+основной конфигурацией. Модули уровня расширения
+`ConfigurationExtension.app.bsl` и `ConfigurationExtension.ssn.bsl` дают
+`managed_application` и `session` с `owner_kind` `extension`. Записей
+`missing` в расширении нет. Тесты — `test_extension_modules_issue435.py`;
+контракт — раздел «Модули расширения» [`modules.md`](modules.md).
+
+## Замер на финальном коде эпика #431 (#438)
+
+Замер выполнен владельцем 1 ноября 2026 сборщиком `coverage_issue438_v1`
+(вне репозитория, sha256 `cfb37c5c5aca586651baa1408e9e2819b81aea42d563882e02c8ed8d851c9852`) на
+двух версиях кода из `git archive`: «было» — `main` `6d798c0`, «стало» —
+`roadmap/431-coverage-closure` `16116e2` (весь код эпика; коммит #438
+меняет только документацию и тесты). Runner с `include_module_index=True`
+и без СКД работал на временной копии каждой выгрузки; оригиналы сверены по
+sha256 всех файлов до и после. E1–E3 — те же выгрузки, что в замере #209;
+E4 — расширение к E2, `.cfe`, распакованный `v8unpack` 1.2.13. Каталог
+внешних обработок и отчётов прогнан отдельно в режиме `external` (ниже).
+Результаты: `cov438_6d798c0.json` (sha256 `dd3cbcdd112a7104428cdb75a4393719831e65ea64c6bd4b5b6f5cfa96e6266e`) и
+`cov438_16116e2.json` (sha256 `fda1fbfc09ec3eb7fc748dad9ddd04c59f7f27be1388f0dfca2b570aa9a6414b`) хранятся у владельца.
+
+| Проверка | E1 | E2 | E3 | E4 |
+|---|---:|---:|---:|---:|
+| BSL-файлов | 3996 | 86 | 5099 | 11 |
+| индекс модулей / общие модули / формы | 1179 / 650 / 2167 | 24 / 4 / 58 | 1189 / 241 / 3669 | 6 / 2 / 3 |
+| без обработчика (было на `main`) | 0 | 0 | 6 | 2 |
+| без обработчика (стало) | 0 | 0 | 0 | 0 |
+| записей индекса модулей (было → стало) | 2550 → 2551 | 156 → 156 | 2816 → 2822 | 12 → 6 |
+| runner завершён | да | да | да | да |
+| оригинал не изменился (sha256 всех файлов) | да | да | да | да |
+| записей runner в копию | 0 | 0 | 0 | 0 |
+
+`summary.modules.by_kind` на «стало», формат `ok / empty / whitespace_only / missing / read_error`:
+
+| `module_kind` | E1 | E2 | E3 | E4 |
+|---|---|---|---|---|
+| `command` | 105 / 0 / 0 / 0 / 0 | 3 / 0 / 0 / 0 / 0 | 70 / 0 / 0 / 0 / 0 | — |
+| `external_connection` | 1 / 0 / 0 / 0 / 0 | 1 / 0 / 0 / 0 / 0 | 1 / 0 / 0 / 0 / 0 | — |
+| `managed_application` | 1 / 0 / 0 / 0 / 0 | 1 / 0 / 0 / 0 / 0 | 1 / 0 / 0 / 0 / 0 | 1 / 0 / 0 / 0 / 0 |
+| `manager` | 274 / 34 / 4 / 1016 / 0 | 0 / 0 / 0 / 74 / 0 | 119 / 55 / 2 / 1312 / 0 | 1 / 0 / 0 / 0 / 0 |
+| `object` | 505 / 58 / 3 / 82 / 0 | 17 / 0 / 0 / 41 / 0 | 763 / 54 / 2 / 63 / 0 | 3 / 0 / 0 / 0 / 0 |
+| `ordinary_application` | 1 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 1 / 0 | 1 / 0 / 0 / 0 / 0 | — |
+| `record_set` | 113 / 33 / 3 / 130 / 0 | 0 / 0 / 0 / 12 / 0 | 67 / 39 / 5 / 172 / 0 | — |
+| `service` | 4 / 0 / 0 / 0 / 0 | 1 / 0 / 0 / 0 / 0 | — | — |
+| `session` | 1 / 0 / 0 / 0 / 0 | 1 / 0 / 0 / 0 / 0 | 1 / 0 / 0 / 0 / 0 | 1 / 0 / 0 / 0 / 0 |
+| `value_manager` | 17 / 22 / 0 / 144 / 0 | 0 / 0 / 0 / 4 / 0 | 5 / 4 / 0 / 86 / 0 | — |
+
+Изменения относительно «было»:
+
+- E3: шесть прежних файлов без обработчика стали записями индекса —
+  `object` +2 (`ok`), `record_set` +4: регистр бухгалтерии `ok`,
+  последовательности 2 `empty` и 1 `whitespace_only` (совпадает со
+  сверкой #433).
+- E4: ложные `missing` заимствованных объектов (5 `manager`, 3 `object`)
+  больше не создаются; добавлены `managed_application` и `session` уровня
+  расширения (#435).
+- E1: одна новая запись `record_set` `missing` — каталог последовательности
+  без файла модуля, общее правило `missing`; число обработанных BSL-файлов
+  не изменилось.
+- E2: без изменений.
+
+Каталог внешних обработок и отчётов владельца (466 артефактов, сборщик
+`coverage_issue438_v2`, sha256 `3159659d2d3f0f610aa7305ada06232868c63ea2eead4cfb6331b899949369a5`, режим `external`) на
+обеих версиях: 1438 BSL-файлов, формами обработано 972, без обработчика
+466 — модули объекта `{Artifact}/ExternalDataProcessor.obj.bsl`. Каталог
+содержит только BSL: в артефактах нет `ExternalDataProcessor.json` и JSON
+форм, поэтому сканер модулей объекта (#351) не создаёт записей и имя
+владельца не угадывает. Оригинал не изменился, записей в копию нет.
+Результаты `cov438x_6d798c0.json` и `cov438x_16116e2.json` — у владельца.

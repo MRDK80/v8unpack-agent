@@ -1,0 +1,4149 @@
+{
+ "derived_from": {
+  "5b6e1bd": {
+   "bytes": 7142215,
+   "file": "m437_5b6e1bd.json",
+   "sha256": "13fa63d657eb85edd84c318650d69edb6ac816d72544aa0b02bddc47bea33f2b"
+  },
+  "6d798c0": {
+   "bytes": 7138307,
+   "file": "m437_6d798c0.json",
+   "sha256": "4c44b203c2835c8b6130ea68cc127fae9d62de3bfdd2c9dfa800ecf63144991a"
+  }
+ },
+ "runs": {
+  "5b6e1bd": {
+   "base_measure_script_sha256": "63af2d408015afd8ec532e2765c29685b4c55b1a52f54d71b9b1b1f488c0e179",
+   "corpora": {
+    "issue321": {
+     "failed_free_slices": [
+      "tag:paraphrase"
+     ],
+     "groups": {
+      "class:free": {
+       "hit@1": 0.7647,
+       "mrr@10": 0.8402,
+       "n_free": 17,
+       "ndcg@10": 0.8793,
+       "recall@5": 1.0
+      },
+      "class:free+mixed": {
+       "hit@1": 0.7647,
+       "mrr@10": 0.8402,
+       "n_free": 17,
+       "ndcg@10": 0.8793,
+       "recall@5": 1.0
+      },
+      "forms": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 2,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "large": {
+       "hit@1": 0.75,
+       "mrr@10": 0.8333,
+       "n_free": 4,
+       "ndcg@10": 0.875,
+       "recall@5": 1.0
+      },
+      "module_kind:command": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 1,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "module_kind:common_module": {
+       "hit@1": 0.5,
+       "mrr@10": 0.6,
+       "n_free": 2,
+       "ndcg@10": 0.6934,
+       "recall@5": 1.0
+      },
+      "module_kind:form": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 2,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "module_kind:manager": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 1,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "module_kind:object": {
+       "hit@1": 0.6667,
+       "mrr@10": 0.8056,
+       "n_free": 6,
+       "ndcg@10": 0.8552,
+       "recall@5": 1.0
+      },
+      "module_kind:record_set": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 2,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "module_kind:service": {
+       "hit@1": 0.5,
+       "mrr@10": 0.625,
+       "n_free": 2,
+       "ndcg@10": 0.7153,
+       "recall@5": 1.0
+      },
+      "module_kind:session": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 1,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "owner_kind:common_module": {
+       "hit@1": 0.5,
+       "mrr@10": 0.6,
+       "n_free": 2,
+       "ndcg@10": 0.6934,
+       "recall@5": 1.0
+      },
+      "owner_kind:configuration": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 1,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "owner_kind:external_data_processor": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 1,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "owner_kind:metadata_object": {
+       "hit@1": 0.7,
+       "mrr@10": 0.8083,
+       "n_free": 10,
+       "ndcg@10": 0.8562,
+       "recall@5": 1.0
+      },
+      "owner_kind:metadata_object_command": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 1,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "owner_kind:metadata_object_form": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 2,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "tag:base": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 9,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "tag:distractor": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 2,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "tag:paraphrase": {
+       "hit@1": 0.25,
+       "mrr@10": 0.4875,
+       "n_free": 4,
+       "ndcg@10": 0.6121,
+       "recall@5": 1.0
+      },
+      "tag:tail": {
+       "hit@1": 0.5,
+       "mrr@10": 0.6667,
+       "n_free": 2,
+       "ndcg@10": 0.75,
+       "recall@5": 1.0
+      }
+     },
+     "per_query": {
+      "f1": {
+       "gold_rank": 1,
+       "group": null,
+       "top3": [
+        "metadata_object:Document:РеализацияТоваров:object",
+        "metadata_object:Catalog:КонтрагентыАрхив:object",
+        "form:Document/ПоступлениеТоваров/DocumentForm/ФормаПоступления"
+       ]
+      },
+      "f2": {
+       "gold_rank": 1,
+       "group": null,
+       "top3": [
+        "form:Document/РеализацияТоваров/DocumentForm/ФормаДокумента",
+        "metadata_object:Catalog:Контрагенты:object",
+        "form:Document/ПоступлениеТоваров/DocumentForm/ФормаПоступления"
+       ]
+      },
+      "f3": {
+       "gold_rank": 1,
+       "group": null,
+       "top3": [
+        "metadata_object:InformationRegister:ЦеныНоменклатуры:record_set",
+        "metadata_object:Document:РеализацияТоваров:object",
+        "metadata_object:Document:ПоступлениеТоваров:object"
+       ]
+      },
+      "f4": {
+       "gold_rank": 1,
+       "group": null,
+       "top3": [
+        "metadata_object:Catalog:Контрагенты:manager",
+        "metadata_object:Catalog:Контрагенты:object",
+        "form:Document/РеализацияТоваров/DocumentForm/ФормаДокумента"
+       ]
+      },
+      "f5": {
+       "gold_rank": 1,
+       "group": null,
+       "top3": [
+        "metadata_object:HTTPService:ОбменЗаказами:service",
+        "configuration:::external_connection",
+        "external_data_processor:ExternalDataProcessor:ЗагрузкаЦен:object"
+       ]
+      },
+      "f6": {
+       "gold_rank": 1,
+       "group": null,
+       "top3": [
+        "common_module:CommonModule:ОбщегоНазначенияСервер:common_module",
+        "metadata_object:Document:ПоступлениеТоваров:object",
+        "form:Document/ПоступлениеТоваров/DocumentForm/ФормаПоступления"
+       ]
+      },
+      "f7": {
+       "gold_rank": 1,
+       "group": null,
+       "top3": [
+        "metadata_object_command:Catalog:Контрагенты.ОткрытьКарточку:command",
+        "metadata_object:Catalog:Контрагенты:manager",
+        "metadata_object:Catalog:Контрагенты:object"
+       ]
+      },
+      "f8": {
+       "gold_rank": 1,
+       "group": null,
+       "top3": [
+        "external_data_processor:ExternalDataProcessor:ЗагрузкаЦен:object",
+        "form:Document/ПоступлениеТоваров/DocumentForm/ФормаПоступления",
+        "metadata_object:InformationRegister:ЦеныНоменклатуры:record_set"
+       ]
+      },
+      "f9": {
+       "gold_rank": 1,
+       "group": null,
+       "top3": [
+        "configuration:::session",
+        "configuration:::ordinary_application",
+        "configuration:::external_connection"
+       ]
+      },
+      "hd1": {
+       "gold_rank": 1,
+       "group": null,
+       "top3": [
+        "metadata_object:Document:РеализацияУслуг:object",
+        "metadata_object:Document:ПоступлениеТоваров:object",
+        "metadata_object:Document:РеализацияТоваров:object"
+       ]
+      },
+      "hd2": {
+       "gold_rank": 1,
+       "group": null,
+       "top3": [
+        "metadata_object:Catalog:КонтрагентыАрхив:object",
+        "metadata_object:Catalog:Контрагенты:object",
+        "form:Document/РеализацияТоваров/DocumentForm/ФормаДокумента"
+       ]
+      },
+      "hp1": {
+       "gold_rank": 2,
+       "group": null,
+       "top3": [
+        "metadata_object:Catalog:КонтрагентыАрхив:object",
+        "metadata_object:Catalog:Контрагенты:object",
+        "metadata_object:Catalog:Контрагенты:manager"
+       ]
+      },
+      "hp2": {
+       "gold_rank": 1,
+       "group": null,
+       "top3": [
+        "metadata_object:InformationRegister:ЦеныНоменклатуры:record_set",
+        "external_report:ExternalReport:ОтчетПоЦенам:object",
+        "external_data_processor:ExternalDataProcessor:ЗагрузкаЦен:object"
+       ]
+      },
+      "hp3": {
+       "gold_rank": 4,
+       "group": null,
+       "top3": [
+        "form:Document/ПоступлениеТоваров/DocumentForm/ФормаПоступления",
+        "common_module:CommonModule:ОбщегоНазначенияСервер:common_module",
+        "form:Document/РеализацияТоваров/DocumentForm/ФормаДокумента"
+       ]
+      },
+      "hp4": {
+       "gold_rank": 5,
+       "group": null,
+       "top3": [
+        "metadata_object:Document:ПоступлениеТоваров:object",
+        "metadata_object:Document:РеализацияТоваров:object",
+        "form:Document/ПоступлениеТоваров/DocumentForm/ФормаПоступления"
+       ]
+      },
+      "ht1": {
+       "gold_rank": 3,
+       "group": null,
+       "top3": [
+        "metadata_object:Document:РеализацияТоваров:object",
+        "form:Document/ПоступлениеТоваров/DocumentForm/ФормаПоступления",
+        "metadata_object:Document:ПоступлениеТоваров:object"
+       ]
+      },
+      "ht2": {
+       "gold_rank": 1,
+       "group": null,
+       "top3": [
+        "form:Document/ПоступлениеТоваров/DocumentForm/ФормаПоступления",
+        "metadata_object:Document:ПоступлениеТоваров:object",
+        "metadata_object:Document:РеализацияТоваров:object"
+       ]
+      }
+     },
+     "thresholds_passed": true
+    },
+    "issue369": {
+     "failed_free_slices": [
+      "group:configuration:external_connection",
+      "group:form:external_data_processor_form",
+      "module_kind:external_connection"
+     ],
+     "groups": {
+      "annotation:distractor": {
+       "hit@1": 0.6429,
+       "mrr@10": 0.8,
+       "n_free": 14,
+       "ndcg@10": 0.8508,
+       "recall@5": 1.0
+      },
+      "annotation:lexical_disjoint": {
+       "hit@1": 0.6818,
+       "mrr@10": 0.7919,
+       "n_free": 132,
+       "ndcg@10": 0.8395,
+       "recall@5": 0.947
+      },
+      "annotation:tail": {
+       "hit@1": 0.5,
+       "mrr@10": 0.6667,
+       "n_free": 8,
+       "ndcg@10": 0.7202,
+       "recall@5": 0.875
+      },
+      "class:free": {
+       "hit@1": 0.7039,
+       "mrr@10": 0.8083,
+       "n_free": 152,
+       "ndcg@10": 0.8525,
+       "recall@5": 0.9539
+      },
+      "class:free+mixed": {
+       "hit@1": 0.7039,
+       "mrr@10": 0.8083,
+       "n_free": 152,
+       "ndcg@10": 0.8525,
+       "recall@5": 0.9539
+      },
+      "forms": {
+       "hit@1": 0.5,
+       "mrr@10": 0.6839,
+       "n_free": 32,
+       "ndcg@10": 0.7617,
+       "recall@5": 0.9375
+      },
+      "group:common_command:command": {
+       "hit@1": 0.75,
+       "mrr@10": 0.8333,
+       "n_free": 8,
+       "ndcg@10": 0.8734,
+       "recall@5": 0.875
+      },
+      "group:common_module:common_module": {
+       "hit@1": 0.625,
+       "mrr@10": 0.6813,
+       "n_free": 8,
+       "ndcg@10": 0.7272,
+       "recall@5": 0.875
+      },
+      "group:configuration:external_connection": {
+       "hit@1": 0.5,
+       "mrr@10": 0.6458,
+       "n_free": 8,
+       "ndcg@10": 0.7304,
+       "recall@5": 0.75
+      },
+      "group:configuration:managed_application": {
+       "hit@1": 0.75,
+       "mrr@10": 0.8542,
+       "n_free": 8,
+       "ndcg@10": 0.8914,
+       "recall@5": 1.0
+      },
+      "group:configuration:ordinary_application": {
+       "hit@1": 0.875,
+       "mrr@10": 0.9375,
+       "n_free": 8,
+       "ndcg@10": 0.9539,
+       "recall@5": 1.0
+      },
+      "group:configuration:session": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 8,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "group:external_data_processor:object": {
+       "hit@1": 0.875,
+       "mrr@10": 0.9375,
+       "n_free": 8,
+       "ndcg@10": 0.9539,
+       "recall@5": 1.0
+      },
+      "group:external_report:object": {
+       "hit@1": 0.875,
+       "mrr@10": 0.9375,
+       "n_free": 8,
+       "ndcg@10": 0.9539,
+       "recall@5": 1.0
+      },
+      "group:form:common_form": {
+       "hit@1": 0.75,
+       "mrr@10": 0.8095,
+       "n_free": 8,
+       "ndcg@10": 0.8542,
+       "recall@5": 0.875
+      },
+      "group:form:external_data_processor_form": {
+       "hit@1": 0.125,
+       "mrr@10": 0.4804,
+       "n_free": 8,
+       "ndcg@10": 0.6094,
+       "recall@5": 0.875
+      },
+      "group:form:external_report_form": {
+       "hit@1": 0.5,
+       "mrr@10": 0.6542,
+       "n_free": 8,
+       "ndcg@10": 0.7381,
+       "recall@5": 1.0
+      },
+      "group:form:metadata_object_form": {
+       "hit@1": 0.625,
+       "mrr@10": 0.7917,
+       "n_free": 8,
+       "ndcg@10": 0.8452,
+       "recall@5": 1.0
+      },
+      "group:metadata_object:HTTPService:service": {
+       "hit@1": 0.75,
+       "mrr@10": 0.8542,
+       "n_free": 8,
+       "ndcg@10": 0.8914,
+       "recall@5": 1.0
+      },
+      "group:metadata_object:WebService:service": {
+       "hit@1": 0.5,
+       "mrr@10": 0.6042,
+       "n_free": 8,
+       "ndcg@10": 0.6702,
+       "recall@5": 0.875
+      },
+      "group:metadata_object:manager": {
+       "hit@1": 0.75,
+       "mrr@10": 0.875,
+       "n_free": 8,
+       "ndcg@10": 0.9077,
+       "recall@5": 1.0
+      },
+      "group:metadata_object:object": {
+       "hit@1": 0.75,
+       "mrr@10": 0.8542,
+       "n_free": 8,
+       "ndcg@10": 0.8914,
+       "recall@5": 1.0
+      },
+      "group:metadata_object:record_set": {
+       "hit@1": 0.625,
+       "mrr@10": 0.775,
+       "n_free": 8,
+       "ndcg@10": 0.8311,
+       "recall@5": 1.0
+      },
+      "group:metadata_object:value_manager": {
+       "hit@1": 0.875,
+       "mrr@10": 0.9167,
+       "n_free": 8,
+       "ndcg@10": 0.9375,
+       "recall@5": 1.0
+      },
+      "group:metadata_object_command:command": {
+       "hit@1": 0.875,
+       "mrr@10": 0.9167,
+       "n_free": 8,
+       "ndcg@10": 0.9375,
+       "recall@5": 1.0
+      },
+      "large": {
+       "hit@1": 0.5,
+       "mrr@10": 0.6708,
+       "n_free": 16,
+       "ndcg@10": 0.7373,
+       "recall@5": 0.9375
+      },
+      "module_kind:command": {
+       "hit@1": 0.8125,
+       "mrr@10": 0.875,
+       "n_free": 16,
+       "ndcg@10": 0.9054,
+       "recall@5": 0.9375
+      },
+      "module_kind:common_module": {
+       "hit@1": 0.625,
+       "mrr@10": 0.6813,
+       "n_free": 8,
+       "ndcg@10": 0.7272,
+       "recall@5": 0.875
+      },
+      "module_kind:external_connection": {
+       "hit@1": 0.5,
+       "mrr@10": 0.6458,
+       "n_free": 8,
+       "ndcg@10": 0.7304,
+       "recall@5": 0.75
+      },
+      "module_kind:form": {
+       "hit@1": 0.5,
+       "mrr@10": 0.6839,
+       "n_free": 32,
+       "ndcg@10": 0.7617,
+       "recall@5": 0.9375
+      },
+      "module_kind:managed_application": {
+       "hit@1": 0.75,
+       "mrr@10": 0.8542,
+       "n_free": 8,
+       "ndcg@10": 0.8914,
+       "recall@5": 1.0
+      },
+      "module_kind:manager": {
+       "hit@1": 0.75,
+       "mrr@10": 0.875,
+       "n_free": 8,
+       "ndcg@10": 0.9077,
+       "recall@5": 1.0
+      },
+      "module_kind:object": {
+       "hit@1": 0.8333,
+       "mrr@10": 0.9097,
+       "n_free": 24,
+       "ndcg@10": 0.933,
+       "recall@5": 1.0
+      },
+      "module_kind:ordinary_application": {
+       "hit@1": 0.875,
+       "mrr@10": 0.9375,
+       "n_free": 8,
+       "ndcg@10": 0.9539,
+       "recall@5": 1.0
+      },
+      "module_kind:record_set": {
+       "hit@1": 0.625,
+       "mrr@10": 0.775,
+       "n_free": 8,
+       "ndcg@10": 0.8311,
+       "recall@5": 1.0
+      },
+      "module_kind:service": {
+       "hit@1": 0.625,
+       "mrr@10": 0.7292,
+       "n_free": 16,
+       "ndcg@10": 0.7808,
+       "recall@5": 0.9375
+      },
+      "module_kind:session": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 8,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "module_kind:value_manager": {
+       "hit@1": 0.875,
+       "mrr@10": 0.9167,
+       "n_free": 8,
+       "ndcg@10": 0.9375,
+       "recall@5": 1.0
+      },
+      "owner_kind:common_command": {
+       "hit@1": 0.75,
+       "mrr@10": 0.8333,
+       "n_free": 8,
+       "ndcg@10": 0.8734,
+       "recall@5": 0.875
+      },
+      "owner_kind:common_form": {
+       "hit@1": 0.75,
+       "mrr@10": 0.8095,
+       "n_free": 8,
+       "ndcg@10": 0.8542,
+       "recall@5": 0.875
+      },
+      "owner_kind:common_module": {
+       "hit@1": 0.625,
+       "mrr@10": 0.6813,
+       "n_free": 8,
+       "ndcg@10": 0.7272,
+       "recall@5": 0.875
+      },
+      "owner_kind:configuration": {
+       "hit@1": 0.7812,
+       "mrr@10": 0.8594,
+       "n_free": 32,
+       "ndcg@10": 0.8939,
+       "recall@5": 0.9375
+      },
+      "owner_kind:external_data_processor": {
+       "hit@1": 0.5,
+       "mrr@10": 0.7089,
+       "n_free": 16,
+       "ndcg@10": 0.7816,
+       "recall@5": 0.9375
+      },
+      "owner_kind:external_report": {
+       "hit@1": 0.6875,
+       "mrr@10": 0.7958,
+       "n_free": 16,
+       "ndcg@10": 0.846,
+       "recall@5": 1.0
+      },
+      "owner_kind:metadata_object": {
+       "hit@1": 0.7083,
+       "mrr@10": 0.8132,
+       "n_free": 48,
+       "ndcg@10": 0.8549,
+       "recall@5": 0.9792
+      },
+      "owner_kind:metadata_object_command": {
+       "hit@1": 0.875,
+       "mrr@10": 0.9167,
+       "n_free": 8,
+       "ndcg@10": 0.9375,
+       "recall@5": 1.0
+      },
+      "owner_kind:metadata_object_form": {
+       "hit@1": 0.625,
+       "mrr@10": 0.7917,
+       "n_free": 8,
+       "ndcg@10": 0.8452,
+       "recall@5": 1.0
+      },
+      "tag:paraphrase": {
+       "hit@1": 0.7039,
+       "mrr@10": 0.8083,
+       "n_free": 152,
+       "ndcg@10": 0.8525,
+       "recall@5": 0.9539
+      }
+     },
+     "per_query": {
+      "p369-g01-a1-i1-q1": {
+       "gold_rank": 1,
+       "group": "configuration:ordinary_application",
+       "top3": [
+        "configuration:::ordinary_application",
+        "configuration:::managed_application",
+        "metadata_object:InformationRegister:ДемоРезервы:record_set"
+       ]
+      },
+      "p369-g01-a1-i1-q2": {
+       "gold_rank": 1,
+       "group": "configuration:ordinary_application",
+       "top3": [
+        "configuration:::ordinary_application",
+        "common_command:CommonCommand:ДемоОбновление:command",
+        "metadata_object:WebService:ДемоПрием:service"
+       ]
+      },
+      "p369-g01-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "configuration:ordinary_application",
+       "top3": [
+        "configuration:::ordinary_application",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "configuration:::managed_application"
+       ]
+      },
+      "p369-g01-a1-i2-q2": {
+       "gold_rank": 1,
+       "group": "configuration:ordinary_application",
+       "top3": [
+        "configuration:::ordinary_application",
+        "external_data_processor:ExternalDataProcessor:ИмпортБанка:object",
+        "configuration:::external_connection"
+       ]
+      },
+      "p369-g01-a1-i3-q1": {
+       "gold_rank": 1,
+       "group": "configuration:ordinary_application",
+       "top3": [
+        "configuration:::ordinary_application",
+        "configuration:::session",
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object"
+       ]
+      },
+      "p369-g01-a1-i3-q2": {
+       "gold_rank": 1,
+       "group": "configuration:ordinary_application",
+       "top3": [
+        "configuration:::ordinary_application",
+        "configuration:::session",
+        "configuration:::managed_application"
+       ]
+      },
+      "p369-g01-a1-i4-q1": {
+       "gold_rank": 2,
+       "group": "configuration:ordinary_application",
+       "top3": [
+        "form:ExternalDataProcessor/ДемоБанк.epf/Form/ПанельДемо",
+        "configuration:::ordinary_application",
+        "form:ExternalReport/ДемоОборот.erf/ReportForm/ПанельДемоБ"
+       ]
+      },
+      "p369-g01-a1-i4-q2": {
+       "gold_rank": 1,
+       "group": "configuration:ordinary_application",
+       "top3": [
+        "configuration:::ordinary_application",
+        "configuration:::external_connection",
+        "metadata_object:HTTPService:ДемоСтатус:service"
+       ]
+      },
+      "p369-g02-a1-i1-q1": {
+       "gold_rank": 2,
+       "group": "configuration:managed_application",
+       "top3": [
+        "form:CommonForm//CommonForm/ПанельДемо",
+        "configuration:::managed_application",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g02-a1-i1-q2": {
+       "gold_rank": 3,
+       "group": "configuration:managed_application",
+       "top3": [
+        "configuration:::session",
+        "metadata_object:HTTPService:ДемоСтатус:service",
+        "configuration:::managed_application"
+       ]
+      },
+      "p369-g02-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "configuration:managed_application",
+       "top3": [
+        "configuration:::managed_application",
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g02-a1-i2-q2": {
+       "gold_rank": 1,
+       "group": "configuration:managed_application",
+       "top3": [
+        "configuration:::managed_application",
+        "configuration:::ordinary_application",
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager"
+       ]
+      },
+      "p369-g02-a1-i3-q1": {
+       "gold_rank": 1,
+       "group": "configuration:managed_application",
+       "top3": [
+        "configuration:::managed_application",
+        "configuration:::ordinary_application",
+        "metadata_object:WebService:ДемоПрием:service"
+       ]
+      },
+      "p369-g02-a1-i3-q2": {
+       "gold_rank": 1,
+       "group": "configuration:managed_application",
+       "top3": [
+        "configuration:::managed_application",
+        "form:ExternalDataProcessor/ДемоБанк.epf/Form/ПанельДемо",
+        "metadata_object:WebService:ДемоСтатус:service"
+       ]
+      },
+      "p369-g02-a1-i4-q1": {
+       "gold_rank": 1,
+       "group": "configuration:managed_application",
+       "top3": [
+        "configuration:::managed_application",
+        "configuration:::ordinary_application",
+        "metadata_object:InformationRegister:ДемоРезервы:record_set"
+       ]
+      },
+      "p369-g02-a1-i4-q2": {
+       "gold_rank": 1,
+       "group": "configuration:managed_application",
+       "top3": [
+        "configuration:::managed_application",
+        "configuration:::ordinary_application",
+        "configuration:::external_connection"
+       ]
+      },
+      "p369-g03-a1-i1-q1": {
+       "gold_rank": 2,
+       "group": "configuration:external_connection",
+       "top3": [
+        "configuration:::managed_application",
+        "configuration:::external_connection",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g03-a1-i1-q2": {
+       "gold_rank": 1,
+       "group": "configuration:external_connection",
+       "top3": [
+        "configuration:::external_connection",
+        "configuration:::managed_application",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g03-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "configuration:external_connection",
+       "top3": [
+        "configuration:::external_connection",
+        "metadata_object:HTTPService:ДемоСтатус:service",
+        "common_module:CommonModule:ДемоОбновление:common_module"
+       ]
+      },
+      "p369-g03-a1-i2-q2": {
+       "gold_rank": 3,
+       "group": "configuration:external_connection",
+       "top3": [
+        "configuration:::ordinary_application",
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager",
+        "configuration:::external_connection"
+       ]
+      },
+      "p369-g03-a1-i3-q1": {
+       "gold_rank": 1,
+       "group": "configuration:external_connection",
+       "top3": [
+        "configuration:::external_connection",
+        "configuration:::ordinary_application",
+        "configuration:::managed_application"
+       ]
+      },
+      "p369-g03-a1-i3-q2": {
+       "gold_rank": 6,
+       "group": "configuration:external_connection",
+       "top3": [
+        "form:ExternalReport/ДемоОборот.erf/ReportForm/ПанельДемоБ",
+        "configuration:::session",
+        "configuration:::managed_application"
+       ]
+      },
+      "p369-g03-a1-i4-q1": {
+       "gold_rank": 1,
+       "group": "configuration:external_connection",
+       "top3": [
+        "configuration:::external_connection",
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager",
+        "configuration:::session"
+       ]
+      },
+      "p369-g03-a1-i4-q2": {
+       "gold_rank": 6,
+       "group": "configuration:external_connection",
+       "top3": [
+        "configuration:::managed_application",
+        "configuration:::ordinary_application",
+        "form:ExternalReport/ДемоОборот.erf/ReportForm/ПанельДемоБ"
+       ]
+      },
+      "p369-g04-a1-i1-q1": {
+       "gold_rank": 1,
+       "group": "configuration:session",
+       "top3": [
+        "configuration:::session",
+        "configuration:::ordinary_application",
+        "configuration:::managed_application"
+       ]
+      },
+      "p369-g04-a1-i1-q2": {
+       "gold_rank": 1,
+       "group": "configuration:session",
+       "top3": [
+        "configuration:::session",
+        "configuration:::managed_application",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g04-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "configuration:session",
+       "top3": [
+        "configuration:::session",
+        "form:CommonForm//CommonForm/ПанельДемо",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set"
+       ]
+      },
+      "p369-g04-a1-i2-q2": {
+       "gold_rank": 1,
+       "group": "configuration:session",
+       "top3": [
+        "configuration:::session",
+        "external_report:ExternalReport:АнализДолгов:object",
+        "configuration:::managed_application"
+       ]
+      },
+      "p369-g04-a1-i3-q1": {
+       "gold_rank": 1,
+       "group": "configuration:session",
+       "top3": [
+        "configuration:::session",
+        "configuration:::ordinary_application",
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object"
+       ]
+      },
+      "p369-g04-a1-i3-q2": {
+       "gold_rank": 1,
+       "group": "configuration:session",
+       "top3": [
+        "configuration:::session",
+        "metadata_object:Document:ЗаказПокупателя:manager",
+        "common_module:CommonModule:ДемоОбновление:common_module"
+       ]
+      },
+      "p369-g04-a1-i4-q1": {
+       "gold_rank": 1,
+       "group": "configuration:session",
+       "top3": [
+        "configuration:::session",
+        "common_command:CommonCommand:ДемоПроверка:command",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g04-a1-i4-q2": {
+       "gold_rank": 1,
+       "group": "configuration:session",
+       "top3": [
+        "configuration:::session",
+        "configuration:::managed_application",
+        "configuration:::external_connection"
+       ]
+      },
+      "p369-g05-a1-i1-q1": {
+       "gold_rank": 2,
+       "group": "metadata_object:object",
+       "top3": [
+        "metadata_object:Catalog:Номенклатура:object",
+        "metadata_object:Document:ЗаказПокупателя:object",
+        "metadata_object:Constant:ДемоВалюта:value_manager"
+       ]
+      },
+      "p369-g05-a1-i1-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:object",
+       "top3": [
+        "metadata_object:Document:ЗаказПокупателя:object",
+        "metadata_object:HTTPService:ДемоПрием:service",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g05-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:object",
+       "top3": [
+        "metadata_object:Document:ЗаказПокупателя:object",
+        "external_report:ExternalReport:ОборотЗапасов:object",
+        "metadata_object:Document:ЗаказПокупателя:manager"
+       ]
+      },
+      "p369-g05-a1-i2-q2": {
+       "gold_rank": 3,
+       "group": "metadata_object:object",
+       "top3": [
+        "external_report:ExternalReport:ОборотЗапасов:object",
+        "external_report:ExternalReport:АнализДолгов:object",
+        "metadata_object:Document:ЗаказПокупателя:object"
+       ]
+      },
+      "p369-g05-a2-i1-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:object",
+       "top3": [
+        "metadata_object:Catalog:Номенклатура:object",
+        "metadata_object:InformationRegister:ДемоРезервы:record_set",
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object"
+       ]
+      },
+      "p369-g05-a2-i1-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:object",
+       "top3": [
+        "metadata_object:Catalog:Номенклатура:object",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g05-a2-i2-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:object",
+       "top3": [
+        "metadata_object:Catalog:Номенклатура:object",
+        "metadata_object_command:Catalog:Номенклатура.Этикетка:command",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа"
+       ]
+      },
+      "p369-g05-a2-i2-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:object",
+       "top3": [
+        "metadata_object:Catalog:Номенклатура:object",
+        "external_report:ExternalReport:ОборотЗапасов:object",
+        "metadata_object:Document:ЗаказПокупателя:object"
+       ]
+      },
+      "p369-g06-a1-i1-q1": {
+       "gold_rank": 1,
+       "group": "external_data_processor:object",
+       "top3": [
+        "external_data_processor:ExternalDataProcessor:ИмпортБанка:object",
+        "form:ExternalDataProcessor/ДемоБанк.epf/Form/ПанельДемо",
+        "form:ExternalDataProcessor/ДемоНомера.epf/Form/ПанельДемоБ"
+       ]
+      },
+      "p369-g06-a1-i1-q2": {
+       "gold_rank": 2,
+       "group": "external_data_processor:object",
+       "top3": [
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "external_data_processor:ExternalDataProcessor:ИмпортБанка:object",
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object"
+       ]
+      },
+      "p369-g06-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "external_data_processor:object",
+       "top3": [
+        "external_data_processor:ExternalDataProcessor:ИмпортБанка:object",
+        "configuration:::ordinary_application",
+        "external_report:ExternalReport:АнализДолгов:object"
+       ]
+      },
+      "p369-g06-a1-i2-q2": {
+       "gold_rank": 1,
+       "group": "external_data_processor:object",
+       "top3": [
+        "external_data_processor:ExternalDataProcessor:ИмпортБанка:object",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "form:Catalog/Номенклатура/CatalogForm/ФормаТовара"
+       ]
+      },
+      "p369-g06-a2-i1-q1": {
+       "gold_rank": 1,
+       "group": "external_data_processor:object",
+       "top3": [
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object",
+        "metadata_object:InformationRegister:ДемоРезервы:record_set",
+        "common_module:CommonModule:ДемоОбновление:common_module"
+       ]
+      },
+      "p369-g06-a2-i1-q2": {
+       "gold_rank": 1,
+       "group": "external_data_processor:object",
+       "top3": [
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "form:CommonForm//CommonForm/ПанельДемоБ"
+       ]
+      },
+      "p369-g06-a2-i2-q1": {
+       "gold_rank": 1,
+       "group": "external_data_processor:object",
+       "top3": [
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object",
+        "common_module:CommonModule:ДемоОбновление:common_module",
+        "form:ExternalDataProcessor/ДемоНомера.epf/Form/ПанельДемоБ"
+       ]
+      },
+      "p369-g06-a2-i2-q2": {
+       "gold_rank": 1,
+       "group": "external_data_processor:object",
+       "top3": [
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object",
+        "configuration:::ordinary_application",
+        "configuration:::session"
+       ]
+      },
+      "p369-g07-a1-i1-q1": {
+       "gold_rank": 1,
+       "group": "external_report:object",
+       "top3": [
+        "external_report:ExternalReport:АнализДолгов:object",
+        "metadata_object:Document:ЗаказПокупателя:manager",
+        "form:ExternalReport/ДемоДолги.erf/ReportForm/ПанельДемо"
+       ]
+      },
+      "p369-g07-a1-i1-q2": {
+       "gold_rank": 1,
+       "group": "external_report:object",
+       "top3": [
+        "external_report:ExternalReport:АнализДолгов:object",
+        "external_report:ExternalReport:ОборотЗапасов:object",
+        "metadata_object:Document:ЗаказПокупателя:manager"
+       ]
+      },
+      "p369-g07-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "external_report:object",
+       "top3": [
+        "external_report:ExternalReport:АнализДолгов:object",
+        "metadata_object:Document:ЗаказПокупателя:object",
+        "metadata_object:Catalog:Номенклатура:object"
+       ]
+      },
+      "p369-g07-a1-i2-q2": {
+       "gold_rank": 1,
+       "group": "external_report:object",
+       "top3": [
+        "external_report:ExternalReport:АнализДолгов:object",
+        "form:ExternalReport/ДемоДолги.erf/ReportForm/ПанельДемо",
+        "metadata_object:Document:ЗаказПокупателя:manager"
+       ]
+      },
+      "p369-g07-a2-i1-q1": {
+       "gold_rank": 1,
+       "group": "external_report:object",
+       "top3": [
+        "external_report:ExternalReport:ОборотЗапасов:object",
+        "metadata_object:Document:ЗаказПокупателя:manager",
+        "external_report:ExternalReport:АнализДолгов:object"
+       ]
+      },
+      "p369-g07-a2-i1-q2": {
+       "gold_rank": 1,
+       "group": "external_report:object",
+       "top3": [
+        "external_report:ExternalReport:ОборотЗапасов:object",
+        "metadata_object:Document:ЗаказПокупателя:manager",
+        "external_report:ExternalReport:АнализДолгов:object"
+       ]
+      },
+      "p369-g07-a2-i2-q1": {
+       "gold_rank": 1,
+       "group": "external_report:object",
+       "top3": [
+        "external_report:ExternalReport:ОборотЗапасов:object",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "common_command:CommonCommand:ДемоОбновление:command"
+       ]
+      },
+      "p369-g07-a2-i2-q2": {
+       "gold_rank": 2,
+       "group": "external_report:object",
+       "top3": [
+        "metadata_object:Document:ЗаказПокупателя:manager",
+        "external_report:ExternalReport:ОборотЗапасов:object",
+        "metadata_object:Document:ЗаказПокупателя:object"
+       ]
+      },
+      "p369-g08-a1-i1-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:manager",
+       "top3": [
+        "metadata_object:Document:ЗаказПокупателя:manager",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа",
+        "external_report:ExternalReport:ОборотЗапасов:object"
+       ]
+      },
+      "p369-g08-a1-i1-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:manager",
+       "top3": [
+        "metadata_object:Document:ЗаказПокупателя:manager",
+        "metadata_object_command:Document:ЗаказПокупателя.Отправить:command",
+        "external_report:ExternalReport:ОборотЗапасов:object"
+       ]
+      },
+      "p369-g08-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:manager",
+       "top3": [
+        "metadata_object:Document:ЗаказПокупателя:manager",
+        "metadata_object:HTTPService:ДемоПрием:service",
+        "configuration:::managed_application"
+       ]
+      },
+      "p369-g08-a1-i2-q2": {
+       "gold_rank": 2,
+       "group": "metadata_object:manager",
+       "top3": [
+        "external_report:ExternalReport:АнализДолгов:object",
+        "metadata_object:Document:ЗаказПокупателя:manager",
+        "external_report:ExternalReport:ОборотЗапасов:object"
+       ]
+      },
+      "p369-g08-a2-i1-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:manager",
+       "top3": [
+        "metadata_object:Catalog:Номенклатура:manager",
+        "metadata_object_command:Catalog:Номенклатура.Этикетка:command",
+        "external_data_processor:ExternalDataProcessor:ИмпортБанка:object"
+       ]
+      },
+      "p369-g08-a2-i1-q2": {
+       "gold_rank": 2,
+       "group": "metadata_object:manager",
+       "top3": [
+        "metadata_object_command:Catalog:Номенклатура.Этикетка:command",
+        "metadata_object:Catalog:Номенклатура:manager",
+        "external_report:ExternalReport:ОборотЗапасов:object"
+       ]
+      },
+      "p369-g08-a2-i2-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:manager",
+       "top3": [
+        "metadata_object:Catalog:Номенклатура:manager",
+        "external_report:ExternalReport:ОборотЗапасов:object",
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object"
+       ]
+      },
+      "p369-g08-a2-i2-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:manager",
+       "top3": [
+        "metadata_object:Catalog:Номенклатура:manager",
+        "metadata_object:Document:ЗаказПокупателя:manager",
+        "metadata_object:Catalog:Номенклатура:object"
+       ]
+      },
+      "p369-g09-a1-i1-q1": {
+       "gold_rank": 2,
+       "group": "metadata_object:record_set",
+       "top3": [
+        "metadata_object:Catalog:Номенклатура:object",
+        "metadata_object:InformationRegister:ДемоРезервы:record_set",
+        "metadata_object:Document:ЗаказПокупателя:object"
+       ]
+      },
+      "p369-g09-a1-i1-q2": {
+       "gold_rank": 5,
+       "group": "metadata_object:record_set",
+       "top3": [
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager",
+        "metadata_object:Catalog:Номенклатура:object"
+       ]
+      },
+      "p369-g09-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:record_set",
+       "top3": [
+        "metadata_object:InformationRegister:ДемоРезервы:record_set",
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g09-a1-i2-q2": {
+       "gold_rank": 2,
+       "group": "metadata_object:record_set",
+       "top3": [
+        "common_module:CommonModule:ДемоОбновление:common_module",
+        "metadata_object:InformationRegister:ДемоРезервы:record_set",
+        "form:ExternalDataProcessor/ДемоНомера.epf/Form/ПанельДемоБ"
+       ]
+      },
+      "p369-g09-a2-i1-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:record_set",
+       "top3": [
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "configuration:::ordinary_application",
+        "common_command:CommonCommand:ДемоОбновление:command"
+       ]
+      },
+      "p369-g09-a2-i1-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:record_set",
+       "top3": [
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "external_report:ExternalReport:ОборотЗапасов:object",
+        "metadata_object:InformationRegister:ДемоРезервы:record_set"
+       ]
+      },
+      "p369-g09-a2-i2-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:record_set",
+       "top3": [
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "metadata_object:Catalog:Номенклатура:object",
+        "metadata_object:Catalog:Номенклатура:manager"
+       ]
+      },
+      "p369-g09-a2-i2-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:record_set",
+       "top3": [
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "metadata_object:WebService:ДемоПрием:service",
+        "configuration:::session"
+       ]
+      },
+      "p369-g10-a1-i1-q1": {
+       "gold_rank": 2,
+       "group": "common_command:command",
+       "top3": [
+        "form:CommonForm//CommonForm/ПанельДемоБ",
+        "common_command:CommonCommand:ДемоПроверка:command",
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager"
+       ]
+      },
+      "p369-g10-a1-i1-q2": {
+       "gold_rank": 1,
+       "group": "common_command:command",
+       "top3": [
+        "common_command:CommonCommand:ДемоПроверка:command",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "form:CommonForm//CommonForm/ПанельДемоБ"
+       ]
+      },
+      "p369-g10-a1-i2-q1": {
+       "gold_rank": 6,
+       "group": "common_command:command",
+       "top3": [
+        "form:ExternalReport/ДемоОборот.erf/ReportForm/ПанельДемоБ",
+        "form:ExternalDataProcessor/ДемоНомера.epf/Form/ПанельДемоБ",
+        "external_report:ExternalReport:ОборотЗапасов:object"
+       ]
+      },
+      "p369-g10-a1-i2-q2": {
+       "gold_rank": 1,
+       "group": "common_command:command",
+       "top3": [
+        "common_command:CommonCommand:ДемоПроверка:command",
+        "metadata_object:WebService:ДемоПрием:service",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g10-a2-i1-q1": {
+       "gold_rank": 1,
+       "group": "common_command:command",
+       "top3": [
+        "common_command:CommonCommand:ДемоОбновление:command",
+        "configuration:::managed_application",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g10-a2-i1-q2": {
+       "gold_rank": 1,
+       "group": "common_command:command",
+       "top3": [
+        "common_command:CommonCommand:ДемоОбновление:command",
+        "common_command:CommonCommand:ДемоПроверка:command",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set"
+       ]
+      },
+      "p369-g10-a2-i2-q1": {
+       "gold_rank": 1,
+       "group": "common_command:command",
+       "top3": [
+        "common_command:CommonCommand:ДемоОбновление:command",
+        "common_command:CommonCommand:ДемоПроверка:command",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g10-a2-i2-q2": {
+       "gold_rank": 1,
+       "group": "common_command:command",
+       "top3": [
+        "common_command:CommonCommand:ДемоОбновление:command",
+        "configuration:::ordinary_application",
+        "external_report:ExternalReport:ОборотЗапасов:object"
+       ]
+      },
+      "p369-g11-a1-i1-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object_command:command",
+       "top3": [
+        "metadata_object_command:Document:ЗаказПокупателя.Отправить:command",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа",
+        "metadata_object:Document:ЗаказПокупателя:manager"
+       ]
+      },
+      "p369-g11-a1-i1-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object_command:command",
+       "top3": [
+        "metadata_object_command:Document:ЗаказПокупателя.Отправить:command",
+        "metadata_object:HTTPService:ДемоПрием:service",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа"
+       ]
+      },
+      "p369-g11-a1-i2-q1": {
+       "gold_rank": 3,
+       "group": "metadata_object_command:command",
+       "top3": [
+        "metadata_object:Document:ЗаказПокупателя:manager",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа",
+        "metadata_object_command:Document:ЗаказПокупателя.Отправить:command"
+       ]
+      },
+      "p369-g11-a1-i2-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object_command:command",
+       "top3": [
+        "metadata_object_command:Document:ЗаказПокупателя.Отправить:command",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа",
+        "metadata_object:Document:ЗаказПокупателя:manager"
+       ]
+      },
+      "p369-g11-a2-i1-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object_command:command",
+       "top3": [
+        "metadata_object_command:Catalog:Номенклатура.Этикетка:command",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа",
+        "metadata_object:Catalog:Номенклатура:object"
+       ]
+      },
+      "p369-g11-a2-i1-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object_command:command",
+       "top3": [
+        "metadata_object_command:Catalog:Номенклатура.Этикетка:command",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа",
+        "external_data_processor:ExternalDataProcessor:ИмпортБанка:object"
+       ]
+      },
+      "p369-g11-a2-i2-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object_command:command",
+       "top3": [
+        "metadata_object_command:Catalog:Номенклатура.Этикетка:command",
+        "metadata_object:Catalog:Номенклатура:manager",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа"
+       ]
+      },
+      "p369-g11-a2-i2-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object_command:command",
+       "top3": [
+        "metadata_object_command:Catalog:Номенклатура.Этикетка:command",
+        "metadata_object:Catalog:Номенклатура:manager",
+        "metadata_object:Document:ЗаказПокупателя:object"
+       ]
+      },
+      "p369-g12-a1-i1-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:value_manager",
+       "top3": [
+        "metadata_object:Constant:ДемоВалюта:value_manager",
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object",
+        "metadata_object:InformationRegister:ДемоРезервы:record_set"
+       ]
+      },
+      "p369-g12-a1-i1-q2": {
+       "gold_rank": 3,
+       "group": "metadata_object:value_manager",
+       "top3": [
+        "configuration:::ordinary_application",
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager",
+        "metadata_object:Constant:ДемоВалюта:value_manager"
+       ]
+      },
+      "p369-g12-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:value_manager",
+       "top3": [
+        "metadata_object:Constant:ДемоВалюта:value_manager",
+        "external_data_processor:ExternalDataProcessor:ИмпортБанка:object",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set"
+       ]
+      },
+      "p369-g12-a1-i2-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:value_manager",
+       "top3": [
+        "metadata_object:Constant:ДемоВалюта:value_manager",
+        "external_data_processor:ExternalDataProcessor:ИмпортБанка:object",
+        "common_module:CommonModule:ДемоПроверка:common_module"
+       ]
+      },
+      "p369-g12-a2-i1-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:value_manager",
+       "top3": [
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager",
+        "configuration:::ordinary_application",
+        "metadata_object:InformationRegister:ДемоРезервы:record_set"
+       ]
+      },
+      "p369-g12-a2-i1-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:value_manager",
+       "top3": [
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager",
+        "configuration:::managed_application",
+        "configuration:::session"
+       ]
+      },
+      "p369-g12-a2-i2-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:value_manager",
+       "top3": [
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager",
+        "configuration:::ordinary_application",
+        "configuration:::managed_application"
+       ]
+      },
+      "p369-g12-a2-i2-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:value_manager",
+       "top3": [
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager",
+        "configuration:::ordinary_application",
+        "configuration:::session"
+       ]
+      },
+      "p369-g13-a1-i1-q1": {
+       "gold_rank": 3,
+       "group": "metadata_object:HTTPService:service",
+       "top3": [
+        "metadata_object_command:Document:ЗаказПокупателя.Отправить:command",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа",
+        "metadata_object:HTTPService:ДемоПрием:service"
+       ]
+      },
+      "p369-g13-a1-i1-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:HTTPService:service",
+       "top3": [
+        "metadata_object:HTTPService:ДемоПрием:service",
+        "metadata_object:WebService:ДемоПрием:service",
+        "metadata_object:Document:ЗаказПокупателя:object"
+       ]
+      },
+      "p369-g13-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:HTTPService:service",
+       "top3": [
+        "metadata_object:HTTPService:ДемоПрием:service",
+        "configuration:::ordinary_application",
+        "configuration:::session"
+       ]
+      },
+      "p369-g13-a1-i2-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:HTTPService:service",
+       "top3": [
+        "metadata_object:HTTPService:ДемоПрием:service",
+        "configuration:::ordinary_application",
+        "metadata_object:HTTPService:ДемоСтатус:service"
+       ]
+      },
+      "p369-g13-a2-i1-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:HTTPService:service",
+       "top3": [
+        "metadata_object:HTTPService:ДемоСтатус:service",
+        "metadata_object:HTTPService:ДемоПрием:service",
+        "metadata_object_command:Document:ЗаказПокупателя.Отправить:command"
+       ]
+      },
+      "p369-g13-a2-i1-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:HTTPService:service",
+       "top3": [
+        "metadata_object:HTTPService:ДемоСтатус:service",
+        "metadata_object:WebService:ДемоСтатус:service",
+        "form:ExternalDataProcessor/ДемоНомера.epf/Form/ПанельДемоБ"
+       ]
+      },
+      "p369-g13-a2-i2-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:HTTPService:service",
+       "top3": [
+        "metadata_object:HTTPService:ДемоСтатус:service",
+        "metadata_object:HTTPService:ДемоПрием:service",
+        "metadata_object:Document:ЗаказПокупателя:object"
+       ]
+      },
+      "p369-g13-a2-i2-q2": {
+       "gold_rank": 2,
+       "group": "metadata_object:HTTPService:service",
+       "top3": [
+        "metadata_object:Document:ЗаказПокупателя:object",
+        "metadata_object:HTTPService:ДемоСтатус:service",
+        "configuration:::external_connection"
+       ]
+      },
+      "p369-g14-a1-i1-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:WebService:service",
+       "top3": [
+        "metadata_object:WebService:ДемоПрием:service",
+        "metadata_object_command:Document:ЗаказПокупателя.Отправить:command",
+        "metadata_object:HTTPService:ДемоПрием:service"
+       ]
+      },
+      "p369-g14-a1-i1-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:WebService:service",
+       "top3": [
+        "metadata_object:WebService:ДемоПрием:service",
+        "metadata_object:WebService:ДемоСтатус:service",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа"
+       ]
+      },
+      "p369-g14-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:WebService:service",
+       "top3": [
+        "metadata_object:WebService:ДемоПрием:service",
+        "metadata_object:HTTPService:ДемоПрием:service",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа"
+       ]
+      },
+      "p369-g14-a1-i2-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:WebService:service",
+       "top3": [
+        "metadata_object:WebService:ДемоПрием:service",
+        "metadata_object:HTTPService:ДемоПрием:service",
+        "metadata_object:Catalog:Номенклатура:object"
+       ]
+      },
+      "p369-g14-a2-i1-q1": {
+       "gold_rank": 4,
+       "group": "metadata_object:WebService:service",
+       "top3": [
+        "metadata_object:HTTPService:ДемоСтатус:service",
+        "metadata_object:HTTPService:ДемоПрием:service",
+        "metadata_object:WebService:ДемоПрием:service"
+       ]
+      },
+      "p369-g14-a2-i1-q2": {
+       "gold_rank": null,
+       "group": "metadata_object:WebService:service",
+       "top3": [
+        "form:ExternalDataProcessor/ДемоНомера.epf/Form/ПанельДемоБ",
+        "metadata_object:WebService:ДемоПрием:service",
+        "form:CommonForm//CommonForm/ПанельДемоБ"
+       ]
+      },
+      "p369-g14-a2-i2-q1": {
+       "gold_rank": 4,
+       "group": "metadata_object:WebService:service",
+       "top3": [
+        "configuration:::managed_application",
+        "metadata_object:HTTPService:ДемоПрием:service",
+        "metadata_object:WebService:ДемоПрием:service"
+       ]
+      },
+      "p369-g14-a2-i2-q2": {
+       "gold_rank": 3,
+       "group": "metadata_object:WebService:service",
+       "top3": [
+        "metadata_object:HTTPService:ДемоСтатус:service",
+        "metadata_object:WebService:ДемоПрием:service",
+        "metadata_object:WebService:ДемоСтатус:service"
+       ]
+      },
+      "p369-g15-a1-i1-q1": {
+       "gold_rank": 1,
+       "group": "common_module:common_module",
+       "top3": [
+        "common_module:CommonModule:ДемоПроверка:common_module",
+        "form:ExternalDataProcessor/ДемоНомера.epf/Form/ПанельДемоБ",
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object"
+       ]
+      },
+      "p369-g15-a1-i1-q2": {
+       "gold_rank": 5,
+       "group": "common_module:common_module",
+       "top3": [
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "metadata_object:Catalog:Номенклатура:manager",
+        "form:CommonForm//CommonForm/ПанельДемоБ"
+       ]
+      },
+      "p369-g15-a1-i2-q1": {
+       "gold_rank": null,
+       "group": "common_module:common_module",
+       "top3": [
+        "metadata_object:WebService:ДемоПрием:service",
+        "external_data_processor:ExternalDataProcessor:ИмпортБанка:object",
+        "common_command:CommonCommand:ДемоПроверка:command"
+       ]
+      },
+      "p369-g15-a1-i2-q2": {
+       "gold_rank": 1,
+       "group": "common_module:common_module",
+       "top3": [
+        "common_module:CommonModule:ДемоПроверка:common_module",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "external_report:ExternalReport:ОборотЗапасов:object"
+       ]
+      },
+      "p369-g15-a2-i1-q1": {
+       "gold_rank": 1,
+       "group": "common_module:common_module",
+       "top3": [
+        "common_module:CommonModule:ДемоОбновление:common_module",
+        "configuration:::session",
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object"
+       ]
+      },
+      "p369-g15-a2-i1-q2": {
+       "gold_rank": 1,
+       "group": "common_module:common_module",
+       "top3": [
+        "common_module:CommonModule:ДемоОбновление:common_module",
+        "common_module:CommonModule:ДемоПроверка:common_module",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set"
+       ]
+      },
+      "p369-g15-a2-i2-q1": {
+       "gold_rank": 4,
+       "group": "common_module:common_module",
+       "top3": [
+        "configuration:::ordinary_application",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа",
+        "form:ExternalDataProcessor/ДемоБанк.epf/Form/ПанельДемо"
+       ]
+      },
+      "p369-g15-a2-i2-q2": {
+       "gold_rank": 1,
+       "group": "common_module:common_module",
+       "top3": [
+        "common_module:CommonModule:ДемоОбновление:common_module",
+        "form:ExternalDataProcessor/ДемоБанк.epf/Form/ПанельДемо",
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object"
+       ]
+      },
+      "p369-g16-a1-i1-q1": {
+       "gold_rank": 1,
+       "group": "form:metadata_object_form",
+       "top3": [
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа",
+        "configuration:::managed_application",
+        "configuration:::external_connection"
+       ]
+      },
+      "p369-g16-a1-i1-q2": {
+       "gold_rank": 1,
+       "group": "form:metadata_object_form",
+       "top3": [
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа",
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object",
+        "configuration:::external_connection"
+       ]
+      },
+      "p369-g16-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "form:metadata_object_form",
+       "top3": [
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа",
+        "metadata_object:Document:ЗаказПокупателя:object",
+        "metadata_object_command:Catalog:Номенклатура.Этикетка:command"
+       ]
+      },
+      "p369-g16-a1-i2-q2": {
+       "gold_rank": 1,
+       "group": "form:metadata_object_form",
+       "top3": [
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа",
+        "metadata_object:Document:ЗаказПокупателя:object",
+        "metadata_object:Catalog:Номенклатура:manager"
+       ]
+      },
+      "p369-g16-a2-i1-q1": {
+       "gold_rank": 3,
+       "group": "form:metadata_object_form",
+       "top3": [
+        "form:ExternalDataProcessor/ДемоБанк.epf/Form/ПанельДемо",
+        "external_data_processor:ExternalDataProcessor:ИмпортБанка:object",
+        "form:Catalog/Номенклатура/CatalogForm/ФормаТовара"
+       ]
+      },
+      "p369-g16-a2-i1-q2": {
+       "gold_rank": 1,
+       "group": "form:metadata_object_form",
+       "top3": [
+        "form:Catalog/Номенклатура/CatalogForm/ФормаТовара",
+        "form:ExternalReport/ДемоОборот.erf/ReportForm/ПанельДемоБ",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа"
+       ]
+      },
+      "p369-g16-a2-i2-q1": {
+       "gold_rank": 2,
+       "group": "form:metadata_object_form",
+       "top3": [
+        "metadata_object:Catalog:Номенклатура:object",
+        "form:Catalog/Номенклатура/CatalogForm/ФормаТовара",
+        "metadata_object:Catalog:Номенклатура:manager"
+       ]
+      },
+      "p369-g16-a2-i2-q2": {
+       "gold_rank": 2,
+       "group": "form:metadata_object_form",
+       "top3": [
+        "common_module:CommonModule:ДемоОбновление:common_module",
+        "form:Catalog/Номенклатура/CatalogForm/ФормаТовара",
+        "configuration:::managed_application"
+       ]
+      },
+      "p369-g17-a1-i1-q1": {
+       "gold_rank": 1,
+       "group": "form:common_form",
+       "top3": [
+        "form:CommonForm//CommonForm/ПанельДемо",
+        "common_command:CommonCommand:ДемоПроверка:command",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g17-a1-i1-q2": {
+       "gold_rank": 1,
+       "group": "form:common_form",
+       "top3": [
+        "form:CommonForm//CommonForm/ПанельДемо",
+        "form:ExternalReport/ДемоДолги.erf/ReportForm/ПанельДемо",
+        "form:CommonForm//CommonForm/ПанельДемоБ"
+       ]
+      },
+      "p369-g17-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "form:common_form",
+       "top3": [
+        "form:CommonForm//CommonForm/ПанельДемо",
+        "form:CommonForm//CommonForm/ПанельДемоБ",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set"
+       ]
+      },
+      "p369-g17-a1-i2-q2": {
+       "gold_rank": 1,
+       "group": "form:common_form",
+       "top3": [
+        "form:CommonForm//CommonForm/ПанельДемо",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "common_command:CommonCommand:ДемоПроверка:command"
+       ]
+      },
+      "p369-g17-a2-i1-q1": {
+       "gold_rank": 1,
+       "group": "form:common_form",
+       "top3": [
+        "form:CommonForm//CommonForm/ПанельДемоБ",
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object",
+        "common_module:CommonModule:ДемоОбновление:common_module"
+       ]
+      },
+      "p369-g17-a2-i1-q2": {
+       "gold_rank": 1,
+       "group": "form:common_form",
+       "top3": [
+        "form:CommonForm//CommonForm/ПанельДемоБ",
+        "metadata_object:WebService:ДемоПрием:service",
+        "common_module:CommonModule:ДемоПроверка:common_module"
+       ]
+      },
+      "p369-g17-a2-i2-q1": {
+       "gold_rank": 7,
+       "group": "form:common_form",
+       "top3": [
+        "configuration:::managed_application",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа",
+        "configuration:::session"
+       ]
+      },
+      "p369-g17-a2-i2-q2": {
+       "gold_rank": 3,
+       "group": "form:common_form",
+       "top3": [
+        "configuration:::ordinary_application",
+        "configuration:::session",
+        "form:CommonForm//CommonForm/ПанельДемоБ"
+       ]
+      },
+      "p369-g18-a1-i1-q1": {
+       "gold_rank": 2,
+       "group": "form:external_data_processor_form",
+       "top3": [
+        "external_data_processor:ExternalDataProcessor:ИмпортБанка:object",
+        "form:ExternalDataProcessor/ДемоБанк.epf/Form/ПанельДемо",
+        "configuration:::external_connection"
+       ]
+      },
+      "p369-g18-a1-i1-q2": {
+       "gold_rank": 2,
+       "group": "form:external_data_processor_form",
+       "top3": [
+        "configuration:::external_connection",
+        "form:ExternalDataProcessor/ДемоБанк.epf/Form/ПанельДемо",
+        "form:ExternalReport/ДемоОборот.erf/ReportForm/ПанельДемоБ"
+       ]
+      },
+      "p369-g18-a1-i2-q1": {
+       "gold_rank": 7,
+       "group": "form:external_data_processor_form",
+       "top3": [
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "external_report:ExternalReport:АнализДолгов:object",
+        "configuration:::managed_application"
+       ]
+      },
+      "p369-g18-a1-i2-q2": {
+       "gold_rank": 2,
+       "group": "form:external_data_processor_form",
+       "top3": [
+        "configuration:::managed_application",
+        "form:ExternalDataProcessor/ДемоБанк.epf/Form/ПанельДемо",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g18-a2-i1-q1": {
+       "gold_rank": 2,
+       "group": "form:external_data_processor_form",
+       "top3": [
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager",
+        "form:ExternalDataProcessor/ДемоНомера.epf/Form/ПанельДемоБ",
+        "common_module:CommonModule:ДемоОбновление:common_module"
+       ]
+      },
+      "p369-g18-a2-i1-q2": {
+       "gold_rank": 2,
+       "group": "form:external_data_processor_form",
+       "top3": [
+        "common_module:CommonModule:ДемоОбновление:common_module",
+        "form:ExternalDataProcessor/ДемоНомера.epf/Form/ПанельДемоБ",
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager"
+       ]
+      },
+      "p369-g18-a2-i2-q1": {
+       "gold_rank": 5,
+       "group": "form:external_data_processor_form",
+       "top3": [
+        "common_module:CommonModule:ДемоОбновление:common_module",
+        "configuration:::managed_application",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g18-a2-i2-q2": {
+       "gold_rank": 1,
+       "group": "form:external_data_processor_form",
+       "top3": [
+        "form:ExternalDataProcessor/ДемоНомера.epf/Form/ПанельДемоБ",
+        "common_command:CommonCommand:ДемоОбновление:command",
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object"
+       ]
+      },
+      "p369-g19-a1-i1-q1": {
+       "gold_rank": 5,
+       "group": "form:external_report_form",
+       "top3": [
+        "configuration:::managed_application",
+        "metadata_object:Document:ЗаказПокупателя:manager",
+        "external_report:ExternalReport:АнализДолгов:object"
+       ]
+      },
+      "p369-g19-a1-i1-q2": {
+       "gold_rank": 1,
+       "group": "form:external_report_form",
+       "top3": [
+        "form:ExternalReport/ДемоДолги.erf/ReportForm/ПанельДемо",
+        "external_report:ExternalReport:АнализДолгов:object",
+        "metadata_object:Document:ЗаказПокупателя:object"
+       ]
+      },
+      "p369-g19-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "form:external_report_form",
+       "top3": [
+        "form:ExternalReport/ДемоДолги.erf/ReportForm/ПанельДемо",
+        "common_module:CommonModule:ДемоОбновление:common_module",
+        "form:CommonForm//CommonForm/ПанельДемоБ"
+       ]
+      },
+      "p369-g19-a1-i2-q2": {
+       "gold_rank": 5,
+       "group": "form:external_report_form",
+       "top3": [
+        "external_report:ExternalReport:АнализДолгов:object",
+        "external_report:ExternalReport:ОборотЗапасов:object",
+        "metadata_object:Document:ЗаказПокупателя:object"
+       ]
+      },
+      "p369-g19-a2-i1-q1": {
+       "gold_rank": 1,
+       "group": "form:external_report_form",
+       "top3": [
+        "form:ExternalReport/ДемоОборот.erf/ReportForm/ПанельДемоБ",
+        "metadata_object:Document:ЗаказПокупателя:object",
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager"
+       ]
+      },
+      "p369-g19-a2-i1-q2": {
+       "gold_rank": 2,
+       "group": "form:external_report_form",
+       "top3": [
+        "external_report:ExternalReport:ОборотЗапасов:object",
+        "form:ExternalReport/ДемоОборот.erf/ReportForm/ПанельДемоБ",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set"
+       ]
+      },
+      "p369-g19-a2-i2-q1": {
+       "gold_rank": 3,
+       "group": "form:external_report_form",
+       "top3": [
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "configuration:::managed_application",
+        "form:ExternalReport/ДемоОборот.erf/ReportForm/ПанельДемоБ"
+       ]
+      },
+      "p369-g19-a2-i2-q2": {
+       "gold_rank": 1,
+       "group": "form:external_report_form",
+       "top3": [
+        "form:ExternalReport/ДемоОборот.erf/ReportForm/ПанельДемоБ",
+        "metadata_object:Document:ЗаказПокупателя:object",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set"
+       ]
+      }
+     },
+     "thresholds_passed": true
+    }
+   },
+   "dataset_hashes": {
+    "search_eval_issue321.json": {
+     "bytes": 29006,
+     "sha256": "35166f3e74ca7047731fc05a1cf3ed564530a02cf65cf03f2371d3ff48efa052"
+    },
+    "search_eval_issue321_hard.json": {
+     "bytes": 33429,
+     "sha256": "f94c3d222eb34d2c9b629a3c51379fc7661f42dd252388b1b596da5026b70ec3"
+    },
+    "search_eval_issue329_paraphrase.json": {
+     "bytes": 255707,
+     "sha256": "5b69e413527a7fc733c525c997a8031310a538fcaa3f584a32b3b31881eee46b"
+    }
+   },
+   "embedder": {
+    "config_hash": "8fa460172b22b28ab728b2c83f32e3187b35bac9b17ffa0d2713af092c1ea33a",
+    "dimension": 1024,
+    "name": "BAAI/bge-m3",
+    "version": "5617a9f61b028005a4858fdac845db406aefb181"
+   },
+   "layout_link_basis": true,
+   "source_sha": "5b6e1bd416337fb5e490c7eb512742338e415de7",
+   "source_tree_sha256": "a272ce5fb03fcb555bcd8b929b5fbb4fb73aeb517cbf1f83df82f39fc446a45e",
+   "status": "evaluation_complete",
+   "weights_sha256": "b5e0ce3470abf5ef3831aa1bd5553b486803e83251590ab7ff35a117cf6aad38"
+  },
+  "6d798c0": {
+   "base_measure_script_sha256": "63af2d408015afd8ec532e2765c29685b4c55b1a52f54d71b9b1b1f488c0e179",
+   "corpora": {
+    "issue321": {
+     "failed_free_slices": [
+      "tag:paraphrase"
+     ],
+     "groups": {
+      "class:free": {
+       "hit@1": 0.7647,
+       "mrr@10": 0.8402,
+       "n_free": 17,
+       "ndcg@10": 0.8793,
+       "recall@5": 1.0
+      },
+      "class:free+mixed": {
+       "hit@1": 0.7647,
+       "mrr@10": 0.8402,
+       "n_free": 17,
+       "ndcg@10": 0.8793,
+       "recall@5": 1.0
+      },
+      "forms": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 2,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "large": {
+       "hit@1": 0.75,
+       "mrr@10": 0.8333,
+       "n_free": 4,
+       "ndcg@10": 0.875,
+       "recall@5": 1.0
+      },
+      "module_kind:command": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 1,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "module_kind:common_module": {
+       "hit@1": 0.5,
+       "mrr@10": 0.6,
+       "n_free": 2,
+       "ndcg@10": 0.6934,
+       "recall@5": 1.0
+      },
+      "module_kind:form": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 2,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "module_kind:manager": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 1,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "module_kind:object": {
+       "hit@1": 0.6667,
+       "mrr@10": 0.8056,
+       "n_free": 6,
+       "ndcg@10": 0.8552,
+       "recall@5": 1.0
+      },
+      "module_kind:record_set": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 2,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "module_kind:service": {
+       "hit@1": 0.5,
+       "mrr@10": 0.625,
+       "n_free": 2,
+       "ndcg@10": 0.7153,
+       "recall@5": 1.0
+      },
+      "module_kind:session": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 1,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "owner_kind:common_module": {
+       "hit@1": 0.5,
+       "mrr@10": 0.6,
+       "n_free": 2,
+       "ndcg@10": 0.6934,
+       "recall@5": 1.0
+      },
+      "owner_kind:configuration": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 1,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "owner_kind:external_data_processor": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 1,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "owner_kind:metadata_object": {
+       "hit@1": 0.7,
+       "mrr@10": 0.8083,
+       "n_free": 10,
+       "ndcg@10": 0.8562,
+       "recall@5": 1.0
+      },
+      "owner_kind:metadata_object_command": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 1,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "owner_kind:metadata_object_form": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 2,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "tag:base": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 9,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "tag:distractor": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 2,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "tag:paraphrase": {
+       "hit@1": 0.25,
+       "mrr@10": 0.4875,
+       "n_free": 4,
+       "ndcg@10": 0.6121,
+       "recall@5": 1.0
+      },
+      "tag:tail": {
+       "hit@1": 0.5,
+       "mrr@10": 0.6667,
+       "n_free": 2,
+       "ndcg@10": 0.75,
+       "recall@5": 1.0
+      }
+     },
+     "per_query": {
+      "f1": {
+       "gold_rank": 1,
+       "group": null,
+       "top3": [
+        "metadata_object:Document:РеализацияТоваров:object",
+        "metadata_object:Catalog:КонтрагентыАрхив:object",
+        "form:Document/ПоступлениеТоваров/DocumentForm/ФормаПоступления"
+       ]
+      },
+      "f2": {
+       "gold_rank": 1,
+       "group": null,
+       "top3": [
+        "form:Document/РеализацияТоваров/DocumentForm/ФормаДокумента",
+        "metadata_object:Catalog:Контрагенты:object",
+        "form:Document/ПоступлениеТоваров/DocumentForm/ФормаПоступления"
+       ]
+      },
+      "f3": {
+       "gold_rank": 1,
+       "group": null,
+       "top3": [
+        "metadata_object:InformationRegister:ЦеныНоменклатуры:record_set",
+        "metadata_object:Document:РеализацияТоваров:object",
+        "metadata_object:Document:ПоступлениеТоваров:object"
+       ]
+      },
+      "f4": {
+       "gold_rank": 1,
+       "group": null,
+       "top3": [
+        "metadata_object:Catalog:Контрагенты:manager",
+        "metadata_object:Catalog:Контрагенты:object",
+        "form:Document/РеализацияТоваров/DocumentForm/ФормаДокумента"
+       ]
+      },
+      "f5": {
+       "gold_rank": 1,
+       "group": null,
+       "top3": [
+        "metadata_object:HTTPService:ОбменЗаказами:service",
+        "configuration:::external_connection",
+        "external_data_processor:ExternalDataProcessor:ЗагрузкаЦен:object"
+       ]
+      },
+      "f6": {
+       "gold_rank": 1,
+       "group": null,
+       "top3": [
+        "common_module:CommonModule:ОбщегоНазначенияСервер:common_module",
+        "metadata_object:Document:ПоступлениеТоваров:object",
+        "form:Document/ПоступлениеТоваров/DocumentForm/ФормаПоступления"
+       ]
+      },
+      "f7": {
+       "gold_rank": 1,
+       "group": null,
+       "top3": [
+        "metadata_object_command:Catalog:Контрагенты.ОткрытьКарточку:command",
+        "metadata_object:Catalog:Контрагенты:manager",
+        "metadata_object:Catalog:Контрагенты:object"
+       ]
+      },
+      "f8": {
+       "gold_rank": 1,
+       "group": null,
+       "top3": [
+        "external_data_processor:ExternalDataProcessor:ЗагрузкаЦен:object",
+        "form:Document/ПоступлениеТоваров/DocumentForm/ФормаПоступления",
+        "metadata_object:InformationRegister:ЦеныНоменклатуры:record_set"
+       ]
+      },
+      "f9": {
+       "gold_rank": 1,
+       "group": null,
+       "top3": [
+        "configuration:::session",
+        "configuration:::ordinary_application",
+        "configuration:::external_connection"
+       ]
+      },
+      "hd1": {
+       "gold_rank": 1,
+       "group": null,
+       "top3": [
+        "metadata_object:Document:РеализацияУслуг:object",
+        "metadata_object:Document:ПоступлениеТоваров:object",
+        "metadata_object:Document:РеализацияТоваров:object"
+       ]
+      },
+      "hd2": {
+       "gold_rank": 1,
+       "group": null,
+       "top3": [
+        "metadata_object:Catalog:КонтрагентыАрхив:object",
+        "metadata_object:Catalog:Контрагенты:object",
+        "form:Document/РеализацияТоваров/DocumentForm/ФормаДокумента"
+       ]
+      },
+      "hp1": {
+       "gold_rank": 2,
+       "group": null,
+       "top3": [
+        "metadata_object:Catalog:КонтрагентыАрхив:object",
+        "metadata_object:Catalog:Контрагенты:object",
+        "metadata_object:Catalog:Контрагенты:manager"
+       ]
+      },
+      "hp2": {
+       "gold_rank": 1,
+       "group": null,
+       "top3": [
+        "metadata_object:InformationRegister:ЦеныНоменклатуры:record_set",
+        "external_report:ExternalReport:ОтчетПоЦенам:object",
+        "external_data_processor:ExternalDataProcessor:ЗагрузкаЦен:object"
+       ]
+      },
+      "hp3": {
+       "gold_rank": 4,
+       "group": null,
+       "top3": [
+        "form:Document/ПоступлениеТоваров/DocumentForm/ФормаПоступления",
+        "common_module:CommonModule:ОбщегоНазначенияСервер:common_module",
+        "form:Document/РеализацияТоваров/DocumentForm/ФормаДокумента"
+       ]
+      },
+      "hp4": {
+       "gold_rank": 5,
+       "group": null,
+       "top3": [
+        "metadata_object:Document:ПоступлениеТоваров:object",
+        "metadata_object:Document:РеализацияТоваров:object",
+        "form:Document/ПоступлениеТоваров/DocumentForm/ФормаПоступления"
+       ]
+      },
+      "ht1": {
+       "gold_rank": 3,
+       "group": null,
+       "top3": [
+        "metadata_object:Document:РеализацияТоваров:object",
+        "form:Document/ПоступлениеТоваров/DocumentForm/ФормаПоступления",
+        "metadata_object:Document:ПоступлениеТоваров:object"
+       ]
+      },
+      "ht2": {
+       "gold_rank": 1,
+       "group": null,
+       "top3": [
+        "form:Document/ПоступлениеТоваров/DocumentForm/ФормаПоступления",
+        "metadata_object:Document:ПоступлениеТоваров:object",
+        "metadata_object:Document:РеализацияТоваров:object"
+       ]
+      }
+     },
+     "thresholds_passed": true
+    },
+    "issue369": {
+     "failed_free_slices": [
+      "group:common_module:common_module",
+      "group:form:external_data_processor_form",
+      "group:form:external_report_form",
+      "module_kind:common_module",
+      "owner_kind:common_module"
+     ],
+     "groups": {
+      "annotation:distractor": {
+       "hit@1": 0.7143,
+       "mrr@10": 0.8357,
+       "n_free": 14,
+       "ndcg@10": 0.8771,
+       "recall@5": 1.0
+      },
+      "annotation:lexical_disjoint": {
+       "hit@1": 0.6818,
+       "mrr@10": 0.7856,
+       "n_free": 132,
+       "ndcg@10": 0.8344,
+       "recall@5": 0.9545
+      },
+      "annotation:tail": {
+       "hit@1": 0.5,
+       "mrr@10": 0.6667,
+       "n_free": 8,
+       "ndcg@10": 0.7202,
+       "recall@5": 0.875
+      },
+      "class:free": {
+       "hit@1": 0.6908,
+       "mrr@10": 0.7946,
+       "n_free": 152,
+       "ndcg@10": 0.8418,
+       "recall@5": 0.9605
+      },
+      "class:free+mixed": {
+       "hit@1": 0.6908,
+       "mrr@10": 0.7946,
+       "n_free": 152,
+       "ndcg@10": 0.8418,
+       "recall@5": 0.9605
+      },
+      "forms": {
+       "hit@1": 0.4375,
+       "mrr@10": 0.6175,
+       "n_free": 32,
+       "ndcg@10": 0.7101,
+       "recall@5": 0.9375
+      },
+      "group:common_command:command": {
+       "hit@1": 0.875,
+       "mrr@10": 0.8958,
+       "n_free": 8,
+       "ndcg@10": 0.9195,
+       "recall@5": 0.875
+      },
+      "group:common_module:common_module": {
+       "hit@1": 0.5,
+       "mrr@10": 0.6146,
+       "n_free": 8,
+       "ndcg@10": 0.6772,
+       "recall@5": 0.75
+      },
+      "group:configuration:external_connection": {
+       "hit@1": 0.5,
+       "mrr@10": 0.6542,
+       "n_free": 8,
+       "ndcg@10": 0.7381,
+       "recall@5": 1.0
+      },
+      "group:configuration:managed_application": {
+       "hit@1": 0.75,
+       "mrr@10": 0.8542,
+       "n_free": 8,
+       "ndcg@10": 0.8914,
+       "recall@5": 1.0
+      },
+      "group:configuration:ordinary_application": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 8,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "group:configuration:session": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 8,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "group:external_data_processor:object": {
+       "hit@1": 0.75,
+       "mrr@10": 0.875,
+       "n_free": 8,
+       "ndcg@10": 0.9077,
+       "recall@5": 1.0
+      },
+      "group:external_report:object": {
+       "hit@1": 0.875,
+       "mrr@10": 0.9375,
+       "n_free": 8,
+       "ndcg@10": 0.9539,
+       "recall@5": 1.0
+      },
+      "group:form:common_form": {
+       "hit@1": 0.75,
+       "mrr@10": 0.7991,
+       "n_free": 8,
+       "ndcg@10": 0.8455,
+       "recall@5": 0.875
+      },
+      "group:form:external_data_processor_form": {
+       "hit@1": 0.125,
+       "mrr@10": 0.3917,
+       "n_free": 8,
+       "ndcg@10": 0.5374,
+       "recall@5": 0.875
+      },
+      "group:form:external_report_form": {
+       "hit@1": 0.25,
+       "mrr@10": 0.4875,
+       "n_free": 8,
+       "ndcg@10": 0.6121,
+       "recall@5": 1.0
+      },
+      "group:form:metadata_object_form": {
+       "hit@1": 0.625,
+       "mrr@10": 0.7917,
+       "n_free": 8,
+       "ndcg@10": 0.8452,
+       "recall@5": 1.0
+      },
+      "group:metadata_object:HTTPService:service": {
+       "hit@1": 0.75,
+       "mrr@10": 0.8542,
+       "n_free": 8,
+       "ndcg@10": 0.8914,
+       "recall@5": 1.0
+      },
+      "group:metadata_object:WebService:service": {
+       "hit@1": 0.5,
+       "mrr@10": 0.6042,
+       "n_free": 8,
+       "ndcg@10": 0.6702,
+       "recall@5": 0.875
+      },
+      "group:metadata_object:manager": {
+       "hit@1": 0.75,
+       "mrr@10": 0.875,
+       "n_free": 8,
+       "ndcg@10": 0.9077,
+       "recall@5": 1.0
+      },
+      "group:metadata_object:object": {
+       "hit@1": 0.75,
+       "mrr@10": 0.8542,
+       "n_free": 8,
+       "ndcg@10": 0.8914,
+       "recall@5": 1.0
+      },
+      "group:metadata_object:record_set": {
+       "hit@1": 0.625,
+       "mrr@10": 0.775,
+       "n_free": 8,
+       "ndcg@10": 0.8311,
+       "recall@5": 1.0
+      },
+      "group:metadata_object:value_manager": {
+       "hit@1": 0.875,
+       "mrr@10": 0.9167,
+       "n_free": 8,
+       "ndcg@10": 0.9375,
+       "recall@5": 1.0
+      },
+      "group:metadata_object_command:command": {
+       "hit@1": 0.875,
+       "mrr@10": 0.9167,
+       "n_free": 8,
+       "ndcg@10": 0.9375,
+       "recall@5": 1.0
+      },
+      "large": {
+       "hit@1": 0.5,
+       "mrr@10": 0.6687,
+       "n_free": 16,
+       "ndcg@10": 0.7354,
+       "recall@5": 0.875
+      },
+      "module_kind:command": {
+       "hit@1": 0.875,
+       "mrr@10": 0.9062,
+       "n_free": 16,
+       "ndcg@10": 0.9285,
+       "recall@5": 0.9375
+      },
+      "module_kind:common_module": {
+       "hit@1": 0.5,
+       "mrr@10": 0.6146,
+       "n_free": 8,
+       "ndcg@10": 0.6772,
+       "recall@5": 0.75
+      },
+      "module_kind:external_connection": {
+       "hit@1": 0.5,
+       "mrr@10": 0.6542,
+       "n_free": 8,
+       "ndcg@10": 0.7381,
+       "recall@5": 1.0
+      },
+      "module_kind:form": {
+       "hit@1": 0.4375,
+       "mrr@10": 0.6175,
+       "n_free": 32,
+       "ndcg@10": 0.7101,
+       "recall@5": 0.9375
+      },
+      "module_kind:managed_application": {
+       "hit@1": 0.75,
+       "mrr@10": 0.8542,
+       "n_free": 8,
+       "ndcg@10": 0.8914,
+       "recall@5": 1.0
+      },
+      "module_kind:manager": {
+       "hit@1": 0.75,
+       "mrr@10": 0.875,
+       "n_free": 8,
+       "ndcg@10": 0.9077,
+       "recall@5": 1.0
+      },
+      "module_kind:object": {
+       "hit@1": 0.7917,
+       "mrr@10": 0.8889,
+       "n_free": 24,
+       "ndcg@10": 0.9177,
+       "recall@5": 1.0
+      },
+      "module_kind:ordinary_application": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 8,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "module_kind:record_set": {
+       "hit@1": 0.625,
+       "mrr@10": 0.775,
+       "n_free": 8,
+       "ndcg@10": 0.8311,
+       "recall@5": 1.0
+      },
+      "module_kind:service": {
+       "hit@1": 0.625,
+       "mrr@10": 0.7292,
+       "n_free": 16,
+       "ndcg@10": 0.7808,
+       "recall@5": 0.9375
+      },
+      "module_kind:session": {
+       "hit@1": 1.0,
+       "mrr@10": 1.0,
+       "n_free": 8,
+       "ndcg@10": 1.0,
+       "recall@5": 1.0
+      },
+      "module_kind:value_manager": {
+       "hit@1": 0.875,
+       "mrr@10": 0.9167,
+       "n_free": 8,
+       "ndcg@10": 0.9375,
+       "recall@5": 1.0
+      },
+      "owner_kind:common_command": {
+       "hit@1": 0.875,
+       "mrr@10": 0.8958,
+       "n_free": 8,
+       "ndcg@10": 0.9195,
+       "recall@5": 0.875
+      },
+      "owner_kind:common_form": {
+       "hit@1": 0.75,
+       "mrr@10": 0.7991,
+       "n_free": 8,
+       "ndcg@10": 0.8455,
+       "recall@5": 0.875
+      },
+      "owner_kind:common_module": {
+       "hit@1": 0.5,
+       "mrr@10": 0.6146,
+       "n_free": 8,
+       "ndcg@10": 0.6772,
+       "recall@5": 0.75
+      },
+      "owner_kind:configuration": {
+       "hit@1": 0.8125,
+       "mrr@10": 0.8771,
+       "n_free": 32,
+       "ndcg@10": 0.9074,
+       "recall@5": 1.0
+      },
+      "owner_kind:external_data_processor": {
+       "hit@1": 0.4375,
+       "mrr@10": 0.6333,
+       "n_free": 16,
+       "ndcg@10": 0.7226,
+       "recall@5": 0.9375
+      },
+      "owner_kind:external_report": {
+       "hit@1": 0.5625,
+       "mrr@10": 0.7125,
+       "n_free": 16,
+       "ndcg@10": 0.783,
+       "recall@5": 1.0
+      },
+      "owner_kind:metadata_object": {
+       "hit@1": 0.7083,
+       "mrr@10": 0.8132,
+       "n_free": 48,
+       "ndcg@10": 0.8549,
+       "recall@5": 0.9792
+      },
+      "owner_kind:metadata_object_command": {
+       "hit@1": 0.875,
+       "mrr@10": 0.9167,
+       "n_free": 8,
+       "ndcg@10": 0.9375,
+       "recall@5": 1.0
+      },
+      "owner_kind:metadata_object_form": {
+       "hit@1": 0.625,
+       "mrr@10": 0.7917,
+       "n_free": 8,
+       "ndcg@10": 0.8452,
+       "recall@5": 1.0
+      },
+      "tag:paraphrase": {
+       "hit@1": 0.6908,
+       "mrr@10": 0.7946,
+       "n_free": 152,
+       "ndcg@10": 0.8418,
+       "recall@5": 0.9605
+      }
+     },
+     "per_query": {
+      "p369-g01-a1-i1-q1": {
+       "gold_rank": 1,
+       "group": "configuration:ordinary_application",
+       "top3": [
+        "configuration:::ordinary_application",
+        "configuration:::managed_application",
+        "metadata_object:InformationRegister:ДемоРезервы:record_set"
+       ]
+      },
+      "p369-g01-a1-i1-q2": {
+       "gold_rank": 1,
+       "group": "configuration:ordinary_application",
+       "top3": [
+        "configuration:::ordinary_application",
+        "common_command:CommonCommand:ДемоОбновление:command",
+        "metadata_object:WebService:ДемоПрием:service"
+       ]
+      },
+      "p369-g01-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "configuration:ordinary_application",
+       "top3": [
+        "configuration:::ordinary_application",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "configuration:::managed_application"
+       ]
+      },
+      "p369-g01-a1-i2-q2": {
+       "gold_rank": 1,
+       "group": "configuration:ordinary_application",
+       "top3": [
+        "configuration:::ordinary_application",
+        "external_data_processor:ExternalDataProcessor:ИмпортБанка:object",
+        "configuration:::external_connection"
+       ]
+      },
+      "p369-g01-a1-i3-q1": {
+       "gold_rank": 1,
+       "group": "configuration:ordinary_application",
+       "top3": [
+        "configuration:::ordinary_application",
+        "configuration:::session",
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object"
+       ]
+      },
+      "p369-g01-a1-i3-q2": {
+       "gold_rank": 1,
+       "group": "configuration:ordinary_application",
+       "top3": [
+        "configuration:::ordinary_application",
+        "configuration:::session",
+        "configuration:::managed_application"
+       ]
+      },
+      "p369-g01-a1-i4-q1": {
+       "gold_rank": 1,
+       "group": "configuration:ordinary_application",
+       "top3": [
+        "configuration:::ordinary_application",
+        "form:ExternalDataProcessor/ДемоНомера.epf/Form/ПанельДемоБ",
+        "form:ExternalDataProcessor/ДемоБанк.epf/Form/ПанельДемо"
+       ]
+      },
+      "p369-g01-a1-i4-q2": {
+       "gold_rank": 1,
+       "group": "configuration:ordinary_application",
+       "top3": [
+        "configuration:::ordinary_application",
+        "configuration:::external_connection",
+        "metadata_object:HTTPService:ДемоСтатус:service"
+       ]
+      },
+      "p369-g02-a1-i1-q1": {
+       "gold_rank": 2,
+       "group": "configuration:managed_application",
+       "top3": [
+        "form:CommonForm//CommonForm/ПанельДемо",
+        "configuration:::managed_application",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g02-a1-i1-q2": {
+       "gold_rank": 3,
+       "group": "configuration:managed_application",
+       "top3": [
+        "configuration:::session",
+        "metadata_object:HTTPService:ДемоСтатус:service",
+        "configuration:::managed_application"
+       ]
+      },
+      "p369-g02-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "configuration:managed_application",
+       "top3": [
+        "configuration:::managed_application",
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g02-a1-i2-q2": {
+       "gold_rank": 1,
+       "group": "configuration:managed_application",
+       "top3": [
+        "configuration:::managed_application",
+        "configuration:::ordinary_application",
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager"
+       ]
+      },
+      "p369-g02-a1-i3-q1": {
+       "gold_rank": 1,
+       "group": "configuration:managed_application",
+       "top3": [
+        "configuration:::managed_application",
+        "configuration:::ordinary_application",
+        "metadata_object:WebService:ДемоПрием:service"
+       ]
+      },
+      "p369-g02-a1-i3-q2": {
+       "gold_rank": 1,
+       "group": "configuration:managed_application",
+       "top3": [
+        "configuration:::managed_application",
+        "metadata_object:WebService:ДемоСтатус:service",
+        "form:ExternalDataProcessor/ДемоБанк.epf/Form/ПанельДемо"
+       ]
+      },
+      "p369-g02-a1-i4-q1": {
+       "gold_rank": 1,
+       "group": "configuration:managed_application",
+       "top3": [
+        "configuration:::managed_application",
+        "configuration:::ordinary_application",
+        "metadata_object:InformationRegister:ДемоРезервы:record_set"
+       ]
+      },
+      "p369-g02-a1-i4-q2": {
+       "gold_rank": 1,
+       "group": "configuration:managed_application",
+       "top3": [
+        "configuration:::managed_application",
+        "configuration:::ordinary_application",
+        "configuration:::external_connection"
+       ]
+      },
+      "p369-g03-a1-i1-q1": {
+       "gold_rank": 2,
+       "group": "configuration:external_connection",
+       "top3": [
+        "configuration:::managed_application",
+        "configuration:::external_connection",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g03-a1-i1-q2": {
+       "gold_rank": 1,
+       "group": "configuration:external_connection",
+       "top3": [
+        "configuration:::external_connection",
+        "configuration:::managed_application",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g03-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "configuration:external_connection",
+       "top3": [
+        "configuration:::external_connection",
+        "metadata_object:HTTPService:ДемоСтатус:service",
+        "common_module:CommonModule:ДемоОбновление:common_module"
+       ]
+      },
+      "p369-g03-a1-i2-q2": {
+       "gold_rank": 3,
+       "group": "configuration:external_connection",
+       "top3": [
+        "configuration:::ordinary_application",
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager",
+        "configuration:::external_connection"
+       ]
+      },
+      "p369-g03-a1-i3-q1": {
+       "gold_rank": 1,
+       "group": "configuration:external_connection",
+       "top3": [
+        "configuration:::external_connection",
+        "configuration:::ordinary_application",
+        "configuration:::managed_application"
+       ]
+      },
+      "p369-g03-a1-i3-q2": {
+       "gold_rank": 5,
+       "group": "configuration:external_connection",
+       "top3": [
+        "configuration:::session",
+        "configuration:::managed_application",
+        "form:ExternalReport/ДемоОборот.erf/ReportForm/ПанельДемоБ"
+       ]
+      },
+      "p369-g03-a1-i4-q1": {
+       "gold_rank": 1,
+       "group": "configuration:external_connection",
+       "top3": [
+        "configuration:::external_connection",
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager",
+        "configuration:::session"
+       ]
+      },
+      "p369-g03-a1-i4-q2": {
+       "gold_rank": 5,
+       "group": "configuration:external_connection",
+       "top3": [
+        "form:ExternalReport/ДемоОборот.erf/ReportForm/ПанельДемоБ",
+        "configuration:::managed_application",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g04-a1-i1-q1": {
+       "gold_rank": 1,
+       "group": "configuration:session",
+       "top3": [
+        "configuration:::session",
+        "configuration:::ordinary_application",
+        "configuration:::managed_application"
+       ]
+      },
+      "p369-g04-a1-i1-q2": {
+       "gold_rank": 1,
+       "group": "configuration:session",
+       "top3": [
+        "configuration:::session",
+        "configuration:::managed_application",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g04-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "configuration:session",
+       "top3": [
+        "configuration:::session",
+        "form:CommonForm//CommonForm/ПанельДемо",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set"
+       ]
+      },
+      "p369-g04-a1-i2-q2": {
+       "gold_rank": 1,
+       "group": "configuration:session",
+       "top3": [
+        "configuration:::session",
+        "external_report:ExternalReport:АнализДолгов:object",
+        "configuration:::managed_application"
+       ]
+      },
+      "p369-g04-a1-i3-q1": {
+       "gold_rank": 1,
+       "group": "configuration:session",
+       "top3": [
+        "configuration:::session",
+        "configuration:::ordinary_application",
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object"
+       ]
+      },
+      "p369-g04-a1-i3-q2": {
+       "gold_rank": 1,
+       "group": "configuration:session",
+       "top3": [
+        "configuration:::session",
+        "metadata_object:Document:ЗаказПокупателя:manager",
+        "common_module:CommonModule:ДемоОбновление:common_module"
+       ]
+      },
+      "p369-g04-a1-i4-q1": {
+       "gold_rank": 1,
+       "group": "configuration:session",
+       "top3": [
+        "configuration:::session",
+        "common_command:CommonCommand:ДемоПроверка:command",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g04-a1-i4-q2": {
+       "gold_rank": 1,
+       "group": "configuration:session",
+       "top3": [
+        "configuration:::session",
+        "configuration:::managed_application",
+        "configuration:::external_connection"
+       ]
+      },
+      "p369-g05-a1-i1-q1": {
+       "gold_rank": 2,
+       "group": "metadata_object:object",
+       "top3": [
+        "metadata_object:Catalog:Номенклатура:object",
+        "metadata_object:Document:ЗаказПокупателя:object",
+        "metadata_object:Constant:ДемоВалюта:value_manager"
+       ]
+      },
+      "p369-g05-a1-i1-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:object",
+       "top3": [
+        "metadata_object:Document:ЗаказПокупателя:object",
+        "metadata_object:HTTPService:ДемоПрием:service",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g05-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:object",
+       "top3": [
+        "metadata_object:Document:ЗаказПокупателя:object",
+        "external_report:ExternalReport:ОборотЗапасов:object",
+        "metadata_object:Document:ЗаказПокупателя:manager"
+       ]
+      },
+      "p369-g05-a1-i2-q2": {
+       "gold_rank": 3,
+       "group": "metadata_object:object",
+       "top3": [
+        "external_report:ExternalReport:ОборотЗапасов:object",
+        "external_report:ExternalReport:АнализДолгов:object",
+        "metadata_object:Document:ЗаказПокупателя:object"
+       ]
+      },
+      "p369-g05-a2-i1-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:object",
+       "top3": [
+        "metadata_object:Catalog:Номенклатура:object",
+        "metadata_object:InformationRegister:ДемоРезервы:record_set",
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object"
+       ]
+      },
+      "p369-g05-a2-i1-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:object",
+       "top3": [
+        "metadata_object:Catalog:Номенклатура:object",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g05-a2-i2-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:object",
+       "top3": [
+        "metadata_object:Catalog:Номенклатура:object",
+        "metadata_object_command:Catalog:Номенклатура.Этикетка:command",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа"
+       ]
+      },
+      "p369-g05-a2-i2-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:object",
+       "top3": [
+        "metadata_object:Catalog:Номенклатура:object",
+        "external_report:ExternalReport:ОборотЗапасов:object",
+        "metadata_object:Document:ЗаказПокупателя:object"
+       ]
+      },
+      "p369-g06-a1-i1-q1": {
+       "gold_rank": 1,
+       "group": "external_data_processor:object",
+       "top3": [
+        "external_data_processor:ExternalDataProcessor:ИмпортБанка:object",
+        "form:ExternalDataProcessor/ДемоНомера.epf/Form/ПанельДемоБ",
+        "external_report:ExternalReport:ОборотЗапасов:object"
+       ]
+      },
+      "p369-g06-a1-i1-q2": {
+       "gold_rank": 2,
+       "group": "external_data_processor:object",
+       "top3": [
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "external_data_processor:ExternalDataProcessor:ИмпортБанка:object",
+        "form:ExternalReport/ДемоДолги.erf/ReportForm/ПанельДемо"
+       ]
+      },
+      "p369-g06-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "external_data_processor:object",
+       "top3": [
+        "external_data_processor:ExternalDataProcessor:ИмпортБанка:object",
+        "configuration:::ordinary_application",
+        "external_report:ExternalReport:АнализДолгов:object"
+       ]
+      },
+      "p369-g06-a1-i2-q2": {
+       "gold_rank": 1,
+       "group": "external_data_processor:object",
+       "top3": [
+        "external_data_processor:ExternalDataProcessor:ИмпортБанка:object",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "form:Catalog/Номенклатура/CatalogForm/ФормаТовара"
+       ]
+      },
+      "p369-g06-a2-i1-q1": {
+       "gold_rank": 1,
+       "group": "external_data_processor:object",
+       "top3": [
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object",
+        "metadata_object:InformationRegister:ДемоРезервы:record_set",
+        "common_module:CommonModule:ДемоОбновление:common_module"
+       ]
+      },
+      "p369-g06-a2-i1-q2": {
+       "gold_rank": 2,
+       "group": "external_data_processor:object",
+       "top3": [
+        "form:CommonForm//CommonForm/ПанельДемоБ",
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set"
+       ]
+      },
+      "p369-g06-a2-i2-q1": {
+       "gold_rank": 1,
+       "group": "external_data_processor:object",
+       "top3": [
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object",
+        "common_module:CommonModule:ДемоОбновление:common_module",
+        "form:ExternalDataProcessor/ДемоНомера.epf/Form/ПанельДемоБ"
+       ]
+      },
+      "p369-g06-a2-i2-q2": {
+       "gold_rank": 1,
+       "group": "external_data_processor:object",
+       "top3": [
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object",
+        "configuration:::ordinary_application",
+        "configuration:::session"
+       ]
+      },
+      "p369-g07-a1-i1-q1": {
+       "gold_rank": 1,
+       "group": "external_report:object",
+       "top3": [
+        "external_report:ExternalReport:АнализДолгов:object",
+        "metadata_object:Document:ЗаказПокупателя:manager",
+        "form:ExternalReport/ДемоДолги.erf/ReportForm/ПанельДемо"
+       ]
+      },
+      "p369-g07-a1-i1-q2": {
+       "gold_rank": 1,
+       "group": "external_report:object",
+       "top3": [
+        "external_report:ExternalReport:АнализДолгов:object",
+        "external_report:ExternalReport:ОборотЗапасов:object",
+        "metadata_object:Document:ЗаказПокупателя:manager"
+       ]
+      },
+      "p369-g07-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "external_report:object",
+       "top3": [
+        "external_report:ExternalReport:АнализДолгов:object",
+        "metadata_object:Document:ЗаказПокупателя:object",
+        "metadata_object:Catalog:Номенклатура:object"
+       ]
+      },
+      "p369-g07-a1-i2-q2": {
+       "gold_rank": 1,
+       "group": "external_report:object",
+       "top3": [
+        "external_report:ExternalReport:АнализДолгов:object",
+        "form:ExternalReport/ДемоДолги.erf/ReportForm/ПанельДемо",
+        "metadata_object:Document:ЗаказПокупателя:manager"
+       ]
+      },
+      "p369-g07-a2-i1-q1": {
+       "gold_rank": 1,
+       "group": "external_report:object",
+       "top3": [
+        "external_report:ExternalReport:ОборотЗапасов:object",
+        "metadata_object:Document:ЗаказПокупателя:manager",
+        "external_report:ExternalReport:АнализДолгов:object"
+       ]
+      },
+      "p369-g07-a2-i1-q2": {
+       "gold_rank": 1,
+       "group": "external_report:object",
+       "top3": [
+        "external_report:ExternalReport:ОборотЗапасов:object",
+        "metadata_object:Document:ЗаказПокупателя:manager",
+        "external_report:ExternalReport:АнализДолгов:object"
+       ]
+      },
+      "p369-g07-a2-i2-q1": {
+       "gold_rank": 1,
+       "group": "external_report:object",
+       "top3": [
+        "external_report:ExternalReport:ОборотЗапасов:object",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "common_command:CommonCommand:ДемоОбновление:command"
+       ]
+      },
+      "p369-g07-a2-i2-q2": {
+       "gold_rank": 2,
+       "group": "external_report:object",
+       "top3": [
+        "metadata_object:Document:ЗаказПокупателя:manager",
+        "external_report:ExternalReport:ОборотЗапасов:object",
+        "metadata_object:Document:ЗаказПокупателя:object"
+       ]
+      },
+      "p369-g08-a1-i1-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:manager",
+       "top3": [
+        "metadata_object:Document:ЗаказПокупателя:manager",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа",
+        "external_report:ExternalReport:ОборотЗапасов:object"
+       ]
+      },
+      "p369-g08-a1-i1-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:manager",
+       "top3": [
+        "metadata_object:Document:ЗаказПокупателя:manager",
+        "metadata_object_command:Document:ЗаказПокупателя.Отправить:command",
+        "external_report:ExternalReport:ОборотЗапасов:object"
+       ]
+      },
+      "p369-g08-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:manager",
+       "top3": [
+        "metadata_object:Document:ЗаказПокупателя:manager",
+        "metadata_object:HTTPService:ДемоПрием:service",
+        "configuration:::managed_application"
+       ]
+      },
+      "p369-g08-a1-i2-q2": {
+       "gold_rank": 2,
+       "group": "metadata_object:manager",
+       "top3": [
+        "external_report:ExternalReport:АнализДолгов:object",
+        "metadata_object:Document:ЗаказПокупателя:manager",
+        "external_report:ExternalReport:ОборотЗапасов:object"
+       ]
+      },
+      "p369-g08-a2-i1-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:manager",
+       "top3": [
+        "metadata_object:Catalog:Номенклатура:manager",
+        "metadata_object_command:Catalog:Номенклатура.Этикетка:command",
+        "external_data_processor:ExternalDataProcessor:ИмпортБанка:object"
+       ]
+      },
+      "p369-g08-a2-i1-q2": {
+       "gold_rank": 2,
+       "group": "metadata_object:manager",
+       "top3": [
+        "metadata_object_command:Catalog:Номенклатура.Этикетка:command",
+        "metadata_object:Catalog:Номенклатура:manager",
+        "external_report:ExternalReport:ОборотЗапасов:object"
+       ]
+      },
+      "p369-g08-a2-i2-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:manager",
+       "top3": [
+        "metadata_object:Catalog:Номенклатура:manager",
+        "external_report:ExternalReport:ОборотЗапасов:object",
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object"
+       ]
+      },
+      "p369-g08-a2-i2-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:manager",
+       "top3": [
+        "metadata_object:Catalog:Номенклатура:manager",
+        "metadata_object:Document:ЗаказПокупателя:manager",
+        "metadata_object:Catalog:Номенклатура:object"
+       ]
+      },
+      "p369-g09-a1-i1-q1": {
+       "gold_rank": 2,
+       "group": "metadata_object:record_set",
+       "top3": [
+        "metadata_object:Catalog:Номенклатура:object",
+        "metadata_object:InformationRegister:ДемоРезервы:record_set",
+        "metadata_object:Document:ЗаказПокупателя:object"
+       ]
+      },
+      "p369-g09-a1-i1-q2": {
+       "gold_rank": 5,
+       "group": "metadata_object:record_set",
+       "top3": [
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager",
+        "metadata_object:Catalog:Номенклатура:object"
+       ]
+      },
+      "p369-g09-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:record_set",
+       "top3": [
+        "metadata_object:InformationRegister:ДемоРезервы:record_set",
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g09-a1-i2-q2": {
+       "gold_rank": 2,
+       "group": "metadata_object:record_set",
+       "top3": [
+        "common_module:CommonModule:ДемоОбновление:common_module",
+        "metadata_object:InformationRegister:ДемоРезервы:record_set",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set"
+       ]
+      },
+      "p369-g09-a2-i1-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:record_set",
+       "top3": [
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "configuration:::ordinary_application",
+        "common_command:CommonCommand:ДемоОбновление:command"
+       ]
+      },
+      "p369-g09-a2-i1-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:record_set",
+       "top3": [
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "external_report:ExternalReport:ОборотЗапасов:object",
+        "metadata_object:InformationRegister:ДемоРезервы:record_set"
+       ]
+      },
+      "p369-g09-a2-i2-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:record_set",
+       "top3": [
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "metadata_object:Catalog:Номенклатура:object",
+        "form:ExternalReport/ДемоОборот.erf/ReportForm/ПанельДемоБ"
+       ]
+      },
+      "p369-g09-a2-i2-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:record_set",
+       "top3": [
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "metadata_object:WebService:ДемоПрием:service",
+        "configuration:::session"
+       ]
+      },
+      "p369-g10-a1-i1-q1": {
+       "gold_rank": 1,
+       "group": "common_command:command",
+       "top3": [
+        "common_command:CommonCommand:ДемоПроверка:command",
+        "form:CommonForm//CommonForm/ПанельДемоБ",
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager"
+       ]
+      },
+      "p369-g10-a1-i1-q2": {
+       "gold_rank": 1,
+       "group": "common_command:command",
+       "top3": [
+        "common_command:CommonCommand:ДемоПроверка:command",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "form:CommonForm//CommonForm/ПанельДемоБ"
+       ]
+      },
+      "p369-g10-a1-i2-q1": {
+       "gold_rank": 6,
+       "group": "common_command:command",
+       "top3": [
+        "form:ExternalReport/ДемоОборот.erf/ReportForm/ПанельДемоБ",
+        "external_report:ExternalReport:ОборотЗапасов:object",
+        "form:ExternalDataProcessor/ДемоНомера.epf/Form/ПанельДемоБ"
+       ]
+      },
+      "p369-g10-a1-i2-q2": {
+       "gold_rank": 1,
+       "group": "common_command:command",
+       "top3": [
+        "common_command:CommonCommand:ДемоПроверка:command",
+        "metadata_object:WebService:ДемоПрием:service",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g10-a2-i1-q1": {
+       "gold_rank": 1,
+       "group": "common_command:command",
+       "top3": [
+        "common_command:CommonCommand:ДемоОбновление:command",
+        "configuration:::managed_application",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g10-a2-i1-q2": {
+       "gold_rank": 1,
+       "group": "common_command:command",
+       "top3": [
+        "common_command:CommonCommand:ДемоОбновление:command",
+        "common_command:CommonCommand:ДемоПроверка:command",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set"
+       ]
+      },
+      "p369-g10-a2-i2-q1": {
+       "gold_rank": 1,
+       "group": "common_command:command",
+       "top3": [
+        "common_command:CommonCommand:ДемоОбновление:command",
+        "common_command:CommonCommand:ДемоПроверка:command",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g10-a2-i2-q2": {
+       "gold_rank": 1,
+       "group": "common_command:command",
+       "top3": [
+        "common_command:CommonCommand:ДемоОбновление:command",
+        "configuration:::ordinary_application",
+        "external_report:ExternalReport:ОборотЗапасов:object"
+       ]
+      },
+      "p369-g11-a1-i1-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object_command:command",
+       "top3": [
+        "metadata_object_command:Document:ЗаказПокупателя.Отправить:command",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа",
+        "metadata_object:Document:ЗаказПокупателя:manager"
+       ]
+      },
+      "p369-g11-a1-i1-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object_command:command",
+       "top3": [
+        "metadata_object_command:Document:ЗаказПокупателя.Отправить:command",
+        "metadata_object:HTTPService:ДемоПрием:service",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа"
+       ]
+      },
+      "p369-g11-a1-i2-q1": {
+       "gold_rank": 3,
+       "group": "metadata_object_command:command",
+       "top3": [
+        "metadata_object:Document:ЗаказПокупателя:manager",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа",
+        "metadata_object_command:Document:ЗаказПокупателя.Отправить:command"
+       ]
+      },
+      "p369-g11-a1-i2-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object_command:command",
+       "top3": [
+        "metadata_object_command:Document:ЗаказПокупателя.Отправить:command",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа",
+        "metadata_object:Document:ЗаказПокупателя:manager"
+       ]
+      },
+      "p369-g11-a2-i1-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object_command:command",
+       "top3": [
+        "metadata_object_command:Catalog:Номенклатура.Этикетка:command",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа",
+        "metadata_object:Catalog:Номенклатура:object"
+       ]
+      },
+      "p369-g11-a2-i1-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object_command:command",
+       "top3": [
+        "metadata_object_command:Catalog:Номенклатура.Этикетка:command",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа",
+        "external_data_processor:ExternalDataProcessor:ИмпортБанка:object"
+       ]
+      },
+      "p369-g11-a2-i2-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object_command:command",
+       "top3": [
+        "metadata_object_command:Catalog:Номенклатура.Этикетка:command",
+        "metadata_object:Catalog:Номенклатура:manager",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа"
+       ]
+      },
+      "p369-g11-a2-i2-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object_command:command",
+       "top3": [
+        "metadata_object_command:Catalog:Номенклатура.Этикетка:command",
+        "metadata_object:Catalog:Номенклатура:manager",
+        "metadata_object:Document:ЗаказПокупателя:object"
+       ]
+      },
+      "p369-g12-a1-i1-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:value_manager",
+       "top3": [
+        "metadata_object:Constant:ДемоВалюта:value_manager",
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object",
+        "metadata_object:InformationRegister:ДемоРезервы:record_set"
+       ]
+      },
+      "p369-g12-a1-i1-q2": {
+       "gold_rank": 3,
+       "group": "metadata_object:value_manager",
+       "top3": [
+        "configuration:::ordinary_application",
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager",
+        "metadata_object:Constant:ДемоВалюта:value_manager"
+       ]
+      },
+      "p369-g12-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:value_manager",
+       "top3": [
+        "metadata_object:Constant:ДемоВалюта:value_manager",
+        "external_data_processor:ExternalDataProcessor:ИмпортБанка:object",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set"
+       ]
+      },
+      "p369-g12-a1-i2-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:value_manager",
+       "top3": [
+        "metadata_object:Constant:ДемоВалюта:value_manager",
+        "external_data_processor:ExternalDataProcessor:ИмпортБанка:object",
+        "common_module:CommonModule:ДемоПроверка:common_module"
+       ]
+      },
+      "p369-g12-a2-i1-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:value_manager",
+       "top3": [
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager",
+        "configuration:::ordinary_application",
+        "metadata_object:InformationRegister:ДемоРезервы:record_set"
+       ]
+      },
+      "p369-g12-a2-i1-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:value_manager",
+       "top3": [
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager",
+        "configuration:::managed_application",
+        "configuration:::session"
+       ]
+      },
+      "p369-g12-a2-i2-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:value_manager",
+       "top3": [
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager",
+        "configuration:::ordinary_application",
+        "configuration:::managed_application"
+       ]
+      },
+      "p369-g12-a2-i2-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:value_manager",
+       "top3": [
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager",
+        "configuration:::ordinary_application",
+        "configuration:::session"
+       ]
+      },
+      "p369-g13-a1-i1-q1": {
+       "gold_rank": 3,
+       "group": "metadata_object:HTTPService:service",
+       "top3": [
+        "metadata_object_command:Document:ЗаказПокупателя.Отправить:command",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа",
+        "metadata_object:HTTPService:ДемоПрием:service"
+       ]
+      },
+      "p369-g13-a1-i1-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:HTTPService:service",
+       "top3": [
+        "metadata_object:HTTPService:ДемоПрием:service",
+        "metadata_object:WebService:ДемоПрием:service",
+        "metadata_object:Document:ЗаказПокупателя:object"
+       ]
+      },
+      "p369-g13-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:HTTPService:service",
+       "top3": [
+        "metadata_object:HTTPService:ДемоПрием:service",
+        "configuration:::ordinary_application",
+        "configuration:::session"
+       ]
+      },
+      "p369-g13-a1-i2-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:HTTPService:service",
+       "top3": [
+        "metadata_object:HTTPService:ДемоПрием:service",
+        "configuration:::ordinary_application",
+        "metadata_object:HTTPService:ДемоСтатус:service"
+       ]
+      },
+      "p369-g13-a2-i1-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:HTTPService:service",
+       "top3": [
+        "metadata_object:HTTPService:ДемоСтатус:service",
+        "metadata_object:HTTPService:ДемоПрием:service",
+        "metadata_object_command:Document:ЗаказПокупателя.Отправить:command"
+       ]
+      },
+      "p369-g13-a2-i1-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:HTTPService:service",
+       "top3": [
+        "metadata_object:HTTPService:ДемоСтатус:service",
+        "metadata_object:WebService:ДемоСтатус:service",
+        "form:ExternalDataProcessor/ДемоНомера.epf/Form/ПанельДемоБ"
+       ]
+      },
+      "p369-g13-a2-i2-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:HTTPService:service",
+       "top3": [
+        "metadata_object:HTTPService:ДемоСтатус:service",
+        "metadata_object:HTTPService:ДемоПрием:service",
+        "metadata_object:Document:ЗаказПокупателя:object"
+       ]
+      },
+      "p369-g13-a2-i2-q2": {
+       "gold_rank": 2,
+       "group": "metadata_object:HTTPService:service",
+       "top3": [
+        "metadata_object:Document:ЗаказПокупателя:object",
+        "metadata_object:HTTPService:ДемоСтатус:service",
+        "configuration:::external_connection"
+       ]
+      },
+      "p369-g14-a1-i1-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:WebService:service",
+       "top3": [
+        "metadata_object:WebService:ДемоПрием:service",
+        "metadata_object_command:Document:ЗаказПокупателя.Отправить:command",
+        "metadata_object:HTTPService:ДемоПрием:service"
+       ]
+      },
+      "p369-g14-a1-i1-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:WebService:service",
+       "top3": [
+        "metadata_object:WebService:ДемоПрием:service",
+        "metadata_object:WebService:ДемоСтатус:service",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа"
+       ]
+      },
+      "p369-g14-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "metadata_object:WebService:service",
+       "top3": [
+        "metadata_object:WebService:ДемоПрием:service",
+        "metadata_object:HTTPService:ДемоПрием:service",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа"
+       ]
+      },
+      "p369-g14-a1-i2-q2": {
+       "gold_rank": 1,
+       "group": "metadata_object:WebService:service",
+       "top3": [
+        "metadata_object:WebService:ДемоПрием:service",
+        "metadata_object:HTTPService:ДемоПрием:service",
+        "metadata_object:Catalog:Номенклатура:object"
+       ]
+      },
+      "p369-g14-a2-i1-q1": {
+       "gold_rank": 4,
+       "group": "metadata_object:WebService:service",
+       "top3": [
+        "metadata_object:HTTPService:ДемоСтатус:service",
+        "metadata_object:HTTPService:ДемоПрием:service",
+        "metadata_object:WebService:ДемоПрием:service"
+       ]
+      },
+      "p369-g14-a2-i1-q2": {
+       "gold_rank": null,
+       "group": "metadata_object:WebService:service",
+       "top3": [
+        "form:ExternalDataProcessor/ДемоНомера.epf/Form/ПанельДемоБ",
+        "metadata_object:WebService:ДемоПрием:service",
+        "form:CommonForm//CommonForm/ПанельДемоБ"
+       ]
+      },
+      "p369-g14-a2-i2-q1": {
+       "gold_rank": 4,
+       "group": "metadata_object:WebService:service",
+       "top3": [
+        "configuration:::managed_application",
+        "metadata_object:HTTPService:ДемоПрием:service",
+        "metadata_object:WebService:ДемоПрием:service"
+       ]
+      },
+      "p369-g14-a2-i2-q2": {
+       "gold_rank": 3,
+       "group": "metadata_object:WebService:service",
+       "top3": [
+        "metadata_object:HTTPService:ДемоСтатус:service",
+        "metadata_object:WebService:ДемоПрием:service",
+        "metadata_object:WebService:ДемоСтатус:service"
+       ]
+      },
+      "p369-g15-a1-i1-q1": {
+       "gold_rank": 1,
+       "group": "common_module:common_module",
+       "top3": [
+        "common_module:CommonModule:ДемоПроверка:common_module",
+        "form:ExternalDataProcessor/ДемоНомера.epf/Form/ПанельДемоБ",
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object"
+       ]
+      },
+      "p369-g15-a1-i1-q2": {
+       "gold_rank": 6,
+       "group": "common_module:common_module",
+       "top3": [
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "metadata_object:Catalog:Номенклатура:manager",
+        "common_command:CommonCommand:ДемоПроверка:command"
+       ]
+      },
+      "p369-g15-a1-i2-q1": {
+       "gold_rank": null,
+       "group": "common_module:common_module",
+       "top3": [
+        "metadata_object:WebService:ДемоПрием:service",
+        "external_data_processor:ExternalDataProcessor:ИмпортБанка:object",
+        "common_command:CommonCommand:ДемоПроверка:command"
+       ]
+      },
+      "p369-g15-a1-i2-q2": {
+       "gold_rank": 1,
+       "group": "common_module:common_module",
+       "top3": [
+        "common_module:CommonModule:ДемоПроверка:common_module",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "external_report:ExternalReport:ОборотЗапасов:object"
+       ]
+      },
+      "p369-g15-a2-i1-q1": {
+       "gold_rank": 1,
+       "group": "common_module:common_module",
+       "top3": [
+        "common_module:CommonModule:ДемоОбновление:common_module",
+        "configuration:::session",
+        "form:CommonForm//CommonForm/ПанельДемоБ"
+       ]
+      },
+      "p369-g15-a2-i1-q2": {
+       "gold_rank": 1,
+       "group": "common_module:common_module",
+       "top3": [
+        "common_module:CommonModule:ДемоОбновление:common_module",
+        "common_module:CommonModule:ДемоПроверка:common_module",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set"
+       ]
+      },
+      "p369-g15-a2-i2-q1": {
+       "gold_rank": 4,
+       "group": "common_module:common_module",
+       "top3": [
+        "configuration:::ordinary_application",
+        "form:ExternalDataProcessor/ДемоБанк.epf/Form/ПанельДемо",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа"
+       ]
+      },
+      "p369-g15-a2-i2-q2": {
+       "gold_rank": 2,
+       "group": "common_module:common_module",
+       "top3": [
+        "form:ExternalDataProcessor/ДемоБанк.epf/Form/ПанельДемо",
+        "common_module:CommonModule:ДемоОбновление:common_module",
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object"
+       ]
+      },
+      "p369-g16-a1-i1-q1": {
+       "gold_rank": 1,
+       "group": "form:metadata_object_form",
+       "top3": [
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа",
+        "configuration:::managed_application",
+        "configuration:::external_connection"
+       ]
+      },
+      "p369-g16-a1-i1-q2": {
+       "gold_rank": 1,
+       "group": "form:metadata_object_form",
+       "top3": [
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа",
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object",
+        "configuration:::external_connection"
+       ]
+      },
+      "p369-g16-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "form:metadata_object_form",
+       "top3": [
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа",
+        "metadata_object:Document:ЗаказПокупателя:object",
+        "metadata_object_command:Catalog:Номенклатура.Этикетка:command"
+       ]
+      },
+      "p369-g16-a1-i2-q2": {
+       "gold_rank": 1,
+       "group": "form:metadata_object_form",
+       "top3": [
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа",
+        "metadata_object:Document:ЗаказПокупателя:object",
+        "metadata_object:Catalog:Номенклатура:manager"
+       ]
+      },
+      "p369-g16-a2-i1-q1": {
+       "gold_rank": 3,
+       "group": "form:metadata_object_form",
+       "top3": [
+        "form:ExternalDataProcessor/ДемоБанк.epf/Form/ПанельДемо",
+        "external_data_processor:ExternalDataProcessor:ИмпортБанка:object",
+        "form:Catalog/Номенклатура/CatalogForm/ФормаТовара"
+       ]
+      },
+      "p369-g16-a2-i1-q2": {
+       "gold_rank": 1,
+       "group": "form:metadata_object_form",
+       "top3": [
+        "form:Catalog/Номенклатура/CatalogForm/ФормаТовара",
+        "form:ExternalReport/ДемоОборот.erf/ReportForm/ПанельДемоБ",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа"
+       ]
+      },
+      "p369-g16-a2-i2-q1": {
+       "gold_rank": 2,
+       "group": "form:metadata_object_form",
+       "top3": [
+        "metadata_object:Catalog:Номенклатура:object",
+        "form:Catalog/Номенклатура/CatalogForm/ФормаТовара",
+        "metadata_object:Catalog:Номенклатура:manager"
+       ]
+      },
+      "p369-g16-a2-i2-q2": {
+       "gold_rank": 2,
+       "group": "form:metadata_object_form",
+       "top3": [
+        "common_module:CommonModule:ДемоОбновление:common_module",
+        "form:Catalog/Номенклатура/CatalogForm/ФормаТовара",
+        "configuration:::managed_application"
+       ]
+      },
+      "p369-g17-a1-i1-q1": {
+       "gold_rank": 1,
+       "group": "form:common_form",
+       "top3": [
+        "form:CommonForm//CommonForm/ПанельДемо",
+        "common_command:CommonCommand:ДемоПроверка:command",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g17-a1-i1-q2": {
+       "gold_rank": 1,
+       "group": "form:common_form",
+       "top3": [
+        "form:CommonForm//CommonForm/ПанельДемо",
+        "form:ExternalReport/ДемоДолги.erf/ReportForm/ПанельДемо",
+        "form:CommonForm//CommonForm/ПанельДемоБ"
+       ]
+      },
+      "p369-g17-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "form:common_form",
+       "top3": [
+        "form:CommonForm//CommonForm/ПанельДемо",
+        "form:CommonForm//CommonForm/ПанельДемоБ",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set"
+       ]
+      },
+      "p369-g17-a1-i2-q2": {
+       "gold_rank": 1,
+       "group": "form:common_form",
+       "top3": [
+        "form:CommonForm//CommonForm/ПанельДемо",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "form:CommonForm//CommonForm/ПанельДемоБ"
+       ]
+      },
+      "p369-g17-a2-i1-q1": {
+       "gold_rank": 1,
+       "group": "form:common_form",
+       "top3": [
+        "form:CommonForm//CommonForm/ПанельДемоБ",
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object",
+        "common_module:CommonModule:ДемоОбновление:common_module"
+       ]
+      },
+      "p369-g17-a2-i1-q2": {
+       "gold_rank": 1,
+       "group": "form:common_form",
+       "top3": [
+        "form:CommonForm//CommonForm/ПанельДемоБ",
+        "metadata_object:WebService:ДемоПрием:service",
+        "common_module:CommonModule:ДемоПроверка:common_module"
+       ]
+      },
+      "p369-g17-a2-i2-q1": {
+       "gold_rank": 7,
+       "group": "form:common_form",
+       "top3": [
+        "configuration:::managed_application",
+        "form:Document/ЗаказПокупателя/DocumentForm/ФормаЗаказа",
+        "configuration:::session"
+       ]
+      },
+      "p369-g17-a2-i2-q2": {
+       "gold_rank": 4,
+       "group": "form:common_form",
+       "top3": [
+        "configuration:::ordinary_application",
+        "configuration:::session",
+        "configuration:::managed_application"
+       ]
+      },
+      "p369-g18-a1-i1-q1": {
+       "gold_rank": 4,
+       "group": "form:external_data_processor_form",
+       "top3": [
+        "external_data_processor:ExternalDataProcessor:ИмпортБанка:object",
+        "configuration:::external_connection",
+        "form:ExternalReport/ДемоДолги.erf/ReportForm/ПанельДемо"
+       ]
+      },
+      "p369-g18-a1-i1-q2": {
+       "gold_rank": 5,
+       "group": "form:external_data_processor_form",
+       "top3": [
+        "configuration:::external_connection",
+        "external_data_processor:ExternalDataProcessor:ИмпортБанка:object",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g18-a1-i2-q1": {
+       "gold_rank": 10,
+       "group": "form:external_data_processor_form",
+       "top3": [
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "external_report:ExternalReport:АнализДолгов:object",
+        "configuration:::managed_application"
+       ]
+      },
+      "p369-g18-a1-i2-q2": {
+       "gold_rank": 2,
+       "group": "form:external_data_processor_form",
+       "top3": [
+        "configuration:::managed_application",
+        "form:ExternalDataProcessor/ДемоБанк.epf/Form/ПанельДемо",
+        "configuration:::ordinary_application"
+       ]
+      },
+      "p369-g18-a2-i1-q1": {
+       "gold_rank": 4,
+       "group": "form:external_data_processor_form",
+       "top3": [
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager",
+        "common_module:CommonModule:ДемоОбновление:common_module",
+        "external_data_processor:ExternalDataProcessor:ПеренумерацияАктов:object"
+       ]
+      },
+      "p369-g18-a2-i1-q2": {
+       "gold_rank": 2,
+       "group": "form:external_data_processor_form",
+       "top3": [
+        "common_module:CommonModule:ДемоОбновление:common_module",
+        "form:ExternalDataProcessor/ДемоНомера.epf/Form/ПанельДемоБ",
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager"
+       ]
+      },
+      "p369-g18-a2-i2-q1": {
+       "gold_rank": 3,
+       "group": "form:external_data_processor_form",
+       "top3": [
+        "common_module:CommonModule:ДемоОбновление:common_module",
+        "configuration:::managed_application",
+        "form:ExternalDataProcessor/ДемоНомера.epf/Form/ПанельДемоБ"
+       ]
+      },
+      "p369-g18-a2-i2-q2": {
+       "gold_rank": 1,
+       "group": "form:external_data_processor_form",
+       "top3": [
+        "form:ExternalDataProcessor/ДемоНомера.epf/Form/ПанельДемоБ",
+        "form:CommonForm//CommonForm/ПанельДемоБ",
+        "common_command:CommonCommand:ДемоОбновление:command"
+       ]
+      },
+      "p369-g19-a1-i1-q1": {
+       "gold_rank": 5,
+       "group": "form:external_report_form",
+       "top3": [
+        "configuration:::managed_application",
+        "metadata_object:Document:ЗаказПокупателя:manager",
+        "external_report:ExternalReport:АнализДолгов:object"
+       ]
+      },
+      "p369-g19-a1-i1-q2": {
+       "gold_rank": 1,
+       "group": "form:external_report_form",
+       "top3": [
+        "form:ExternalReport/ДемоДолги.erf/ReportForm/ПанельДемо",
+        "external_report:ExternalReport:АнализДолгов:object",
+        "metadata_object:Document:ЗаказПокупателя:object"
+       ]
+      },
+      "p369-g19-a1-i2-q1": {
+       "gold_rank": 1,
+       "group": "form:external_report_form",
+       "top3": [
+        "form:ExternalReport/ДемоДолги.erf/ReportForm/ПанельДемо",
+        "common_module:CommonModule:ДемоОбновление:common_module",
+        "external_data_processor:ExternalDataProcessor:ИмпортБанка:object"
+       ]
+      },
+      "p369-g19-a1-i2-q2": {
+       "gold_rank": 4,
+       "group": "form:external_report_form",
+       "top3": [
+        "external_report:ExternalReport:АнализДолгов:object",
+        "external_report:ExternalReport:ОборотЗапасов:object",
+        "metadata_object:Document:ЗаказПокупателя:object"
+       ]
+      },
+      "p369-g19-a2-i1-q1": {
+       "gold_rank": 4,
+       "group": "form:external_report_form",
+       "top3": [
+        "metadata_object:Document:ЗаказПокупателя:object",
+        "metadata_object:Constant:ДемоГраницаПериода:value_manager",
+        "configuration:::managed_application"
+       ]
+      },
+      "p369-g19-a2-i1-q2": {
+       "gold_rank": 2,
+       "group": "form:external_report_form",
+       "top3": [
+        "external_report:ExternalReport:ОборотЗапасов:object",
+        "form:ExternalReport/ДемоОборот.erf/ReportForm/ПанельДемоБ",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set"
+       ]
+      },
+      "p369-g19-a2-i2-q1": {
+       "gold_rank": 5,
+       "group": "form:external_report_form",
+       "top3": [
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set",
+        "configuration:::managed_application",
+        "external_report:ExternalReport:ОборотЗапасов:object"
+       ]
+      },
+      "p369-g19-a2-i2-q2": {
+       "gold_rank": 2,
+       "group": "form:external_report_form",
+       "top3": [
+        "metadata_object:Document:ЗаказПокупателя:object",
+        "form:ExternalReport/ДемоОборот.erf/ReportForm/ПанельДемоБ",
+        "metadata_object:AccumulationRegister:ДемоРезервы:record_set"
+       ]
+      }
+     },
+     "thresholds_passed": true
+    }
+   },
+   "dataset_hashes": {
+    "search_eval_issue321.json": {
+     "bytes": 29006,
+     "sha256": "35166f3e74ca7047731fc05a1cf3ed564530a02cf65cf03f2371d3ff48efa052"
+    },
+    "search_eval_issue321_hard.json": {
+     "bytes": 33429,
+     "sha256": "f94c3d222eb34d2c9b629a3c51379fc7661f42dd252388b1b596da5026b70ec3"
+    },
+    "search_eval_issue329_paraphrase.json": {
+     "bytes": 255707,
+     "sha256": "5b69e413527a7fc733c525c997a8031310a538fcaa3f584a32b3b31881eee46b"
+    }
+   },
+   "embedder": {
+    "config_hash": "8fa460172b22b28ab728b2c83f32e3187b35bac9b17ffa0d2713af092c1ea33a",
+    "dimension": 1024,
+    "name": "BAAI/bge-m3",
+    "version": "5617a9f61b028005a4858fdac845db406aefb181"
+   },
+   "layout_link_basis": false,
+   "source_sha": "6d798c04a1e902b22ce3eaf3024d1d29394db238",
+   "source_tree_sha256": "44758be86ee445c667d0443a5ac10570f97e16eaa5bfd83cfdd13d109da50fdb",
+   "status": "evaluation_complete",
+   "weights_sha256": "b5e0ce3470abf5ef3831aa1bd5553b486803e83251590ab7ff35a117cf6aad38"
+  }
+ },
+ "schema": "search_groups_issue437_summary/1",
+ "thresholds": {
+  "mrr@10": 0.6,
+  "recall@5": 0.8
+ }
+}

@@ -111,6 +111,11 @@ class ModuleEntry:
 `metadata_object:InformationRegister:Alpha:record_set`,
 `metadata_object_form:Catalog:Alpha.ItemForm:form`.
 
+Модуль расширения (#435) имеет непустое поле `extension` — имя
+расширения, и его `module_id` начинается с `extension:<имя>/`, например
+`extension:Расширение1/metadata_object:Document:Покупка:object`. У записей
+конфигурации поля нет, их `module_id` не меняется.
+
 Идентификаторы 1С не содержат `:` и `.` внутри имени, поэтому разбор
 однозначен. Имена 1С нечувствительны к регистру, поэтому уникальность
 проверяется через `casefold()`.
@@ -189,7 +194,9 @@ class ModuleIndex:
 агрегировать данные на своём уровне.
 
 `from_dict()` требует схему `module_index/1`, точный набор ключей записи,
-совпадение `module_id` с полями и `total` с числом записей.
+совпадение `module_id` с полями и `total` с числом записей. Ключ
+`extension` необязателен и пишется только у модулей расширения (#435);
+прежние индексы читаются без изменений.
 
 ## Совместимость с CommonModuleEntry
 
@@ -303,13 +310,38 @@ Windows. Некорректные аргументы: `max_chars` не `int` (в
 `missing`; в #351 доказано, что так распаковываются артефакты с пустым
 модулем объекта. Runner вызывает сканер только при `mode="external"`.
 
+## Модули расширения (#435)
+
+Выгрузка — распакованный `.cfe`, если в корне есть
+`ConfigurationExtension.json`; имя расширения — его поле `name`
+(`extension_name(root)` из `v8unpack_agent.extension_modules`). Файл есть,
+но не читается или `name` не идентификатор 1С — `ValueError`, в runner —
+фатальная ошибка стадии модулей. Объекты расширения лежат в том же
+layout, что и у конфигурации, и их модули находят существующие сканеры.
+`apply_extension(root, entries)` для расширения:
+
+- ставит `extension` каждой записи; вид владельца (`owner_kind`) не
+  меняется;
+- отбрасывает записи `missing`: у заимствованного объекта отсутствие файла
+  значит «модуль не переопределён в расширении»;
+- добавляет модули уровня расширения из `scan_extension_modules`:
+  `ConfigurationExtension.app.bsl` (`managed_application`) и
+  `ConfigurationExtension.ssn.bsl` (`session`) с `owner_kind="extension"`,
+  `metadata_type="ConfigurationExtension"`, `owner_name` — имя расширения
+  (сверка с Конфигуратором — #433). Они относятся к группе модулей
+  `configuration`.
+
+Для конфигурации записи не меняются. Заимствованные и собственные объекты
+не различаются: подтверждённого признака в JSON `v8unpack` нет.
+
 ## Нерешённое в #202
 
 Модель не фиксирует спорные соответствия как доказанные:
 
-- семантика `Sequences/{Name}/Sequences.obj.bsl`;
-- `obj` у `ChartOfAccounts`, `ChartOfCalculationTypes`, `AccountingRegister`
-  (сверено только с upstream `ext_code`, не с Конфигуратором);
+- семантика `Sequences/{Name}/Sequences.obj.bsl` и `obj` у
+  `ChartOfAccounts`, `ChartOfCalculationTypes`, `AccountingRegister` —
+  закрыто сверкой с Конфигуратором в #433 и поддержано в #434
+  (`record_set` и `object`);
 - 1 176 модулей форм без пары у Конфигуратора (связь с #150).
 
 Закрытые наборы от этих случаев не зависят. Сканер, который включает такие
