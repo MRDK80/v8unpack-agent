@@ -70,9 +70,12 @@
 
 ## Не поддержано и не проверено
 
-- Вне индекса модулей (остаток #209): `Sequences`, `obj` у
-  `ChartOfAccounts`, `ChartOfCalculationTypes`, `AccountingRegister`;
-  модули расширений; raw-layout. Эти файлы не попадают в корпус и в поиск.
+- Вне индекса модулей: модули уровня расширения (`ConfigurationExtension.app.bsl`,
+  `.ssn.bsl`) и raw-layout; эти файлы не попадают в корпус и в поиск.
+  `Sequences`, `obj` у `ChartOfAccounts`, `ChartOfCalculationTypes`,
+  `AccountingRegister` индексируются с #434 и находятся exact и semantic
+  (`test_confirmed_module_kinds_issue434.py`); замер качества поиска по ним
+  не проводился.
 - Внешний отчёт без форм и без суффикса `.erf` неотличим от обработки:
   записи нет (#351).
 - Связи `CommonForm` и внешних форм остаются `unconfirmed`; статус не

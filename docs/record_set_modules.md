@@ -11,7 +11,11 @@
 ([`docs/research/bsl_module_inventory_issue202.md`](research/bsl_module_inventory_issue202.md))
 с `owner_kind=metadata_object`, `module_kind=record_set` и доказательством
 `designer_content_match_A`: текст файлов v8unpack совпал с
-`RecordSetModule.bsl` выгрузки Конфигуратором в файлы.
+`RecordSetModule.bsl` выгрузки Конфигуратором в файлы. `AccountingRegister`
+и `Sequences` добавлены по сверке с Конфигуратором в #434
+([`docs/research/configurator_check_issue433.md`](research/configurator_check_issue433.md)):
+после снятия BOM и замены CRLF на LF текст совпал с `RecordSetModule.bsl`;
+у последовательности других модулей в выгрузке Конфигуратора нет.
 
 Файл лежит непосредственно в каталоге регистра:
 `<metadata_type>/<owner_name>/<файл>`.
@@ -20,6 +24,11 @@
 |---|---|---|
 | `AccumulationRegister` | `AccumulationRegister.obj.bsl` | `AccumulationRegisters/{Name}/Ext/RecordSetModule.bsl` |
 | `InformationRegister` | `InformationRegister.obj.bsl` | `InformationRegisters/{Name}/Ext/RecordSetModule.bsl` |
+| `AccountingRegister` | `AccountingRegister.obj.bsl` | `AccountingRegisters/{Name}/Ext/RecordSetModule.bsl` (#433) |
+| `Sequences` | `Sequences.obj.bsl` | `Sequences/{Name}/Ext/RecordSetModule.bsl` (#433) |
+
+Каталог типа последовательности в выгрузке `v8unpack` называется
+`Sequences` (во множественном числе); `metadata_type` записи совпадает с ним.
 
 Суффикс `obj` сам по себе не определяет вид модуля: у справочников и
 документов это модуль объекта, у перечислений — модуль менеджера, у
@@ -32,8 +41,6 @@
 
 | Случай | Причина |
 |---|---|
-| `AccountingRegister/{Name}/AccountingRegister.obj.bsl` | в #202 unresolved: только upstream `ext_code` и аналогия layout, с Конфигуратором не сверено |
-| `Sequences/{Name}/Sequences.obj.bsl` | в #202 unresolved: семантика не установлена |
 | `CalculationRegister` | в #202 not_detected: каталогов нет ни в одной выгрузке |
 | модули менеджеров, форм и команд регистров | другие виды модулей (#205, form-pipeline, #207) |
 | расширения, внешние обработки и отчёты | в #202 not_detected |

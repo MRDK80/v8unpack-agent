@@ -11,7 +11,10 @@
 ([`docs/research/bsl_module_inventory_issue202.md`](research/bsl_module_inventory_issue202.md))
 с `owner_kind=metadata_object`, `module_kind` `object` или `manager` и
 доказательством `designer_content_match_A`: текст файлов v8unpack совпал с
-модулями выгрузки Конфигуратором в файлы.
+модулями выгрузки Конфигуратором в файлы. Модуль объекта у
+`ChartOfAccounts` и `ChartOfCalculationTypes` добавлен по сверке с
+Конфигуратором в #434
+([`docs/research/configurator_check_issue433.md`](research/configurator_check_issue433.md)).
 
 Файл лежит непосредственно в каталоге объекта:
 `<metadata_type>/<owner_name>/<файл>`.
@@ -21,6 +24,8 @@
 | `AccumulationRegister` | — | `AccumulationRegister.mgr.bsl` |
 | `BusinessProcess` | `BusinessProcess.obj.bsl` | — |
 | `Catalog` | `Catalog.obj.bsl` | `Catalog.mgr.bsl` |
+| `ChartOfAccounts` | `ChartOfAccounts.obj.bsl` (#433) | — |
+| `ChartOfCalculationTypes` | `ChartOfCalculationTypes.obj.bsl` (#433) | — |
 | `ChartOfCharacteristicType` | `ChartOfCharacteristicType.obj.bsl` | — |
 | `DataProcessor` | `DataProcessor.obj.bsl` | `DataProcessor.mgr.bsl` |
 | `Document` | `Document.obj.bsl` | `Document.mgr.bsl` |
@@ -31,7 +36,7 @@
 | `Report` | `Report.obj.bsl` | `Report.mgr.bsl` |
 | `Task` | `Task.obj.bsl` | — |
 
-Всего 17 пар. «—» означает, что вид модуля для типа в #202 не доказан, и
+Всего 19 пар. «—» означает, что вид модуля для типа в #202 и #433 не доказан, и
 сканер такую запись не создаёт.
 
 Суффикс сам по себе не определяет вид модуля. `Enum.obj.bsl` — модуль
@@ -43,8 +48,7 @@ Web-сервисов — `service`; эти пары сканер не класс
 
 | Случай | Причина |
 |---|---|
-| `.obj.bsl` у `ChartOfAccounts`, `ChartOfCalculationTypes`, `AccountingRegister` | в #202 unresolved: только upstream `ext_code` и аналогия layout |
-| `Sequences/{Name}/Sequences.obj.bsl` | в #202 unresolved |
+| `.obj.bsl` у `AccountingRegister` и `Sequences` | модуль набора записей (`record_set`, #206, #434) |
 | `.mgr.bsl` у `ChartOfCharacteristicType`, `BusinessProcess`, `Task`, `ChartOfAccounts`, `ChartOfCalculationTypes`, `AccountingRegister` | в #202 not_detected |
 | `record_set`, `value_manager`, `service`, `command`, `form` | другие виды модулей |
 | внешние обработки и отчёты (`ExternalDataProcessor`, `ExternalReport`) | в #202 артефакты не предоставлялись, layout не доказан |

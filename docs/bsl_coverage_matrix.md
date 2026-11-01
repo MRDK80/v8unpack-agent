@@ -23,9 +23,9 @@ report и ограничения. Остаток, который агент не
 | `managed_application` | `configuration` | `Configuration.app.bsl` | `scan_configuration_modules` (#204) | те же | `module_managed_application` | — |
 | `external_connection` | `configuration` | `Configuration.con.bsl` | `scan_configuration_modules` (#204) | те же | `module_external_connection` | — |
 | `session` | `configuration` | `Configuration.seance.bsl` | `scan_configuration_modules` (#204) | те же | `module_session` | — |
-| `object` | `metadata_object` | `{Type}/{Name}/{Type}.obj.bsl` для `BusinessProcess`, `Catalog`, `ChartOfCharacteristicType`, `DataProcessor`, `Document`, `ExchangePlan`, `Report`, `Task` | `scan_metadata_object_modules` (#205) | `test_metadata_modules_issue205.py`, `test_bsl_coverage_matrix_issue209.py` | `module_object` | только пары, доказанные в #202 |
+| `object` | `metadata_object` | `{Type}/{Name}/{Type}.obj.bsl` для `BusinessProcess`, `Catalog`, `ChartOfAccounts`, `ChartOfCalculationTypes`, `ChartOfCharacteristicType`, `DataProcessor`, `Document`, `ExchangePlan`, `Report`, `Task` | `scan_metadata_object_modules` (#205, #434) | `test_metadata_modules_issue205.py`, `test_confirmed_module_kinds_issue434.py`, `test_bsl_coverage_matrix_issue209.py` | `module_object` | только пары, доказанные в #202 и #433; `ChartOfAccounts`, `ChartOfCalculationTypes` — на одной выгрузке |
 | `manager` | `metadata_object` | `{Type}/{Name}/{Type}.mgr.bsl` для `AccumulationRegister`, `Catalog`, `DataProcessor`, `Document`, `DocumentJournal`, `ExchangePlan`, `InformationRegister`, `Report`; `Enum/{Name}/Enum.obj.bsl` | `scan_metadata_object_modules` (#205) | те же | `module_manager` | `Enum.obj.bsl` — модуль менеджера |
-| `record_set` | `metadata_object` | `AccumulationRegister/{Name}/AccumulationRegister.obj.bsl`, `InformationRegister/{Name}/InformationRegister.obj.bsl` | `scan_record_set_modules` (#206) | `test_record_set_modules_issue206.py`, `test_bsl_coverage_matrix_issue209.py` | `module_record_set` | разбивка по `metadata_type` в `summary.modules` |
+| `record_set` | `metadata_object` | `AccountingRegister/{Name}/AccountingRegister.obj.bsl`, `AccumulationRegister/{Name}/AccumulationRegister.obj.bsl`, `InformationRegister/{Name}/InformationRegister.obj.bsl`, `Sequences/{Name}/Sequences.obj.bsl` | `scan_record_set_modules` (#206, #434) | `test_record_set_modules_issue206.py`, `test_confirmed_module_kinds_issue434.py`, `test_bsl_coverage_matrix_issue209.py` | `module_record_set` | разбивка по `metadata_type` в `summary.modules`; `AccountingRegister`, `Sequences` — по #433, на одной выгрузке |
 | `command` | `common_command` | `CommonCommand/{Cmd}/CommonCommand.obj.bsl` | `scan_command_modules` (#207) | `test_command_modules_issue207.py`, `test_bsl_coverage_matrix_issue209.py` | `module_command` | — |
 | `command` | `metadata_object_command` | `{Type}/{Name}/{Type}Command/{Cmd}/{Type}Command.obj.bsl` для `Catalog`, `DataProcessor`, `Document`, `InformationRegister`, `Report` | `scan_command_modules` (#207) | те же | `module_command` | команды других типов в #202 не встретились |
 | `value_manager` | `metadata_object` | `Constant/{Name}/Constant.obj.bsl` | `scan_value_manager_modules` (#337) | `test_value_manager_modules_issue337.py`, `test_bsl_coverage_matrix_issue209.py` | `module_value_manager` | — |
@@ -139,14 +139,18 @@ upstream распаковывает `.erf` тем же классом, что и
 
 ## Остаток: необработанные BSL-файлы
 
+После #434 шаблоны `Sequences.obj`, `ChartOfAccounts.obj`,
+`ChartOfCalculationTypes.obj` и `AccountingRegister.obj` («6 без
+обработчика» E3 в замере выше) берутся индексом модулей по сверке #433
+([`research/configurator_check_issue433.md`](research/configurator_check_issue433.md)).
+Модули менеджера этих типов ни в одной выгрузке не встречались и записей не
+дают. Пересчёт замера на финальном SHA эпика — #438.
+
 | Шаблон | Где встретился | Причина | Решение |
 |---|---|---|---|
-| `Sequences/{Name}/Sequences.obj.bsl` | E3: 3 | семантика в #202 unresolved | вне индекса до сверки с выгрузкой Конфигуратором |
-| `ChartOfAccounts/{Name}/ChartOfAccounts.obj.bsl` | E3: 1 | в #202 только upstream `ext_code` и аналогия layout | вне индекса до сверки с Конфигуратором |
-| `ChartOfCalculationTypes/{Name}/ChartOfCalculationTypes.obj.bsl` | E3: 1 | то же | вне индекса до сверки с Конфигуратором |
-| `AccountingRegister/{Name}/AccountingRegister.obj.bsl` | E3: 1 | то же | вне индекса до сверки с Конфигуратором |
 | модули форм внешних обработок и отчётов | внешние: 14 | обрабатываются `scan_forms` в режиме `mode="external"`, а не индексом модулей | без изменений |
-| модули расширения (`ConfigurationExtension`) | расширение: 0 файлов | артефакта с BSL нет | not_detected; проверить при появлении артефакта |
+| `ConfigurationExtension.app.bsl`, `ConfigurationExtension.ssn.bsl` | распакованный `.cfe`: 1 + 1 | модуль приложения и модуль сеанса расширения (#433); признака принадлежности расширению в контракте нет | #435 |
+| остальные модули расширения | распакованный `.cfe`: 9 | берутся существующими сканерами как модули конфигурации, без признака расширения (#432) | #435 |
 | raw-layout и выгрузка Конфигуратором в файлы | — | исследован только normalized-layout | вне scope |
 
 Unresolved-случаи не классифицируются догадкой и не дают записей, в том

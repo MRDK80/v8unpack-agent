@@ -30,6 +30,9 @@ DATA = TEXT.encode("utf-8")
 MARKER = "МаркерТекстаКоторогоНетВИндексе"
 BS = chr(92)
 PROVEN = "designer_content_match_A"
+# Модуль объекта подтверждён сверкой с Конфигуратором в #433
+# (docs/research/configurator_check_issue433.md).
+ISSUE433 = ("ChartOfAccounts", "ChartOfCalculationTypes")
 
 
 def put(
@@ -87,8 +90,12 @@ def test_layouts_match_issue202_proven_rows() -> None:
         }
         for metadata_type, layout in METADATA_OBJECT_MODULE_LAYOUTS.items()
     }
+    for metadata_type in ISSUE433:
+        proven[metadata_type] = {
+            "object": f"{metadata_type}/{{Name}}/{metadata_type}.obj.bsl"
+        }
     assert actual == proven
-    assert sum(len(layout) for layout in proven.values()) == 17
+    assert sum(len(layout) for layout in proven.values()) == 19
 
 
 def test_unresolved_and_other_kinds_are_excluded() -> None:
@@ -105,6 +112,7 @@ def test_unresolved_and_other_kinds_are_excluded() -> None:
     assert ("Sequences", "record_set") in excluded
     assert ("ChartOfAccounts", "object") in excluded
     assert ("ChartOfCalculationTypes", "object") in excluded
+    excluded -= {(metadata_type, "object") for metadata_type in ISSUE433}
     for metadata_type, kind in excluded:
         layout = METADATA_OBJECT_MODULE_LAYOUTS.get(metadata_type, {})
         assert kind not in layout
@@ -153,10 +161,10 @@ def test_each_proven_type_is_detected(
 def test_all_proven_pairs_together(tmp_path: Path) -> None:
     populate(tmp_path)
     index = scan_metadata_object_modules(tmp_path)
-    assert index.total == 17
-    assert index.filter(module_kind="object").total == 8
+    assert index.total == 19
+    assert index.filter(module_kind="object").total == 10
     assert index.filter(module_kind="manager").total == 9
-    assert index.filter(read_status="ok").total == 17
+    assert index.filter(read_status="ok").total == 19
 
 
 def test_object_and_manager_are_separate_entries(tmp_path: Path) -> None:
@@ -223,8 +231,6 @@ def test_designer_layout_is_not_classified(tmp_path: Path) -> None:
         "AccountingRegister",
         "BusinessProcessCommand",
         "CalculationRegister",
-        "ChartOfAccounts",
-        "ChartOfCalculationTypes",
         "CommonCommand",
         "CommonForm",
         "CommonModule",
@@ -450,7 +456,7 @@ def test_traversal_order_does_not_change_index(
     reordered = scan_metadata_object_modules(tmp_path)
     assert reordered == baseline
     assert reordered.to_json() == baseline.to_json()
-    assert baseline.total == 4 * 17
+    assert baseline.total == 4 * 19
 
 
 def test_repeated_scan_is_identical_and_read_only(tmp_path: Path) -> None:

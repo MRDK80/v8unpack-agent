@@ -5,7 +5,8 @@
 ``ModuleIndex`` из #203. Пары «тип метаданных → вид модуля → файл» взяты
 только из доказанных строк исследования #202
 (``docs/research/bsl_module_inventory_issue202.md``) со статусом
-``designer_content_match_A``. Сканер только читает: он не создаёт и не
+``designer_content_match_A`` и из сверки с Конфигуратором #433
+(``docs/research/configurator_check_issue433.md``). Сканер только читает: он не создаёт и не
 изменяет файлы и не вызывает ``scan_forms()``.
 """
 
@@ -43,6 +44,12 @@ _LAYOUTS: dict[str, dict[ModuleKind, str]] = {
     "Catalog": {
         "manager": "Catalog.mgr.bsl",
         "object": "Catalog.obj.bsl",
+    },
+    "ChartOfAccounts": {
+        "object": "ChartOfAccounts.obj.bsl",
+    },
+    "ChartOfCalculationTypes": {
+        "object": "ChartOfCalculationTypes.obj.bsl",
     },
     "ChartOfCharacteristicType": {
         "object": "ChartOfCharacteristicType.obj.bsl",
@@ -85,7 +92,10 @@ METADATA_OBJECT_MODULE_LAYOUTS: Mapping[str, Mapping[ModuleKind, str]] = (
         }
     )
 )
-"""Доказанные в #202 пары «metadata_type → module_kind → имя файла».
+"""Доказанные в #202 и #433 пары «metadata_type → module_kind → имя файла».
+
+``object`` у ``ChartOfAccounts`` и ``ChartOfCalculationTypes`` подтверждён
+в #433; модуль менеджера этих типов не встречался и не классифицируется.
 
 Файл лежит непосредственно в каталоге объекта:
 ``<metadata_type>/<owner_name>/<имя файла>``.

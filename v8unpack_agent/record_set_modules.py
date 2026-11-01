@@ -2,9 +2,10 @@
 
 Обнаруживает модули наборов записей регистров в normalized-layout v8unpack и
 возвращает общий контракт ``ModuleIndex`` из #203 с
-``module_kind="record_set"``. Типы регистров взяты только из доказанных
-строк исследования #202 (``docs/research/bsl_module_inventory_issue202.md``)
-со статусом ``designer_content_match_A``. Суффикс ``obj`` сам по себе не
+``module_kind="record_set"``. Типы взяты только из доказанных строк
+исследования #202 (``docs/research/bsl_module_inventory_issue202.md``) со
+статусом ``designer_content_match_A`` и из сверки с Конфигуратором #433
+(``docs/research/configurator_check_issue433.md``). Суффикс ``obj`` сам по себе не
 определяет вид модуля: ``record_set`` задаёт пара «тип регистра + файл».
 Сканер только читает: он не создаёт и не изменяет файлы и не вызывает
 ``scan_forms()``.
@@ -34,12 +35,17 @@ __all__ = [
 ]
 
 _FILES: dict[str, str] = {
+    "AccountingRegister": "AccountingRegister.obj.bsl",
     "AccumulationRegister": "AccumulationRegister.obj.bsl",
     "InformationRegister": "InformationRegister.obj.bsl",
+    "Sequences": "Sequences.obj.bsl",
 }
 
 RECORD_SET_MODULE_FILES: Mapping[str, str] = MappingProxyType(dict(_FILES))
-"""Доказанные в #202 пары «metadata_type → имя файла модуля набора записей».
+"""Доказанные в #202 и #433 пары «metadata_type → имя файла модуля набора записей».
+
+``AccountingRegister`` и ``Sequences`` (имя каталога типа в выгрузке
+``v8unpack`` — во множественном числе) подтверждены в #433.
 
 Файл лежит непосредственно в каталоге регистра:
 ``<metadata_type>/<owner_name>/<имя файла>``.
@@ -185,9 +191,8 @@ def scan_record_set_modules(root: Path) -> ModuleIndex:
     Владелец — существующий обычный каталог ``<metadata_type>/<имя>``
     доказанного типа из ``RECORD_SET_MODULE_FILES``. Для каждого владельца
     создаётся ровно одна запись ``record_set``; отсутствующий файл получает
-    статус ``missing`` («файла нет», а не «модуля нет»). Недоказанные и
-    unresolved типы (``AccountingRegister``, ``Sequences``,
-    ``CalculationRegister`` и др.) записей не создают.
+    статус ``missing`` («файла нет», а не «модуля нет»). Недоказанные
+    типы (``CalculationRegister`` и др.) записей не создают.
 
     Symlink и иные не-обычные каталоги типов и владельцев не обходятся.
     Symlink, каталог или иной не-обычный файл на месте модуля, выход за
