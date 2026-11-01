@@ -1,5 +1,28 @@
 # Changelog
 
+## Связь владельца для общих и внешних форм ([#436](https://github.com/MRDK80/v8unpack-agent/issues/436))
+
+### Изменение контракта
+
+- `LinkBasis`: новое значение `layout` — связь, доказанная раскладкой
+  выгрузки. Общая форма `CommonForm/<Форма>` — владелец сама себе; форма
+  внешней обработки или отчёта принадлежит владельцу модуля объекта (#351)
+  из того же каталога артефакта. `OwnerLink` проверяет, что владелец
+  совпадает с `ArtifactRef.owner` формы.
+
+### Поведение
+
+- Корпус поиска подтверждает такие связи вместо `unconfirmed`: у формы
+  задан `ArtifactRef.owner`, она входит в карточку владельца и находится
+  фильтром `owner_names`. Идентификаторы артефактов не меняются.
+
+### Документация и тесты
+
+- `docs/search_corpus.md`, `search_contract.md`, `search_dispatch.md`,
+  `search_fragments.md`, `search_coverage.md`.
+- `tests/test_form_owner_links_issue436.py`; тесты #323 и #384 переведены
+  с `unconfirmed` на `layout`, добавлен поиск по `owner_name`.
+
 ## Модули расширений ([#435](https://github.com/MRDK80/v8unpack-agent/issues/435))
 
 ### Новое

@@ -538,23 +538,65 @@ def test_form_context_budget_truncates_by_included_lines(
 # --- связи владельцев ----------------------------------------------------------
 
 
-@pytest.mark.parametrize("name", ["common", "processor", "report"])
-def test_common_and_external_forms_stay_unconfirmed(
+LAYOUT_OWNERS = {
+    "common": "owner:common_form:CommonForm:ОбщаяФормаВыбора",
+    "processor": "owner:external_data_processor:ExternalDataProcessor:ЗагрузкаЦен",
+    "report": "owner:external_report:ExternalReport:ОтчетПродаж",
+}
+LAYOUT_OWNER_NAMES = {
+    "common": "ОбщаяФормаВыбора",
+    "processor": "ЗагрузкаЦен",
+    "report": "ОтчетПродаж",
+}
+
+
+@pytest.mark.parametrize("name", sorted(LAYOUT_OWNERS))
+def test_common_and_external_forms_are_linked_by_layout(
     name: str, corpora: dict[str, SearchCorpus]
 ) -> None:
+    """#436: связь общей и внешней формы подтверждена layout выгрузки."""
     corpus = corpora[MODE_OF[name]]
     artifact_id = FORM_IDS[name]
     item = next(i for i in corpus.report.items if i.artifact_id == artifact_id)
-    assert item.owner_basis == "unconfirmed"
+    assert item.owner_basis == "layout"
+    assert item.owner_id == LAYOUT_OWNERS[name]
     link = next(l for l in corpus.owner_links if l.artifact.artifact_id == artifact_id)
-    assert link.confirmed is False
+    assert link.confirmed is True
     document = next(
         d for d in corpus.documents.documents if d.artifact.artifact_id == artifact_id
     )
-    assert document.artifact.owner is None
-    for card in corpus.documents.documents:
-        if card.artifact.artifact_kind == "owner":
-            assert artifact_id not in card.text
+    assert document.artifact.owner is not None
+    assert document.artifact.owner.owner_id == LAYOUT_OWNERS[name]
+    card = next(
+        d for d in corpus.documents.documents if d.artifact.artifact_id == LAYOUT_OWNERS[name]
+    )
+    assert f"form {artifact_id} basis=layout" in card.text
+
+
+@pytest.mark.parametrize("name", sorted(LAYOUT_OWNERS))
+def test_owner_name_filter_finds_layout_form(
+    name: str, fragmentations: dict[str, FragmentationResult]
+) -> None:
+    """#436: поиск по ``owner_name`` находит форму с подтверждённой связью."""
+    fragmentation = fragmentations[MODE_OF[name]]
+    context = search_with_context(
+        fragmentation,
+        LAYOUT_OWNER_NAMES[name],
+        search_mode="exact",
+        top_k=10,
+        filters=SearchFilters(artifact_kinds=("form",)),
+        max_chars=100_000,
+    )
+    hits = [h.artifact.artifact_id for h in context.dispatch.result.hits]
+    assert FORM_IDS[name] in hits
+    filtered = search_with_context(
+        fragmentation,
+        FORM_IDS[name],
+        search_mode="exact",
+        filters=SearchFilters(owner_names=(LAYOUT_OWNER_NAMES[name],)),
+        max_chars=100_000,
+    )
+    assert [h.artifact.artifact_id for h in filtered.dispatch.result.hits] == [FORM_IDS[name]]
 
 
 def test_owner_card_from_module_lists_only_confirmed_form(

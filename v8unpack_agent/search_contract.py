@@ -74,7 +74,7 @@ SearchStatus = Literal["ambiguous", "empty", "error", "exact", "semantic"]
 MatchMethod = Literal["exact_id", "exact_name", "semantic"]
 MatchField = Literal["artifact_id", "form_name", "owner_name"]
 QueryMode = Literal["auto", "exact", "semantic"]
-LinkBasis = Literal["form_key", "module_entry", "unconfirmed"]
+LinkBasis = Literal["form_key", "layout", "module_entry", "unconfirmed"]
 SearchErrorCode = Literal[
     "embedder_failed",
     "incompatible_index",
@@ -819,6 +819,23 @@ class OwnerLink:
                 or identity_key(self.owner.owner_name) != identity_key(key[1])
             ):
                 raise ValueError("form_key link requires owner matching form key")
+        elif self.basis == "layout":
+            key = self.artifact.form_key
+            owner = self.owner
+            if kind != "form" or key is None or not _same_owner(owner, self.artifact.owner):
+                raise ValueError("layout link requires a form owned by the link owner")
+            if owner.owner_kind == "common_form":
+                if (
+                    owner.metadata_type != key[0]
+                    or owner.owner_name is None
+                    or identity_key(owner.owner_name) != identity_key(key[3])
+                ):
+                    raise ValueError("common form layout link requires the form itself")
+            elif owner.owner_kind in ("external_data_processor", "external_report"):
+                if owner.metadata_type != key[0]:
+                    raise ValueError("external layout link requires matching metadata_type")
+            else:
+                raise ValueError("layout link is defined for common and external forms")
 
     @property
     def confirmed(self) -> bool:

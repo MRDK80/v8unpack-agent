@@ -233,17 +233,17 @@ def test_external_object_module_and_form(tmp_path: Path) -> None:
     assert module_id in _doc_ids(corpus)
     form_item = next(i for i in corpus.report.items if i.artifact_kind == "form")
     assert form_item.included
-    assert form_item.owner_basis == "unconfirmed"
+    assert form_item.owner_basis == "layout"
     assert form_item.owner_id == "owner:external_data_processor:ExternalDataProcessor:Loader"
     form_doc = next(
         d for d in corpus.documents.documents if d.artifact.artifact_kind == "form"
     )
-    assert form_doc.artifact.owner is None
+    assert form_doc.artifact.owner is not None
     card = next(
         d for d in corpus.documents.documents if d.artifact.artifact_kind == "owner"
     )
     assert form_item.artifact_id is not None
-    assert form_item.artifact_id not in card.text
+    assert f"form {form_item.artifact_id} basis=layout" in card.text
 
 
 # ---------------------------------------------------------------------------
@@ -421,15 +421,16 @@ def test_owner_links_and_cards(tmp_path: Path) -> None:
     links = {link.artifact.artifact_id: link for link in corpus.owner_links}
     assert links[form_id].basis == "form_key"
     assert links[form_id].owner.owner_id == "owner:metadata_object:Catalog:Alpha"
-    assert links[common_form_id].basis == "unconfirmed"
+    assert links[common_form_id].basis == "layout"
     assert links[common_form_id].owner.owner_id == "owner:common_form:CommonForm:Shared"
     documents = {d.document_id: d for d in corpus.documents.documents}
     assert documents[form_id].artifact.owner is not None
-    assert documents[common_form_id].artifact.owner is None
+    assert documents[common_form_id].artifact.owner is not None
     card = documents["owner:metadata_object:Catalog:Alpha"]
     assert f"form {form_id} basis=form_key" in card.text
     assert "module metadata_object:Catalog:Alpha:object basis=module_entry" in card.text
-    assert "owner:common_form:CommonForm:Shared" not in documents
+    common_card = documents["owner:common_form:CommonForm:Shared"]
+    assert f"form {common_form_id} basis=layout" in common_card.text
     for document in corpus.documents.documents:
         if document.artifact.artifact_kind == "owner":
             assert "unconfirmed" not in document.text
