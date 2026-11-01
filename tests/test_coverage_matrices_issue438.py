@@ -58,6 +58,13 @@ def test_final_measurement_is_balanced_and_read_only() -> None:
         assert int(total) == sum(int(x) for x in split.split("/"))
 
 
+def test_external_bsl_only_remainder_is_documented() -> None:
+    remainder = _section(MATRIX, "## Остаток: необработанные BSL-файлы")
+    assert "без `ExternalDataProcessor.json`" in remainder
+    final = _section(MATRIX, "## Замер на финальном коде эпика #431 (#438)")
+    assert "coverage_issue438_v2" in final and "466" in final
+
+
 def test_search_coverage_reflects_epic() -> None:
     assert "layout" in LINK_BASES
     assert "## Состояние на финальном коде эпика #431 (#438)" in SEARCH
