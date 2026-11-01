@@ -527,12 +527,18 @@ def _metadata_form_owner(
         return None
 
 
-def _candidate_owner(
+def _layout_owner(
     key: tuple[str, str, str, str],
     parts: tuple[str, ...],
     external_owners: Mapping[str, OwnerRef],
 ) -> OwnerRef | None:
-    """Предполагаемый владелец без основания в контракте #322."""
+    """Владелец общей или внешней формы по layout выгрузки (#436).
+
+    Общая форма ``CommonForm/<Имя>`` — сама себе владелец. Форма внешней
+    обработки или отчёта ``<артефакт>/Form|ReportForm/<Форма>`` принадлежит
+    объекту, чей ``ExternalDataProcessor.json`` лежит в том же каталоге
+    артефакта (#351).
+    """
     object_type, object_name, container, form_name = key
     if (
         object_type == _COMMON_FORM
@@ -576,6 +582,10 @@ def _add_form(
     )
     parts = _form_parts(source_path)
     owner = _metadata_form_owner(key, parts)
+    basis: LinkBasis | None = None if owner is None else "form_key"
+    if owner is None:
+        owner = _layout_owner(key, parts, external_owners)
+        basis = None if owner is None else "layout"
     if owner is not None and extension is not None:
         owner = dataclasses.replace(owner, extension=extension)
     try:
@@ -606,16 +616,7 @@ def _add_form(
             )
         )
         return
-    basis: LinkBasis | None = None
-    link_owner: OwnerRef | None = None
-    if owner is not None:
-        basis, link_owner = "form_key", owner
-    else:
-        candidate = _candidate_owner(key, parts, external_owners)
-        if candidate is not None and extension is not None:
-            candidate = dataclasses.replace(candidate, extension=extension)
-        if candidate is not None:
-            basis, link_owner = "unconfirmed", candidate
+    link_owner = owner
     if basis is not None and link_owner is not None:
         builder.links.append(OwnerLink(owner=link_owner, artifact=artifact, basis=basis))
     reason: CorpusReason | None = "read_error"
