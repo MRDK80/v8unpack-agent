@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import hashlib
 import stat
 from collections.abc import Iterable, Mapping
@@ -560,6 +561,7 @@ def _add_form(
     builder: _Builder,
     form: _FormContextLike | FormReadFailure,
     external_owners: Mapping[str, OwnerRef],
+    extension: str | None = None,
 ) -> None:
     key = (
         str(form.object_type or ""),
@@ -574,8 +576,12 @@ def _add_form(
     )
     parts = _form_parts(source_path)
     owner = _metadata_form_owner(key, parts)
+    if owner is not None and extension is not None:
+        owner = dataclasses.replace(owner, extension=extension)
     try:
-        artifact = ArtifactRef.form(*key, owner=owner, source_path=source_path)
+        artifact = ArtifactRef.form(
+            *key, owner=owner, source_path=source_path, extension=extension
+        )
     except (TypeError, ValueError):
         builder.items.append(
             CorpusItem(
@@ -606,6 +612,8 @@ def _add_form(
         basis, link_owner = "form_key", owner
     else:
         candidate = _candidate_owner(key, parts, external_owners)
+        if candidate is not None and extension is not None:
+            candidate = dataclasses.replace(candidate, extension=extension)
         if candidate is not None:
             basis, link_owner = "unconfirmed", candidate
     if basis is not None and link_owner is not None:
@@ -705,6 +713,7 @@ def build_search_corpus(
     module_index: ModuleIndex | None = None,
     common_modules: CommonModuleIndex | None = None,
     forms: Iterable[_FormContextLike | FormReadFailure] = (),
+    extension: str | None = None,
 ) -> SearchCorpus:
     """Собрать поисковый корпус из результатов существующих сканеров.
 
@@ -717,6 +726,11 @@ def build_search_corpus(
     учитывается только как артефакт формы, общий модуль — один раз при
     повторе в нескольких входах. Порядок результата не зависит от порядка
     входа.
+
+    ``extension`` — имя расширения, если выгрузка — распакованный ``.cfe``
+    (#435): общие модули и формы получают его в id, общие модули без файла
+    записей не дают. Записи ``module_index`` должны быть уже помечены
+    (:func:`v8unpack_agent.extension_modules.apply_extension`).
     """
     root = Path(export_root)
     builder = _Builder(documents=[], links=[], items=[], seen=set())
@@ -733,7 +747,16 @@ def build_search_corpus(
         _add_module(builder, read, "module_index")
 
     if common_modules is not None:
-        for read in sorted(_common_module_reads(root, common_modules), key=_module_sort_key):
+        common_reads = _common_module_reads(root, common_modules)
+        if extension is not None:
+            common_reads = [
+                dataclasses.replace(
+                    read, entry=dataclasses.replace(read.entry, extension=extension)
+                )
+                for read in common_reads
+                if read.entry.read_status != "missing"
+            ]
+        for read in sorted(common_reads, key=_module_sort_key):
             _add_module(builder, read, "common_modules")
 
     external_owners: dict[str, OwnerRef] = {}
@@ -746,7 +769,7 @@ def build_search_corpus(
             )
 
     for form in sorted(forms, key=_form_sort_key):
-        _add_form(builder, form, external_owners)
+        _add_form(builder, form, external_owners, extension)
 
     _add_owner_cards(builder)
 

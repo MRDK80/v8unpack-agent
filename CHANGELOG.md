@@ -1,5 +1,34 @@
 # Changelog
 
+## Модули расширений ([#435](https://github.com/MRDK80/v8unpack-agent/issues/435))
+
+### Новое
+
+- `v8unpack_agent.extension_modules`: распакованный `.cfe` распознаётся по
+  `ConfigurationExtension.json`; `extension_name`, `scan_extension_modules`,
+  `apply_extension`. Модули уровня расширения
+  `ConfigurationExtension.app.bsl` / `.ssn.bsl` — `managed_application` /
+  `session` с `owner_kind="extension"`.
+- Runner и `search_cli` / `collect_search_corpus` помечают записи
+  расширения и не выдают для него `missing`.
+
+### Изменение контракта
+
+- `ModuleEntry`, `OwnerRef`, `ArtifactRef`: необязательное поле
+  `extension`. У модулей, форм, общих модулей и карточек владельцев
+  расширения `module_id` / `owner_id` / `artifact_id` получают префикс
+  `extension:<имя>/`; ключ `extension` сериализуется только у них.
+  Идентификаторы, JSON и схемы для конфигурации не меняются.
+
+### Документация и тесты
+
+- `docs/modules.md`, `docs/bsl_coverage_matrix.md`,
+  `docs/search_coverage.md`, `README.md`.
+- `tests/test_extension_modules_issue435.py`: распознавание и ошибки
+  метаданных, статусы модулей уровня расширения, отсутствие `missing`,
+  группы модулей, префиксы id и отсутствие коллизий с конфигурацией,
+  сериализация.
+
 ## Сканеры для видов, подтверждённых сверкой с Конфигуратором ([#434](https://github.com/MRDK80/v8unpack-agent/issues/434))
 
 ### Новое

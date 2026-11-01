@@ -25,6 +25,7 @@ from typing import Literal
 
 from v8unpack_agent import runner
 from v8unpack_agent.common_modules import CommonModuleIndex, scan_common_modules
+from v8unpack_agent.extension_modules import apply_extension, extension_name
 from v8unpack_agent.external_object_modules import scan_external_object_modules
 from v8unpack_agent.modules import ModuleEntry, ModuleIndex
 from v8unpack_agent.scan_forms import scan_forms
@@ -129,7 +130,13 @@ def collect_search_corpus(
             entries.extend(scanner(root))
         if mode == "external":
             entries.extend(scan_external_object_modules(root))
+        entries = apply_extension(
+            root,
+            entries,
+            include_extension_modules=groups is None or "configuration" in groups,
+        )
         module_index = ModuleIndex.from_entries(entries)
+        extension = extension_name(root)
     except Exception as exc:
         raise SearchCorpusError(runner.FATAL_MODULES_FAILED) from exc
 
@@ -138,6 +145,7 @@ def collect_search_corpus(
         module_index=module_index,
         common_modules=common_modules,
         forms=forms,
+        extension=extension,
     )
 
 
