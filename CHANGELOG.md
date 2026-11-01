@@ -1,5 +1,16 @@
 # Changelog
 
+## Сверка необработанных BSL-файлов с Конфигуратором ([#433](https://github.com/MRDK80/v8unpack-agent/issues/433))
+
+### Документация
+
+- `docs/research/configurator_check_issue433.md`: для каждого шаблона
+  остатка #432 установлен модуль Конфигуратора — `AccountingRegister.obj`
+  и `Sequences.obj` — набор записей, `ChartOfAccounts.obj` и
+  `ChartOfCalculationTypes.obj` — модуль объекта, `.app.bsl` и `.ssn.bsl`
+  расширения — модуль приложения и модуль сеанса; нормализация `v8unpack`
+  (BOM, CRLF). Код пакета не меняется.
+
 ## Инвентаризация необработанных BSL-файлов ([#432](https://github.com/MRDK80/v8unpack-agent/issues/432))
 
 ### Документация
