@@ -1,5 +1,24 @@
 # Changelog
 
+## Сводка резолюции ссылочных типов в post-run report ([#288](https://github.com/MRDK80/v8unpack-agent/issues/288))
+
+### Добавлено
+
+- `v8unpack_agent/reference_resolution.py`: классификатор остатка `Ref#uuid`
+  перенесён без изменений из `examples/unresolved_refs_report.py` (пример
+  импортирует его, вывод на реальной выгрузке совпадает байт в байт);
+  `ReferenceResolutionSummary` с инвариантами.
+- Post-run report `schema_version = 2`: `summary.reference_resolution` —
+  applicable / resolved / unresolved и разбивка по классам, только счётчики.
+  `RunOptions.include_reference_resolution` (по умолчанию `True`).
+- Код предупреждения `REFERENCE_TYPES_UNRESOLVED` (#167) для непустого
+  остатка; статусы объектов и код возврата не меняются.
+
+### Тесты
+
+- `tests/test_reference_resolution_issue288.py`; обновлены ожидания версии
+  схемы в тестах прогона и контракт `docs/run_report.md`.
+
 ## Сквозной пример не изменяет выгрузку ([#335](https://github.com/MRDK80/v8unpack-agent/issues/335))
 
 ### Исправлено

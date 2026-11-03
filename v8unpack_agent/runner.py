@@ -84,6 +84,10 @@ from v8unpack_agent.form_context import (
 from v8unpack_agent.metadata_modules import scan_metadata_object_modules
 from v8unpack_agent.modules import ModuleEntry, ModuleIndex
 from v8unpack_agent.record_set_modules import scan_record_set_modules
+from v8unpack_agent.reference_resolution import (
+    ReferenceResolutionCollector,
+    ReferenceResolutionSummary,
+)
 from v8unpack_agent.run_report import (
     ModuleStatusTable,
     ObjectRunResult,
@@ -100,7 +104,13 @@ from v8unpack_agent.run_report import (
     skd_status,
     unindexed_reason_code,
 )
-from v8unpack_agent.scan_forms import FormEntry, FormScanIndex, scan_forms
+from v8unpack_agent.scan_forms import (
+    SCAN_WARNING_REFERENCE_TYPES_UNRESOLVED,
+    FormEntry,
+    FormScanIndex,
+    _format_scan_warning,
+    scan_forms,
+)
 from v8unpack_agent.service_modules import scan_service_modules
 from v8unpack_agent.skd_extractor import extract_all_skd_queries
 from v8unpack_agent.value_manager_modules import scan_value_manager_modules
@@ -113,7 +123,7 @@ __all__ = [
     "run_pipeline",
 ]
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 # Группы индекса модулей (issue #346): по одной на сканер, порядок фиксирован.
 MODULE_GROUPS: tuple[str, ...] = (
@@ -144,6 +154,7 @@ REASON_MODULE_UNCLASSIFIED = "module_unclassified"
 FATAL_SCAN_FAILED = "scan_failed"
 FATAL_COMMON_MODULES_FAILED = "common_modules_failed"
 FATAL_SKD_FAILED = "skd_failed"
+FATAL_REFERENCE_RESOLUTION_FAILED = "reference_resolution_failed"
 FATAL_MODULES_FAILED = "modules_failed"
 FATAL_INTERNAL_ERROR = "internal_error"
 FATAL_ERROR_TYPE_FALLBACK = "runtime_error"
@@ -171,6 +182,10 @@ class RunOptions:
         ``False`` полностью отключает обнаружение общих модулей.
     include_skd:
         ``False`` полностью отключает извлечение артефактов СКД.
+    include_reference_resolution:
+        ``True`` (по умолчанию) добавляет в отчёт сводку резолюции
+        ссылочных типов (issue #288). На статусы объектов и код возврата
+        сводка не влияет.
     max_prompt_chars:
         Лимит длины промпт-фрагмента; ``-1`` — без ограничения.
     include_module_index:
@@ -188,6 +203,7 @@ class RunOptions:
     mode: Literal["config", "external"] = "config"
     include_common_modules: bool = True
     include_skd: bool = True
+    include_reference_resolution: bool = True
     max_prompt_chars: int = -1
     include_module_index: bool = False
     module_groups: tuple[str, ...] | None = None
@@ -280,6 +296,10 @@ def _run_pipeline(options: RunOptions, started_at: str) -> RunOutcome:
     prompt_chars = 0
     fatal: RunFatalError | None = None
     module_table: ModuleStatusTable | None = None
+    resolution: ReferenceResolutionCollector | None = (
+        ReferenceResolutionCollector() if options.include_reference_resolution else None
+    )
+    resolution_summary: ReferenceResolutionSummary | None = None
 
     try:
         index = scan_forms(
@@ -292,7 +312,9 @@ def _run_pipeline(options: RunOptions, started_at: str) -> RunOutcome:
     else:
         scan_warnings.extend(sanitize_diagnostic(w) for w in index.scan_warnings)
         for entry in index.forms:
-            result, fragment_chars = _process_form(entry, export_root, index, options)
+            result, fragment_chars = _process_form(
+                entry, export_root, index, options, resolution
+            )
             objects.append(result)
             prompt_chars += fragment_chars
 
@@ -310,6 +332,24 @@ def _run_pipeline(options: RunOptions, started_at: str) -> RunOutcome:
         if fatal is None and options.include_skd:
             fatal = _process_skd(export_root, objects)
 
+        if fatal is None and resolution is not None:
+            try:
+                resolution_summary = resolution.summarize(
+                    export_root, index.reference_types
+                )
+            except Exception as exc:  # noqa: BLE001
+                fatal = _fatal_error(FATAL_REFERENCE_RESOLUTION_FAILED, exc)
+            else:
+                if resolution_summary.unresolved:
+                    scan_warnings.append(
+                        _format_scan_warning(
+                            SCAN_WARNING_REFERENCE_TYPES_UNRESOLVED,
+                            "ссылочные типы не резолвлены: "
+                            f"{resolution_summary.unresolved} вхождений, "
+                            f"{resolution_summary.unresolved_uuids} UUID",
+                        )
+                    )
+
     ordered = tuple(objects)
     report = PostRunReport(
         schema_version=SCHEMA_VERSION,
@@ -320,6 +360,7 @@ def _run_pipeline(options: RunOptions, started_at: str) -> RunOutcome:
         objects=ordered,
         fatal_error=fatal,
         modules=module_table,
+        reference_resolution=resolution_summary,
     )
     return RunOutcome(
         report=report,
@@ -333,6 +374,7 @@ def _process_form(
     export_root: Path,
     index: FormScanIndex,
     options: RunOptions,
+    resolution: ReferenceResolutionCollector | None = None,
 ) -> tuple[ObjectRunResult, int]:
     """Обработать одну форму и вернуть результат с длиной фрагмента."""
     object_id = _fallback_form_id(entry, export_root)
@@ -357,6 +399,8 @@ def _process_form(
         )
 
     object_id = _context_form_id(context, object_id)
+    if resolution is not None:
+        resolution.add_attributes(getattr(context, "object_attributes", None))
 
     try:
         fragment = to_llm_prompt_fragment(context, options.max_prompt_chars)

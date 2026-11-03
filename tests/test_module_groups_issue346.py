@@ -167,7 +167,7 @@ def test_result_does_not_depend_on_option_order(tmp_path: Path, calls: list[str]
 
 def test_report_schema_unchanged(tmp_path: Path, calls: list[str]) -> None:
     data = run_pipeline(_options(tmp_path, module_groups=("services",))).report.to_dict()
-    assert data["schema_version"] == 1
+    assert data["schema_version"] == 2
     assert set(data) == {"schema_version", "run", "summary", "objects", "fatal_error"}
     assert json.loads(json.dumps(data)) == data
 

@@ -384,7 +384,7 @@ def test_cli_success_writes_report(tmp_path: Path) -> None:
     payload = json.loads(report_path.read_text(encoding="utf-8"))
 
     assert code == cli.EXIT_OK
-    assert payload["schema_version"] == 1
+    assert payload["schema_version"] == 2
     assert payload["run"]["completed"] is True
     assert payload["summary"]["found"] == 0
     assert payload["objects"] == []
