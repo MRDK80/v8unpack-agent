@@ -1,5 +1,19 @@
 # Changelog
 
+## Явный признак недоказанного ссылочного типа во фрагменте ([#289](https://github.com/MRDK80/v8unpack-agent/issues/289))
+
+### Добавлено
+
+- `to_llm_prompt_fragment()`: `"type_resolved": false` рядом с `Ref#<uuid>`
+  у реквизита с недоказанным типом (значение не меняется); строка агрегата
+  `reference_types: applicable: N; resolved: M; unresolved: K` в `## SUMMARY`,
+  атомарная при обрезке и стоящая до `## BSL`.
+- `docs/form_context.md`: контракт и синтетический пример.
+
+### Тесты
+
+- `tests/test_unresolved_type_marker_issue289.py`.
+
 ## Сводка резолюции ссылочных типов в post-run report ([#288](https://github.com/MRDK80/v8unpack-agent/issues/288))
 
 ### Добавлено
