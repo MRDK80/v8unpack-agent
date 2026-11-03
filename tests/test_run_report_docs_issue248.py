@@ -6,6 +6,10 @@ import json
 import re
 from pathlib import Path
 
+from v8unpack_agent.reference_resolution import (
+    RESIDUAL_CLASSES,
+    ReferenceResolutionSummary,
+)
 from v8unpack_agent.run_report import (
     PostRunReport,
     RunSummary,
@@ -38,9 +42,12 @@ def _docs_payload() -> dict[str, object]:
     return payload
 
 
+_ZEROS = dict.fromkeys(RESIDUAL_CLASSES, 0)
+
+
 def _synthetic_report() -> PostRunReport:
     return PostRunReport(
-        schema_version=1,
+        schema_version=2,
         completed=True,
         started_at="2026-01-01T00:00:00Z",
         finished_at="2026-01-01T00:00:01Z",
@@ -52,11 +59,14 @@ def _synthetic_report() -> PostRunReport:
             excluded=0,
         ),
         objects=(),
+        reference_resolution=ReferenceResolutionSummary(
+            0, 0, 0, 0, dict(_ZEROS), dict(_ZEROS)
+        ),
     )
 
 
 def test_docs_json_block_is_parseable() -> None:
-    assert _docs_payload()["schema_version"] == 1
+    assert _docs_payload()["schema_version"] == 2
 
 
 def test_docs_top_level_keys_match_contract() -> None:

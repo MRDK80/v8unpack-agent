@@ -45,7 +45,7 @@ objects = (
     ),
 )
 report = PostRunReport(
-    schema_version=1,
+    schema_version=2,
     completed=True,
     started_at="2026-01-01T00:00:00Z",
     finished_at="2026-01-01T00:00:01Z",
@@ -94,7 +94,7 @@ write_post_run_report(report, Path("post-run.json"))
 
 ```python
 report = PostRunReport(
-    schema_version=1,
+    schema_version=2,
     completed=True,
     started_at="2026-01-01T00:00:00Z",
     finished_at="2026-01-01T00:00:01Z",
@@ -118,14 +118,32 @@ report = PostRunReport(
     "finished_at": "2026-01-01T00:00:01Z",
     "started_at": "2026-01-01T00:00:00Z"
   },
-  "schema_version": 1,
+  "schema_version": 2,
   "summary": {
     "complete": 0,
     "discovered": 0,
     "excluded": 0,
     "failed": 0,
     "found": 0,
-    "partial": 0
+    "partial": 0,
+    "reference_resolution": {
+      "applicable": 0,
+      "resolved": 0,
+      "unresolved": 0,
+      "unresolved_by_class": {
+        "ambiguous": 0,
+        "definition_known": 0,
+        "definition_unknown_layout": 0,
+        "reference_only": 0
+      },
+      "unresolved_uuids": 0,
+      "unresolved_uuids_by_class": {
+        "ambiguous": 0,
+        "definition_known": 0,
+        "definition_unknown_layout": 0,
+        "reference_only": 0
+      }
+    }
   }
 }
 ```
@@ -208,6 +226,23 @@ completed = payload["run"]["completed"]
 только при включённом индексе модулей. Отображение статусов чтения описано в
 [docs/runner.md](runner.md). Ключи верхнего уровня и `schema_version`
 не изменились.
+
+### Сводка резолюции ссылочных типов `summary.reference_resolution` (#288)
+
+С `schema_version = 2` прогон по умолчанию (`RunOptions.include_reference_resolution=True`)
+добавляет в `summary` блок `reference_resolution`: `applicable`, `resolved`,
+`unresolved`, `unresolved_uuids` и разбивку остатка `unresolved_by_class` /
+`unresolved_uuids_by_class` по классам `definition_known`,
+`definition_unknown_layout`, `reference_only`, `ambiguous`. Инварианты:
+`applicable = resolved + unresolved`, сумма по классам равна `unresolved`
+(и `unresolved_uuids` для счётчиков UUID). Метрика считается тем же кодом
+(`v8unpack_agent.reference_resolution`), что и
+`examples/unresolved_refs_report.py`. UUID, имена и пути в блок не попадают.
+
+Непустой остаток не меняет статусы объектов и код возврата: fallback
+`Ref#uuid` корректен. Он отражается в сводке и одним предупреждением с кодом
+`REFERENCE_TYPES_UNRESOLVED` в `RunOutcome.scan_warnings` (только счётчики).
+Отчёты `schema_version = 1` по-прежнему читаются моделью, но без этого блока.
 
 ### Таблица статусов `summary.modules`
 

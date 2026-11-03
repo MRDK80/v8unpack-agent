@@ -166,7 +166,7 @@ def test_no_common_module_or_form_kinds_from_module_index(tmp_path: Path) -> Non
 def test_report_schema_unchanged(tmp_path: Path) -> None:
     _build_export(tmp_path)
     data = run_pipeline(_options(tmp_path, include_module_index=True)).report.to_dict()
-    assert data["schema_version"] == 1
+    assert data["schema_version"] == 2
     assert set(data) == {"schema_version", "run", "summary", "objects", "fatal_error"}
     assert json.loads(json.dumps(data)) == data
 

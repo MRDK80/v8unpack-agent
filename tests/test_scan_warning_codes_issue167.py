@@ -31,6 +31,7 @@ from v8unpack_agent.scan_forms import (
     SCAN_WARNING_FORM_MODULE_MISSING,
     SCAN_WARNING_FORM_SCAN_ERROR,
     SCAN_WARNING_REFERENCE_METADATA_INCOMPLETE,
+    SCAN_WARNING_REFERENCE_TYPES_UNRESOLVED,
     SCAN_WARNING_REFERENCE_UUID_CONFLICT,
     SCAN_WARNING_SCAN_ROOT_INVALID,
     FormScanIndex,
@@ -289,6 +290,8 @@ def test_every_documented_code_has_a_branch_test() -> None:
         SCAN_WARNING_FORM_SCAN_ERROR,
         SCAN_WARNING_REFERENCE_METADATA_INCOMPLETE,
         SCAN_WARNING_REFERENCE_UUID_CONFLICT,
+        # ветвь эмиссии — tests/test_reference_resolution_issue288.py (runner)
+        SCAN_WARNING_REFERENCE_TYPES_UNRESOLVED,
         SCAN_WARNING_SCAN_ROOT_INVALID,
     }
     assert covered == set(SCAN_WARNING_CODES)

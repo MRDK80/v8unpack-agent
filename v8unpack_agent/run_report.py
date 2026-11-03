@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from v8unpack_agent.elem_parser import UnindexedReason
     from v8unpack_agent.modules import ModuleEntry, ModuleReadStatus
     from v8unpack_agent.object_decoder import DecodeError
+    from v8unpack_agent.reference_resolution import ReferenceResolutionSummary
 
 _MACHINE_CODE_RE = re.compile(r"^[a-z][a-z0-9_]*$")
 _POSIX_ABSOLUTE_PATH_RE = re.compile(r"(?:^|\s)/\S+")
@@ -249,10 +250,17 @@ class PostRunReport:
     objects: tuple[ObjectRunResult, ...]
     fatal_error: RunFatalError | None = None
     modules: ModuleStatusTable | None = None
+    reference_resolution: ReferenceResolutionSummary | None = None
 
     def __post_init__(self) -> None:
-        if self.schema_version != 1:
+        # issue #288: схема 2 добавляет summary.reference_resolution;
+        # схема 1 допустима только без этого блока.
+        if self.schema_version not in (1, 2):
             raise RunReportValidationError("unsupported schema_version")
+        if self.schema_version == 1 and self.reference_resolution is not None:
+            raise RunReportValidationError(
+                "reference_resolution requires schema_version 2"
+            )
         started = _validate_timestamp(self.started_at, "started_at")
         finished = _validate_timestamp(self.finished_at, "finished_at")
         if finished < started:
@@ -290,6 +298,8 @@ class PostRunReport:
         summary: dict[str, object] = dict(self.summary.to_dict())
         if self.modules is not None:
             summary["modules"] = self.modules.to_dict()
+        if self.reference_resolution is not None:
+            summary["reference_resolution"] = self.reference_resolution.to_dict()
         return {
             "schema_version": self.schema_version,
             "run": {
