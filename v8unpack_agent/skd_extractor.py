@@ -104,7 +104,17 @@ class SkdBatchResult:
     warnings: list[str] = field(default_factory=list)
 
 
-def extract_all_skd_queries(unpacked_root: str | Path) -> SkdBatchResult:
+def extract_all_skd_queries(
+    unpacked_root: str | Path,
+    *,
+    write_json: bool = True,
+) -> SkdBatchResult:
+    """Разобрать все ``Template.bin`` под корнем.
+
+    ``write_json=True`` (по умолчанию) пишет ``skd_queries.json`` в корень
+    каждого объекта. ``write_json=False`` не создаёт и не изменяет файлов:
+    результат доступен только в ``SkdBatchResult`` (issue #335).
+    """
     unpacked_root = Path(unpacked_root)
     warnings: list[str] = []
     results: list[SkdResult] = []
@@ -130,7 +140,7 @@ def extract_all_skd_queries(unpacked_root: str | Path) -> SkdBatchResult:
 
     for report_root, group in groups.items():
         datasets = [d for r in group for d in r.datasets]
-        if datasets:
+        if datasets and write_json:
             error = _write_datasets(report_root, datasets)
             if error is not None:
                 for r in group:
@@ -163,7 +173,11 @@ def _guess_report_root(template_path: Path) -> Path:
     return template_path.parent
 
 
-def extract_skd_queries(unpacked_root: str | Path) -> SkdResult:
+def extract_skd_queries(
+    unpacked_root: str | Path,
+    *,
+    write_json: bool = True,
+) -> SkdResult:
     """Извлечь запросы СКД из распакованного .erf.
 
     Parameters
@@ -171,6 +185,9 @@ def extract_skd_queries(unpacked_root: str | Path) -> SkdResult:
     unpacked_root:
         Корень директории, в которую был распакован .erf-файл.
         Принимает как ``str``, так и ``pathlib.Path``.
+    write_json:
+        ``True`` (по умолчанию) — записать ``skd_queries.json`` в
+        ``unpacked_root``; ``False`` — ничего не записывать (issue #335).
 
     Returns
     -------
@@ -190,7 +207,7 @@ def extract_skd_queries(unpacked_root: str | Path) -> SkdResult:
         )
 
     result = _extract_template(template_path)
-    if result.datasets:
+    if result.datasets and write_json:
         error = _write_datasets(unpacked_root, result.datasets)
         if error is not None:
             result.warnings.append(error)

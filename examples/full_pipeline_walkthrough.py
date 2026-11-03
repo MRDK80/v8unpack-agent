@@ -238,7 +238,8 @@ def run_elem_and_coverage(root: Path, entry: Any) -> Any:
         line("reason", "form_dir_missing")
         return None
 
-    elem_result = parse_elem_json(form_root)
+    # issue #335: пример не пишет form_elements_index.json в выгрузку.
+    elem_result = parse_elem_json(form_root, write_index=False)
     line("status", "ok" if elem_result.elem_index_ok else "degraded")
     line("elem_index_ok", flag(elem_result.elem_index_ok))
     line("elements", len(elem_result.elements))
@@ -314,7 +315,8 @@ def run_managed_forms(root: Path) -> None:
 
 def run_skd(root: Path) -> None:
     step(10, "extract_all_skd_queries")
-    batch = extract_all_skd_queries(root)
+    # issue #335: пример не пишет skd_queries.json в выгрузку.
+    batch = extract_all_skd_queries(root, write_json=False)
     results = list(batch.results)
     if not results:
         line("status", "not_applicable")
