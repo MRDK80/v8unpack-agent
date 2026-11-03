@@ -94,6 +94,12 @@ from v8unpack_agent.form_summary import (
     to_normalized_json,
 )
 from v8unpack_agent.object_decoder import decode_object_attributes
+from v8unpack_agent.reference_resolution import (
+    REF_PREFIX,
+    UUID_RE,
+    is_reference_type,
+    iter_named_types,
+)
 
 __all__ = [
     "FormContext",
@@ -165,6 +171,11 @@ DATA_PATH_MARKERS: dict[str, str] = {
 }
 #: Начало строки отрицательного знания в секции ``## SUMMARY``.
 DATA_PATH_LINE_PREFIX = "data_path: "
+
+#: issue #289: строка агрегата ссылочных типов формы в ``## SUMMARY`` и
+#: признак недоказанного типа у реквизита в ``## OBJECT_ATTRIBUTES``.
+REFERENCE_TYPES_LINE_PREFIX = "reference_types: "
+TYPE_RESOLVED_KEY = "type_resolved"
 
 
 class _FormEntryProtocol(Protocol):
@@ -383,6 +394,10 @@ def _to_llm_prompt_fragment_chars(
         sanitize_diagnostic(_data_path_status_line(entry))
         for entry in context.unresolved_data_paths
     ]
+    # issue #289: агрегат идёт первой атомарной строкой после JSON выжимки,
+    # до блока BSL, поэтому сохраняется при обрезке хвоста.
+    if context.object_attributes is not None:
+        status_lines.insert(0, _reference_types_line(context.object_attributes))
 
     # issue #146: блоки собираются в каноническом порядке ALL_SECTIONS;
     # при полном составе список строк совпадает с прежним символ в символ.
@@ -440,13 +455,52 @@ def _data_path_status_line(entry: dict[str, Any]) -> str:
     return "; ".join(parts)
 
 
+def _reference_types_line(object_attributes: dict[str, Any]) -> str:
+    """Стабильная строка агрегата ссылочных вхождений формы (issue #289)."""
+    applicable = resolved = 0
+    for _name, type_name, _section in iter_named_types(object_attributes):
+        if not is_reference_type(type_name):
+            continue
+        applicable += 1
+        if not _is_unresolved_ref(type_name):
+            resolved += 1
+    return (
+        f"{REFERENCE_TYPES_LINE_PREFIX}applicable: {applicable}; "
+        f"resolved: {resolved}; unresolved: {applicable - resolved}"
+    )
+
+
+def _is_unresolved_ref(type_name: Any) -> bool:
+    if not isinstance(type_name, str) or not type_name.startswith(REF_PREFIX):
+        return False
+    return bool(UUID_RE.match(type_name[len(REF_PREFIX):]))
+
+
+def _mark_unresolved_types(node: Any) -> Any:
+    """Копия с ``type_resolved: false`` рядом с ``Ref#<uuid>`` (issue #289).
+
+    Значение типа не меняется; у доказанных типов ключ не добавляется.
+    """
+    if isinstance(node, list):
+        return [_mark_unresolved_types(item) for item in node]
+    if not isinstance(node, dict):
+        return node
+    marked = {key: _mark_unresolved_types(value) for key, value in node.items()}
+    type_value = node.get("Type") or node.get("type")
+    if _is_unresolved_ref(type_value):
+        marked[TYPE_RESOLVED_KEY] = False
+    return marked
+
+
 def _object_attributes_to_json(
     object_attributes: dict[str, Any], resolved_relations: list[dict[str, Any]]
 ) -> str:
     """Детерминированное JSON-представление реквизитов объекта."""
     payload = {
-        "Properties": object_attributes.get("Properties", []),
-        "TabularSections": object_attributes.get("TabularSections", []),
+        "Properties": _mark_unresolved_types(object_attributes.get("Properties", [])),
+        "TabularSections": _mark_unresolved_types(
+            object_attributes.get("TabularSections", [])
+        ),
         "ResolvedRelations": resolved_relations,
     }
     return json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2)
