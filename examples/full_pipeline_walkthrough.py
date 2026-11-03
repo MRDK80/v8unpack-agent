@@ -57,7 +57,14 @@ from v8unpack_agent.form_context import (
 from v8unpack_agent.managed_forms import discover_elem_forms
 from v8unpack_agent.object_decoder import decode_object_attributes
 from v8unpack_agent.scan_forms import scan_forms, scan_warning_code
-from v8unpack_agent.skd_extractor import extract_all_skd_queries
+from v8unpack_agent.skd_extractor import (
+    STATUS_ERROR,
+    STATUS_NOT_SCHEMA,
+    STATUS_QUERY_EXTRACTED,
+    STATUS_SCHEMA_WITHOUT_DATASETS,
+    STATUS_SCHEMA_WITHOUT_QUERY,
+    extract_all_skd_queries,
+)
 
 TOTAL_STEPS = 11
 INDEX_FILE_NAME = "forms_scan_index.json"
@@ -231,7 +238,8 @@ def run_elem_and_coverage(root: Path, entry: Any) -> Any:
         line("reason", "form_dir_missing")
         return None
 
-    elem_result = parse_elem_json(form_root)
+    # issue #335: пример не пишет form_elements_index.json в выгрузку.
+    elem_result = parse_elem_json(form_root, write_index=False)
     line("status", "ok" if elem_result.elem_index_ok else "degraded")
     line("elem_index_ok", flag(elem_result.elem_index_ok))
     line("elements", len(elem_result.elements))
@@ -307,7 +315,8 @@ def run_managed_forms(root: Path) -> None:
 
 def run_skd(root: Path) -> None:
     step(10, "extract_all_skd_queries")
-    batch = extract_all_skd_queries(root)
+    # issue #335: пример не пишет skd_queries.json в выгрузку.
+    batch = extract_all_skd_queries(root, write_json=False)
     results = list(batch.results)
     if not results:
         line("status", "not_applicable")
@@ -315,15 +324,26 @@ def run_skd(root: Path) -> None:
         line("queries_total", 0)
         return
 
-    success = sum(1 for item in results if item.skd_extracted and item.datasets)
-    empty = sum(1 for item in results if item.skd_extracted and not item.datasets)
-    failed = sum(1 for item in results if not item.skd_extracted)
+    # issue #287: degraded — только доказанные сбои (status=error);
+    # СКД без текстового запроса и макеты другого вида — не ошибка.
+    statuses = Counter(item.status for item in results)
+    known = (
+        STATUS_QUERY_EXTRACTED,
+        STATUS_SCHEMA_WITHOUT_QUERY,
+        STATUS_SCHEMA_WITHOUT_DATASETS,
+        STATUS_NOT_SCHEMA,
+        STATUS_ERROR,
+    )
+    unknown = sum(count for status, count in statuses.items() if status not in known)
+    failed = statuses[STATUS_ERROR] + unknown
     queries = sum(len(item.datasets) for item in results)
     line("status", "ok" if failed == 0 else "degraded")
     line("skd_extracted", flag(batch.skd_extracted))
     line("batch_results", len(results))
-    line("success", success)
-    line("empty", empty)
+    line("success", statuses[STATUS_QUERY_EXTRACTED])
+    line("schema_without_query", statuses[STATUS_SCHEMA_WITHOUT_QUERY])
+    line("schema_without_datasets", statuses[STATUS_SCHEMA_WITHOUT_DATASETS])
+    line("not_schema", statuses[STATUS_NOT_SCHEMA])
     line("error", failed)
     line("queries_total", queries)
     line("batch_warnings", len(batch.warnings))

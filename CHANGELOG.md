@@ -1,5 +1,73 @@
 # Changelog
 
+## Явный признак недоказанного ссылочного типа во фрагменте ([#289](https://github.com/MRDK80/v8unpack-agent/issues/289))
+
+### Добавлено
+
+- `to_llm_prompt_fragment()`: `"type_resolved": false` рядом с `Ref#<uuid>`
+  у реквизита с недоказанным типом (значение не меняется); строка агрегата
+  `reference_types: applicable: N; resolved: M; unresolved: K` в `## SUMMARY`,
+  атомарная при обрезке и стоящая до `## BSL`.
+- `docs/form_context.md`: контракт и синтетический пример.
+
+### Тесты
+
+- `tests/test_unresolved_type_marker_issue289.py`.
+
+## Сводка резолюции ссылочных типов в post-run report ([#288](https://github.com/MRDK80/v8unpack-agent/issues/288))
+
+### Добавлено
+
+- `v8unpack_agent/reference_resolution.py`: классификатор остатка `Ref#uuid`
+  перенесён без изменений из `examples/unresolved_refs_report.py` (пример
+  импортирует его, вывод на реальной выгрузке совпадает байт в байт);
+  `ReferenceResolutionSummary` с инвариантами.
+- Post-run report `schema_version = 2`: `summary.reference_resolution` —
+  applicable / resolved / unresolved и разбивка по классам, только счётчики.
+  `RunOptions.include_reference_resolution` (по умолчанию `True`).
+- Код предупреждения `REFERENCE_TYPES_UNRESOLVED` (#167) для непустого
+  остатка; статусы объектов и код возврата не меняются.
+
+### Тесты
+
+- `tests/test_reference_resolution_issue288.py`; обновлены ожидания версии
+  схемы в тестах прогона и контракт `docs/run_report.md`.
+
+## Сквозной пример не изменяет выгрузку ([#335](https://github.com/MRDK80/v8unpack-agent/issues/335))
+
+### Исправлено
+
+- `extract_skd_queries()` и `extract_all_skd_queries()`: параметр
+  `write_json` (по умолчанию `True`, прежнее поведение); `False` — без
+  записи `skd_queries.json`.
+- Шаг 10 `examples/full_pipeline_walkthrough.py` вызывает пакетный режим с
+  `write_json=False`: выгрузка не изменяется, как и заявлено в описании.
+- Шаг 6 примера вызывает `parse_elem_json(..., write_index=False)`: найденная
+  тестом запись `form_elements_index.json` в выгрузку устранена.
+
+### Тесты
+
+- `tests/test_walkthrough_no_write_issue335.py`: снимок файловой системы
+  выгрузки, доступной на запись, до и после реального запуска примера;
+  запись API по умолчанию сохранена.
+
+## СКД без текстового запроса не считается ошибкой ([#287](https://github.com/MRDK80/v8unpack-agent/issues/287))
+
+### Исправлено
+
+- `extract_all_skd_queries()` разбирает каждый `Template.bin`, а не первый
+  макет объекта повторно; `skd_queries.json` объединяет запросы всех
+  макетов объекта.
+- `SkdResult.status`: `query_extracted`, `schema_without_query`,
+  `schema_without_datasets`, `not_schema`, `error`; `SkdResult.template_path`.
+- Шаг 10 `examples/full_pipeline_walkthrough.py`: `degraded` только при
+  доказанных сбоях, отдельные счётчики классов вместо `empty`.
+
+### Тесты
+
+- `tests/test_skd_status_issue287.py`: каждый класс по структуре реальных
+  `Template.bin`, несколько макетов одного объекта, смешанный пакет, шаг 10.
+
 ## Итоговые матрицы и замер эпика #431 ([#438](https://github.com/MRDK80/v8unpack-agent/issues/438))
 
 ### Документация

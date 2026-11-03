@@ -7,7 +7,9 @@
            └─► skd_extractor.extract_skd_queries() → skd_queries.json
 
 Если ``skd_extracted=False`` — агент видит только BSL модуля отчёта.
-Это не ошибка пайплайна, а сигнал о неполноте контекста.
+Это не ошибка пайплайна, а сигнал о неполноте контекста. Причину
+различает поле ``SkdResult.status`` (issue #287): схема без текстового
+запроса, макет другого вида или доказанная ошибка чтения/разбора.
 
 Модуль использует regex по тексту XML (best-effort).
 Ошибка СКД-шага не влияет на ``extraction_ok`` основного артефакта.
@@ -43,6 +45,18 @@ _DATASET_NAME_RE = re.compile(
 
 _SKD_QUERIES_JSON = "skd_queries.json"
 
+# Машинные статусы результата (issue #287)
+STATUS_QUERY_EXTRACTED = "query_extracted"
+STATUS_SCHEMA_WITHOUT_QUERY = "schema_without_query"
+STATUS_SCHEMA_WITHOUT_DATASETS = "schema_without_datasets"
+STATUS_NOT_SCHEMA = "not_schema"
+STATUS_ERROR = "error"
+
+_SCHEMA_ROOTS = frozenset({"SchemaFile", "DataCompositionSchema"})
+_ROOT_TAG_RE = re.compile(r"<([A-Za-z_][\w.:-]*)[\s>/]")
+_DATASET_TAG_RE = re.compile(r"<dataSet\b", re.IGNORECASE)
+_QUERY_TAG_RE = re.compile(r"<query>\s*[^<\s]", re.IGNORECASE)
+
 
 # ---------------------------------------------------------------------------
 # Public API
@@ -61,11 +75,26 @@ class SkdResult:
         Список словарей ``{"name": str, "query": str}``.
     warnings:
         Диагностические сообщения (неполнота, отсутствие файла и т.п.).
+    status:
+        Машинный статус (issue #287): ``query_extracted``,
+        ``schema_without_query`` (валидная СКД, наборы без текста запроса,
+        например из объекта), ``schema_without_datasets``, ``not_schema``
+        (макет другого вида) или ``error`` (доказанный сбой либо
+        нераспознанный случай). Если не задан — выводится из
+        ``skd_extracted``.
+    template_path:
+        Путь к разобранному ``Template.bin`` (``None``, если файл не найден).
     """
 
     skd_extracted: bool
     datasets: list[dict] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
+    status: str = ""
+    template_path: str | None = None
+
+    def __post_init__(self) -> None:
+        if not self.status:
+            self.status = STATUS_QUERY_EXTRACTED if self.skd_extracted else STATUS_ERROR
 
 
 @dataclass
@@ -75,7 +104,17 @@ class SkdBatchResult:
     warnings: list[str] = field(default_factory=list)
 
 
-def extract_all_skd_queries(unpacked_root: str | Path) -> SkdBatchResult:
+def extract_all_skd_queries(
+    unpacked_root: str | Path,
+    *,
+    write_json: bool = True,
+) -> SkdBatchResult:
+    """Разобрать все ``Template.bin`` под корнем.
+
+    ``write_json=True`` (по умолчанию) пишет ``skd_queries.json`` в корень
+    каждого объекта. ``write_json=False`` не создаёт и не изменяет файлов:
+    результат доступен только в ``SkdBatchResult`` (issue #335).
+    """
     unpacked_root = Path(unpacked_root)
     warnings: list[str] = []
     results: list[SkdResult] = []
@@ -89,14 +128,29 @@ def extract_all_skd_queries(unpacked_root: str | Path) -> SkdBatchResult:
             warnings=[f"Template.bin не найден в {unpacked_root}"],
         )
 
+    # Каждый Template.bin разбирается сам (issue #287): объект может содержать
+    # несколько макетов. skd_queries.json пишется один на корень объекта и
+    # объединяет запросы всех его макетов.
+    groups: dict[Path, list[SkdResult]] = {}
     for template_path in template_paths:
         report_root = _guess_report_root(template_path)
-        result = extract_skd_queries(report_root)
-
-        if not result.skd_extracted:
-            warnings.extend(f"{report_root}: {w}" for w in result.warnings)
-
+        result = _extract_template(template_path)
+        groups.setdefault(report_root, []).append(result)
         results.append(result)
+
+    for report_root, group in groups.items():
+        datasets = [d for r in group for d in r.datasets]
+        if datasets and write_json:
+            error = _write_datasets(report_root, datasets)
+            if error is not None:
+                for r in group:
+                    if r.datasets:
+                        r.skd_extracted = False
+                        r.status = STATUS_ERROR
+                        r.warnings.append(error)
+        for r in group:
+            if not r.skd_extracted:
+                warnings.extend(f"{report_root}: {w}" for w in r.warnings)
 
     return SkdBatchResult(
         skd_extracted=any(r.skd_extracted for r in results),
@@ -119,7 +173,11 @@ def _guess_report_root(template_path: Path) -> Path:
     return template_path.parent
 
 
-def extract_skd_queries(unpacked_root: str | Path) -> SkdResult:
+def extract_skd_queries(
+    unpacked_root: str | Path,
+    *,
+    write_json: bool = True,
+) -> SkdResult:
     """Извлечь запросы СКД из распакованного .erf.
 
     Parameters
@@ -127,6 +185,9 @@ def extract_skd_queries(unpacked_root: str | Path) -> SkdResult:
     unpacked_root:
         Корень директории, в которую был распакован .erf-файл.
         Принимает как ``str``, так и ``pathlib.Path``.
+    write_json:
+        ``True`` (по умолчанию) — записать ``skd_queries.json`` в
+        ``unpacked_root``; ``False`` — ничего не записывать (issue #335).
 
     Returns
     -------
@@ -135,7 +196,6 @@ def extract_skd_queries(unpacked_root: str | Path) -> SkdResult:
         При любой ошибке ``skd_extracted=False``, детали — в ``warnings``.
     """
     unpacked_root = Path(unpacked_root)
-    result_warnings: list[str] = []
 
     try:
         template_path = _find_template_bin(unpacked_root)
@@ -143,42 +203,94 @@ def extract_skd_queries(unpacked_root: str | Path) -> SkdResult:
         return SkdResult(
             skd_extracted=False,
             warnings=[str(exc)],
+            status=STATUS_ERROR,
+        )
+
+    result = _extract_template(template_path)
+    if result.datasets and write_json:
+        error = _write_datasets(unpacked_root, result.datasets)
+        if error is not None:
+            result.warnings.append(error)
+            result.skd_extracted = False
+            result.status = STATUS_ERROR
+    return result
+
+
+def _write_datasets(root: Path, datasets: list[dict]) -> str | None:
+    """Записать skd_queries.json в корень; вернуть текст ошибки или None."""
+    try:
+        (root / _SKD_QUERIES_JSON).write_text(
+            json.dumps(datasets, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+    except OSError as exc:
+        return f"Не удалось сохранить {_SKD_QUERIES_JSON}: {exc}"
+    return None
+
+
+def _extract_template(template_path: Path) -> SkdResult:
+    """Разобрать один Template.bin без записи на диск и классифицировать."""
+    result_warnings: list[str] = []
+    path_text = str(template_path)
+
+    def done(status: str, datasets: list[dict] | None = None) -> SkdResult:
+        return SkdResult(
+            skd_extracted=status == STATUS_QUERY_EXTRACTED,
+            datasets=datasets or [],
+            warnings=result_warnings,
+            status=status,
+            template_path=path_text,
         )
 
     try:
         xml_text = _read_xml_from_v8_container(template_path, result_warnings)
     except Exception as exc:  # noqa: BLE001
-        return SkdResult(
-            skd_extracted=False,
-            warnings=[f"Не удалось прочитать {template_path.name}: {exc}"],
-        )
+        result_warnings.append(f"Не удалось прочитать {template_path.name}: {exc}")
+        return done(STATUS_ERROR)
 
     if xml_text is None:
-        return SkdResult(skd_extracted=False, warnings=result_warnings)
+        return done(STATUS_ERROR)
 
     datasets = _extract_datasets(xml_text, result_warnings)
+    if datasets:
+        return done(STATUS_QUERY_EXTRACTED, datasets)
 
-    if not datasets:
-        result_warnings.append(
-            "Запросы ВЫБРАТЬ в Template.bin не найдены (regex не дал совпадений)."
-        )
-        return SkdResult(skd_extracted=False, warnings=result_warnings)
-
-    output_path = unpacked_root / _SKD_QUERIES_JSON
-    try:
-        output_path.write_text(
-            json.dumps(datasets, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
-    except OSError as exc:
-        result_warnings.append(f"Не удалось сохранить {_SKD_QUERIES_JSON}: {exc}")
-        return SkdResult(skd_extracted=False, warnings=result_warnings)
-
-    return SkdResult(
-        skd_extracted=True,
-        datasets=datasets,
-        warnings=result_warnings,
+    result_warnings.append(
+        "Запросы ВЫБРАТЬ в Template.bin не найдены (regex не дал совпадений)."
     )
+    root = _root_tag(xml_text)
+    if root is None:
+        if xml_text.lstrip().startswith("{"):
+            # Скобочный формат 1С без XML-схемы — макет другого вида.
+            result_warnings.append(f"{template_path.name}: макет другого вида (не СКД).")
+            return done(STATUS_NOT_SCHEMA)
+        result_warnings.append(f"{template_path.name}: корневой элемент XML не найден.")
+        return done(STATUS_ERROR)
+    if root not in _SCHEMA_ROOTS:
+        result_warnings.append(
+            f"{template_path.name}: макет другого вида (корень {root}, не СКД)."
+        )
+        return done(STATUS_NOT_SCHEMA)
+    if _QUERY_TAG_RE.search(xml_text):
+        # Текст запроса есть, но не распознан — не объявлять успехом.
+        return done(STATUS_ERROR)
+    if not _DATASET_TAG_RE.search(xml_text):
+        result_warnings.append(f"{template_path.name}: СКД без наборов данных.")
+        return done(STATUS_SCHEMA_WITHOUT_DATASETS)
+    result_warnings.append(
+        f"{template_path.name}: СКД без текстового запроса (набор из объекта или объединение)."
+    )
+    return done(STATUS_SCHEMA_WITHOUT_QUERY)
+
+
+def _root_tag(xml_text: str) -> str | None:
+    """Имя корневого элемента: первый тег, кроме объявления и комментариев."""
+    for match in _ROOT_TAG_RE.finditer(xml_text):
+        name = match.group(1)
+        if name.lower() == "xml":
+            continue
+        return name.split(":")[-1]
+    return None
 
 
 # ---------------------------------------------------------------------------

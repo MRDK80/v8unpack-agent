@@ -116,7 +116,7 @@ def test_json_success(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> Non
     data = payload["data"]
     assert isinstance(data, dict)
     assert data["summary"] == {"found": 0, "complete": 0, "partial": 0, "failed": 0, "excluded": 0}
-    assert data["report"] == {"file_name": "r.json", "written": True, "schema_version": 1}
+    assert data["report"] == {"file_name": "r.json", "written": True, "schema_version": 2}
     assert data["fatal_error"] is None
     assert err == ""
 

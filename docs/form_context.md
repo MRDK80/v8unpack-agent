@@ -221,6 +221,7 @@ context = build_form_context(
 # FORM <object_type>/<object_name>/<container_name>/<form_name>
 ## SUMMARY
 <to_normalized_json(summary)>
+<reference_types: …, если есть object_attributes (#289); data_path: … (#141)>
 ## OBJECT_ATTRIBUTES
 <JSON с Properties/TabularSections/ResolvedRelations либо «(реквизиты объекта не найдены)»>
 ## BSL
@@ -239,6 +240,55 @@ context = build_form_context(
 - `max_chars == 0` и значения меньше `-1` дают пустую строку;
 - результат детерминирован: два вызова на одинаковых данных дают идентичный
   текст.
+
+## Недоказанный ссылочный тип во фрагменте (#289)
+
+Модели неполнота типов видна явно, а не только по форме строки `Ref#<uuid>`:
+
+- у реквизита с недоказанным типом в `## OBJECT_ATTRIBUTES` рядом со значением
+  `Ref#<uuid>` (оно не меняется) стоит `"type_resolved": false`; у доказанных
+  типов ключа нет, поэтому фрагмент формы без остатка отличается от прежнего
+  только строкой агрегата;
+- в `## SUMMARY` сразу после JSON выжимки — стабильная строка агрегата
+  `reference_types: applicable: N; resolved: M; unresolved: K` (те же правила
+  применимости, что и в сводке post-run report #288). Строка атомарна при
+  обрезке и стоит до `## OBJECT_ATTRIBUTES` и `## BSL`, поэтому сохраняется,
+  когда обрезается хвост `## BSL`. Без `object_attributes` строки нет.
+
+Синтетический пример (имена и UUID вымышлены):
+
+```
+# FORM Catalog/Пример/CatalogForm/ФормаЭлемента
+## SUMMARY
+{
+  "attributes": [],
+  "commands": [],
+  "elements": [],
+  "events": [],
+  "relations": [],
+  "warnings": []
+}
+reference_types: applicable: 2; resolved: 1; unresolved: 1
+## OBJECT_ATTRIBUTES
+{
+  "Properties": [
+    {
+      "Name": "Владелец",
+      "Type": "CatalogRef.Пример"
+    },
+    {
+      "Name": "Основание",
+      "Type": "Ref#00000000-0000-0000-0000-000000000001",
+      "type_resolved": false
+    }
+  ],
+  "ResolvedRelations": [],
+  "TabularSections": []
+}
+## BSL
+Процедура ПриОткрытии(Отказ)
+КонецПроцедуры
+```
 
 ## Обезличенность
 
