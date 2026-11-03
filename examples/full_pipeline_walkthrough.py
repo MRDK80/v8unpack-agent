@@ -57,7 +57,14 @@ from v8unpack_agent.form_context import (
 from v8unpack_agent.managed_forms import discover_elem_forms
 from v8unpack_agent.object_decoder import decode_object_attributes
 from v8unpack_agent.scan_forms import scan_forms, scan_warning_code
-from v8unpack_agent.skd_extractor import extract_all_skd_queries
+from v8unpack_agent.skd_extractor import (
+    STATUS_ERROR,
+    STATUS_NOT_SCHEMA,
+    STATUS_QUERY_EXTRACTED,
+    STATUS_SCHEMA_WITHOUT_DATASETS,
+    STATUS_SCHEMA_WITHOUT_QUERY,
+    extract_all_skd_queries,
+)
 
 TOTAL_STEPS = 11
 INDEX_FILE_NAME = "forms_scan_index.json"
@@ -315,15 +322,26 @@ def run_skd(root: Path) -> None:
         line("queries_total", 0)
         return
 
-    success = sum(1 for item in results if item.skd_extracted and item.datasets)
-    empty = sum(1 for item in results if item.skd_extracted and not item.datasets)
-    failed = sum(1 for item in results if not item.skd_extracted)
+    # issue #287: degraded — только доказанные сбои (status=error);
+    # СКД без текстового запроса и макеты другого вида — не ошибка.
+    statuses = Counter(item.status for item in results)
+    known = (
+        STATUS_QUERY_EXTRACTED,
+        STATUS_SCHEMA_WITHOUT_QUERY,
+        STATUS_SCHEMA_WITHOUT_DATASETS,
+        STATUS_NOT_SCHEMA,
+        STATUS_ERROR,
+    )
+    unknown = sum(count for status, count in statuses.items() if status not in known)
+    failed = statuses[STATUS_ERROR] + unknown
     queries = sum(len(item.datasets) for item in results)
     line("status", "ok" if failed == 0 else "degraded")
     line("skd_extracted", flag(batch.skd_extracted))
     line("batch_results", len(results))
-    line("success", success)
-    line("empty", empty)
+    line("success", statuses[STATUS_QUERY_EXTRACTED])
+    line("schema_without_query", statuses[STATUS_SCHEMA_WITHOUT_QUERY])
+    line("schema_without_datasets", statuses[STATUS_SCHEMA_WITHOUT_DATASETS])
+    line("not_schema", statuses[STATUS_NOT_SCHEMA])
     line("error", failed)
     line("queries_total", queries)
     line("batch_warnings", len(batch.warnings))

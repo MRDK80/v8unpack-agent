@@ -1,5 +1,22 @@
 # Changelog
 
+## СКД без текстового запроса не считается ошибкой ([#287](https://github.com/MRDK80/v8unpack-agent/issues/287))
+
+### Исправлено
+
+- `extract_all_skd_queries()` разбирает каждый `Template.bin`, а не первый
+  макет объекта повторно; `skd_queries.json` объединяет запросы всех
+  макетов объекта.
+- `SkdResult.status`: `query_extracted`, `schema_without_query`,
+  `schema_without_datasets`, `not_schema`, `error`; `SkdResult.template_path`.
+- Шаг 10 `examples/full_pipeline_walkthrough.py`: `degraded` только при
+  доказанных сбоях, отдельные счётчики классов вместо `empty`.
+
+### Тесты
+
+- `tests/test_skd_status_issue287.py`: каждый класс по структуре реальных
+  `Template.bin`, несколько макетов одного объекта, смешанный пакет, шаг 10.
+
 ## Итоговые матрицы и замер эпика #431 ([#438](https://github.com/MRDK80/v8unpack-agent/issues/438))
 
 ### Документация
