@@ -1,5 +1,23 @@
 # Changelog
 
+## Сквозной пример не изменяет выгрузку ([#335](https://github.com/MRDK80/v8unpack-agent/issues/335))
+
+### Исправлено
+
+- `extract_skd_queries()` и `extract_all_skd_queries()`: параметр
+  `write_json` (по умолчанию `True`, прежнее поведение); `False` — без
+  записи `skd_queries.json`.
+- Шаг 10 `examples/full_pipeline_walkthrough.py` вызывает пакетный режим с
+  `write_json=False`: выгрузка не изменяется, как и заявлено в описании.
+- Шаг 6 примера вызывает `parse_elem_json(..., write_index=False)`: найденная
+  тестом запись `form_elements_index.json` в выгрузку устранена.
+
+### Тесты
+
+- `tests/test_walkthrough_no_write_issue335.py`: снимок файловой системы
+  выгрузки, доступной на запись, до и после реального запуска примера;
+  запись API по умолчанию сохранена.
+
 ## СКД без текстового запроса не считается ошибкой ([#287](https://github.com/MRDK80/v8unpack-agent/issues/287))
 
 ### Исправлено

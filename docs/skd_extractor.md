@@ -47,6 +47,14 @@ print(batch.warnings)            # предупреждения по неуда�
 макетов; `skd_queries.json` пишется один на корень объекта и объединяет
 запросы всех его макетов.
 
+## Запись `skd_queries.json` (issue #335)
+
+По умолчанию `extract_skd_queries()` и `extract_all_skd_queries()` пишут
+`skd_queries.json` рядом со входом. С `write_json=False` файлы не создаются и
+не изменяются, результат доступен только в возвращаемом объекте. Шаг 10
+`examples/full_pipeline_walkthrough.py` вызывает пакетный режим с
+`write_json=False` и не изменяет выгрузку.
+
 ## Статусы результата (issue #287)
 
 `SkdResult.status` объясняет, почему запроса нет. `skd_extracted` и
