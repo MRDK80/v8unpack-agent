@@ -1,5 +1,19 @@
 # Changelog
 
+## Диагностика символов Cf и файлового BOM ([#458](https://github.com/MRDK80/v8unpack-agent/issues/458))
+
+### Добавлено
+
+- `v8unpack_agent/untrusted_diagnostics.py`: `detect_untrusted_chars(text, *, raw=None)`
+  находит символы категории Cf (строка и столбец с 1, в кодовых точках) и файловый
+  BOM по исходным байтам; группы `bidi`, `zero_width`, `soft_hyphen`, `other_cf` —
+  по фиксированной таблице решения 4 ADR #457, `unidata_version` — отдельным полем.
+  Текст и данные не изменяются; существующие выводы не меняются.
+
+### Тесты
+
+- `tests/test_untrusted_diagnostics_issue458.py`.
+
 ## Дополнение характеристики LLM-вывода ([#456](https://github.com/MRDK80/v8unpack-agent/issues/456))
 
 ### Тесты
