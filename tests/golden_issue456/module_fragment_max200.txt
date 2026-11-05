@@ -1,0 +1,9 @@
+MODULE
+kind: common_module
+owner_kind: common_module
+metadata_type: CommonModule
+owner: SharedHelpers
+path: CommonModule/SharedHelpers/CommonModule.obj.bsl
+BSL
+// SOURCE TE
+[TRUNCATED: 12 of 71 chars]

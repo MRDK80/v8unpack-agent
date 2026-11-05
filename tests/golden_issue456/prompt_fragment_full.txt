@@ -1,0 +1,21 @@
+# FORM Catalog/SampleObject/ItemForm/Variant1
+## SUMMARY
+{
+  "attributes": [],
+  "commands": [],
+  "elements": [],
+  "events": [],
+  "relations": [],
+  "warnings": [
+    "elem.json не найден в .../Catalog/SampleObject/ItemForm/Variant1"
+  ]
+}
+data_path: "<UNRESOLVED: путь не доказан>"; status: unresolved; reason: elem_json_missing; scope: form
+## OBJECT_ATTRIBUTES
+(реквизиты объекта не найдены)
+## BSL
+﻿// SOURCE TEXT
+## BSL
+Процедура Тест()
+	Сообщить("a​b‮c­d");
+КонецПроцедуры
