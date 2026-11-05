@@ -20,6 +20,7 @@ tests/test_output_characterization_issue456.py`` — только осознан
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 
 import pytest
@@ -35,6 +36,11 @@ from v8unpack_agent.search_fragments import fragment_corpus
 
 GOLDEN = Path(__file__).parent / "golden_issue456"
 REGEN = os.environ.get("V8UNPACK_REGEN_ISSUE456") == "1"
+# С Python 3.12 встроенный sum() по float использует компенсированное
+# суммирование; косинус в search_index отличается в последнем бите, вместе с
+# ним text_sha256. Это текущее поведение по версии интерпретатора: эталон
+# смыслового запроса хранится отдельно для < 3.12 и >= 3.12.
+PY_SUFFIX = "" if sys.version_info >= (3, 12) else "_py_lt312"
 
 FIXED_NOW = "2026-01-01T00:00:00.000000Z"
 EXPORT = "export"
@@ -151,7 +157,7 @@ def test_search_cli(export: Path, capsys: pytest.CaptureFixture[str]) -> None:
     for name, extra in (
         ("search_cli_query_exact.txt", ["--query", "SharedHelpers"]),
         ("search_cli_query_text.txt", ["--query", "SharedHelpers", "--include-text"]),
-        ("search_cli_query_semantic.txt", ["--query", "Сообщить", "--search-mode", "semantic"]),
+        (f"search_cli_query_semantic{PY_SUFFIX}.txt", ["--query", "Сообщить", "--search-mode", "semantic"]),
     ):
         argv = ["query", str(export), "--snapshot", "snap.json", "--embedder", "hashed-bow-demo"]
         _check(name, _run_search_cli(capsys, argv + extra))

@@ -1,0 +1,323 @@
+exit=0
+--stdout--
+{
+  "command": "query",
+  "context": {
+    "candidates_omitted": 0,
+    "candidates_shown": 4,
+    "candidates_total": 4,
+    "dispatch": {
+      "exact_filtered_out": 0,
+      "index_status": {
+        "compatibility": "compatible",
+        "freshness": "fresh",
+        "reasons": []
+      },
+      "path": [
+        "semantic"
+      ],
+      "result": {
+        "error": null,
+        "hits": [
+          {
+            "artifact": {
+              "artifact_id": "form:Catalog/SampleObject/ItemForm/Variant1",
+              "artifact_kind": "form",
+              "form_key": [
+                "Catalog",
+                "SampleObject",
+                "ItemForm",
+                "Variant1"
+              ],
+              "module_kind": null,
+              "owner": {
+                "metadata_type": "Catalog",
+                "owner_id": "owner:metadata_object:Catalog:SampleObject",
+                "owner_kind": "metadata_object",
+                "owner_name": "SampleObject"
+              },
+              "source_path": "Catalog/SampleObject/ItemForm/Variant1"
+            },
+            "document_id": "form:Catalog/SampleObject/ItemForm/Variant1#Тест",
+            "matched_field": null,
+            "method": "semantic",
+            "similarity": 0.10660035817780522
+          },
+          {
+            "artifact": {
+              "artifact_id": "common_module:CommonModule:SharedHelpers:common_module",
+              "artifact_kind": "module",
+              "form_key": null,
+              "module_kind": "common_module",
+              "owner": {
+                "metadata_type": "CommonModule",
+                "owner_id": "owner:common_module:CommonModule:SharedHelpers",
+                "owner_kind": "common_module",
+                "owner_name": "SharedHelpers"
+              },
+              "source_path": "CommonModule/SharedHelpers/CommonModule.obj.bsl"
+            },
+            "document_id": "common_module:CommonModule:SharedHelpers:common_module#L1-2",
+            "matched_field": null,
+            "method": "semantic",
+            "similarity": 0.0
+          },
+          {
+            "artifact": {
+              "artifact_id": "owner:common_module:CommonModule:SharedHelpers",
+              "artifact_kind": "owner",
+              "form_key": null,
+              "module_kind": null,
+              "owner": {
+                "metadata_type": "CommonModule",
+                "owner_id": "owner:common_module:CommonModule:SharedHelpers",
+                "owner_kind": "common_module",
+                "owner_name": "SharedHelpers"
+              },
+              "source_path": null
+            },
+            "document_id": "owner:common_module:CommonModule:SharedHelpers",
+            "matched_field": null,
+            "method": "semantic",
+            "similarity": 0.0
+          },
+          {
+            "artifact": {
+              "artifact_id": "owner:metadata_object:Catalog:SampleObject",
+              "artifact_kind": "owner",
+              "form_key": null,
+              "module_kind": null,
+              "owner": {
+                "metadata_type": "Catalog",
+                "owner_id": "owner:metadata_object:Catalog:SampleObject",
+                "owner_kind": "metadata_object",
+                "owner_name": "SampleObject"
+              },
+              "source_path": null
+            },
+            "document_id": "owner:metadata_object:Catalog:SampleObject",
+            "matched_field": null,
+            "method": "semantic",
+            "similarity": 0.0
+          }
+        ],
+        "query": {
+          "filters": {
+            "artifact_kinds": null,
+            "metadata_types": null,
+            "module_kinds": null,
+            "owner_kinds": null,
+            "owner_names": null
+          },
+          "mode": "semantic",
+          "text": "Сообщить",
+          "top_k": 5
+        },
+        "schema": "search_contract/1",
+        "status": "semantic"
+      }
+    },
+    "included": [
+      {
+        "candidate_only": false,
+        "hit": {
+          "artifact": {
+            "artifact_id": "form:Catalog/SampleObject/ItemForm/Variant1",
+            "artifact_kind": "form",
+            "form_key": [
+              "Catalog",
+              "SampleObject",
+              "ItemForm",
+              "Variant1"
+            ],
+            "module_kind": null,
+            "owner": {
+              "metadata_type": "Catalog",
+              "owner_id": "owner:metadata_object:Catalog:SampleObject",
+              "owner_kind": "metadata_object",
+              "owner_name": "SampleObject"
+            },
+            "source_path": "Catalog/SampleObject/ItemForm/Variant1"
+          },
+          "document_id": "form:Catalog/SampleObject/ItemForm/Variant1#Тест",
+          "matched_field": null,
+          "method": "semantic",
+          "similarity": 0.10660035817780522
+        },
+        "included_span": {
+          "end_line": 5,
+          "start_line": 3
+        },
+        "owner_links": [
+          {
+            "artifact": {
+              "artifact_id": "form:Catalog/SampleObject/ItemForm/Variant1",
+              "artifact_kind": "form",
+              "form_key": [
+                "Catalog",
+                "SampleObject",
+                "ItemForm",
+                "Variant1"
+              ],
+              "module_kind": null,
+              "owner": {
+                "metadata_type": "Catalog",
+                "owner_id": "owner:metadata_object:Catalog:SampleObject",
+                "owner_kind": "metadata_object",
+                "owner_name": "SampleObject"
+              },
+              "source_path": "Catalog/SampleObject/ItemForm/Variant1"
+            },
+            "basis": "form_key",
+            "confirmed": true,
+            "owner": {
+              "metadata_type": "Catalog",
+              "owner_id": "owner:metadata_object:Catalog:SampleObject",
+              "owner_kind": "metadata_object",
+              "owner_name": "SampleObject"
+            }
+          }
+        ],
+        "source_document_ids": [
+          "form:Catalog/SampleObject/ItemForm/Variant1#Тест"
+        ],
+        "text_chars": 54,
+        "text_sha256": "4feb71c681fed3ae53231c3ac7003d3ee1804785c43ce7052512345503a9da89"
+      },
+      {
+        "candidate_only": false,
+        "hit": {
+          "artifact": {
+            "artifact_id": "common_module:CommonModule:SharedHelpers:common_module",
+            "artifact_kind": "module",
+            "form_key": null,
+            "module_kind": "common_module",
+            "owner": {
+              "metadata_type": "CommonModule",
+              "owner_id": "owner:common_module:CommonModule:SharedHelpers",
+              "owner_kind": "common_module",
+              "owner_name": "SharedHelpers"
+            },
+            "source_path": "CommonModule/SharedHelpers/CommonModule.obj.bsl"
+          },
+          "document_id": "common_module:CommonModule:SharedHelpers:common_module#L1-2",
+          "matched_field": null,
+          "method": "semantic",
+          "similarity": 0.0
+        },
+        "included_span": {
+          "end_line": 2,
+          "start_line": 1
+        },
+        "owner_links": [
+          {
+            "artifact": {
+              "artifact_id": "common_module:CommonModule:SharedHelpers:common_module",
+              "artifact_kind": "module",
+              "form_key": null,
+              "module_kind": "common_module",
+              "owner": {
+                "metadata_type": "CommonModule",
+                "owner_id": "owner:common_module:CommonModule:SharedHelpers",
+                "owner_kind": "common_module",
+                "owner_name": "SharedHelpers"
+              },
+              "source_path": "CommonModule/SharedHelpers/CommonModule.obj.bsl"
+            },
+            "basis": "module_entry",
+            "confirmed": true,
+            "owner": {
+              "metadata_type": "CommonModule",
+              "owner_id": "owner:common_module:CommonModule:SharedHelpers",
+              "owner_kind": "common_module",
+              "owner_name": "SharedHelpers"
+            }
+          }
+        ],
+        "source_document_ids": [
+          "common_module:CommonModule:SharedHelpers:common_module#L1-2"
+        ],
+        "text_chars": 22,
+        "text_sha256": "2ae85ca46328cb0172ba2bcc402909ebd27d27c23d24b99b28f52070fd68b0f0"
+      },
+      {
+        "candidate_only": false,
+        "hit": {
+          "artifact": {
+            "artifact_id": "owner:common_module:CommonModule:SharedHelpers",
+            "artifact_kind": "owner",
+            "form_key": null,
+            "module_kind": null,
+            "owner": {
+              "metadata_type": "CommonModule",
+              "owner_id": "owner:common_module:CommonModule:SharedHelpers",
+              "owner_kind": "common_module",
+              "owner_name": "SharedHelpers"
+            },
+            "source_path": null
+          },
+          "document_id": "owner:common_module:CommonModule:SharedHelpers",
+          "matched_field": null,
+          "method": "semantic",
+          "similarity": 0.0
+        },
+        "included_span": null,
+        "owner_links": [],
+        "source_document_ids": [
+          "owner:common_module:CommonModule:SharedHelpers"
+        ],
+        "text_chars": 169,
+        "text_sha256": "f2a54094d31e8ed29d6810915b1b13fd96ee80e75797026834f5b0bc44566177"
+      },
+      {
+        "candidate_only": false,
+        "hit": {
+          "artifact": {
+            "artifact_id": "owner:metadata_object:Catalog:SampleObject",
+            "artifact_kind": "owner",
+            "form_key": null,
+            "module_kind": null,
+            "owner": {
+              "metadata_type": "Catalog",
+              "owner_id": "owner:metadata_object:Catalog:SampleObject",
+              "owner_kind": "metadata_object",
+              "owner_name": "SampleObject"
+            },
+            "source_path": null
+          },
+          "document_id": "owner:metadata_object:Catalog:SampleObject",
+          "matched_field": null,
+          "method": "semantic",
+          "similarity": 0.0
+        },
+        "included_span": null,
+        "owner_links": [],
+        "source_document_ids": [
+          "owner:metadata_object:Catalog:SampleObject"
+        ],
+        "text_chars": 289,
+        "text_sha256": "9a6edc69d8e7cb08a588ad0e5d9a17c5f2f6d1c063ce712d6fdd785ca970c6fd"
+      }
+    ],
+    "omitted": [],
+    "schema": "search_context/1",
+    "search_kind": "semantic",
+    "status": "built",
+    "text_chars": 5497,
+    "text_sha256": "dbdc13401e968a13fd5e7823d01123a5d75fc98fd7ac580da80d9bf663253522",
+    "warnings": [
+      "similarity is not a probability of correctness"
+    ]
+  },
+  "error": null,
+  "schema": "search_cli/1",
+  "snapshot": {
+    "compatibility": "compatible",
+    "error_code": null,
+    "freshness": "fresh",
+    "loaded": true,
+    "provided": true
+  },
+  "status": "ok"
+}
+--stderr--
