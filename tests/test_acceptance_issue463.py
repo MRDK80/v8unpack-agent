@@ -17,6 +17,7 @@ from pathlib import Path
 
 import pytest
 import test_output_characterization_issue456 as t456
+from test_cli_json_issue258 import _fatal_outcome
 
 from v8unpack_agent import cli, runner, search_cli
 from v8unpack_agent.form_context import build_form_context, to_llm_prompt_fragment
@@ -105,6 +106,9 @@ def test_module_fragment_matrix(export: Path) -> None:
     text = raw.decode("utf-8")
     legacy = to_llm_module_fragment(_module_entry(), text)
     assert legacy.text.encode("utf-8") == _golden("module_fragment_full.txt")
+    assert to_llm_module_fragment(_module_entry(), text, max_chars=200).text.encode(
+        "utf-8"
+    ) == _golden("module_fragment_max200.txt")
     framed = to_llm_module_fragment(
         _module_entry(), text, representation="framed", bsl_bytes=raw
     )
@@ -136,6 +140,11 @@ def test_search_context_matrix(export: Path) -> None:
     diagnostics = data["included"][0]["diagnostics"]
     assert "file_bom" not in diagnostics  # B: BOM снят #324
     assert diagnostics["unidata_version"] == unicodedata.unidata_version
+    assert diagnostics["cf"] == [
+        {"codepoint": "U+200D", "line": 4, "column": 12, "group": "zero_width"}
+    ]
+    assert diagnostics["counts"] == {"bidi": 0, "zero_width": 1, "soft_hyphen": 0, "other_cf": 0}
+    assert diagnostics["total"] == 1
     assert data["included"][0]["hit"]["artifact"]["source_path"] == t456.MODULE_PATH  # N
 
 
@@ -162,7 +171,12 @@ def test_cli_surfaces_matrix(export: Path, capsys: pytest.CaptureFixture[str]) -
     framed_code, framed_out = _run(capsys, search_cli.main, query + ["--representation", "framed"])
     assert legacy_code == framed_code == 0
     assert json.loads(legacy_out)["context"]["schema"] == "search_context/1"
-    assert json.loads(framed_out)["context"]["schema"] == "search_context/2"
+    context = json.loads(framed_out)["context"]
+    assert context["schema"] == "search_context/2"
+    (body,) = (decode_block(block) for block in _blocks(context["text"]))
+    assert body.text == json.loads(legacy_out)["context"]["included"][0]["text"]
+    assert "text" not in context["included"][0]
+    assert context["included"][0]["diagnostics"]["total"] == 1
 
 
 @pytest.mark.parametrize("representation", ["legacy", "framed"])
@@ -182,6 +196,20 @@ def test_exit_codes_unchanged(
     degraded = _run(capsys, cli.main, [t456.EXPORT, "--report-path", "d.json", *flag])[0]
     assert degraded == cli.EXIT_DEGRADED
     assert _run(capsys, search_cli.main, ["query", "absent", "--query", "x", *flag])[0] == 2
+
+
+@pytest.mark.parametrize("representation", ["legacy", "framed"])
+def test_agent_error_exit_codes(
+    export: Path, monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str], representation: str,
+) -> None:
+    flag = ["--representation", representation]
+    base = [str(export), "--json", *flag]
+    unwritable = ["--report-path", "absent/report.json"]
+    assert _run(capsys, cli.main, base + unwritable)[0] == cli.EXIT_WRITE_ERROR == 5
+    monkeypatch.setattr(cli, "run_pipeline", lambda _options: _fatal_outcome())
+    assert _run(capsys, cli.main, base + ["--report-path", "report.json"])[0] == cli.EXIT_FATAL == 4
+    assert _run(capsys, cli.main, base + unwritable)[0] == cli.EXIT_FATAL_AND_WRITE_ERROR == 6
 
 
 def test_describe_cli_agreed_change(capsys: pytest.CaptureFixture[str]) -> None:
