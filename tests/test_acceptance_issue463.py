@@ -94,7 +94,10 @@ def test_prompt_fragment_matrix(export: Path) -> None:
         framed,
         {"name": "Catalog/SampleObject/ItemForm/Variant1", "bsl": context.bsl_text},
     )
-    assert "<<<UNTRUSTED_DIAG n=3 file_bom=1 cf=3 bidi=1 zero_width=1 soft_hyphen=1 " in framed  # B, C
+    assert (
+        "<<<UNTRUSTED_DIAG n=3 file_bom=1 cf=3 bidi=1 zero_width=1 soft_hyphen=1 "
+        "other_cf=0 positions=U+200B@4:13:zero_width,U+202E@4:15:bidi,U+00AD@4:17:soft_hyphen>>>"
+    ) in framed  # B, C
     cut = to_llm_prompt_fragment(context, len(framed) - 40, representation="framed")
     bsl = decode_block(_blocks(cut)[-1])  # T
     assert bsl.truncated and bsl.omitted == (bsl.last_line + 1, 5)
@@ -123,6 +126,10 @@ def test_module_fragment_matrix(export: Path) -> None:
     )
     body = decode_block(_blocks(cut.text)[-1])  # T
     assert cut.truncated and body.truncated and text.startswith(body.text)
+    assert body.omitted == (body.last_line + 1, 5)
+    assert framed.diagnostics["cf"] == [
+        {"codepoint": "U+200D", "line": 4, "column": 12, "group": "zero_width"}
+    ]
 
 
 def test_search_context_matrix(export: Path) -> None:
@@ -146,6 +153,17 @@ def test_search_context_matrix(export: Path) -> None:
     assert diagnostics["counts"] == {"bidi": 0, "zero_width": 1, "soft_hyphen": 0, "other_cf": 0}
     assert diagnostics["total"] == 1
     assert data["included"][0]["hit"]["artifact"]["source_path"] == t456.MODULE_PATH  # N
+    budget = len(framed.text) - 40
+    cut = search_with_context(
+        fragmentation, "SharedHelpers", max_chars=budget, representation="framed"
+    )
+    assert cut.status == "truncated" and len(cut.text) <= budget
+    (body,) = (decode_block(block) for block in _blocks(cut.text))
+    span = cut.included[0].included_span
+    assert span is not None and body.truncated
+    assert (body.first_line, body.last_line) == (span.start_line, span.end_line)
+    assert body.omitted == (span.end_line + 1, 5)
+    assert body.text == "".join(legacy.included[0].text.splitlines(keepends=True)[:span.end_line])
 
 
 def _run(capsys: pytest.CaptureFixture[str], main, argv: list[str]) -> tuple[int, str]:  # type: ignore[no-untyped-def]
