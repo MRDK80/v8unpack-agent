@@ -187,3 +187,11 @@ Library: прямой импорт v8unpack_agent.search_api; max_chars в
 search_with_context обязателен, эмбеддер передаётся явно. Пример строит
 SearchCorpus публичными типами в памяти, не scanner. Схемы search_*/1
 независимы; это не реализация контрактов #254/#258/#259.
+
+## Флаг `--representation` (#461)
+
+`query --representation {legacy,framed}`; по умолчанию `legacy` — вывод не
+меняется. `framed` передаёт режим в `search_with_context`: `context` имеет схему
+`search_context/2` с обратимыми блоками недоверенного текста и
+`included[].diagnostics` (docs/search_context.md, ADR #457). Коды завершения не
+меняются.

@@ -28,7 +28,7 @@ stderr пуст. Выгрузка не читается, файлы не пиш�
 
 | Поле | Значение |
 |---|---|
-| `schema_version` | `"1.0"` — версия формы каталога |
+| `schema_version` | `"1.1"` — версия формы каталога (1.1: параметр `--representation`, #461) |
 | `kind` | `"v8unpack-agent.cli-catalog"` |
 | `json_contract` | `kind` и `schema_version` envelope `--json` ([cli_json](cli_json.md)); версия каталога с ним не смешивается |
 | `usage_error` | `exit_code` 2, `source` `argparse` — общая ошибка разбора для всех команд |
