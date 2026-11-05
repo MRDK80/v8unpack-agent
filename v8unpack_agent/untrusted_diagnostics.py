@@ -24,6 +24,7 @@ __all__ = [
     "UntrustedDiagnostics",
     "cf_group",
     "detect_untrusted_chars",
+    "diag_line",
 ]
 
 FILE_BOM_BYTES = b"\xef\xbb\xbf"
@@ -144,3 +145,13 @@ def detect_untrusted_chars(text: str, *, raw: bytes | None = None) -> UntrustedD
         occurrences=tuple(occurrences),
         unidata_version=unicodedata.unidata_version,
     )
+
+
+def diag_line(diagnostics: UntrustedDiagnostics) -> str:
+    """Содержимое служебной строки ``<<<UNTRUSTED_DIAG …>>>`` (решение 5 ADR #457).
+
+    Только признак BOM и счётчики; позиции — в структурированных полях.
+    """
+    bom = {None: "unknown", True: "1", False: "0"}[diagnostics.file_bom]
+    counts = " ".join(f"{key}={value}" for key, value in diagnostics.counts.items())
+    return f"file_bom={bom} cf={diagnostics.total} {counts}"

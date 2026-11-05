@@ -8,11 +8,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any, Literal
 
 from v8unpack_agent.modules import ModuleEntry, ModuleReadStatus
+from v8unpack_agent.untrusted_diagnostics import detect_untrusted_chars, diag_line
+from v8unpack_agent.untrusted_transport import encode_block
+
+Representation = Literal["legacy", "framed"]
 
 __all__ = [
     "ModuleProjection",
+    "Representation",
     "to_llm_module_fragment",
 ]
 
@@ -37,6 +43,9 @@ class ModuleProjection:
     text: str
     truncated: bool
     original_chars: int
+    representation: Representation = "legacy"
+    diagnostics: dict[str, Any] | None = None
+    """Только в режиме ``framed`` (#460): диагностика Cf/BOM по ADR #457."""
 
 
 def _normalize(text: str) -> str:
@@ -60,6 +69,62 @@ def _header(entry: ModuleEntry) -> str:
     return _LF.join(lines) + _LF
 
 
+def _framed_header(entry: ModuleEntry) -> str:
+    lines = [
+        "MODULE",
+        f"kind: {entry.module_kind}",
+        f"owner_kind: {entry.owner_kind}",
+    ]
+    if entry.metadata_type is not None:
+        lines.append(f"metadata_type: {entry.metadata_type}")
+    text = _LF.join(lines) + _LF
+    number = 1
+    if entry.owner_name is not None:
+        text += "owner:" + _LF + encode_block(entry.owner_name, n=number, kind="name")
+        number += 1
+    text += "path:" + _LF + encode_block(entry.relative_path, n=number, kind="path")
+    return text + "BSL" + _LF
+
+
+def _framed(
+    entry: ModuleEntry, bsl_text: str, max_chars: int, raw: bytes | None
+) -> ModuleProjection:
+    header = _framed_header(entry)
+    number = header.count("<<<UNTRUSTED_END") + 1
+    diagnostics = detect_untrusted_chars(bsl_text, raw=raw)
+    diag = diag_line(diagnostics)
+    pieces = bsl_text.split(_LF)
+    lines = [p + _LF for p in pieces[:-1]] + ([pieces[-1]] if pieces[-1] else [])
+    total = len(lines)
+
+    def render(count: int) -> str:
+        body = "".join(lines[:count])
+        block = encode_block(
+            body, n=number, kind="bsl", total_lines=total, diag=diag
+        )
+        return header + block
+
+    full = render(total)
+
+    def result(text: str, truncated: bool) -> ModuleProjection:
+        return ModuleProjection(
+            status=entry.read_status,
+            text=text,
+            truncated=truncated,
+            original_chars=len(bsl_text),
+            representation="framed",
+            diagnostics=diagnostics.to_dict(),
+        )
+
+    if max_chars == _NO_LIMIT or len(full) <= max_chars:
+        return result(full, False)
+    for count in range(total - 1, -1, -1):
+        text = render(count)
+        if len(text) <= max_chars:
+            return result(text, True)
+    return result("", True)
+
+
 def _marker(included: int, total: int) -> str:
     return _LF + f"[TRUNCATED: {included} of {total} chars]"
 
@@ -69,6 +134,8 @@ def to_llm_module_fragment(
     bsl_text: str | None,
     *,
     max_chars: int = _NO_LIMIT,
+    representation: Representation = "legacy",
+    bsl_bytes: bytes | None = None,
 ) -> ModuleProjection:
     """Построить детерминированный текст модуля для LLM.
 
@@ -77,7 +144,16 @@ def to_llm_module_fragment(
     результат — заголовок (вид модуля, владелец, относительный путь) и
     тело. ``max_chars=-1`` отключает лимит; иначе ``len(text) <= max_chars``,
     а усечение отражено в ``truncated`` и маркере в конце текста.
+
+    ``representation="framed"`` (#460, ADR #457): имя владельца, путь и тело —
+    обратимые блоки недоверенного текста; тело берётся без нормализации,
+    усечение — по целым строкам с ``truncated=1``/``omitted`` в заголовке
+    блока, маркер ``[TRUNCATED: …]`` не выводится. По умолчанию ``legacy``.
+    ``bsl_bytes`` — исходные байты файла для признака ``file_bom``; в
+    прежнем режиме не используется.
     """
+    if representation not in ("legacy", "framed"):
+        raise ValueError("representation must be 'legacy' or 'framed'")
     if isinstance(max_chars, bool) or not isinstance(max_chars, int):
         raise TypeError("max_chars must be int")
     if max_chars < _NO_LIMIT:
@@ -87,12 +163,15 @@ def to_llm_module_fragment(
     status = entry.read_status
     if status != "ok":
         return ModuleProjection(
-            status=status, text="", truncated=False, original_chars=0
+            status=status, text="", truncated=False, original_chars=0,
+            representation=representation,
         )
     if bsl_text is None:
         raise ValueError("bsl_text is required for status 'ok'")
     if not isinstance(bsl_text, str):
         raise TypeError("bsl_text must be str")
+    if representation == "framed":
+        return _framed(entry, bsl_text, max_chars, bsl_bytes)
     body = _normalize(bsl_text)
     header = _header(entry)
     total = len(body)

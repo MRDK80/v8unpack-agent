@@ -1,0 +1,21 @@
+MODULE
+kind: common_module
+owner_kind: common_module
+metadata_type: CommonModule
+owner:
+<<<UNTRUSTED_BEGIN n=1 kind=name lines=1-1/1 chars=13 final_newline=0 truncated=0 sha256=722e573b11e91d83b66264d5b409732e2d899fbd506ce1bc9ead54f54b2ad959>>>
+| SharedHelpers
+<<<UNTRUSTED_END n=1>>>
+path:
+<<<UNTRUSTED_BEGIN n=2 kind=path lines=1-1/1 chars=47 final_newline=0 truncated=0 sha256=56646ba0476a875c8670171f6893850f8c3ee1708e4b2b79f655d436b2fd6cad>>>
+| CommonModule/SharedHelpers/CommonModule.obj.bsl
+<<<UNTRUSTED_END n=2>>>
+BSL
+<<<UNTRUSTED_BEGIN n=3 kind=bsl lines=1-5/5 chars=72 final_newline=1 truncated=0 sha256=366bc24105925d7790134bb578452f92b59b9c5a1b02841154b612e8dcfa6199>>>
+<<<UNTRUSTED_DIAG n=3 file_bom=1 cf=1 bidi=0 zero_width=1 soft_hyphen=0 other_cf=0>>>
+| \u{FEFF}// SOURCE TEXT
+| MODULE
+| Функция Ф() Экспорт
+| 	Возврат "x\u{200D}y";
+| КонецФункции
+<<<UNTRUSTED_END n=3>>>

@@ -1,0 +1,41 @@
+# FORM
+<<<UNTRUSTED_BEGIN n=1 kind=name lines=1-1/1 chars=41 final_newline=0 truncated=0 sha256=3d6e00e77ce66a2342fea9def63a32f9393ca005027c9d30e3ffd5c93eb25016>>>
+| Catalog/Образец/CatalogForm/ФормаЭлемента
+<<<UNTRUSTED_END n=1>>>
+## SUMMARY
+<<<UNTRUSTED_BEGIN n=2 kind=text lines=1-23/23 chars=455 final_newline=0 truncated=0 sha256=2ac6fc989c9b943ad21d0325553fc1002a67bfd61e3af3c3b92778223123252a>>>
+| {
+|   "attributes": [
+|     {
+|       "name": "ЗаголовокФормы1",
+|       "type": "String"
+|     }
+|   ],
+|   "commands": [],
+|   "elements": [
+|     {
+|       "kind": "Page",
+|       "name": "Страница\u{200B}1",
+|       "path": "Страница\u{200B}1",
+|       "source": "data"
+|     }
+|   ],
+|   "events": [],
+|   "relations": [],
+|   "warnings": [
+|     "Метаданные владельца не найдены для .../Catalog/Образец/CatalogForm/ФормаЭлемента",
+|     "decode_element_data_path: карта реквизитов владельца пуста"
+|   ]
+| }
+<<<UNTRUSTED_END n=2>>>
+## OBJECT_ATTRIBUTES
+(реквизиты объекта не найдены)
+## BSL
+<<<UNTRUSTED_BEGIN n=3 kind=bsl lines=1-5/5 chars=89 final_newline=1 truncated=0 sha256=829d5b7d248f389035455acfc435e6bc9b8677560fbd585a3c438001cd49d844>>>
+<<<UNTRUSTED_DIAG n=3 file_bom=1 cf=1 bidi=1 zero_width=0 soft_hyphen=0 other_cf=0>>>
+| \u{FEFF}// SOURCE TEXT
+| ## SUMMARY
+| Процедура ПриОткрытии(Отказ)
+| 	Сообщить("a\u{202E}b");
+| КонецПроцедуры
+<<<UNTRUSTED_END n=3>>>

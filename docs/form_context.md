@@ -543,3 +543,24 @@ rag_text = to_llm_prompt_fragment(context, sections=(SECTION_FORM, SECTION_SUMMA
 параметр `sections` не передаёт: смена текста для эмбеддинга меняет индекс и
 требует отдельной политики перестроения. #146 поставляет только механизм.
 Тесты: `tests/test_form_context_sections_issue146.py`.
+
+## Новый режим `framed` (#460)
+
+`to_llm_prompt_fragment(context, ..., representation="framed")` выводит данные
+выгрузки обратимыми блоками недоверенного текста (ADR
+`docs/research/untrusted_content_contract_issue457.md`); по умолчанию
+`representation="legacy"` и вывод не меняется.
+
+- `# FORM` — блок `kind=name` с путём формы; `## SUMMARY` (JSON выжимки и строки
+  статусов) и `## OBJECT_ATTRIBUTES` — блоки `kind=text`; `## BSL` — блок
+  `kind=bsl` со служебной строкой `<<<UNTRUSTED_DIAG n=… file_bom=… cf=…>>>`.
+  Заглушки отсутствующих данных выводятся без блока.
+- Каждая строка данных начинается с `| `, поэтому строка исходника вида
+  `## BSL` остаётся данными. Блок декодируется
+  `v8unpack_agent.untrusted_transport.decode_block`.
+- Бюджеты `max_chars`/`max_tokens` применяются к итоговому тексту. Частично
+  входит только блок BSL — целыми строками, с `truncated=1` и `omitted`;
+  остальные блоки атомарны. Сбой `count_tokens` — fallback на символьный
+  бюджет.
+- `file_bom` определяется по ведущему U+FEFF: BSL читается как `utf-8` без
+  снятия BOM, поэтому это точно соответствует байтам файла.

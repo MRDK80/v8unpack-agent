@@ -82,7 +82,7 @@ import json
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field, replace
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any, Literal, Protocol
 
 from v8unpack_agent._safe_paths import sanitize_diagnostic
 from v8unpack_agent.catalog_resolver import object_json_path, resolve_data_path
@@ -100,6 +100,12 @@ from v8unpack_agent.reference_resolution import (
     is_reference_type,
     iter_named_types,
 )
+from v8unpack_agent.untrusted_diagnostics import (
+    FILE_BOM_BYTES,
+    detect_untrusted_chars,
+    diag_line,
+)
+from v8unpack_agent.untrusted_transport import encode_block
 
 __all__ = [
     "FormContext",
@@ -854,6 +860,143 @@ def _normalize_sections(sections: Iterable[str]) -> frozenset[str]:
     return frozenset(selected)
 
 
+# --- issue #460: режим framed (ADR #457) ---
+
+_FRAMED_BOM = chr(0xFEFF)
+
+
+def _framed_sections(
+    context: FormContext, selected: frozenset[str]
+) -> list[tuple[str, str, str, str | None]]:
+    """Секции нового режима: (имя, служебная строка, канон, kind блока|None).
+
+    Канон заголовка, выжимки и реквизитов санитизируется так же, как в
+    прежнем режиме (#142), затем кодируется как недоверенный текст.
+    """
+    name = "/".join(
+        part
+        for part in (
+            context.object_type,
+            context.object_name,
+            context.container_name,
+            context.form_name,
+        )
+        if part
+    )
+    summary_lines = [sanitize_diagnostic(to_normalized_json(context.summary))]
+    if context.object_attributes is not None:
+        summary_lines.append(_reference_types_line(context.object_attributes))
+    summary_lines.extend(
+        sanitize_diagnostic(_data_path_status_line(entry))
+        for entry in context.unresolved_data_paths
+    )
+    if context.object_attributes is not None:
+        attributes: str | None = _object_attributes_to_json(
+            context.object_attributes, context.resolved_relations
+        )
+    else:
+        attributes = None
+    items: list[tuple[str, str, str, str | None]] = [
+        (SECTION_FORM, "# FORM", sanitize_diagnostic(name), "name"),
+        (SECTION_SUMMARY, SUMMARY_MARKER, "\n".join(summary_lines), "text"),
+        (
+            SECTION_OBJECT_ATTRIBUTES,
+            OBJECT_ATTRIBUTES_MARKER,
+            NO_OBJECT_PLACEHOLDER if attributes is None else attributes,
+            None if attributes is None else "text",
+        ),
+        (
+            SECTION_BSL,
+            BSL_MARKER,
+            NO_BSL_PLACEHOLDER if context.bsl_text is None else context.bsl_text,
+            None if context.bsl_text is None else "bsl",
+        ),
+    ]
+    return [item for item in items if item[0] in selected]
+
+
+def _framed_fragment(
+    context: FormContext,
+    selected: frozenset[str],
+    fits: Callable[[str], bool],
+) -> str:
+    """Собрать фрагмент нового режима в пределах бюджета ``fits``.
+
+    Секции идут в каноническом порядке. Частично включается только блок
+    BSL — по целым строкам, с ``truncated=1`` и ``omitted`` в заголовке;
+    остальные блоки атомарны: невместившаяся секция и все следующие
+    отбрасываются. Если не помещается даже первая секция — пустая строка.
+    """
+    items = _framed_sections(context, selected)
+    rendered: list[str] = []
+    number = 0
+    for _name, label, canon, kind in items:
+        if kind is None:
+            piece = f"{label}\n{canon}\n"
+            if not fits("".join(rendered) + piece):
+                break
+            rendered.append(piece)
+            continue
+        number += 1
+        if kind != "bsl":
+            piece = label + "\n" + encode_block(canon, n=number, kind=kind)
+            if not fits("".join(rendered) + piece):
+                break
+            rendered.append(piece)
+            continue
+        raw = FILE_BOM_BYTES if canon.startswith(_FRAMED_BOM) else b""
+        diag = diag_line(detect_untrusted_chars(canon, raw=raw))
+        lines = _split_complete_lines(canon)
+        accepted = None
+        for count in range(len(lines), -1, -1):
+            piece = label + "\n" + encode_block(
+                "".join(lines[:count]), n=number, kind="bsl",
+                total_lines=len(lines), diag=diag,
+            )
+            if fits("".join(rendered) + piece):
+                accepted = piece
+                break
+        if accepted is None:
+            break
+        rendered.append(accepted)
+    return "".join(rendered)
+
+
+def _framed_prompt_fragment(
+    context: FormContext,
+    selected: frozenset[str],
+    max_chars: int,
+    max_tokens: int | None,
+    count_tokens: Callable[[str], int] | None,
+) -> str:
+    if max_chars == 0 or max_chars < -1 or (max_tokens is not None and max_tokens <= 0):
+        return ""
+
+    def chars_fit(text: str) -> bool:
+        return max_chars == -1 or len(text) <= max_chars
+
+    if max_tokens is None or count_tokens is None:
+        return _framed_fragment(context, selected, chars_fit)
+    limit = max_tokens
+    counter = count_tokens
+    failed = False
+
+    def both_fit(text: str) -> bool:
+        nonlocal failed
+        if not chars_fit(text):
+            return False
+        tokens = _safe_token_count(counter, text)
+        if tokens is None:
+            failed = True
+            return False
+        return tokens <= limit
+
+    result = _framed_fragment(context, selected, both_fit)
+    if failed:
+        return _framed_fragment(context, selected, chars_fit)
+    return result
+
+
 def to_llm_prompt_fragment(
     context: FormContext,
     max_chars: int = -1,
@@ -861,6 +1004,7 @@ def to_llm_prompt_fragment(
     max_tokens: int | None = None,
     count_tokens: Callable[[str], int] | None = None,
     sections: Iterable[str] | None = None,
+    representation: Literal["legacy", "framed"] = "legacy",
 ) -> str:
     """Фрагмент для промпта с символьным и опциональным токенным бюджетом.
 
@@ -884,8 +1028,30 @@ def to_llm_prompt_fragment(
     ``sections`` на результат не влияют. Пустой набор даёт пустую строку.
     Непустой набор обязан включать :data:`SECTION_FORM`, неизвестное имя —
     ``ValueError``. Оба бюджета считаются по уже отфильтрованному тексту.
+
+    ``representation="framed"`` (#460, ADR #457): имя формы — блок
+    ``kind=name``, выжимка и реквизиты — блоки ``kind=text``, BSL — блок
+    ``kind=bsl`` со строкой ``<<<UNTRUSTED_DIAG …>>>``; бюджеты применяются к
+    итоговому тексту, частично входит только блок BSL (целыми строками).
+    Сбой ``count_tokens`` — fallback на символьный бюджет, как в прежнем
+    режиме. По умолчанию ``legacy``: вывод бит-в-бит прежний.
     """
+    if representation not in ("legacy", "framed"):
+        raise ValueError("to_llm_prompt_fragment: representation — 'legacy' или 'framed'")
     selected = None if sections is None else _normalize_sections(sections)
+    if representation == "framed":
+        if (max_tokens is None) != (count_tokens is None):
+            raise ValueError(_TOKEN_BUDGET_PAIRING_ERROR)
+        if max_tokens is not None and (
+            isinstance(max_tokens, bool) or not isinstance(max_tokens, int)
+        ):
+            raise TypeError("to_llm_prompt_fragment: max_tokens должен быть int")
+        if count_tokens is not None and not callable(count_tokens):
+            raise TypeError("to_llm_prompt_fragment: count_tokens должен быть callable")
+        chosen = frozenset(ALL_SECTIONS) if selected is None else selected
+        return _framed_prompt_fragment(
+            context, chosen, max_chars, max_tokens, count_tokens
+        )
 
     def chars(limit: int) -> str:
         if selected is None:

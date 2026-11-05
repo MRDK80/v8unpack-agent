@@ -1,5 +1,21 @@
 # Changelog
 
+## Новый режим фрагментов формы и модуля ([#460](https://github.com/MRDK80/v8unpack-agent/issues/460))
+
+### Добавлено
+
+- `to_llm_prompt_fragment()` и `to_llm_module_fragment()`: keyword-only
+  `representation="legacy"|"framed"` (по умолчанию `legacy`, вывод не меняется).
+  В `framed` значения выгрузки — обратимые блоки по ADR #457 со строкой
+  `<<<UNTRUSTED_DIAG …>>>`; `to_llm_module_fragment` получает `bsl_bytes`,
+  `ModuleProjection` — поля `representation` и `diagnostics`.
+- `untrusted_diagnostics.diag_line()`; `untrusted_transport.encode_block(diag=…)`.
+- `docs/form_context.md`, `docs/modules.md`: разделы о режиме `framed`.
+
+### Тесты
+
+- `tests/test_fragment_framed_issue460.py`, `tests/golden_issue460/`.
+
 ## Новый режим `search_context` ([#459](https://github.com/MRDK80/v8unpack-agent/issues/459))
 
 ### Добавлено
