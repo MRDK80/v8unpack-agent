@@ -1,5 +1,16 @@
 # Changelog
 
+## Характеристика текущего LLM-вывода ([#456](https://github.com/MRDK80/v8unpack-agent/issues/456))
+
+### Тесты
+
+- `tests/test_output_characterization_issue456.py`: побайтные эталоны текущего
+  вывода `to_llm_prompt_fragment`, `to_llm_module_fragment`, `search_context/1`,
+  `search_cli`, `v8unpack-agent-run` (текст и envelope `--json`), post-run report
+  schema 1 и 2 и каталога `--describe-cli` на синтетической выгрузке с символами
+  Cf, файловым BOM и строкой вида служебного маркера.
+- `tests/golden_issue456/`: эталоны. Продуктовый код не изменён.
+
 ## Явный признак недоказанного ссылочного типа во фрагменте ([#289](https://github.com/MRDK80/v8unpack-agent/issues/289))
 
 ### Добавлено

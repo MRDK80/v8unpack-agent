@@ -1,0 +1,38 @@
+exit=0
+--stdout--
+{
+  "command": "build",
+  "corpus": {
+    "counts": {
+      "common_modules": {
+        "included": 1
+      },
+      "forms": {
+        "included": 1
+      },
+      "module_index": {
+        "missing": 2
+      },
+      "owner_cards": {
+        "included": 2
+      }
+    },
+    "total": 6
+  },
+  "error": null,
+  "fragments": 6,
+  "schema": "search_cli/1",
+  "snapshot": {
+    "embedder": {
+      "config_hash": "1aa2cab28c2a8ad4c8819c35e812a084707da7b63d0b44789f8acf4e9aedab14",
+      "dimension": 256,
+      "name": "v8unpack-agent-hashed-bow-demo",
+      "version": "1"
+    },
+    "entries": 6,
+    "representation_version": "c8eb4789dfe3b2db716b5198180bfb9b4e2f3bea71aaf933eaf6ec7edb944c9f",
+    "schema": "search_index/1"
+  },
+  "status": "ok"
+}
+--stderr--

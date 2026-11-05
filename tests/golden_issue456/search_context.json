@@ -1,0 +1,116 @@
+{
+  "candidates_omitted": 0,
+  "candidates_shown": 1,
+  "candidates_total": 1,
+  "dispatch": {
+    "exact_filtered_out": 0,
+    "index_status": null,
+    "path": [
+      "exact"
+    ],
+    "result": {
+      "error": null,
+      "hits": [
+        {
+          "artifact": {
+            "artifact_id": "common_module:CommonModule:SharedHelpers:common_module",
+            "artifact_kind": "module",
+            "form_key": null,
+            "module_kind": "common_module",
+            "owner": {
+              "metadata_type": "CommonModule",
+              "owner_id": "owner:common_module:CommonModule:SharedHelpers",
+              "owner_kind": "common_module",
+              "owner_name": "SharedHelpers"
+            },
+            "source_path": "CommonModule/SharedHelpers/CommonModule.obj.bsl"
+          },
+          "document_id": null,
+          "matched_field": "owner_name",
+          "method": "exact_name",
+          "similarity": null
+        }
+      ],
+      "query": {
+        "filters": {
+          "artifact_kinds": null,
+          "metadata_types": null,
+          "module_kinds": null,
+          "owner_kinds": null,
+          "owner_names": null
+        },
+        "mode": "auto",
+        "text": "SharedHelpers",
+        "top_k": 5
+      },
+      "schema": "search_contract/1",
+      "status": "exact"
+    }
+  },
+  "included": [
+    {
+      "candidate_only": false,
+      "hit": {
+        "artifact": {
+          "artifact_id": "common_module:CommonModule:SharedHelpers:common_module",
+          "artifact_kind": "module",
+          "form_key": null,
+          "module_kind": "common_module",
+          "owner": {
+            "metadata_type": "CommonModule",
+            "owner_id": "owner:common_module:CommonModule:SharedHelpers",
+            "owner_kind": "common_module",
+            "owner_name": "SharedHelpers"
+          },
+          "source_path": "CommonModule/SharedHelpers/CommonModule.obj.bsl"
+        },
+        "document_id": null,
+        "matched_field": "owner_name",
+        "method": "exact_name",
+        "similarity": null
+      },
+      "included_span": {
+        "end_line": 5,
+        "start_line": 1
+      },
+      "owner_links": [
+        {
+          "artifact": {
+            "artifact_id": "common_module:CommonModule:SharedHelpers:common_module",
+            "artifact_kind": "module",
+            "form_key": null,
+            "module_kind": "common_module",
+            "owner": {
+              "metadata_type": "CommonModule",
+              "owner_id": "owner:common_module:CommonModule:SharedHelpers",
+              "owner_kind": "common_module",
+              "owner_name": "SharedHelpers"
+            },
+            "source_path": "CommonModule/SharedHelpers/CommonModule.obj.bsl"
+          },
+          "basis": "module_entry",
+          "confirmed": true,
+          "owner": {
+            "metadata_type": "CommonModule",
+            "owner_id": "owner:common_module:CommonModule:SharedHelpers",
+            "owner_kind": "common_module",
+            "owner_name": "SharedHelpers"
+          }
+        }
+      ],
+      "source_document_ids": [
+        "common_module:CommonModule:SharedHelpers:common_module#L1-2",
+        "common_module:CommonModule:SharedHelpers:common_module#Ф"
+      ],
+      "text_chars": 71,
+      "text_sha256": "2b3fe5624576823953882e8c6618aca6d0c6e247fef3f733bfdcb12c4059da99"
+    }
+  ],
+  "omitted": [],
+  "schema": "search_context/1",
+  "search_kind": "exact",
+  "status": "built",
+  "text_chars": 1888,
+  "text_sha256": "526ea4ab0e2f157eec5d6673fcff45b1685ae28afbf874ff1a759f029752d2d0",
+  "warnings": []
+}
