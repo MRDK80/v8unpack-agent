@@ -32,7 +32,7 @@
 
 ```
 <<<UNTRUSTED_BEGIN n=1 kind=bsl lines=1-2/5 chars=27 final_newline=1 truncated=1 omitted=3-5 sha256=<hex>>>>
-<<<UNTRUSTED_DIAG n=1 file_bom=1 cf=1 bidi=1 zero_width=0 soft_hyphen=0 other_cf=0>>>
+<<<UNTRUSTED_DIAG n=1 file_bom=1 cf=1 bidi=1 zero_width=0 soft_hyphen=0 other_cf=0 positions=U+202E@4:13:bidi>>>
 | \u{FEFF}// SOURCE TEXT
 | ## SUMMARY
 <<<UNTRUSTED_END n=1>>>
@@ -52,7 +52,10 @@
 - Усечение только целыми строками: `truncated=1` и `omitted=b+1-T`. Маркер
   `[TRUNCATED: …]` прежнего режима в `framed` не выводится.
 - Строка `<<<UNTRUSTED_DIAG …>>>` (после заголовка блока BSL) — признак
-  файлового BOM и счётчики Cf по группам.
+  файлового BOM, счётчики Cf по группам и позиции в форме
+  `codepoint@line:column:group` через запятую. При отсутствии Cf — `positions=-`.
+- В JSON-карточках `search_context/2` строковые значения экранируются по тем
+  же правилам. С `include_text=True` блоки находятся в верхнем поле `text`.
 
 Обратимость: `v8unpack_agent.untrusted_transport.decode_block` возвращает
 включённый канонический текст точно и отвергает блок с неверными `sha256`,
