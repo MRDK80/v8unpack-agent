@@ -197,6 +197,11 @@ class RunOptions:
         ``include_module_index=True``. После конструирования значение
         нормализовано: без повторов, в фиксированном порядке групп.
         Ошибка значения даёт ``ValueError`` без повтора введённых данных.
+    representation:
+        Режим представления данных выгрузки в промпт-фрагментах (#461,
+        ADR #457): ``"legacy"`` (по умолчанию, прежний вывод) или
+        ``"framed"``. Отчёт не меняется; ``prompt_chars`` отражает длину
+        фрагментов выбранного режима.
     """
 
     export_root: Path
@@ -207,8 +212,11 @@ class RunOptions:
     max_prompt_chars: int = -1
     include_module_index: bool = False
     module_groups: tuple[str, ...] | None = None
+    representation: Literal["legacy", "framed"] = "legacy"
 
     def __post_init__(self) -> None:
+        if self.representation not in ("legacy", "framed"):
+            raise ValueError("representation: ожидается 'legacy' или 'framed'")
         groups = self.module_groups
         if groups is None:
             return
@@ -403,7 +411,12 @@ def _process_form(
         resolution.add_attributes(getattr(context, "object_attributes", None))
 
     try:
-        fragment = to_llm_prompt_fragment(context, options.max_prompt_chars)
+        if options.representation == "legacy":
+            fragment = to_llm_prompt_fragment(context, options.max_prompt_chars)
+        else:
+            fragment = to_llm_prompt_fragment(
+                context, options.max_prompt_chars, representation=options.representation
+            )
     except Exception as exc:  # noqa: BLE001
         return (
             _object_result(

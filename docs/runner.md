@@ -248,3 +248,12 @@ write_post_run_report(outcome.report, Path("post-run.json"))
 группами не управляются. Библиотечный вызов: `RunOptions.module_groups`
 (`None` — все группы; значение вне набора или без индекса даёт `ValueError`).
 
+
+## Флаг `--representation` (#461)
+
+`v8unpack-agent-run --representation {legacy,framed}` и
+`RunOptions(representation=...)`; по умолчанию `legacy` — вывод не меняется.
+`framed` строит промпт-фрагменты форм в режиме `framed` (docs/form_context.md).
+Post-run report и envelope `--json` новых полей не получают; значение
+`prompt_chars` («промпт-символов») равно длине фрагментов выбранного режима.
+Коды завершения не меняются.

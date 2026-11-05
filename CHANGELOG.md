@@ -1,5 +1,23 @@
 # Changelog
 
+## Флаг `--representation` в CLI ([#461](https://github.com/MRDK80/v8unpack-agent/issues/461))
+
+### Добавлено
+
+- `v8unpack-agent-run --representation {legacy,framed}` и `RunOptions.representation`;
+  `search_cli query --representation {legacy,framed}`. По умолчанию `legacy`: вывод,
+  отчёт и envelope `--json` не меняются; в `framed` меняются только фрагменты
+  (и значение `prompt_chars`) и `context` поиска (`search_context/2`).
+
+### Изменено
+
+- Каталог `--describe-cli`: `schema_version` 1.0 → 1.1 (новый параметр, MINOR);
+  существующие поля не меняются. Эталон #456 обновлён только этой записью.
+
+### Тесты
+
+- `tests/test_cli_representation_issue461.py`.
+
 ## Новый режим фрагментов формы и модуля ([#460](https://github.com/MRDK80/v8unpack-agent/issues/460))
 
 ### Добавлено
