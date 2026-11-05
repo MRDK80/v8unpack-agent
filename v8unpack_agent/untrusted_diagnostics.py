@@ -150,8 +150,12 @@ def detect_untrusted_chars(text: str, *, raw: bytes | None = None) -> UntrustedD
 def diag_line(diagnostics: UntrustedDiagnostics) -> str:
     """Содержимое служебной строки ``<<<UNTRUSTED_DIAG …>>>`` (решение 5 ADR #457).
 
-    Только признак BOM и счётчики; позиции — в структурированных полях.
+    Позиции перечисляются в порядке исходного текста как codepoint@line:column:group.
     """
     bom = {None: "unknown", True: "1", False: "0"}[diagnostics.file_bom]
     counts = " ".join(f"{key}={value}" for key, value in diagnostics.counts.items())
-    return f"file_bom={bom} cf={diagnostics.total} {counts}"
+    positions = ",".join(
+        f"{item.codepoint}@{item.line}:{item.column}:{item.group}"
+        for item in diagnostics.occurrences
+    )
+    return f"file_bom={bom} cf={diagnostics.total} {counts} positions={positions or '-'}"

@@ -69,7 +69,7 @@ def _header(entry: ModuleEntry) -> str:
     return _LF.join(lines) + _LF
 
 
-def _framed_header(entry: ModuleEntry) -> str:
+def _framed_header(entry: ModuleEntry) -> tuple[str, int]:
     lines = [
         "MODULE",
         f"kind: {entry.module_kind}",
@@ -83,14 +83,13 @@ def _framed_header(entry: ModuleEntry) -> str:
         text += "owner:" + _LF + encode_block(entry.owner_name, n=number, kind="name")
         number += 1
     text += "path:" + _LF + encode_block(entry.relative_path, n=number, kind="path")
-    return text + "BSL" + _LF
+    return text + "BSL" + _LF, number + 1
 
 
 def _framed(
     entry: ModuleEntry, bsl_text: str, max_chars: int, raw: bytes | None
 ) -> ModuleProjection:
-    header = _framed_header(entry)
-    number = header.count("<<<UNTRUSTED_END") + 1
+    header, number = _framed_header(entry)
     diagnostics = detect_untrusted_chars(bsl_text, raw=raw)
     diag = diag_line(diagnostics)
     pieces = bsl_text.split(_LF)

@@ -32,7 +32,7 @@
 (реквизиты объекта не найдены)
 ## BSL
 <<<UNTRUSTED_BEGIN n=3 kind=bsl lines=1-2/5 chars=27 final_newline=1 truncated=1 omitted=3-5 sha256=9bdde505ae45ed834c901941a4865e173be771460b222e73da263decc8c3d039>>>
-<<<UNTRUSTED_DIAG n=3 file_bom=1 cf=1 bidi=1 zero_width=0 soft_hyphen=0 other_cf=0>>>
+<<<UNTRUSTED_DIAG n=3 file_bom=1 cf=1 bidi=1 zero_width=0 soft_hyphen=0 other_cf=0 positions=U+202E@4:13:bidi>>>
 | \u{FEFF}// SOURCE TEXT
 | ## SUMMARY
 <<<UNTRUSTED_END n=3>>>

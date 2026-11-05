@@ -554,7 +554,8 @@ rag_text = to_llm_prompt_fragment(context, sections=(SECTION_FORM, SECTION_SUMMA
 - `# FORM` — блок `kind=name` с путём формы; `## SUMMARY` (JSON выжимки и строки
   статусов) и `## OBJECT_ATTRIBUTES` — блоки `kind=text`; `## BSL` — блок
   `kind=bsl` со служебной строкой `<<<UNTRUSTED_DIAG n=… file_bom=… cf=…>>>`.
-  Заглушки отсутствующих данных выводятся без блока.
+  Поле `positions` перечисляет Cf как `codepoint@line:column:group` через
+  запятую (`-` при отсутствии). Заглушки отсутствующих данных выводятся без блока.
 - Каждая строка данных начинается с `| `, поэтому строка исходника вида
   `## BSL` остаётся данными. Блок декодируется
   `v8unpack_agent.untrusted_transport.decode_block`.

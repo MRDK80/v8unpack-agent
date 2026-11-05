@@ -12,7 +12,7 @@ path:
 <<<UNTRUSTED_END n=2>>>
 BSL
 <<<UNTRUSTED_BEGIN n=3 kind=bsl lines=1-2/5 chars=23 final_newline=1 truncated=1 omitted=3-5 sha256=982abdb2721824a3fb7e739b8723277f3b65266463f0a8f96807f87648050c41>>>
-<<<UNTRUSTED_DIAG n=3 file_bom=1 cf=1 bidi=0 zero_width=1 soft_hyphen=0 other_cf=0>>>
+<<<UNTRUSTED_DIAG n=3 file_bom=1 cf=1 bidi=0 zero_width=1 soft_hyphen=0 other_cf=0 positions=U+200D@4:12:zero_width>>>
 | \u{FEFF}// SOURCE TEXT
 | MODULE
 <<<UNTRUSTED_END n=3>>>
