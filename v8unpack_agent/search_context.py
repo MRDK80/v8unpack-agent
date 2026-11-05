@@ -138,7 +138,7 @@ class SearchContext:
 
     def to_dict(self, *, include_text: bool = False) -> dict[str, Any]:
         framed = self.representation == "framed"
-        included = [b.to_dict(include_text=include_text) for b in self.included]
+        included = [b.to_dict(include_text=include_text and not framed) for b in self.included]
         if framed:
             for block, item in zip(self.included, included):
                 item["diagnostics"] = _diagnostics(block)

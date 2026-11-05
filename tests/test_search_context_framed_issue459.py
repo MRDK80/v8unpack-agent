@@ -90,6 +90,8 @@ def test_framed_fixture_456(fixture_fragmentation: FragmentationResult) -> None:
     data = framed.to_dict(include_text=True)
     assert data["schema"] == SEARCH_CONTEXT_SCHEMA_FRAMED
     assert data["status"] == "built"
+    assert "text" not in data["included"][0]
+    assert ZWJ not in framed.to_json(include_text=True)
     (block,) = framed.included
     assert block.text == legacy.included[0].text
     assert data["included"][0]["diagnostics"] == {
