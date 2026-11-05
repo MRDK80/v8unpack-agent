@@ -330,6 +330,12 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="включить исходный текст в JSON",
     )
+    query.add_argument(
+        "--representation",
+        choices=("legacy", "framed"),
+        default="legacy",
+        help="режим представления данных выгрузки для LLM (ADR #457): legacy — прежний вывод, framed — обратимые блоки",
+    )
     _add_embedder_argument(query, required=False)
     return parser
 
@@ -541,6 +547,7 @@ def _run_query(
         object_index=object_index,
         fusion=args.rank_fusion and object_index is not None,
         max_chars=args.max_chars,
+        representation=args.representation,
     )
     payload["context"] = context.to_dict(include_text=args.include_text)
     if args.min_score is not None:

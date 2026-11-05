@@ -22,7 +22,7 @@ from typing import Any
 from v8unpack_agent import cli, search_cli
 from v8unpack_agent.runner import MODULE_GROUPS
 
-CATALOG_SCHEMA_VERSION = "1.0"
+CATALOG_SCHEMA_VERSION = "1.1"
 CATALOG_KIND = "v8unpack-agent.cli-catalog"
 DESCRIBE_FLAG = "--describe-cli"
 

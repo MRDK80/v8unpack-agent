@@ -29,7 +29,11 @@ from v8unpack_agent.extension_modules import apply_extension, extension_name
 from v8unpack_agent.external_object_modules import scan_external_object_modules
 from v8unpack_agent.modules import ModuleEntry, ModuleIndex
 from v8unpack_agent.scan_forms import scan_forms
-from v8unpack_agent.search_context import SearchContext, build_search_context
+from v8unpack_agent.search_context import (
+    Representation,
+    SearchContext,
+    build_search_context,
+)
 from v8unpack_agent.search_contract import QueryMode, SearchFilters, SearchQuery
 from v8unpack_agent.search_corpus import (
     SearchCorpus,
@@ -193,8 +197,11 @@ def search_with_context(
     max_chars: int,
     max_tokens: int | None = None,
     count_tokens: Callable[[str], int] | None = None,
+    representation: Representation = "legacy",
 ) -> SearchContext:
     """Выполнить запрос через общий диспетчер и собрать контекст с бюджетом.
+
+    ``representation`` передаётся в :func:`build_search_context` (#459).
 
     Без ``index`` или ``embedder`` смысловой шаг даёт ``index_not_ready``;
     точный поиск работает без эмбеддера. ``object_index`` — индекс уровня
@@ -221,6 +228,7 @@ def search_with_context(
         max_chars=max_chars,
         max_tokens=max_tokens,
         count_tokens=count_tokens,
+        representation=representation,
     )
 
 

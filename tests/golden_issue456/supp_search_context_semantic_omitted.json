@@ -1,0 +1,150 @@
+{
+  "candidates_omitted": 2,
+  "candidates_shown": 0,
+  "candidates_total": 2,
+  "dispatch": {
+    "exact_filtered_out": 0,
+    "index_status": {
+      "compatibility": "compatible",
+      "freshness": "fresh",
+      "reasons": []
+    },
+    "path": [
+      "semantic"
+    ],
+    "result": {
+      "error": null,
+      "hits": [
+        {
+          "artifact": {
+            "artifact_id": "form:Catalog/Образец/CatalogForm/ФормаЭлемента",
+            "artifact_kind": "form",
+            "form_key": [
+              "Catalog",
+              "Образец",
+              "CatalogForm",
+              "ФормаЭлемента"
+            ],
+            "module_kind": null,
+            "owner": {
+              "metadata_type": "Catalog",
+              "owner_id": "owner:metadata_object:Catalog:Образец",
+              "owner_kind": "metadata_object",
+              "owner_name": "Образец"
+            },
+            "source_path": "Catalog/Образец/CatalogForm/ФормаЭлемента"
+          },
+          "document_id": "form:Catalog/Образец/CatalogForm/ФормаЭлемента#L1-2",
+          "matched_field": null,
+          "method": "semantic",
+          "similarity": 0.07955572841757301
+        },
+        {
+          "artifact": {
+            "artifact_id": "owner:metadata_object:Catalog:Образец",
+            "artifact_kind": "owner",
+            "form_key": null,
+            "module_kind": null,
+            "owner": {
+              "metadata_type": "Catalog",
+              "owner_id": "owner:metadata_object:Catalog:Образец",
+              "owner_kind": "metadata_object",
+              "owner_name": "Образец"
+            },
+            "source_path": null
+          },
+          "document_id": "owner:metadata_object:Catalog:Образец",
+          "matched_field": null,
+          "method": "semantic",
+          "similarity": 0.0
+        }
+      ],
+      "query": {
+        "filters": {
+          "artifact_kinds": null,
+          "metadata_types": null,
+          "module_kinds": null,
+          "owner_kinds": null,
+          "owner_names": null
+        },
+        "mode": "semantic",
+        "text": "Сообщить ПриОткрытии",
+        "top_k": 3
+      },
+      "schema": "search_contract/1",
+      "status": "semantic"
+    }
+  },
+  "included": [],
+  "omitted": [
+    {
+      "hit": {
+        "artifact": {
+          "artifact_id": "form:Catalog/Образец/CatalogForm/ФормаЭлемента",
+          "artifact_kind": "form",
+          "form_key": [
+            "Catalog",
+            "Образец",
+            "CatalogForm",
+            "ФормаЭлемента"
+          ],
+          "module_kind": null,
+          "owner": {
+            "metadata_type": "Catalog",
+            "owner_id": "owner:metadata_object:Catalog:Образец",
+            "owner_kind": "metadata_object",
+            "owner_name": "Образец"
+          },
+          "source_path": "Catalog/Образец/CatalogForm/ФормаЭлемента"
+        },
+        "document_id": "form:Catalog/Образец/CatalogForm/ФормаЭлемента#L1-2",
+        "matched_field": null,
+        "method": "semantic",
+        "similarity": 0.07955572841757301
+      },
+      "omitted_span": {
+        "end_line": 2,
+        "start_line": 1
+      },
+      "reason": "line_too_long",
+      "source_document_ids": [
+        "form:Catalog/Образец/CatalogForm/ФормаЭлемента#L1-2"
+      ]
+    },
+    {
+      "hit": {
+        "artifact": {
+          "artifact_id": "owner:metadata_object:Catalog:Образец",
+          "artifact_kind": "owner",
+          "form_key": null,
+          "module_kind": null,
+          "owner": {
+            "metadata_type": "Catalog",
+            "owner_id": "owner:metadata_object:Catalog:Образец",
+            "owner_kind": "metadata_object",
+            "owner_name": "Образец"
+          },
+          "source_path": null
+        },
+        "document_id": "owner:metadata_object:Catalog:Образец",
+        "matched_field": null,
+        "method": "semantic",
+        "similarity": 0.0
+      },
+      "omitted_span": null,
+      "reason": "no_span_atomic",
+      "source_document_ids": [
+        "owner:metadata_object:Catalog:Образец"
+      ]
+    }
+  ],
+  "schema": "search_context/1",
+  "search_kind": "semantic",
+  "status": "truncated",
+  "text": "{\"candidates_omitted\": 2, \"candidates_shown\": 0, \"candidates_total\": 2, \"context_status\": \"truncated\", \"error\": null, \"exact_filtered_out\": 0, \"index_status\": {\"compatibility\": \"compatible\", \"freshness\": \"fresh\", \"reasons\": []}, \"omission_reasons\": [\"line_too_long\", \"no_span_atomic\"], \"omitted_slices\": 2, \"path\": [\"semantic\"], \"schema\": \"search_context/1\", \"search_kind\": \"semantic\", \"warnings\": [\"similarity is not a probability of correctness\"]}\n",
+  "text_chars": 450,
+  "text_sha256": "ee92f43407bef076f8797a4743399a527a7e6a658d06392bac52007e5a50fa0b",
+  "warnings": [
+    "similarity is not a probability of correctness"
+  ]
+}

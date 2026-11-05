@@ -1,5 +1,90 @@
 # Changelog
 
+## Флаг `--representation` в CLI ([#461](https://github.com/MRDK80/v8unpack-agent/issues/461))
+
+### Добавлено
+
+- `v8unpack-agent-run --representation {legacy,framed}` и `RunOptions.representation`;
+  `search_cli query --representation {legacy,framed}`. По умолчанию `legacy`: вывод,
+  отчёт и envelope `--json` не меняются; в `framed` меняются только фрагменты
+  (и значение `prompt_chars`) и `context` поиска (`search_context/2`).
+
+### Изменено
+
+- Каталог `--describe-cli`: `schema_version` 1.0 → 1.1 (новый параметр, MINOR);
+  существующие поля не меняются. Эталон #456 обновлён только этой записью.
+
+### Тесты
+
+- `tests/test_cli_representation_issue461.py`.
+
+## Новый режим фрагментов формы и модуля ([#460](https://github.com/MRDK80/v8unpack-agent/issues/460))
+
+### Добавлено
+
+- `to_llm_prompt_fragment()` и `to_llm_module_fragment()`: keyword-only
+  `representation="legacy"|"framed"` (по умолчанию `legacy`, вывод не меняется).
+  В `framed` значения выгрузки — обратимые блоки по ADR #457 со строкой
+  `<<<UNTRUSTED_DIAG …>>>`; `to_llm_module_fragment` получает `bsl_bytes`,
+  `ModuleProjection` — поля `representation` и `diagnostics`.
+- `untrusted_diagnostics.diag_line()`; `untrusted_transport.encode_block(diag=…)`.
+- `docs/form_context.md`, `docs/modules.md`: разделы о режиме `framed`.
+
+### Тесты
+
+- `tests/test_fragment_framed_issue460.py`, `tests/golden_issue460/`.
+
+## Новый режим `search_context` ([#459](https://github.com/MRDK80/v8unpack-agent/issues/459))
+
+### Добавлено
+
+- `build_search_context()` и `search_with_context()`: keyword-only
+  `representation="legacy"|"framed"` (по умолчанию `legacy`, вывод не меняется).
+  В режиме `framed` — схема `search_context/2`, обратимые блоки недоверенного
+  текста и `included[].diagnostics` по ADR #457.
+- `v8unpack_agent/untrusted_transport.py`: `encode_block`/`decode_block`.
+- `docs/search_context.md`: раздел о режиме `framed`.
+
+### Тесты
+
+- `tests/test_search_context_framed_issue459.py`, `tests/golden_issue459/`.
+
+## Диагностика символов Cf и файлового BOM ([#458](https://github.com/MRDK80/v8unpack-agent/issues/458))
+
+### Добавлено
+
+- `v8unpack_agent/untrusted_diagnostics.py`: `detect_untrusted_chars(text, *, raw=None)`
+  находит символы категории Cf (строка и столбец с 1, в кодовых точках) и файловый
+  BOM по исходным байтам; группы `bidi`, `zero_width`, `soft_hyphen`, `other_cf` —
+  по фиксированной таблице решения 4 ADR #457, `unidata_version` — отдельным полем.
+  Текст и данные не изменяются; существующие выводы не меняются.
+
+### Тесты
+
+- `tests/test_untrusted_diagnostics_issue458.py`.
+
+## Дополнение характеристики LLM-вывода ([#456](https://github.com/MRDK80/v8unpack-agent/issues/456))
+
+### Тесты
+
+- `tests/test_output_supplement_issue456.py`: эталоны существующих полей, не
+  охваченных первой характеристикой (решение 9 ADR #457): `## SUMMARY` из
+  `elem.json`, `sections` и токенный режим `to_llm_prompt_fragment`, объекты СКД
+  и `--mode external` в `v8unpack-agent-run`, состояния `search_context`
+  (`truncated`, `insufficient_budget`, `token_count_failed`, опущенные кандидаты).
+- `tests/golden_issue456/supp_*`. Продуктовый код не изменён.
+
+## Характеристика текущего LLM-вывода ([#456](https://github.com/MRDK80/v8unpack-agent/issues/456))
+
+### Тесты
+
+- `tests/test_output_characterization_issue456.py`: побайтные эталоны текущего
+  вывода `to_llm_prompt_fragment`, `to_llm_module_fragment`, `search_context/1`,
+  `search_cli`, `v8unpack-agent-run` (текст и envelope `--json`), post-run report
+  schema 1 и 2 и каталога `--describe-cli` на синтетической выгрузке с символами
+  Cf, файловым BOM и строкой вида служебного маркера.
+- `tests/golden_issue456/`: эталоны. Продуктовый код не изменён.
+
 ## Явный признак недоказанного ссылочного типа во фрагменте ([#289](https://github.com/MRDK80/v8unpack-agent/issues/289))
 
 ### Добавлено

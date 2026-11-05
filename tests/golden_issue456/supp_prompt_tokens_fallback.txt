@@ -1,0 +1,17 @@
+# FORM Catalog/Образец/CatalogForm/ФормаЭлемента
+## SUMMARY
+{
+  "attributes": [
+    {
+      "name": "ЗаголовокФормы1",
+      "type": "String"
+    }
+  ],
+  "commands": [],
+  "elements": [
+    {
+      "kind": "Page",
+      "name": "Страница​1",
+      "path": "Страница​1",
+      "source": "data"
+    }

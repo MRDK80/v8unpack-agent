@@ -180,6 +180,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="лимит длины промпт-фрагмента; -1 без ограничения",
     )
     parser.add_argument(
+        "--representation",
+        choices=("legacy", "framed"),
+        default="legacy",
+        help="режим представления данных выгрузки для LLM (ADR #457): legacy — прежний вывод, framed — обратимые блоки",
+    )
+    parser.add_argument(
         _JSON_FLAG,
         action="store_true",
         help=(
@@ -237,6 +243,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         include_module_index=args.include_module_index,
         module_groups=module_groups,
         max_prompt_chars=args.max_prompt_chars,
+        representation=args.representation,
     )
 
     try:

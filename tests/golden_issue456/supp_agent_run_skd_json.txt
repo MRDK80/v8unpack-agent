@@ -1,0 +1,4 @@
+exit=3
+--stdout--
+{"data": {"completed": true, "degraded": true, "fatal_error": null, "prompt_chars": 664, "report": {"file_name": "r_skd_json.json", "schema_version": 2, "written": true}, "scan_warnings": 0, "summary": {"complete": 1, "excluded": 0, "failed": 0, "found": 2, "partial": 1}}, "error": null, "exit_code": 3, "kind": "v8unpack-agent-run.result", "ok": false, "schema_version": "1.0", "status": "degraded"}
+--stderr--

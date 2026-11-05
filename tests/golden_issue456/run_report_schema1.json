@@ -1,0 +1,18 @@
+{
+  "fatal_error": null,
+  "objects": [],
+  "run": {
+    "completed": true,
+    "finished_at": "2026-01-01T00:00:00.000000Z",
+    "started_at": "2026-01-01T00:00:00.000000Z"
+  },
+  "schema_version": 1,
+  "summary": {
+    "complete": 0,
+    "discovered": 0,
+    "excluded": 0,
+    "failed": 0,
+    "found": 0,
+    "partial": 0
+  }
+}

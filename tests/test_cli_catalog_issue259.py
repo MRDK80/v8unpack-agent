@@ -73,7 +73,7 @@ def _minimal_argv(name: str, params: list[dict[str, Any]]) -> list[str]:
 
 def test_catalog_envelope_and_contract_link() -> None:
     data = _catalog()
-    assert data["schema_version"] == "1.0"
+    assert data["schema_version"] == "1.1"
     assert data["kind"] == "v8unpack-agent.cli-catalog"
     assert data["json_contract"] == {
         "kind": cli.JSON_KIND,

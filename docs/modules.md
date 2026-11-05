@@ -346,3 +346,13 @@ layout, что и у конфигурации, и их модули находя
 
 Закрытые наборы от этих случаев не зависят. Сканер, который включает такие
 строки, должен ссылаться на их статус в #202 и не повышать его до доказанного.
+
+## Режим `framed` у `to_llm_module_fragment` (#460)
+
+`to_llm_module_fragment(entry, bsl_text, ..., representation="framed",
+bsl_bytes=None)`: имя владельца и путь — блоки `kind=name`/`kind=path`, тело —
+блок `kind=bsl` без нормализации BOM и переводов строк (они экранируются) со
+строкой `<<<UNTRUSTED_DIAG …>>>`. `ModuleProjection.representation` и
+`ModuleProjection.diagnostics` (решение 4 ADR #457; `file_bom` — по
+`bsl_bytes`, без них `null`). Усечение — целыми строками тела, маркер
+`[TRUNCATED: …]` не выводится. По умолчанию `legacy`; `ModuleEntry` не меняется.

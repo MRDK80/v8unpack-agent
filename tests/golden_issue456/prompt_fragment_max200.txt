@@ -1,0 +1,10 @@
+# FORM Catalog/SampleObject/ItemForm/Variant1
+## SUMMARY
+{
+  "attributes": [],
+  "commands": [],
+  "elements": [],
+  "events": [],
+  "relations": [],
+  "warnings": [
+    "elem.json не найден в .../Cat

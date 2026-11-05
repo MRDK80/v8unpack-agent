@@ -1,0 +1,100 @@
+{
+  "candidates_omitted": 1,
+  "candidates_shown": 0,
+  "candidates_total": 1,
+  "dispatch": {
+    "exact_filtered_out": 0,
+    "index_status": null,
+    "path": [
+      "exact"
+    ],
+    "result": {
+      "error": null,
+      "hits": [
+        {
+          "artifact": {
+            "artifact_id": "form:Catalog/Образец/CatalogForm/ФормаЭлемента",
+            "artifact_kind": "form",
+            "form_key": [
+              "Catalog",
+              "Образец",
+              "CatalogForm",
+              "ФормаЭлемента"
+            ],
+            "module_kind": null,
+            "owner": {
+              "metadata_type": "Catalog",
+              "owner_id": "owner:metadata_object:Catalog:Образец",
+              "owner_kind": "metadata_object",
+              "owner_name": "Образец"
+            },
+            "source_path": "Catalog/Образец/CatalogForm/ФормаЭлемента"
+          },
+          "document_id": null,
+          "matched_field": "owner_name",
+          "method": "exact_name",
+          "similarity": null
+        }
+      ],
+      "query": {
+        "filters": {
+          "artifact_kinds": null,
+          "metadata_types": null,
+          "module_kinds": null,
+          "owner_kinds": null,
+          "owner_names": null
+        },
+        "mode": "auto",
+        "text": "Образец",
+        "top_k": 5
+      },
+      "schema": "search_contract/1",
+      "status": "exact"
+    }
+  },
+  "included": [],
+  "omitted": [
+    {
+      "hit": {
+        "artifact": {
+          "artifact_id": "form:Catalog/Образец/CatalogForm/ФормаЭлемента",
+          "artifact_kind": "form",
+          "form_key": [
+            "Catalog",
+            "Образец",
+            "CatalogForm",
+            "ФормаЭлемента"
+          ],
+          "module_kind": null,
+          "owner": {
+            "metadata_type": "Catalog",
+            "owner_id": "owner:metadata_object:Catalog:Образец",
+            "owner_kind": "metadata_object",
+            "owner_name": "Образец"
+          },
+          "source_path": "Catalog/Образец/CatalogForm/ФормаЭлемента"
+        },
+        "document_id": null,
+        "matched_field": "owner_name",
+        "method": "exact_name",
+        "similarity": null
+      },
+      "omitted_span": {
+        "end_line": 5,
+        "start_line": 1
+      },
+      "reason": "budget",
+      "source_document_ids": [
+        "form:Catalog/Образец/CatalogForm/ФормаЭлемента#L1-2",
+        "form:Catalog/Образец/CatalogForm/ФормаЭлемента#ПриОткрытии"
+      ]
+    }
+  ],
+  "schema": "search_context/1",
+  "search_kind": "exact",
+  "status": "insufficient_budget",
+  "text": "",
+  "text_chars": 0,
+  "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "warnings": []
+}

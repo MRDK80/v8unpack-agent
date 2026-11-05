@@ -1,0 +1,49 @@
+{
+  "fatal_error": null,
+  "objects": [
+    {
+      "object": "Catalog/Образец/CatalogForm/ФормаЭлемента",
+      "object_kind": "form",
+      "reason_code": "scan_warning_unclassified",
+      "stage": "scan",
+      "status": "partial"
+    },
+    {
+      "object": "skd_artifact_001",
+      "object_kind": "skd_artifact",
+      "status": "complete"
+    }
+  ],
+  "run": {
+    "completed": true,
+    "finished_at": "2026-01-01T00:00:00.000000Z",
+    "started_at": "2026-01-01T00:00:00.000000Z"
+  },
+  "schema_version": 2,
+  "summary": {
+    "complete": 1,
+    "discovered": 2,
+    "excluded": 0,
+    "failed": 0,
+    "found": 2,
+    "partial": 1,
+    "reference_resolution": {
+      "applicable": 0,
+      "resolved": 0,
+      "unresolved": 0,
+      "unresolved_by_class": {
+        "ambiguous": 0,
+        "definition_known": 0,
+        "definition_unknown_layout": 0,
+        "reference_only": 0
+      },
+      "unresolved_uuids": 0,
+      "unresolved_uuids_by_class": {
+        "ambiguous": 0,
+        "definition_known": 0,
+        "definition_unknown_layout": 0,
+        "reference_only": 0
+      }
+    }
+  }
+}

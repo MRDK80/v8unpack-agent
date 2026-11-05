@@ -1,0 +1,87 @@
+{
+  "fatal_error": null,
+  "objects": [
+    {
+      "object": "CommonModule/SharedHelpers/CommonModule.obj.bsl",
+      "object_kind": "common_module",
+      "status": "complete"
+    },
+    {
+      "object": "Catalog/SampleObject/ItemForm/Variant1",
+      "object_kind": "form",
+      "reason_code": "elem_index_unavailable",
+      "stage": "parse_elem",
+      "status": "partial"
+    },
+    {
+      "object": "Catalog/SampleObject/Catalog.mgr.bsl",
+      "object_kind": "module_manager",
+      "reason_code": "missing",
+      "stage": "modules",
+      "status": "excluded"
+    },
+    {
+      "object": "Catalog/SampleObject/Catalog.obj.bsl",
+      "object_kind": "module_object",
+      "reason_code": "missing",
+      "stage": "modules",
+      "status": "excluded"
+    }
+  ],
+  "run": {
+    "completed": true,
+    "finished_at": "2026-01-01T00:00:00.000000Z",
+    "started_at": "2026-01-01T00:00:00.000000Z"
+  },
+  "schema_version": 2,
+  "summary": {
+    "complete": 1,
+    "discovered": 4,
+    "excluded": 2,
+    "failed": 0,
+    "found": 2,
+    "modules": {
+      "by_kind": {
+        "manager": {
+          "empty": 0,
+          "missing": 1,
+          "ok": 0,
+          "owners_checked": 1,
+          "read_error": 0,
+          "total": 1,
+          "whitespace_only": 0
+        },
+        "object": {
+          "empty": 0,
+          "missing": 1,
+          "ok": 0,
+          "owners_checked": 1,
+          "read_error": 0,
+          "total": 1,
+          "whitespace_only": 0
+        }
+      },
+      "note": "missing — файл модуля отсутствует в выгрузке. Это не доказывает отсутствие модуля и не считается дефектом выгрузки",
+      "record_set_by_metadata_type": {}
+    },
+    "partial": 1,
+    "reference_resolution": {
+      "applicable": 0,
+      "resolved": 0,
+      "unresolved": 0,
+      "unresolved_by_class": {
+        "ambiguous": 0,
+        "definition_known": 0,
+        "definition_unknown_layout": 0,
+        "reference_only": 0
+      },
+      "unresolved_uuids": 0,
+      "unresolved_uuids_by_class": {
+        "ambiguous": 0,
+        "definition_known": 0,
+        "definition_unknown_layout": 0,
+        "reference_only": 0
+      }
+    }
+  }
+}

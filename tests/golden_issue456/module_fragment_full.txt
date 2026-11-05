@@ -1,0 +1,12 @@
+MODULE
+kind: common_module
+owner_kind: common_module
+metadata_type: CommonModule
+owner: SharedHelpers
+path: CommonModule/SharedHelpers/CommonModule.obj.bsl
+BSL
+// SOURCE TEXT
+MODULE
+Функция Ф() Экспорт
+	Возврат "x‍y";
+КонецФункции
