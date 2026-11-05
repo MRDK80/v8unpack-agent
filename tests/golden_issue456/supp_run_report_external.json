@@ -1,0 +1,44 @@
+{
+  "fatal_error": null,
+  "objects": [
+    {
+      "object": "Обработка.epf/Form/Форма",
+      "object_kind": "form",
+      "reason_code": "elem_index_unavailable",
+      "stage": "parse_elem",
+      "status": "partial"
+    }
+  ],
+  "run": {
+    "completed": true,
+    "finished_at": "2026-01-01T00:00:00.000000Z",
+    "started_at": "2026-01-01T00:00:00.000000Z"
+  },
+  "schema_version": 2,
+  "summary": {
+    "complete": 0,
+    "discovered": 1,
+    "excluded": 0,
+    "failed": 0,
+    "found": 1,
+    "partial": 1,
+    "reference_resolution": {
+      "applicable": 0,
+      "resolved": 0,
+      "unresolved": 0,
+      "unresolved_by_class": {
+        "ambiguous": 0,
+        "definition_known": 0,
+        "definition_unknown_layout": 0,
+        "reference_only": 0
+      },
+      "unresolved_uuids": 0,
+      "unresolved_uuids_by_class": {
+        "ambiguous": 0,
+        "definition_known": 0,
+        "definition_unknown_layout": 0,
+        "reference_only": 0
+      }
+    }
+  }
+}

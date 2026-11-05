@@ -1,0 +1,33 @@
+# FORM Catalog/Образец/CatalogForm/ФормаЭлемента
+## SUMMARY
+{
+  "attributes": [
+    {
+      "name": "ЗаголовокФормы1",
+      "type": "String"
+    }
+  ],
+  "commands": [],
+  "elements": [
+    {
+      "kind": "Page",
+      "name": "Страница​1",
+      "path": "Страница​1",
+      "source": "data"
+    }
+  ],
+  "events": [],
+  "relations": [],
+  "warnings": [
+    "Метаданные владельца не найдены для .../Catalog/Образец/CatalogForm/ФормаЭлемента",
+    "decode_element_data_path: карта реквизитов владельца пуста"
+  ]
+}
+## OBJECT_ATTRIBUTES
+(реквизиты объекта не найдены)
+## BSL
+﻿// SOURCE TEXT
+## SUMMARY
+Процедура ПриОткрытии(Отказ)
+	Сообщить("a‮b");
+КонецПроцедуры
