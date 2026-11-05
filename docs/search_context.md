@@ -77,3 +77,27 @@ OwnerLink выводится вместе с basis и confirmed; unconfirmed н�
 `include_text=True`. Метаданные артефактов и запрос из DispatchResult
 могут быть чувствительными: сериализация не является обезличиванием.
 `from_dict` в scope не входит. Экспорт из корневого __init__ не меняется.
+
+## Новый режим `framed` (#459)
+
+Включается явно: `build_search_context(..., representation="framed")` или
+`search_with_context(..., representation="framed")`; по умолчанию `"legacy"`,
+вывод `search_context/1` не меняется. Контракт — ADR
+`docs/research/untrusted_content_contract_issue457.md` (решения 1–3, 8).
+
+- Схема `search_context/2`. Каждый включённый срез источника выводится блоком
+  `<<<UNTRUSTED_BEGIN n=… kind=text lines=a-b/T chars=… final_newline=…
+  truncated=… [omitted=c-d] sha256=…>>>` … `<<<UNTRUSTED_END n=…>>>`; каждая
+  строка данных начинается с `| `; `\` экранируется как `\\`, символы Cf и Cc
+  (кроме табуляции) — как `\u{XXXX}`. Блок декодируется
+  `v8unpack_agent.untrusted_transport.decode_block`.
+- `lines`, `chars`, `sha256` относятся к каноническому включённому тексту;
+  `a`, `b` — координаты строк источника, `T` — последняя строка среза до
+  усечения. Усечённый срез получает `truncated=1` и `omitted=b+1-T`.
+- `included[].diagnostics` — диагностика Cf по ADR (строки в координатах
+  источника); `file_bom` не выводится: BOM в корпусе снят нормализацией #324.
+- Строковые значения карточек кандидатов в новом режиме экранируются
+  по правилам ADR #457 перед сериализацией JSON.
+- При `include_text=True` транспортные блоки находятся в верхнем поле
+  `text`. В `included[]` канонический текст срезов повторно не сериализуется.
+- Канонический текст, индексы, снимки и `text_sha256` срезов не меняются.

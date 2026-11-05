@@ -21,17 +21,25 @@ from v8unpack_agent.search_contract import (
 )
 from v8unpack_agent.search_dispatch import DispatchResult
 from v8unpack_agent.search_fragments import FragmentationResult
+from v8unpack_agent.untrusted_diagnostics import detect_untrusted_chars
+from v8unpack_agent.untrusted_transport import encode_block, escape_line
 
 SEARCH_CONTEXT_SCHEMA = "search_context/1"
+SEARCH_CONTEXT_SCHEMA_FRAMED = "search_context/2"
+Representation = Literal["legacy", "framed"]
+REPRESENTATIONS: tuple[Representation, ...] = ("legacy", "framed")
 ContextStatus = Literal[
     "built", "truncated", "insufficient_budget", "token_count_failed"
 ]
 
 __all__ = [
+    "REPRESENTATIONS",
     "SEARCH_CONTEXT_SCHEMA",
+    "SEARCH_CONTEXT_SCHEMA_FRAMED",
     "ContextBlock",
     "ContextOmission",
     "ContextStatus",
+    "Representation",
     "SearchContext",
     "build_search_context",
 ]
@@ -39,6 +47,17 @@ __all__ = [
 
 def _json(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, allow_nan=False)
+
+
+def _escape_metadata(value: Any) -> Any:
+    """Экранировать строковые значения карточек для транспорта ADR #457."""
+    if isinstance(value, str):
+        return escape_line(value)
+    if isinstance(value, list):
+        return [_escape_metadata(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _escape_metadata(item) for key, item in value.items()}
+    return value
 
 
 def _lines(text: str) -> tuple[str, ...]:
@@ -62,6 +81,8 @@ class ContextBlock:
     text: str
     owner_links: tuple[OwnerLink, ...] = ()
     candidate_only: bool = False
+    planned_end_line: int | None = None
+    """Последняя строка исходного среза до усечения; в сериализацию не входит."""
 
     def to_dict(self, *, include_text: bool = False) -> dict[str, Any]:
         data: dict[str, Any] = {
@@ -112,6 +133,7 @@ class SearchContext:
     included: tuple[ContextBlock, ...]
     omitted: tuple[ContextOmission, ...]
     warnings: tuple[str, ...]
+    representation: Representation = "legacy"
 
     @property
     def search_kind(self) -> str:
@@ -126,17 +148,26 @@ class SearchContext:
         return len({b.hit.artifact.identity for b in self.included})
 
     def to_dict(self, *, include_text: bool = False) -> dict[str, Any]:
+        framed = self.representation == "framed"
+        included = [b.to_dict(include_text=include_text and not framed) for b in self.included]
+        dispatch = self.dispatch.to_dict()
+        omitted = [item.to_dict() for item in self.omitted]
+        if framed:
+            included = _escape_metadata(included)
+            omitted = _escape_metadata(omitted)
+            dispatch["result"]["hits"] = _escape_metadata(dispatch["result"]["hits"])
+            for block, item in zip(self.included, included):
+                item["diagnostics"] = _diagnostics(block)
         data: dict[str, Any] = {
-            "schema": SEARCH_CONTEXT_SCHEMA,
+            "schema": _schema(self.representation),
             "search_kind": self.search_kind,
             "status": self.status,
-            "dispatch": self.dispatch.to_dict(),
+            "dispatch": dispatch,
             "candidates_total": self.candidates_total,
             "candidates_shown": self.candidates_shown,
             "candidates_omitted": self.candidates_total - self.candidates_shown,
-            "included": [b.to_dict(include_text=include_text)
-                         for b in self.included],
-            "omitted": [o.to_dict() for o in self.omitted],
+            "included": included,
+            "omitted": omitted,
             "warnings": list(self.warnings),
             "text_chars": len(self.text),
             "text_sha256": hashlib.sha256(self.text.encode("utf-8")).hexdigest(),
@@ -212,6 +243,7 @@ def _source_units(
         block = ContextBlock(
             hit, _source_ids(positioned, span), span,
             "".join(line_map[n] for n in group), links,
+            planned_end_line=span.end_line,
         )
         units.append(_Unit(block, positioned))
     return tuple(units)
@@ -284,16 +316,46 @@ def _warnings(
     return tuple(warnings)
 
 
+def _schema(representation: Representation) -> str:
+    return SEARCH_CONTEXT_SCHEMA_FRAMED if representation == "framed" else SEARCH_CONTEXT_SCHEMA
+
+
+def _diagnostics(block: ContextBlock) -> dict[str, Any]:
+    """Диагностика Cf по решению 4 ADR #457 в координатах строк источника.
+
+    ``file_bom`` не выводится: исходные байты недоступны, BOM снят #324.
+    """
+    diagnostics = detect_untrusted_chars(block.text)
+    shift = 0 if block.included_span is None else block.included_span.start_line - 1
+    data = diagnostics.to_dict()
+    del data["file_bom"]
+    data["cf"] = [
+        {**item.to_dict(), "line": item.line + shift} for item in diagnostics.occurrences
+    ]
+    return data
+
+
+def _framed_block(block: ContextBlock, n: int) -> str:
+    span = block.included_span
+    if span is None:
+        return encode_block(block.text, n=n, kind="text")
+    end = span.end_line if block.planned_end_line is None else block.planned_end_line
+    return encode_block(
+        block.text, n=n, kind="text", first_line=span.start_line, total_lines=end
+    )
+
+
 def _render(
     dispatch: DispatchResult,
     included: tuple[ContextBlock, ...],
     omitted: tuple[ContextOmission, ...],
     warnings: tuple[str, ...],
+    representation: Representation = "legacy",
 ) -> str:
     shown = len({b.hit.artifact.identity for b in included})
     total = len(dispatch.result.hits)
     metadata = {
-        "schema": SEARCH_CONTEXT_SCHEMA,
+        "schema": _schema(representation),
         "search_kind": dispatch.result.status,
         "context_status": "truncated" if omitted else "built",
         "candidates_shown": shown,
@@ -310,6 +372,14 @@ def _render(
         "warnings": list(warnings),
     }
     parts = [_json(metadata)]
+    if representation == "framed":
+        number = 0
+        for block in included:
+            parts.append("CANDIDATE " + _json(_escape_metadata(block.to_dict())))
+            if not block.candidate_only:
+                number += 1
+                parts.append(_framed_block(block, number).rstrip("\n"))
+        return "\n".join(parts) + "\n"
     for block in included:
         parts.append("CANDIDATE " + _json(block.to_dict()))
         if not block.candidate_only:
@@ -373,8 +443,13 @@ def build_search_context(
     max_chars: int,
     max_tokens: int | None = None,
     count_tokens: Callable[[str], int] | None = None,
+    representation: Representation = "legacy",
 ) -> SearchContext:
     """Build bounded context, preserving source coordinates and uncertainty.
+
+    ``representation="framed"`` (#459, ADR #457) renders each source slice as
+    a reversible untrusted-content block and switches the schema to
+    ``search_context/2``; the default keeps ``search_context/1`` unchanged.
 
     max_chars=-1 disables the character bound; other budgets are nonnegative.
     Both bounds cover the entire rendered text, including metadata and notices.
@@ -387,6 +462,8 @@ def build_search_context(
         fragmentation, FragmentationResult
     ):
         raise TypeError("fragmentation must be FragmentationResult or None")
+    if representation not in REPRESENTATIONS:
+        raise ValueError("representation must be 'legacy' or 'framed'")
     _integer(max_chars, "max_chars", -1)
     if max_tokens is not None:
         _integer(max_tokens, "max_tokens", 0)
@@ -405,6 +482,7 @@ def build_search_context(
         return SearchContext(
             dispatch, status, "", (),
             missing + tuple(_omit(u, reason) for u in units), warnings,
+            representation,
         )
 
     if max_chars == 0 or max_tokens == 0:
@@ -413,7 +491,7 @@ def build_search_context(
         for position, unit in enumerate(units):
             pending = tuple(_omit(u, "budget") for u in units[position + 1:])
             trial = included + (unit.block,)
-            rendered = _render(dispatch, trial, omitted + pending, warnings)
+            rendered = _render(dispatch, trial, omitted + pending, warnings, representation)
             if _fits(rendered, max_chars, max_tokens, count_tokens):
                 included = trial
                 continue
@@ -425,7 +503,7 @@ def build_search_context(
                     prefix, tail = _prefix(unit, size)
                     trial = included + (prefix,)
                     rest = omitted + (tail,) + pending
-                    rendered = _render(dispatch, trial, rest, warnings)
+                    rendered = _render(dispatch, trial, rest, warnings, representation)
                     if _fits(rendered, max_chars, max_tokens, count_tokens):
                         included = trial
                         omitted += (tail,)
@@ -436,10 +514,12 @@ def build_search_context(
                 if not block.candidate_only:
                     reason = "no_span_atomic" if span is None else "line_too_long"
                 omitted += (_omit(unit, reason),)
-        text = _render(dispatch, included, omitted, warnings)
+        text = _render(dispatch, included, omitted, warnings, representation)
         if not _fits(text, max_chars, max_tokens, count_tokens):
             return stopped("insufficient_budget", "budget")
     except _TokenCountFailed:
         return stopped("token_count_failed", "token_count_failed")
     status: ContextStatus = "truncated" if omitted else "built"
-    return SearchContext(dispatch, status, text, included, omitted, warnings)
+    return SearchContext(
+        dispatch, status, text, included, omitted, warnings, representation
+    )
