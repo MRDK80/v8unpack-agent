@@ -195,6 +195,17 @@ def test_cli_surfaces_matrix(export: Path, capsys: pytest.CaptureFixture[str]) -
     assert body.text == json.loads(legacy_out)["context"]["included"][0]["text"]
     assert "text" not in context["included"][0]
     assert context["included"][0]["diagnostics"]["total"] == 1
+    budget = len(context["text"]) - 40
+    cut_code, cut_out = _run(
+        capsys, search_cli.main,
+        query + ["--representation", "framed", "--max-chars", str(budget)],
+    )
+    cut = json.loads(cut_out)["context"]
+    assert cut_code == 0 and cut["status"] == "truncated"
+    (prefix,) = (decode_block(block) for block in _blocks(cut["text"]))
+    span = cut["included"][0]["included_span"]
+    assert prefix.truncated and prefix.omitted == (span["end_line"] + 1, body.last_line)
+    assert body.text.startswith(prefix.text)
 
 
 @pytest.mark.parametrize("representation", ["legacy", "framed"])
@@ -214,6 +225,14 @@ def test_exit_codes_unchanged(
     degraded = _run(capsys, cli.main, [t456.EXPORT, "--report-path", "d.json", *flag])[0]
     assert degraded == cli.EXIT_DEGRADED
     assert _run(capsys, search_cli.main, ["query", "absent", "--query", "x", *flag])[0] == 2
+    query = ["query", t456.EXPORT, "--query", "SharedHelpers", *flag]
+    assert _run(capsys, search_cli.main, query + ["--max-chars", "0"])[0] == 3
+
+    def fail_fragmentation(*_args: object) -> None:
+        raise RuntimeError("synthetic failure")
+
+    monkeypatch.setattr(search_cli, "_fragmentation", fail_fragmentation)
+    assert _run(capsys, search_cli.main, query)[0] == 4
 
 
 @pytest.mark.parametrize("representation", ["legacy", "framed"])
