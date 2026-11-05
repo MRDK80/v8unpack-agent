@@ -1,5 +1,16 @@
 # Changelog
 
+## Дополнение характеристики LLM-вывода ([#456](https://github.com/MRDK80/v8unpack-agent/issues/456))
+
+### Тесты
+
+- `tests/test_output_supplement_issue456.py`: эталоны существующих полей, не
+  охваченных первой характеристикой (решение 9 ADR #457): `## SUMMARY` из
+  `elem.json`, `sections` и токенный режим `to_llm_prompt_fragment`, объекты СКД
+  и `--mode external` в `v8unpack-agent-run`, состояния `search_context`
+  (`truncated`, `insufficient_budget`, `token_count_failed`, опущенные кандидаты).
+- `tests/golden_issue456/supp_*`. Продуктовый код не изменён.
+
 ## Характеристика текущего LLM-вывода ([#456](https://github.com/MRDK80/v8unpack-agent/issues/456))
 
 ### Тесты
