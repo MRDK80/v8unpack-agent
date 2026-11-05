@@ -1,5 +1,20 @@
 # Changelog
 
+## Новый режим `search_context` ([#459](https://github.com/MRDK80/v8unpack-agent/issues/459))
+
+### Добавлено
+
+- `build_search_context()` и `search_with_context()`: keyword-only
+  `representation="legacy"|"framed"` (по умолчанию `legacy`, вывод не меняется).
+  В режиме `framed` — схема `search_context/2`, обратимые блоки недоверенного
+  текста и `included[].diagnostics` по ADR #457.
+- `v8unpack_agent/untrusted_transport.py`: `encode_block`/`decode_block`.
+- `docs/search_context.md`: раздел о режиме `framed`.
+
+### Тесты
+
+- `tests/test_search_context_framed_issue459.py`, `tests/golden_issue459/`.
+
 ## Диагностика символов Cf и файлового BOM ([#458](https://github.com/MRDK80/v8unpack-agent/issues/458))
 
 ### Добавлено
