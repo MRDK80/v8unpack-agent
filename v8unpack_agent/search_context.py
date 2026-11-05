@@ -22,7 +22,7 @@ from v8unpack_agent.search_contract import (
 from v8unpack_agent.search_dispatch import DispatchResult
 from v8unpack_agent.search_fragments import FragmentationResult
 from v8unpack_agent.untrusted_diagnostics import detect_untrusted_chars
-from v8unpack_agent.untrusted_transport import encode_block
+from v8unpack_agent.untrusted_transport import encode_block, escape_line
 
 SEARCH_CONTEXT_SCHEMA = "search_context/1"
 SEARCH_CONTEXT_SCHEMA_FRAMED = "search_context/2"
@@ -47,6 +47,17 @@ __all__ = [
 
 def _json(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, allow_nan=False)
+
+
+def _escape_metadata(value: Any) -> Any:
+    """Экранировать строковые значения карточек для транспорта ADR #457."""
+    if isinstance(value, str):
+        return escape_line(value)
+    if isinstance(value, list):
+        return [_escape_metadata(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _escape_metadata(item) for key, item in value.items()}
+    return value
 
 
 def _lines(text: str) -> tuple[str, ...]:
@@ -139,19 +150,24 @@ class SearchContext:
     def to_dict(self, *, include_text: bool = False) -> dict[str, Any]:
         framed = self.representation == "framed"
         included = [b.to_dict(include_text=include_text and not framed) for b in self.included]
+        dispatch = self.dispatch.to_dict()
+        omitted = [item.to_dict() for item in self.omitted]
         if framed:
+            included = _escape_metadata(included)
+            omitted = _escape_metadata(omitted)
+            dispatch["result"]["hits"] = _escape_metadata(dispatch["result"]["hits"])
             for block, item in zip(self.included, included):
                 item["diagnostics"] = _diagnostics(block)
         data: dict[str, Any] = {
             "schema": _schema(self.representation),
             "search_kind": self.search_kind,
             "status": self.status,
-            "dispatch": self.dispatch.to_dict(),
+            "dispatch": dispatch,
             "candidates_total": self.candidates_total,
             "candidates_shown": self.candidates_shown,
             "candidates_omitted": self.candidates_total - self.candidates_shown,
             "included": included,
-            "omitted": [o.to_dict() for o in self.omitted],
+            "omitted": omitted,
             "warnings": list(self.warnings),
             "text_chars": len(self.text),
             "text_sha256": hashlib.sha256(self.text.encode("utf-8")).hexdigest(),
@@ -359,7 +375,7 @@ def _render(
     if representation == "framed":
         number = 0
         for block in included:
-            parts.append("CANDIDATE " + _json(block.to_dict()))
+            parts.append("CANDIDATE " + _json(_escape_metadata(block.to_dict())))
             if not block.candidate_only:
                 number += 1
                 parts.append(_framed_block(block, number).rstrip("\n"))

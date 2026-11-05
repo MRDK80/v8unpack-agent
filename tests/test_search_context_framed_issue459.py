@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import os
 import unicodedata
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -105,6 +106,27 @@ def test_framed_fixture_456(fixture_fragmentation: FragmentationResult) -> None:
     assert decoded.text == block.text
     assert ZWJ in decoded.text and ZWJ not in encoded
     assert (decoded.first_line, decoded.last_line, decoded.truncated) == (1, 5, False)
+
+
+def test_framed_source_path_uses_transport_escape(
+    fixture_fragmentation: FragmentationResult,
+) -> None:
+    framed = search_with_context(
+        fixture_fragmentation, "SharedHelpers", max_chars=-1, representation="framed"
+    )
+    (block,) = framed.included
+    path = f"CommonModule/Shared{ZWJ}Helpers/CommonModule.obj.bsl"
+    hit = replace(block.hit, artifact=replace(block.hit.artifact, source_path=path))
+    dispatch = replace(framed.dispatch, result=replace(framed.dispatch.result, hits=(hit,)))
+    context = replace(framed, dispatch=dispatch, included=(replace(block, hit=hit),))
+    payload = context.to_dict()
+    for card in (payload["included"][0]["hit"], payload["dispatch"]["result"]["hits"][0]):
+        escaped = card["artifact"]["source_path"]
+        assert ZWJ not in escaped
+        assert unescape_line(escaped) == path
+    assert context.included[0].hit.artifact.source_path == path
+    legacy = replace(context, representation="legacy").to_dict()
+    assert legacy["included"][0]["hit"]["artifact"]["source_path"] == path
 
 
 def test_framed_marker_lines_stay_data(tmp_path: Path) -> None:
