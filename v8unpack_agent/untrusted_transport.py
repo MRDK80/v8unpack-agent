@@ -22,6 +22,7 @@ from dataclasses import dataclass
 
 __all__ = [
     "BLOCK_BEGIN",
+    "BLOCK_DIAG",
     "BLOCK_END",
     "DATA_PREFIX",
     "DecodedBlock",
@@ -34,6 +35,7 @@ __all__ = [
 
 BLOCK_BEGIN = "<<<UNTRUSTED_BEGIN"
 BLOCK_END = "<<<UNTRUSTED_END"
+BLOCK_DIAG = "<<<UNTRUSTED_DIAG"
 DATA_PREFIX = "| "
 _KINDS = frozenset({"bsl", "text", "name", "path"})
 _HEADER_RE = re.compile(
@@ -96,6 +98,7 @@ def encode_block(
     kind: str,
     first_line: int = 1,
     total_lines: int | None = None,
+    diag: str | None = None,
 ) -> str:
     """Закодировать канонический ``text`` как блок; результат оканчивается ``\\n``.
 
@@ -103,6 +106,8 @@ def encode_block(
     ``total_lines`` — число строк исходного текста. Если включённый диапазон
     заканчивается раньше, блок помечается ``truncated=1`` с опущенным
     диапазоном. Пустой ``text`` даёт блок без строк данных (``lines=0-0``).
+    ``diag`` — содержимое служебной строки диагностики
+    ``<<<UNTRUSTED_DIAG n=… <diag>>>>`` сразу после заголовка (решение 5 ADR).
     """
     if isinstance(n, bool) or not isinstance(n, int) or n < 1:
         raise ValueError("n must be positive int")
@@ -132,6 +137,10 @@ def encode_block(
         header += f" omitted={end + 1}-{total}"
     header += f" sha256={_sha(text)}>>>"
     parts = [header]
+    if diag is not None:
+        if "\n" in diag or ">>>" in diag:
+            raise ValueError("diag must be a single service line")
+        parts.append(f"{BLOCK_DIAG} n={n} {diag}>>>")
     parts.extend(DATA_PREFIX + escape_line(line) for line in lines)
     parts.append(f"{BLOCK_END} n={n}>>>")
     return "\n".join(parts) + "\n"
@@ -168,6 +177,8 @@ def decode_block(block: str) -> DecodedBlock:
     if kind not in _KINDS:
         raise TransportError("unknown kind")
     data = rows[1:-1]
+    if data and data[0].startswith(f"{BLOCK_DIAG} n={n} ") and data[0].endswith(">>>"):
+        data = data[1:]
     if any(not row.startswith(DATA_PREFIX) for row in data):
         raise TransportError("data line without prefix")
     lines = [unescape_line(row[len(DATA_PREFIX):]) for row in data]
