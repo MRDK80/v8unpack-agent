@@ -1,5 +1,14 @@
 # Changelog
 
+## Проверка отчётов до действия ([#483](https://github.com/MRDK80/v8unpack-agent/issues/483))
+
+- Host-side task-contract связывает операцию, полный отчёт и evidence с
+  индексированным снимком; подмена, неполнота и лишние аргументы отклоняются.
+- Reference executor пишет только проверенный отчёт в выделенный host каталог,
+  блокирует multi-call/повторы и различает отказ, no_report и восстановление.
+  Границы TOCTOU/внешних инструментов явно описаны; это не OS sandbox и не
+  validator произвольных патчей. Старые transport/CLI не меняются.
+
 ## Контекст фактов и evidence ([#482](https://github.com/MRDK80/v8unpack-agent/issues/482))
 
 - Отдельный opt-in `evidence_context/1`: минимальные факты экспортов или
