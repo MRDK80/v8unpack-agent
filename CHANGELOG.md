@@ -1,5 +1,13 @@
 # Changelog
 
+## Контекст фактов и evidence ([#482](https://github.com/MRDK80/v8unpack-agent/issues/482))
+
+- Отдельный opt-in `evidence_context/1`: минимальные факты экспортов или
+  необходимого прямого литерала, snapshot/evidence, явная полнота и JSON Schema.
+- Module, BSL формы и search adapters не меняют старые данные/transport.
+  Структура/реквизиты формы явно unsupported. Сырые срезы доступны отдельно
+  в обратимом framed; имена, пути и значения остаются недоверенными данными.
+
 ## Проверяемые синтаксические BSL-факты ([#481](https://github.com/MRDK80/v8unpack-agent/issues/481))
 
 - Добавлен opt-in library API `bsl_facts`: объявления, экспортность,
