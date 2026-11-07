@@ -3,13 +3,25 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 import unicodedata
 from pathlib import Path
 from typing import Any
 
-from scripts import agent_acceptance_issue485 as study
-from scripts.audit_acceptance_results_issue485 import DATA, audit
-from v8unpack_agent.untrusted_transport import encode_block
+
+def _project_api() -> tuple[Any, Any, Path, Any]:
+    # Absolute script invocation must use THIS clone, not an older editable
+    # package or the caller's working tree. No checkout/switch or model I/O.
+    root = Path(__file__).resolve().parents[1]
+    sys.path.insert(0, str(root))
+    from scripts import agent_acceptance_issue485 as acceptance
+    from scripts.audit_acceptance_results_issue485 import DATA, audit
+    from v8unpack_agent.untrusted_transport import encode_block
+    return acceptance, audit, DATA, encode_block
+
+
+study, audit, DATA, encode_block = _project_api()
+
 
 DISPLAY = ['legacy', 'framed', 'evidence', 'legacy_guard', 'evidence_guard', 'actual_native']
 
