@@ -1,0 +1,9 @@
+{
+  "equal_initial_requests": 120,
+  "first_action_differences": {
+    "qwen25": 0,
+    "llama31": 3,
+    "qwen3_off4096": 0,
+    "qwen3_on4096": 0
+  }
+}

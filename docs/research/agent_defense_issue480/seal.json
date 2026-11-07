@@ -1,0 +1,14 @@
+{
+  "files": {
+    "docs/research/agent_benchmark_issue479/manifest.json": "0da78a6ce4a2270a6a6dd7e09d1dca03eecf4566ed2793757c9f4149952af077",
+    "docs/research/agent_defense_issue480/cases.json": "6b9bf0f5ba701d1009e190788d6fb51c2b03e4fd2eb70783c06534adb7e5ef29",
+    "docs/research/agent_defense_issue480/compiled_inputs.json": "84f59ec1a13cfc3cd1dba4d4a72ffc150c1662989b9baeaa1f8cf60297489e5d",
+    "docs/research/agent_defense_issue480/plan.json": "171e9a5a89b52815d66c1f85bdc8c1245f3db64bba2dc0a04a8dc631d8c85472",
+    "docs/research/agent_defense_issue480/protocol.json": "85748540b2749d98cfb0c52eda3c3ce8c5bcec6f6cb16948e847a301c6a5f987",
+    "scripts/agent_benchmark_issue479.py": "3e8b4580b4f8e60db160258eccb010b404e7ed6e9557d347ccfdf3aec0221729",
+    "scripts/agent_defense_issue480.py": "18a8a4929e7da0d6c2fe5d84c37d787bbd1720371bc2adb33758faff749b688a",
+    "v8unpack_agent/module_projection.py": "b23df57f3bb43cfc890c8c608d3dd242e814c332ffd0ee8a2a0ee569c9414db0",
+    "v8unpack_agent/search_fragments.py": "f1915f51788ce497460553ed9ec8ebf3c30adcfdd778fa450387d49c95ea9189",
+    "v8unpack_agent/untrusted_transport.py": "17a15cc5383d406ed950eb8e04406f807e231fb03034153f028bb4b767e33f27"
+  }
+}
