@@ -1,5 +1,17 @@
 # Changelog
 
+## Итоговая приёмка действий агентов ([#485](https://github.com/MRDK80/v8unpack-agent/issues/485))
+
+- Все 5313 предзарегистрированных строки Qwen/Llama и 21 fault-проверка
+  сохранены с offline replay запросов, событий и фактических файлов.
+  Legacy/framed без validator дают 198/199 неверных записей; evidence +
+  validator — 0, но 496/660 правильных отчётов с явными no_report/unsupported.
+- Готовый native-клиент подтвердил узкий допуск query у Qwen2.5 и Qwen3
+  без thinking: по 30/30. Остальные prior NO-GO сохраняются, metadata формы
+  не покрыты. Это не гарантия общей устойчивости модели или произвольных действий.
+- Добавлено offline-сравнение «было — стало», уточнены инструкции потребителя
+  и ограничения grammar/TOCTOU. Новый релиз, тег и версия не создаются.
+
 ## Reference-клиенты Qwen/Llama ([#484](https://github.com/MRDK80/v8unpack-agent/issues/484))
 
 - Явные deterministic/native/reader режимы. Native вызывает validator host,
