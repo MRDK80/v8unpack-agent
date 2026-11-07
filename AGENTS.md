@@ -223,6 +223,8 @@ python -m pytest -q
 канонический текст. Контракт —
 [docs/untrusted_content_contract.md](docs/untrusted_content_contract.md);
 он задаёт форму данных и не обещает устойчивость модели к prompt injection.
+Правила чтения `framed` передавайте в доверенной инструкции потребителя.
+[Рекомендуемый текст и условия проверки](docs/untrusted_content_contract.md#рекомендуемая-инструкция-для-агента).
 
 ## Границы гарантий
 
