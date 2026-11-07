@@ -125,3 +125,12 @@ audit воспроизводит исполнителя с записанным�
 Тесты `tests/test_agent_reference_client_issue484.py` работают с synthetic
 callbacks, включая полный mock/replay плана и подмену файла; CI не обращается
 к модели/сети. Traces реальной серии и допуск публикуются после её завершения.
+
+## Фактический результат clean calibration
+
+[Полный результат и ограничения](research/agent_client_calibration_issue484.md):
+246 строк, offline replay PASS, 0 wrong commits; deterministic 6/6 без модели.
+Native clean допуск только query у Qwen2.5 и Qwen3 без thinking (15/15).
+Все exports, Llama query и thinking query — NO-GO по заданным порогам.
+Reader никогда не является writer. Это не held-out/attack acceptance и не
+решение о default/выпуске. Для portable проверки: `python -m scripts.audit_client_results_issue484`.

@@ -1,0 +1,9 @@
+{
+  "schema": "client_calibration_results/1",
+  "seal_sha256": "d57064617f3ba540588ac608cf48e7389c46d23cea0c032216fa58c1db64a34e",
+  "files": {
+    "records.jsonl.gz": "f23c22cee072263d7e513be38ce5e334267cbcc46fdda9196e7be0b39a21c1fd",
+    "runtime.json": "de57ea89394bd16e2d7f5e23b3d3bc452eefee955d55bd14eefce6ecbd7ea3d2",
+    "summary.json": "afa40435905dab84f7ea354c67a006304d2b7478fdcabd51b7ff71ba1726eb68"
+  }
+}

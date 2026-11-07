@@ -181,3 +181,14 @@ def test_all_calibration_rows_replay_without_model(tmp_path,monkeypatch):
     (tmp_path/'records.jsonl').write_text('\n'.join(json.dumps(r) for r in records),encoding='utf-8')
     with pytest.raises(ValueError,match='replay_mismatch'):
         calibration.audit(tmp_path)
+
+
+def test_published_real_calibration_replays_offline():
+    from scripts.audit_client_results_issue484 import audit
+    summary=audit()
+    groups=summary['groups']
+    assert summary['rows']==246 and all(g['wrong_commits']==0 for g in groups.values())
+    admitted={key for key,g in groups.items() if g['native_admission']}
+    assert admitted=={'native:qwen25:returned_string','native:qwen3_off4096:returned_string'}
+    assert groups['native:llama31:returned_string']['correct']==0
+    assert groups['deterministic:none:exported_functions']['correct']==3
