@@ -1,0 +1,5762 @@
+[
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "E01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "E01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "E01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "E01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "E01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "E01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "E01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "E01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "E02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "E02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "E02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "E02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "E02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "E02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "E02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "E02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "E03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "E03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "E03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "E03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "E03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "E03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "E03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "E03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "E01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "E01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "E01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "E01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "E01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "E01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "E01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "E01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "E02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "E02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "E02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "E02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "E02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "E02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "E02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "E02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "E03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "E03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "E03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "E03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "E03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "E03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "E03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "E03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "E01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "E01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "E01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "E01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "E01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "E01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "E01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "E01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "E02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "E02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "E02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "E02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "E02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "E02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "E02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "E02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "E03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "E03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "E03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "E03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "E03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "E03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "E03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "E03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "E01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "E01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "E01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "E01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "E01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "E01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "E01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "E01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "E02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "E02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "E02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "E02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "E02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "E02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "E02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "E02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "E03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "E03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "E03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "E03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "E03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "E03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "E03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "E03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "E01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "E01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "E01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "E01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "E01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "E01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "E01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "E01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "E02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "E02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "E02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "E02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "E02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "E02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "E02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "E02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "E03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "E03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "E03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "E03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "E03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "E03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "E03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "E03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen25",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "E01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "E01",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "E01",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "E01",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "E01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "E01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "E01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "E01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "E02",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "E02",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "E02",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "E02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "E02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "E02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "E02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "E02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "E03",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "E03",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "E03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "E03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "E03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "E03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "E03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "E03",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "E01",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "E01",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "E01",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "E01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "E01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "E01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "E01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "E01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "E02",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "E02",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "E02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "E02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "E02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "E02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "E02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "E02",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "E03",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "E03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "E03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "E03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "E03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "E03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "E03",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "E03",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "E01",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "E01",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "E01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "E01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "E01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "E01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "E01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "E01",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "E02",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "E02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "E02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "E02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "E02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "E02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "E02",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "E02",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "E03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "E03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "E03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "E03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "E03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "E03",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "E03",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "E03",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "E01",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "E01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "E01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "E01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "E01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "E01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "E01",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "E01",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "E02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "E02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "E02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "E02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "E02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "E02",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "E02",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "E02",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "E03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "E03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "E03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "E03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "E03",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "E03",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "E03",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "E03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "E01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "E01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "E01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "E01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "E01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "E01",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "E01",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "E01",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "E02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "E02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "E02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "E02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "E02",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "E02",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "E02",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "E02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "E03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "E03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "E03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "E03",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "E03",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "E03",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "E03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "E03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "framed"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "json"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "facts"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "llama31",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "E01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "E01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "E01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "E01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "E01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "E01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "E01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "E01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "E02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "E02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "E02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "E02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "E02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "E02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "E02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "E02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "E03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "E03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "E03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "E03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "E03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "E03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "E03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "E03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "E01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "E01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "E01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "E01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "E01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "E01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "E01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "E01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "E02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "E02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "E02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "E02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "E02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "E02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "E02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "E02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "E03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "E03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "E03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "E03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "E03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "E03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "E03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "E03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "E01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "E01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "E01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "E01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "E01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "E01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "E01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "E01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "E02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "E02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "E02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "E02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "E02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "E02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "E02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "E02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "E03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "E03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "E03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "E03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "E03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "E03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "E03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "E03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "E01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "E01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "E01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "E01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "E01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "E01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "E01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "E01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "E02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "E02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "E02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "E02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "E02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "E02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "E02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "E02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "E03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "E03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "E03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "E03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "E03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "E03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "E03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "E03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "E01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "E01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "E01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "E01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "E01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "E01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "E01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "E01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "E02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "E02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "E02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "E02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "E02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "E02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "E02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "E02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "E03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "E03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "E03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "E03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "E03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "E03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "E03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "E03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_off4096",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "E01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "E01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "E01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "E01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "E01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "E01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "E01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "E01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "E02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "E02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "E02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "E02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "E02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "E02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "E02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "E02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "E03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "E03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "E03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "E03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "E03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "E03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "E03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "E03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "Q01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "Q02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 17,
+    "case": "Q03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "E01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "E01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "E01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "E01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "E01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "E01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "E01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "E01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "E02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "E02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "E02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "E02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "E02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "E02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "E02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "E02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "E03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "E03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "E03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "E03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "E03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "E03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "E03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "E03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "Q01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "Q02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 29,
+    "case": "Q03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "E01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "E01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "E01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "E01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "E01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "E01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "E01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "E01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "E02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "E02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "E02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "E02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "E02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "E02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "E02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "E02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "E03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "E03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "E03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "E03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "E03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "E03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "E03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "E03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "Q01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "Q02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 43,
+    "case": "Q03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "E01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "E01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "E01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "E01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "E01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "E01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "E01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "E01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "E02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "E02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "E02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "E02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "E02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "E02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "E02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "E02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "E03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "E03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "E03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "E03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "E03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "E03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "E03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "E03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "Q01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "Q02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 61,
+    "case": "Q03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "E01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "E01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "E01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "E01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "E01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "E01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "E01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "E01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "E02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "E02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "E02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "E02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "E02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "E02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "E02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "E02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "E03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "E03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "E03",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "E03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "E03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "E03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "E03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "E03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "Q01",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "legacy"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "Q02",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "framed"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "json"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "facts"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "legacy_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "framed_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "facts_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "reader_guard"
+  },
+  {
+    "profile": "qwen3_on4096",
+    "seed": 83,
+    "case": "Q03",
+    "variant": "legacy"
+  }
+]
