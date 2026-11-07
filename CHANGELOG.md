@@ -1,5 +1,14 @@
 # Changelog
 
+## Reference-клиенты Qwen/Llama ([#484](https://github.com/MRDK80/v8unpack-agent/issues/484))
+
+- Явные deterministic/native/reader режимы. Native вызывает validator host,
+  reader не имеет tools, plain text не выполняется как команда. Runtime и
+  digest фиксированы; модель/сеть не используются при импорте или в CI.
+- До новых ответов фиксируется отдельная clean calibration; native требует
+  допуска per profile/task. Llama exports остаётся explicit no-go без fallback.
+  Это новый клиент, не доказательство универсальной устойчивости модели.
+
 ## Проверка отчётов до действия ([#483](https://github.com/MRDK80/v8unpack-agent/issues/483))
 
 - Host-side task-contract связывает операцию, полный отчёт и evidence с

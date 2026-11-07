@@ -129,3 +129,6 @@ Held-out для разработки не запускался.
 своего контракта/проверки. Строка сохранённого литерала остаётся недоверенной
 для следующего потребителя. Универсальной устойчивости Qwen/Llama этот API
 не обещает. Legacy/framed, CLI, исходники и старые индексы не меняются.
+
+Reference-клиент с явным допуском Qwen/Llama и read-only reader:
+[agent_reference_client.md](agent_reference_client.md).
