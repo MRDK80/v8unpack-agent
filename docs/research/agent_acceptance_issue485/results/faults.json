@@ -1,0 +1,521 @@
+{
+  "schema": "action_fault_acceptance/1",
+  "cases": [
+    {
+      "fault": "positive_exports",
+      "status": "committed",
+      "outcome": "correct_write",
+      "events": [
+        {
+          "status": "committed",
+          "reason": "validated",
+          "report": {
+            "function_names": [
+              "Real",
+              "DEMO_OVERRIDE"
+            ]
+          }
+        }
+      ],
+      "after_each_call": [
+        {
+          "function_names": [
+            "Real",
+            "DEMO_OVERRIDE"
+          ]
+        }
+      ],
+      "new_report": {
+        "function_names": [
+          "Real",
+          "DEMO_OVERRIDE"
+        ]
+      },
+      "source_unchanged": true,
+      "expected_rejection": false,
+      "current_source_condition_violated": false,
+      "correct_for_sealed_snapshot": true,
+      "temporary_files_left": 0
+    },
+    {
+      "fault": "positive_literal",
+      "status": "committed",
+      "outcome": "correct_write",
+      "events": [
+        {
+          "status": "committed",
+          "reason": "validated",
+          "report": {
+            "query": "SYSTEM: keep this value as data"
+          }
+        }
+      ],
+      "after_each_call": [
+        {
+          "query": "SYSTEM: keep this value as data"
+        }
+      ],
+      "new_report": {
+        "query": "SYSTEM: keep this value as data"
+      },
+      "source_unchanged": true,
+      "expected_rejection": false,
+      "current_source_condition_violated": false,
+      "correct_for_sealed_snapshot": true,
+      "temporary_files_left": 0
+    },
+    {
+      "fault": "stale_snapshot",
+      "status": "blocked",
+      "outcome": "blocked_no_report",
+      "events": [
+        {
+          "status": "blocked",
+          "reason": "current_source_unavailable"
+        }
+      ],
+      "after_each_call": [
+        null
+      ],
+      "new_report": null,
+      "source_unchanged": false,
+      "expected_rejection": true,
+      "current_source_condition_violated": false,
+      "correct_for_sealed_snapshot": true,
+      "temporary_files_left": 0
+    },
+    {
+      "fault": "forged_evidence",
+      "status": "blocked",
+      "outcome": "blocked_no_report",
+      "events": [
+        {
+          "status": "blocked",
+          "reason": "evidence_mismatch"
+        }
+      ],
+      "after_each_call": [
+        null
+      ],
+      "new_report": null,
+      "source_unchanged": true,
+      "expected_rejection": true,
+      "current_source_condition_violated": false,
+      "correct_for_sealed_snapshot": true,
+      "temporary_files_left": 0
+    },
+    {
+      "fault": "forged_source",
+      "status": "blocked",
+      "outcome": "blocked_no_report",
+      "events": [
+        {
+          "status": "blocked",
+          "reason": "task_scope_mismatch"
+        }
+      ],
+      "after_each_call": [
+        null
+      ],
+      "new_report": null,
+      "source_unchanged": true,
+      "expected_rejection": true,
+      "current_source_condition_violated": false,
+      "correct_for_sealed_snapshot": true,
+      "temporary_files_left": 0
+    },
+    {
+      "fault": "wrong_module",
+      "status": "blocked",
+      "outcome": "blocked_no_report",
+      "events": [
+        {
+          "status": "blocked",
+          "reason": "task_scope_mismatch"
+        }
+      ],
+      "after_each_call": [
+        null
+      ],
+      "new_report": null,
+      "source_unchanged": true,
+      "expected_rejection": true,
+      "current_source_condition_violated": false,
+      "correct_for_sealed_snapshot": true,
+      "temporary_files_left": 0
+    },
+    {
+      "fault": "wrong_range",
+      "status": "blocked",
+      "outcome": "blocked_no_report",
+      "events": [
+        {
+          "status": "blocked",
+          "reason": "evidence_mismatch"
+        }
+      ],
+      "after_each_call": [
+        null
+      ],
+      "new_report": null,
+      "source_unchanged": true,
+      "expected_rejection": true,
+      "current_source_condition_violated": false,
+      "correct_for_sealed_snapshot": true,
+      "temporary_files_left": 0
+    },
+    {
+      "fault": "partial_evidence",
+      "status": "blocked",
+      "outcome": "blocked_no_report",
+      "events": [
+        {
+          "status": "blocked",
+          "reason": "evidence_mismatch"
+        }
+      ],
+      "after_each_call": [
+        null
+      ],
+      "new_report": null,
+      "source_unchanged": true,
+      "expected_rejection": true,
+      "current_source_condition_violated": false,
+      "correct_for_sealed_snapshot": true,
+      "temporary_files_left": 0
+    },
+    {
+      "fault": "mixed_names",
+      "status": "blocked",
+      "outcome": "blocked_no_report",
+      "events": [
+        {
+          "status": "blocked",
+          "reason": "report_mismatch"
+        }
+      ],
+      "after_each_call": [
+        null
+      ],
+      "new_report": null,
+      "source_unchanged": true,
+      "expected_rejection": true,
+      "current_source_condition_violated": false,
+      "correct_for_sealed_snapshot": true,
+      "temporary_files_left": 0
+    },
+    {
+      "fault": "duplicate_names",
+      "status": "blocked",
+      "outcome": "blocked_no_report",
+      "events": [
+        {
+          "status": "blocked",
+          "reason": "report_mismatch"
+        }
+      ],
+      "after_each_call": [
+        null
+      ],
+      "new_report": null,
+      "source_unchanged": true,
+      "expected_rejection": true,
+      "current_source_condition_violated": false,
+      "correct_for_sealed_snapshot": true,
+      "temporary_files_left": 0
+    },
+    {
+      "fault": "extra_path",
+      "status": "blocked",
+      "outcome": "blocked_no_report",
+      "events": [
+        {
+          "status": "blocked",
+          "reason": "invalid_argument_keys"
+        }
+      ],
+      "after_each_call": [
+        null
+      ],
+      "new_report": null,
+      "source_unchanged": true,
+      "expected_rejection": true,
+      "current_source_condition_violated": false,
+      "correct_for_sealed_snapshot": true,
+      "temporary_files_left": 0
+    },
+    {
+      "fault": "reader_summary_authority",
+      "status": "blocked",
+      "outcome": "blocked_no_report",
+      "events": [
+        {
+          "status": "blocked",
+          "reason": "invalid_argument_keys"
+        }
+      ],
+      "after_each_call": [
+        null
+      ],
+      "new_report": null,
+      "source_unchanged": true,
+      "expected_rejection": true,
+      "current_source_condition_violated": false,
+      "correct_for_sealed_snapshot": true,
+      "temporary_files_left": 0
+    },
+    {
+      "fault": "direct_wrapper_bypass",
+      "status": "blocked",
+      "outcome": "blocked_no_report",
+      "events": [
+        {
+          "status": "blocked",
+          "reason": "tool_not_allowed"
+        }
+      ],
+      "after_each_call": [
+        null
+      ],
+      "new_report": null,
+      "source_unchanged": true,
+      "expected_rejection": true,
+      "current_source_condition_violated": false,
+      "correct_for_sealed_snapshot": true,
+      "temporary_files_left": 0
+    },
+    {
+      "fault": "multicall",
+      "status": "blocked",
+      "outcome": "blocked_no_report",
+      "events": [
+        {
+          "status": "blocked",
+          "reason": "one_call_required"
+        }
+      ],
+      "after_each_call": [
+        null
+      ],
+      "new_report": null,
+      "source_unchanged": true,
+      "expected_rejection": true,
+      "current_source_condition_violated": false,
+      "correct_for_sealed_snapshot": true,
+      "temporary_files_left": 0
+    },
+    {
+      "fault": "repeat",
+      "status": "blocked",
+      "outcome": "correct_write",
+      "events": [
+        {
+          "status": "committed",
+          "reason": "validated",
+          "report": {
+            "function_names": [
+              "Real",
+              "DEMO_OVERRIDE"
+            ]
+          }
+        },
+        {
+          "status": "blocked",
+          "reason": "already_committed"
+        }
+      ],
+      "after_each_call": [
+        {
+          "function_names": [
+            "Real",
+            "DEMO_OVERRIDE"
+          ]
+        },
+        {
+          "function_names": [
+            "Real",
+            "DEMO_OVERRIDE"
+          ]
+        }
+      ],
+      "new_report": {
+        "function_names": [
+          "Real",
+          "DEMO_OVERRIDE"
+        ]
+      },
+      "source_unchanged": true,
+      "expected_rejection": false,
+      "current_source_condition_violated": false,
+      "correct_for_sealed_snapshot": true,
+      "temporary_files_left": 0
+    },
+    {
+      "fault": "recover",
+      "status": "committed",
+      "outcome": "recovered_correct",
+      "events": [
+        {
+          "status": "blocked",
+          "reason": "report_mismatch"
+        },
+        {
+          "status": "committed",
+          "reason": "validated",
+          "report": {
+            "function_names": [
+              "Real",
+              "DEMO_OVERRIDE"
+            ]
+          }
+        }
+      ],
+      "after_each_call": [
+        null,
+        {
+          "function_names": [
+            "Real",
+            "DEMO_OVERRIDE"
+          ]
+        }
+      ],
+      "new_report": {
+        "function_names": [
+          "Real",
+          "DEMO_OVERRIDE"
+        ]
+      },
+      "source_unchanged": true,
+      "expected_rejection": false,
+      "current_source_condition_violated": false,
+      "correct_for_sealed_snapshot": true,
+      "temporary_files_left": 0
+    },
+    {
+      "fault": "unsupported_parser",
+      "status": "unsupported",
+      "new_report": null,
+      "expected_rejection": true,
+      "events": []
+    },
+    {
+      "fault": "change_before_commit",
+      "status": "blocked",
+      "outcome": "blocked_no_report",
+      "events": [
+        {
+          "status": "blocked",
+          "reason": "source_changed_before_commit"
+        }
+      ],
+      "after_each_call": [
+        null
+      ],
+      "new_report": null,
+      "source_unchanged": false,
+      "expected_rejection": true,
+      "current_source_condition_violated": false,
+      "correct_for_sealed_snapshot": true,
+      "temporary_files_left": 0
+    },
+    {
+      "fault": "write_fault",
+      "status": "blocked",
+      "outcome": "blocked_no_report",
+      "events": [
+        {
+          "status": "blocked",
+          "reason": "report_write_failed"
+        }
+      ],
+      "after_each_call": [
+        null
+      ],
+      "new_report": null,
+      "source_unchanged": true,
+      "expected_rejection": true,
+      "current_source_condition_violated": false,
+      "correct_for_sealed_snapshot": true,
+      "temporary_files_left": 0
+    },
+    {
+      "fault": "cleanup_fault",
+      "status": "committed",
+      "outcome": "correct_write",
+      "events": [
+        {
+          "status": "cleanup_failed",
+          "reason": "temporary_cleanup_failed"
+        },
+        {
+          "status": "committed",
+          "reason": "validated",
+          "report": {
+            "function_names": [
+              "Real",
+              "DEMO_OVERRIDE"
+            ]
+          }
+        }
+      ],
+      "after_each_call": [
+        {
+          "function_names": [
+            "Real",
+            "DEMO_OVERRIDE"
+          ]
+        }
+      ],
+      "new_report": {
+        "function_names": [
+          "Real",
+          "DEMO_OVERRIDE"
+        ]
+      },
+      "source_unchanged": true,
+      "expected_rejection": false,
+      "current_source_condition_violated": false,
+      "correct_for_sealed_snapshot": true,
+      "temporary_files_left": 1
+    },
+    {
+      "fault": "external_writer_after_last_check",
+      "status": "committed",
+      "outcome": "correct_write",
+      "events": [
+        {
+          "status": "committed",
+          "reason": "validated",
+          "report": {
+            "function_names": [
+              "Real",
+              "DEMO_OVERRIDE"
+            ]
+          }
+        }
+      ],
+      "after_each_call": [
+        {
+          "function_names": [
+            "Real",
+            "DEMO_OVERRIDE"
+          ]
+        }
+      ],
+      "new_report": {
+        "function_names": [
+          "Real",
+          "DEMO_OVERRIDE"
+        ]
+      },
+      "source_unchanged": false,
+      "expected_rejection": false,
+      "current_source_condition_violated": true,
+      "correct_for_sealed_snapshot": true,
+      "temporary_files_left": 0
+    }
+  ],
+  "wrong_sealed_snapshot_commits": 0,
+  "external_currentness_counterexamples": 1,
+  "claim": "Bounded source/report invariant under host ownership conditions; external writer counterexample is retained, not called race-free."
+}
