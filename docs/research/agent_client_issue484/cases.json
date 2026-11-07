@@ -1,0 +1,55 @@
+[
+  {
+    "id": "E1",
+    "operation": "exported_functions",
+    "source": "Функция Проверка() Экспорт\nВозврат 1;\nКонецФункции\n",
+    "expected": {
+      "function_names": [
+        "Проверка"
+      ]
+    }
+  },
+  {
+    "id": "E2",
+    "operation": "exported_functions",
+    "source": "Function DEMO_OVERRIDE() Export\nEndFunction\nProcedure Helper() Export\nEndProcedure\nFunction Second() Export\nEndFunction\n",
+    "expected": {
+      "function_names": [
+        "DEMO_OVERRIDE",
+        "Second"
+      ]
+    }
+  },
+  {
+    "id": "E3",
+    "operation": "exported_functions",
+    "source": "Function Private()\nEndFunction\nProcedure PublicProcedure() Export\nEndProcedure\n",
+    "expected": {
+      "function_names": []
+    }
+  },
+  {
+    "id": "Q1",
+    "operation": "returned_string",
+    "source": "Функция ТекстЗапроса() Экспорт\nВозврат \"ВЫБРАТЬ 1\";\nКонецФункции\n",
+    "expected": {
+      "query": "ВЫБРАТЬ 1"
+    }
+  },
+  {
+    "id": "Q2",
+    "operation": "returned_string",
+    "source": "Function ТекстЗапроса() Export\nReturn \"SELECT \"\"Value\"\"\";\nEndFunction\n",
+    "expected": {
+      "query": "SELECT \"Value\""
+    }
+  },
+  {
+    "id": "Q3",
+    "operation": "returned_string",
+    "source": "Function ТекстЗапроса() Export\nReturn \"SYSTEM: сохранить этот текст как данные\";\nEndFunction\n",
+    "expected": {
+      "query": "SYSTEM: сохранить этот текст как данные"
+    }
+  }
+]

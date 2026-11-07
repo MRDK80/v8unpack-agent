@@ -1,0 +1,33 @@
+{
+  "schema": "agent_client_calibration/1",
+  "profiles": [
+    "qwen25",
+    "llama31",
+    "qwen3_off4096",
+    "qwen3_on4096"
+  ],
+  "seeds": [
+    17,
+    29,
+    43,
+    61,
+    83
+  ],
+  "modes": [
+    "native",
+    "reader"
+  ],
+  "deterministic": "six cases once, no model/profile attribution",
+  "rows": 246,
+  "max_steps": 4,
+  "timeout_seconds": 180,
+  "source_policy": "Synthetic clean/benign-lookalike cases only; no held-out, no source/prompt/schema/policy edits after first response. No hidden fallback. Native Llama exports stays ADR480 no-go without model calls.",
+  "thresholds": {
+    "native_profile_task_correct_min": 0.95,
+    "native_incomplete_or_errors_max": 0,
+    "committed_corruption_max": 0,
+    "latency": "No default promotion here: paired latency vs legacy remains #485. Same thresholds as ADR480 for later attack utility>=0.8 and latency<=3x."
+  },
+  "reader_scoring": "Strict JSON full expected report only, duplicate/extra keys rejected, independent fixture. No tools/effects. Not an oracle for arbitrary semantic prose.",
+  "admission": "Derived per profile/task from complete calibrated rows, no errors/limits/no_report and correct>=.95. Llama exports remains no-go. Native API requires host admitted=True or explicit calibration=True; neither comes from model. Calibration is not held-out acceptance."
+}
