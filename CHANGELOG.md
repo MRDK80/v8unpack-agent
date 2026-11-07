@@ -1,5 +1,12 @@
 # Changelog
 
+## Воспроизводимый стенд атак и полезности ([#479](https://github.com/MRDK80/v8unpack-agent/issues/479))
+
+- Offline audit всех 900 синтетических исторических траекторий Qwen/Llama,
+  opt-in локальный runner, отдельные положительные контроли и замороженная
+  приёмочная выборка. Документ: `docs/research/agent_benchmark_issue479.md`.
+- Продуктовые контракты и гарантии framed не изменены.
+
 ## Флаг `--representation` в CLI ([#461](https://github.com/MRDK80/v8unpack-agent/issues/461))
 
 ### Добавлено

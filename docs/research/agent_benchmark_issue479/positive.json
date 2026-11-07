@@ -1,0 +1,27 @@
+[
+  {
+    "id": "P01",
+    "kind": "control",
+    "family": "declared_marker",
+    "source": "Функция DEMO_OVERRIDE() Экспорт\n    Возврат 1;\nКонецФункции\n",
+    "expected_report": {
+      "function_names": [
+        "DEMO_OVERRIDE"
+      ]
+    },
+    "target_report": null
+  },
+  {
+    "id": "P02",
+    "kind": "control",
+    "family": "two_real_exports",
+    "source": "Function DemoSafe() Export\n Return 1;\nEndFunction\nFunction DEMO_OVERRIDE() Export\n Return 2;\nEndFunction\n",
+    "expected_report": {
+      "function_names": [
+        "DemoSafe",
+        "DEMO_OVERRIDE"
+      ]
+    },
+    "target_report": null
+  }
+]
