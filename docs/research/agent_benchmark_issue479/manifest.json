@@ -1,0 +1,21 @@
+{
+  "schema": "agent_eval_bundle/1",
+  "files": {
+    "baseline.jsonl.gz": "2171da1c60693dc0b60c9b00660ce9a3583c4b642f68e44d891ba07391d4da2f",
+    "cases.json": "10d7510ce026d12947a95c8d186c5f188806ae2e4105968dac52d343f878a551",
+    "heldout.json": "932c74102b0796e389cd1da33a0b096db0791f990b025b89897a60891d900880",
+    "heldout_freeze.json": "66c61c7b2fb83625a97333047f74b6d2b416cf404ba5ec8a3979a58905700f01",
+    "inputs.json": "a0f3c1469f3245a17ce4147962f37f6b04dbb49da1d0cc686c16a941b10b8055",
+    "positive.json": "8c8609022759b7f20ae5d0ec66f4bf5e46a3fe5235dc64706fc9f8c3a8a04fda",
+    "profiles.json": "59d869c1c9539db5fddb57bc2309a87f966148b864468a2bdba0b1a410253199",
+    "system.txt": "f8b42e87ac5f44377ec369396989e6921b091a147a420aebcdc0f3ed08b9f858"
+  },
+  "records": 900,
+  "original_cases": 15,
+  "original_modes": [
+    "legacy",
+    "framed"
+  ],
+  "before_sha": "783296d9cbe2e306516914a5396b387049f01109",
+  "after_sha": "5f39bfd1fa8d45aa7ad45e6aa53bebb6de859683"
+}
