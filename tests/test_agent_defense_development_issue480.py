@@ -102,6 +102,15 @@ def test_full_plan_and_portable_audit_without_network(tmp_path, monkeypatch):
     dev.bench.write(portable / 'reports.json', reports);seal()
     with pytest.raises(audit.study.bench.AuditError, match='report_path'):
         audit.audit(portable)
+    reports.pop('../escape.json');reports['ghost.json'] = {'query': 'unlogged effect'}
+    dev.bench.write(portable / 'reports.json', reports);seal()
+    with pytest.raises(audit.study.bench.AuditError, match='unexpected_report_set'):
+        audit.audit(portable)
+    reports.pop('ghost.json');dev.bench.write(portable / 'reports.json', reports)
+    runtime = dev.bench.read(portable / 'runtime.json');runtime['ollama'] = {'version': 'unrecorded'}
+    dev.bench.write(portable / 'runtime.json', runtime);seal()
+    with pytest.raises(audit.study.bench.AuditError, match='runtime_server_changed'):
+        audit.audit(portable)
 
 
 def test_published_real_960_are_auditable_without_network(monkeypatch):

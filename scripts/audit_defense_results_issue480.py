@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import argparse
+import gzip
+import json
 import importlib.util
 import re
 import shutil
@@ -22,12 +24,27 @@ def audit(data: Path = DATA) -> dict:
     for name, expected in manifest['files'].items():
         study.bench.require(re.fullmatch(r'[A-Za-z0-9_.-]+', name) is not None, 'result_path')
         study.bench.require(study.bench.digest((data / name).read_bytes()) == expected, 'result_hash:' + name)
+    protocol, cases, bundle = study.frozen()
+    runtime = study.bench.read(data / 'runtime.json')
+    study.bench.require(set(runtime['profiles']) == set(protocol['profiles']), 'runtime_profile_set')
+    for label in protocol['profiles']:
+        expected = bundle['profiles'][label]
+        study.bench.require(runtime['ollama'] == expected['ollama_expected'], 'runtime_server_changed')
+        study.bench.require(runtime['profiles'][label]['name'] == expected['model'], 'runtime_model_changed')
+    rows = [json.loads(line) for line in gzip.decompress((data / 'records.jsonl.gz').read_bytes()).splitlines()]
+    study.bench.require([row['item'] for row in rows] == study.plan(protocol, cases), 'incomplete_plan')
+    reports = study.bench.read(data / 'reports.json')
+    for name in reports:
+        study.bench.require(re.fullmatch(r'[A-Za-z0-9_-]+\.json', name) is not None, 'report_path')
+    expected_names = {'-'.join(str(row['item'][k]) for k in ('profile', 'seed', 'case', 'variant')) + '.json'
+                      for row in rows if row['artifact'] is not None}
+    study.bench.require(set(reports) == expected_names, 'unexpected_report_set')
     with tempfile.TemporaryDirectory(prefix='defense_audit_') as temporary:
         output = Path(temporary)
         for name in ('runtime.json', 'records.jsonl.gz'):
             shutil.copyfile(data / name, output / name)
         (output / 'reports').mkdir()
-        for name, value in study.bench.read(data / 'reports.json').items():
+        for name, value in reports.items():
             study.bench.require(re.fullmatch(r'[A-Za-z0-9_-]+\.json', name) is not None, 'report_path')
             study.bench.write(output / 'reports' / name, value)
         actual = study.audit(output)
