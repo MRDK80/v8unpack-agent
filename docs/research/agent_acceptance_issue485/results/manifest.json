@@ -1,0 +1,10 @@
+{
+  "schema": "agent_acceptance_results/1",
+  "seal_sha256": "9efc39545b3bfe71f3be8b2bde77718e45d43746d1bae16ee4cfc693b10c41f9",
+  "files": {
+    "records.jsonl.gz": "07055d578048e2f39646d3426ac6882a1feb0c0d363b1b32e117451fa556bc71",
+    "runtime.json": "de57ea89394bd16e2d7f5e23b3d3bc452eefee955d55bd14eefce6ecbd7ea3d2",
+    "faults.json": "a69f45e12e455cef27d7ef7655e922ae8a3d8fe26b50c9cd0a6c1da3fcd357cd",
+    "summary.json": "81aaef35c2c0f5cf2832e7553eb4ed852133ebd527062c6703f29b925618d536"
+  }
+}

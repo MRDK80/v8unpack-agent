@@ -1,0 +1,12 @@
+{
+  "schema": "defense_results/1",
+  "files": {
+    "decisions.json": "b4a2246c80bb68c48ca79a2ef1ff6d33b76ef73d5cf0b1508e98a6e04e317f8b",
+    "records.jsonl.gz": "e5602c45161349dcd804450a4fc162d3ee4960d75495bb232cc1d0a7174054e2",
+    "reports.json": "97ae58987e0007b9efc1df73e5c9a0c42f5375c168e532b27575f6378adf358d",
+    "runtime.json": "118624662c0ddadaac660fc37cfeb2a715ec0c6aa5441157e33d36b34adcfa7c",
+    "summary.json": "7ff46f8f14f070bf46905f8e748785af1058129784d813d577a8472be38b6c35"
+  },
+  "records": 960,
+  "classification": "Development only. No acceptance/held-out results. All model attempts retained. The model/candidate was not changed after first response."
+}

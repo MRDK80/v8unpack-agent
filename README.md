@@ -4,9 +4,8 @@
 выгрузку конфигурации 1С в читаемый текстовый слой, машиночитаемую опись
 форм и компактный контекст для LLM.
 
-Задача пакета — дать агенту достоверные сведения о формах и модулях без
-угадывания. С `0.2.0` — индекс BSL-модулей и общий поиск. Где данные нечитаемы, результат помечается как неполный, а не
-достраивается догадками.
+Пакет даёт агенту сведения о формах и модулях. С `0.2.0` — индекс BSL и
+общий поиск. Нечитаемые данные помечаются как неполные.
 
 Практический разбор проверки такого конвейера опубликован на Инфостарте:
 [«Конвейер форм 1С отчитался зелёным. Верим?»](https://infostart.ru/1c/articles/2794715/).
@@ -195,6 +194,7 @@ POSIX-пути, одинаковые на POSIX и NT.
 | `form_dispatcher` | `FormDispatcher`: роутер, при промахе — RAG | [form_router](docs/form_router.md) |
 | `common_modules` | `scan_common_modules`, `build_common_module_context` | [common_modules](docs/common_modules.md) |
 | `modules` и сканеры модулей | `ModuleEntry`, `ModuleIndex`, `scan_*_modules`, `to_llm_module_fragment` | [modules](docs/modules.md) |
+| `bsl_facts`, `evidence_context`, `action_validation` | opt-in факты и проверка действий | [контракты](docs/action_validation.md) |
 | `search_contract` | `ArtifactRef`, `SearchDocument`, `SearchQuery`, `SearchResult`, `OwnerLink` | [search_contract](docs/search_contract.md) |
 | `search_corpus` | `build_search_corpus`, `build_form_inputs`, `read_module_text`, `SearchCorpus` | [search_corpus](docs/search_corpus.md) |
 | `search_fragments` | `fragment_module`, `fragment_corpus`, `verify_fragmentation` | [search_fragments](docs/search_fragments.md) |

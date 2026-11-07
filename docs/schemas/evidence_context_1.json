@@ -1,0 +1,352 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "evidence_context/1",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "enum": [
+        "evidence_context/1"
+      ]
+    },
+    "surface": {
+      "enum": [
+        "module",
+        "form",
+        "search"
+      ]
+    },
+    "operation": {
+      "enum": [
+        "exported_functions",
+        "returned_string"
+      ]
+    },
+    "status": {
+      "enum": [
+        "complete",
+        "incomplete",
+        "truncated",
+        "unsupported"
+      ]
+    },
+    "scope": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "selected_modules"
+          ]
+        },
+        "module_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "selection_status": {
+          "enum": [
+            "complete",
+            "truncated",
+            "unsupported"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "module_ids",
+        "selection_status"
+      ],
+      "additionalProperties": false
+    },
+    "coverage": {
+      "type": "object",
+      "properties": {
+        "bsl": {
+          "enum": [
+            "bounded_syntax"
+          ]
+        },
+        "form_structure": {
+          "enum": [
+            "unsupported"
+          ]
+        }
+      },
+      "required": [
+        "bsl",
+        "form_structure"
+      ],
+      "additionalProperties": false
+    },
+    "value_semantics": {
+      "enum": [
+        "untrusted_data"
+      ]
+    },
+    "modules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "module_id": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "complete",
+              "truncated",
+              "unsupported",
+              "incomplete",
+              "unavailable"
+            ]
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "extractor_version": {
+            "enum": [
+              "bsl-facts/1.0"
+            ]
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "source_id": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "module_id": {
+                    "type": "string"
+                  },
+                  "relative_path": {
+                    "type": "string"
+                  },
+                  "text_sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "bytes_sha256": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "normalization": {
+                    "enum": [
+                      "utf8_exact",
+                      "utf8_sig",
+                      "utf8_sig_lf",
+                      "text_only"
+                    ]
+                  }
+                },
+                "required": [
+                  "source_id",
+                  "module_id",
+                  "relative_path",
+                  "text_sha256",
+                  "bytes_sha256",
+                  "normalization"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "facts": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "exported_function"
+                      ]
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "fact_id": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    },
+                    "start_line": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "end_line": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "name",
+                    "fact_id",
+                    "start_line",
+                    "end_line"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "returned_string"
+                      ]
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "fact_id": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    },
+                    "start_line": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "end_line": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "name",
+                    "fact_id",
+                    "start_line",
+                    "end_line",
+                    "value"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            }
+          },
+          "facts_total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "facts_omitted": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "diagnostics": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "file_bom": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "cf_total": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "counts": {
+                    "type": "object",
+                    "properties": {
+                      "bidi": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "zero_width": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "soft_hyphen": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "other_cf": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    },
+                    "required": [
+                      "bidi",
+                      "zero_width",
+                      "soft_hyphen",
+                      "other_cf"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "unidata_version": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file_bom",
+                  "cf_total",
+                  "counts",
+                  "unidata_version"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "module_id",
+          "status",
+          "reason",
+          "extractor_version",
+          "source",
+          "facts",
+          "facts_total",
+          "facts_omitted",
+          "diagnostics"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "omissions": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "search_selection_incomplete",
+          "unsupported_search_artifact",
+          "outside_host_scope",
+          "module_budget"
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "surface",
+    "operation",
+    "status",
+    "scope",
+    "coverage",
+    "value_semantics",
+    "modules",
+    "omissions"
+  ],
+  "additionalProperties": false
+}

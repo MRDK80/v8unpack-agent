@@ -1,5 +1,67 @@
 # Changelog
 
+## Итоговая приёмка действий агентов ([#485](https://github.com/MRDK80/v8unpack-agent/issues/485))
+
+- Все 5313 предзарегистрированных строки Qwen/Llama и 21 fault-проверка
+  сохранены с offline replay запросов, событий и фактических файлов.
+  Legacy/framed без validator дают 198/199 неверных записей; evidence +
+  validator — 0, но 496/660 правильных отчётов с явными no_report/unsupported.
+- Готовый native-клиент подтвердил узкий допуск query у Qwen2.5 и Qwen3
+  без thinking: по 30/30. Остальные prior NO-GO сохраняются, metadata формы
+  не покрыты. Это не гарантия общей устойчивости модели или произвольных действий.
+- Добавлено offline-сравнение «было — стало», уточнены инструкции потребителя
+  и ограничения grammar/TOCTOU. Новый релиз, тег и версия не создаются.
+
+## Reference-клиенты Qwen/Llama ([#484](https://github.com/MRDK80/v8unpack-agent/issues/484))
+
+- Явные deterministic/native/reader режимы. Native вызывает validator host,
+  reader не имеет tools, plain text не выполняется как команда. Runtime и
+  digest фиксированы; модель/сеть не используются при импорте или в CI.
+- До новых ответов фиксируется отдельная clean calibration; native требует
+  допуска per profile/task. Llama exports остаётся explicit no-go без fallback.
+  Это новый клиент, не доказательство универсальной устойчивости модели.
+
+## Проверка отчётов до действия ([#483](https://github.com/MRDK80/v8unpack-agent/issues/483))
+
+- Host-side task-contract связывает операцию, полный отчёт и evidence с
+  индексированным снимком; подмена, неполнота и лишние аргументы отклоняются.
+- Reference executor пишет только проверенный отчёт в выделенный host каталог,
+  блокирует multi-call/повторы и различает отказ, no_report и восстановление.
+  Границы TOCTOU/внешних инструментов явно описаны; это не OS sandbox и не
+  validator произвольных патчей. Старые transport/CLI не меняются.
+
+## Контекст фактов и evidence ([#482](https://github.com/MRDK80/v8unpack-agent/issues/482))
+
+- Отдельный opt-in `evidence_context/1`: минимальные факты экспортов или
+  необходимого прямого литерала, snapshot/evidence, явная полнота и JSON Schema.
+- Module, BSL формы и search adapters не меняют старые данные/transport.
+  Структура/реквизиты формы явно unsupported. Сырые срезы доступны отдельно
+  в обратимом framed; имена, пути и значения остаются недоверенными данными.
+
+## Проверяемые синтаксические BSL-факты ([#481](https://github.com/MRDK80/v8unpack-agent/issues/481))
+
+- Добавлен opt-in library API `bsl_facts`: объявления, экспортность,
+  параметры, координаты и отдельный ограниченный прямой строковый литерал.
+  Снимок связан с байтами индекса; неподдержанная грамматика, устаревший
+  источник и неполнота не превращаются в подтверждённый пустой список.
+- Canonical source, CLI, прежние индексы и transport не изменены.
+  Это синтаксический анализатор, не полный AST и не гарантия безопасности LLM.
+
+## ADR защиты через факты и проверку действий ([#480](https://github.com/MRDK80/v8unpack-agent/issues/480))
+
+- Зафиксированы до ответов 960 development-прогонов Qwen/Llama на двух
+  задачах, все запросы/ответы, фактические записи и отдельный offline audit.
+- Опубликованы go/no-go, ограничения Llama и отрицательный результат общего
+  reader/propose API. Новый контекст фактов и validator — следующий этап;
+  продуктовые гарантии не расширены.
+
+## Воспроизводимый стенд атак и полезности ([#479](https://github.com/MRDK80/v8unpack-agent/issues/479))
+
+- Offline audit всех 900 синтетических исторических траекторий Qwen/Llama,
+  opt-in локальный runner, отдельные положительные контроли и замороженная
+  приёмочная выборка. Документ: `docs/research/agent_benchmark_issue479.md`.
+- Продуктовые контракты и гарантии framed не изменены.
+
 ## Флаг `--representation` в CLI ([#461](https://github.com/MRDK80/v8unpack-agent/issues/461))
 
 ### Добавлено
