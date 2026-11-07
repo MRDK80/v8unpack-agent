@@ -1,5 +1,11 @@
 """Reference host: expose ONLY execute_calls to the model tool dispatcher (#483).
 
+Категория: reference-компонент host, импортируется вызывающим клиентом.
+Входные данные: разрешённый host ReportContract, корень снимка и отдельный output_dir.
+Ожидаемый результат: только проверенный report.json либо отдельный отказ до записи.
+Поведение без данных: импорт/запуск файла ничего не читает и не записывает;
+данные и разрешение передаёт host при создании ReportExecutor.
+
 Host authorizes a dedicated output directory and owns the source workspace
 exclusively through commit. This is not an OS sandbox against other processes.
 """
