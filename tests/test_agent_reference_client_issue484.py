@@ -192,3 +192,23 @@ def test_published_real_calibration_replays_offline():
     assert admitted=={'native:qwen25:returned_string','native:qwen3_off4096:returned_string'}
     assert groups['native:llama31:returned_string']['correct']==0
     assert groups['deterministic:none:exported_functions']['correct']==3
+
+
+def test_real_replay_maps_only_declared_unicode_runtime_metadata(monkeypatch):
+    import unicodedata
+
+    from scripts.audit_client_results_issue484 import _diagnostic_runtime, audit
+    monkeypatch.setattr(unicodedata,'unidata_version','14.0.0')
+    assert audit()['rows']==246
+    payload={'schema':'evidence_context/1','modules':[{'diagnostics':{'unidata_version':'wrong'}}]}
+    body={'messages':[{'role':'tool','tool_name':'read_source','content':json.dumps(payload)}]}
+    with pytest.raises(ValueError,match='diagnostic_runtime_mismatch'):
+        _diagnostic_runtime(body,'14.0.0','15.0.0')
+    # A source literal that happens to spell a version is never rewritten.
+    payload={'schema':'evidence_context/1','modules':[{'diagnostics':{'unidata_version':'14.0.0'},
+              'facts':[{'value':'14.0.0'}]}]}
+    body['messages'][0]['content']=json.dumps(payload)
+    mapped=_diagnostic_runtime(body,'14.0.0','15.0.0')
+    result=json.loads(mapped['messages'][0]['content'])
+    assert result['modules'][0]['facts'][0]['value']=='14.0.0'
+    assert result['modules'][0]['diagnostics']['unidata_version']=='15.0.0'
