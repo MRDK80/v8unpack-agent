@@ -62,3 +62,56 @@ def test_wrong_proposal_blocked_before_file_then_correct_can_recover(tmp_path, m
     tampered = copy.deepcopy(row);tampered['events'][0]['committed'] = True
     with pytest.raises(dev.bench.AuditError):
         dev.audit_one(tampered, case, bundle)
+
+
+def test_full_plan_and_portable_audit_without_network(tmp_path, monkeypatch):
+    import shutil
+    bundle = dev.bench.load_bundle()
+    cases = dev.bench.read(dev.DATA / 'cases.json')
+    observations = {dev.observation(case, variant): case['expected']
+                    for case in cases for variant in dev.bench.read(dev.DATA / 'protocol.json')['variants']}
+    def fake_api(endpoint, path, request=None):
+        if path == '/api/tags':
+            unique = {p['model']: {'name': p['model'], 'digest': p['model_digest']}
+                      for p in bundle['profiles'].values()}
+            return {'models': list(unique.values())}
+        if path == '/api/version':
+            return bundle['profiles']['qwen25']['ollama_expected']
+        value = observations[request['messages'][3]['content']]
+        name = request['tools'][1]['function']['name']
+        return {'model': request['model'], 'message': {'role': 'assistant', 'content': '',
+                'tool_calls': [{'function': {'name': name, 'arguments': value}}]}}
+    monkeypatch.setattr(dev.bench, 'endpoint_api', fake_api)
+    output = tmp_path / 'mock'
+    result = dev.run('unused', output)
+    assert result['audit'] == 'PASS' and result['records'] == 960
+    assert all(g['correct'] == g['trials'] for groups in result['summary'].values() for g in groups.values())
+    portable = tmp_path / 'portable';portable.mkdir()
+    for name in ('runtime.json', 'records.jsonl.gz', 'summary.json'):
+        shutil.copyfile(output / name, portable / name)
+    reports = {p.name: dev.bench.read(p) for p in (output / 'reports').glob('*.json')}
+    dev.bench.write(portable / 'reports.json', reports)
+    def seal():
+        dev.bench.write(portable / 'manifest.json', {'schema': 'defense_results/1', 'files': {
+            p.name: dev.bench.digest(p.read_bytes()) for p in portable.iterdir() if p.name != 'manifest.json'}})
+    seal()
+    spec = importlib.util.spec_from_file_location('portable480', ROOT / 'scripts' / 'audit_defense_results_issue480.py')
+    audit = importlib.util.module_from_spec(spec);spec.loader.exec_module(audit)
+    assert audit.audit(portable) == result
+    reports['../escape.json'] = {'query': 'not a file path'}
+    dev.bench.write(portable / 'reports.json', reports);seal()
+    with pytest.raises(audit.study.bench.AuditError, match='report_path'):
+        audit.audit(portable)
+
+
+def test_published_real_960_are_auditable_without_network(monkeypatch):
+    import socket
+    def forbidden(*args, **kwargs):
+        raise AssertionError('offline result audit attempted network')
+    monkeypatch.setattr(socket, 'socket', forbidden)
+    spec = importlib.util.spec_from_file_location('public480', ROOT / 'scripts' / 'audit_defense_results_issue480.py')
+    audit = importlib.util.module_from_spec(spec);spec.loader.exec_module(audit)
+    result = audit.audit()
+    assert result['audit'] == 'PASS' and result['records'] == 960
+    assert result['summary']['qwen25/facts_guard']['exports/attack']['correct'] == 5
+    assert result['summary']['llama31/reader_guard']['exports/control']['correct'] == 0
