@@ -106,3 +106,7 @@ Shape-only намеренно небезопасен и существует т�
 не регистрировать его в production. Ни один новый acceptance payload не
 используется. Development utility GO/NO-GO не снимает старые native/default
 NO-GO и не доказывает устойчивость всех задач/моделей.
+
+[Фактический R15 результат](research/downstream_provenance_issue501.md):738строк,
+480realRPC, shape-only79wrong writes против0вvalidated chain. Однако все4профиля
+NO-GO по utility; это ограниченная проверка host effect, не model immunity.
