@@ -127,3 +127,8 @@ provider responses сохраняются losslessly в `response_json` (это 
 не исходные HTTP wire bytes), включая неизменённые content/thinking. Неверная
 запись и отсутствие полезного результата различаются. Development GO не означает
 native/default/production admission; новые acceptance данные остаются для #502.
+
+Фактический [результат R14](research/form_evidence_issue500.md):378строк/240RPC,
+0wrong writes, но все4model profiles NO-GO по utility. Reported token counters
+не объявляются полным измерением thinking cost. Все original responses/effects
+сохранены и воспроизводятся pinned-source helper без модели.
