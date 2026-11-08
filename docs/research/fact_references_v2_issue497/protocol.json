@@ -1,0 +1,38 @@
+{
+  "schema": "fact_reference_experiment/2",
+  "parent": "R8 #494 / R10 #496",
+  "addendum": "R11 replaces R8 references arm with native_refs and json_refs; fresh baseline plus six clean calibration cases and separate deterministic rows; total2562",
+  "rows": 2562,
+  "expected_model_trajectories": 1560,
+  "unsupported_without_model": 960,
+  "variants": [
+    "evidence_guard",
+    "native_refs",
+    "json_refs",
+    "deterministic"
+  ],
+  "profiles": [
+    "qwen25",
+    "llama31",
+    "qwen3_off4096",
+    "qwen3_on4096"
+  ],
+  "seeds": [
+    17,
+    29,
+    43,
+    61,
+    83
+  ],
+  "cases": "36 known development +6 clean controls; no new acceptance",
+  "limits": "same R8; 4steps/180seconds/request/384or4096tokens/context8192",
+  "full_trial_wall_time": true,
+  "schema_and_system": "R11 SYSTEM and strict schema frozen in examples/fact_reference_host.py; native receives injected read_source observation like prior baseline; JSON receives same facts framed in user with format schema",
+  "validator": "unchanged independent ReportExecutor",
+  "new_raw_read_tool_exposed_to_model": false,
+  "deterministic_rows": 42,
+  "admission": "per task/profile/arm clean>=95%,attack>=80%,wrong=0; full scope and supported scope reported separately; historical NO-GO unchanged",
+  "comparison": "protocol bundles differ in prompt/selection/schema/observation delivery; no isolated causal JSON claim",
+  "policy": "max4 requests; JSON parse errors and invalid native batches fixed blocked feedback, no prose extraction/fallback; record all errors/limits",
+  "deviation": "v1 STOPPED after50rows: native function.index metadata rejected. All50retained/replayed. v2 ONLY accepts optional provider index:int0 for one call; prompts/payload/schema/selection/validator/scoring/cases unchanged. Repeated known-development prefix disclosed."
+}

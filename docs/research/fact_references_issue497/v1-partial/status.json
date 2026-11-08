@@ -1,0 +1,9 @@
+{
+  "status": "STOPPED_INCOMPLETE",
+  "rows": 50,
+  "raw_sha256": "fc6a24cc74d1b3ad9cff3e6461581f5546df062a753ce4f636588630b00ef268",
+  "source_zip_sha256": "eb1f39a1d364c90e730dc8a04e11b26ded3ab912bf2694e2901a6c2c15384059",
+  "replay": "PASS all50 using original frozen source",
+  "reason": "provider_metadata_incompatibility",
+  "new_acceptance": false
+}

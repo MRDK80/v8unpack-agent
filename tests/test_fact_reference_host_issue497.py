@@ -9,12 +9,12 @@ from tests.test_task_evidence_issue496 import fixture
 from v8unpack_agent.task_evidence import build_task_evidence
 
 
-def host(tmp_path, source='Function A() Export\nEndFunction\nFunction B() Export\nEndFunction\n', **options):
+def host(tmp_path, source='Function A() Export\nEndFunction\nFunction B() Export\nEndFunction\n', *, host_type=FactReferenceHost, **options):
     root = tmp_path / 'source'
     entry, index, path = fixture(root, source)
     view = build_task_evidence(root, index, entry.module_id, **options)
     output = tmp_path / 'output'; output.mkdir()
-    return FactReferenceHost(view, output_dir=output, scope_id='request-1'), path, output
+    return host_type(view, output_dir=output, scope_id='request-1'), path, output
 
 
 def proposal(h):
