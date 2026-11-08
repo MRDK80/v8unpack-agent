@@ -44,6 +44,11 @@ end-to-end LLM прогон и не OS sandbox.
 конечными повторами; default не допускает модель без host admission.
 [Политика и ограничения](../docs/bounded_fact_agent.md).
 
+`snapshot_report_executor.py` (#499) — opt-in host с неизменяемым снимком,
+одноразовым validation ticket и Linux dirfd writer. Без входов не пишет;
+другие платформы явно unsupported. Это snapshot-correct, не OS sandbox и
+не новый допуск модели. [ADR/контракт](../docs/snapshot_report_executor.md).
+
 ## Самодостаточные (запускаются без аргументов)
 
 Создают синтетические данные во временном каталоге и удаляют их за собой.
