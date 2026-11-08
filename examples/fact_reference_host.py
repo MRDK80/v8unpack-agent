@@ -1,9 +1,9 @@
 """Opt-in reference protocol: model selects facts, host owns report and writer.
 
 Категория: импортируемый reference-компонент, не самостоятельный CLI.
-Вход: полный TaskEvidence, разрешённый host output_dir и уникальный scope_id.
-Результат: прежний независимо проверенный report.json либо явный отказ.
-Без данных: импорт/запуск файла не вызывает модель и ничего не пишет.
+Входные данные: полный TaskEvidence, разрешённый host output_dir и уникальный scope_id.
+Ожидаемый результат: прежний независимо проверенный report.json либо явный отказ.
+Поведение без данных: импорт/запуск файла не вызывает модель и ничего не пишет.
 Host retains the exclusive-source/dedicated-output assumptions of ReportExecutor.
 """
 from __future__ import annotations
