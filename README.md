@@ -187,15 +187,15 @@ POSIX-пути, одинаковые на POSIX и NT.
 | `coverage_metric` | `calc_data_path_coverage`, `CoverageReport` | [form_classifier](docs/form_classifier.md) |
 | `object_decoder` | `decode_object_attributes`, `DecodeResult`, `DecodeError` | [object_decoder](docs/object_decoder.md) |
 | `catalog_resolver` | `resolve_data_path`, `ResolvedBinding` | [catalog_resolver](docs/catalog_resolver.md) |
-| `form_context` | `FormContext`, `build_form_context`, `to_llm_prompt_fragment`, `ALL_SECTIONS` / `SECTION_*` (выбор блоков, #146) | [form_context](docs/form_context.md) |
+| `form_context` | `FormContext`, `build_form_context`, `to_llm_prompt_fragment`, `ALL_SECTIONS` / `SECTION_*` | [form_context](docs/form_context.md) |
 | `form_summary` | `build_form_summary`, `to_normalized_json` | [form_summary](docs/form_summary.md) |
 | `form_router` | `FormRouter`, `form_paths` | [form_router](docs/form_router.md) |
 | `form_rag` | `FormRagIndex`, `RagBuildError`, `RagQueryError`, `RagLoadError` | [form_rag](docs/form_rag.md) |
 | `form_dispatcher` | `FormDispatcher` | [form_router](docs/form_router.md) |
 | `common_modules` | `scan_common_modules`, `build_common_module_context` | [common_modules](docs/common_modules.md) |
-| `modules` и сканеры модулей | `ModuleEntry`, `ModuleIndex`, `scan_*_modules`, `to_llm_module_fragment` | [modules](docs/modules.md) |
+| `modules` | `ModuleEntry`, `ModuleIndex`, `scan_*_modules`, `to_llm_module_fragment` | [modules](docs/modules.md) |
 | `bsl_facts`, `evidence_context`, `action_validation` | факты и действия | [API](docs/action_validation.md) |
-| `task_evidence`, `form_evidence` | | [BSL](docs/task_evidence.md), [Form](docs/form_evidence.md) |
+| `task_evidence`, `form_evidence`, `report_provenance` | | [BSL](docs/task_evidence.md), [Form](docs/form_evidence.md), [Chain](docs/report_provenance.md) |
 | `search_contract` | `ArtifactRef`, `SearchDocument`, `SearchQuery`, `SearchResult`, `OwnerLink` | [search_contract](docs/search_contract.md) |
 | `search_corpus` | `build_search_corpus`, `build_form_inputs`, `read_module_text`, `SearchCorpus` | [search_corpus](docs/search_corpus.md) |
 | `search_fragments` | `fragment_module`, `fragment_corpus`, `verify_fragmentation` | [search_fragments](docs/search_fragments.md) |

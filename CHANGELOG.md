@@ -1,5 +1,14 @@
 # Changelog
 
+## Downstream provenance ([#501](https://github.com/MRDK80/v8unpack-agent/issues/501))
+
+- Opt-in [report_provenance](docs/report_provenance.md): snapshot/field origins и
+  completeness без повышения значений до инструкции или разрешения действия.
+- Reference producer/consumer с out-of-band host receipt после commit и
+  независимой source/target проверкой второго эффекта; Linux snapshot-only.
+- JSON/hash labels не authentication; serialization теряет memory receipt,
+  summary остаётся unverified. Нет универсальной end-to-end/OS-sandbox гарантии.
+
 ## Статические реквизиты формы ([#500](https://github.com/MRDK80/v8unpack-agent/issues/500))
 
 - Opt-in [form_evidence](docs/form_evidence.md): реальная пара metadata/elem,
