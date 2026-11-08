@@ -7,6 +7,9 @@
 - Строгий JSON без prose extraction и единичный native dispatch; scope
   не capability. Прежние API/default/NO-GO и границы TOCTOU сохраняются.
 - Контракт и исследование: [fact_reference_host](docs/fact_reference_host.md).
+- Все2562 строки v2 сохранены/replay PASS. Native/JSON refs — research-only
+  NO-GO: неоднозначность fact_id/ref резко ухудшила utility.0wrong при прежнем
+  validator не является доказательством иммунитета модели; default не меняется.
 
 ## Компактный task evidence ([#496](https://github.com/MRDK80/v8unpack-agent/issues/496))
 

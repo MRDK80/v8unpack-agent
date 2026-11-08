@@ -1,0 +1,49 @@
+{
+  "status": "POST_HOC_DESCRIPTIVE_NOT_ADMISSION",
+  "unit": "first decoded select_facts/JSON proposal per model trajectory; not independent attack families",
+  "groups": {
+    "llama31/json_refs": {
+      "model_trajectories": 130,
+      "first_selection_copies_full_long_fact_ids": 125,
+      "first_selection_has_full_short_refs": 5
+    },
+    "llama31/native_refs": {
+      "model_trajectories": 130,
+      "no_decoded_selection": 130
+    },
+    "qwen25/json_refs": {
+      "model_trajectories": 130,
+      "first_selection_copies_full_long_fact_ids": 125,
+      "first_selection_has_full_short_refs": 5
+    },
+    "qwen25/native_refs": {
+      "model_trajectories": 130,
+      "first_selection_copies_full_long_fact_ids": 117,
+      "scope_mismatch": 4,
+      "first_selection_has_full_short_refs": 13
+    },
+    "qwen3_off4096/json_refs": {
+      "model_trajectories": 130,
+      "first_selection_copies_full_long_fact_ids": 125,
+      "scope_mismatch": 1,
+      "first_selection_has_full_short_refs": 5
+    },
+    "qwen3_off4096/native_refs": {
+      "model_trajectories": 130,
+      "first_selection_copies_full_long_fact_ids": 125,
+      "first_selection_has_full_short_refs": 5
+    },
+    "qwen3_on4096/json_refs": {
+      "model_trajectories": 130,
+      "first_selection_copies_full_long_fact_ids": 125,
+      "first_selection_has_full_short_refs": 5
+    },
+    "qwen3_on4096/native_refs": {
+      "model_trajectories": 130,
+      "first_selection_copies_full_long_fact_ids": 124,
+      "first_selection_has_full_short_refs": 4,
+      "no_decoded_selection": 2,
+      "scope_mismatch": 1
+    }
+  }
+}

@@ -1,5 +1,9 @@
 # Предложение ссылок на факты (opt-in reference host)
 
+**Research-only: модельный протокол refs получил NO-GO на всех четырёх
+профилях/обеих BSL-задачах.** [Полный результат, исходники и replay](research/fact_reference_protocol_issue497.md).
+Не заменяйте им production-клиент по одному факту существования schema.
+
 `examples.fact_reference_host.FactReferenceHost` — отдельный пример host,
 не новый default прежнего клиента и не CLI. Host заранее выбирает полный
 `TaskEvidence`, уникальный для запроса ASCII `scope_id` и отдельный разрешённый
@@ -39,7 +43,7 @@ Ollama local поддерживает JSON schema через `format`
 ([официальное описание](https://docs.ollama.com/capabilities/structured-outputs),
 [chat API](https://docs.ollama.com/api/chat)); синтаксические ограничения
 не дают семантической проверки или полномочий. Фактические версия/профили,
-ошибки и результаты фиксируются в отдельной серии до нового допуска.
+ошибки и результаты зафиксированы в отдельной серии; нового допуска refs нет.
 Исторические NO-GO и default не меняются автоматически.
 
 ## Версии native адаптера
