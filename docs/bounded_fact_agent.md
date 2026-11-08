@@ -1,5 +1,8 @@
 # Ограниченное восстановление JSON-агента
 
+**Research-only: в завершённой серии все JSON recovery profile/task — NO-GO.**
+[Полный результат и replay](research/bounded_recovery_issue498.md).
+
 `examples.bounded_fact_agent` — отдельный opt-in research controller R12.
 Старый reference-клиент и его default/исторические NO-GO не меняются.
 Host заранее разрешает конкретный `TaskEvidence`, уникальный scope и отдельный
