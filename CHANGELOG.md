@@ -1,5 +1,14 @@
 # Changelog
 
+## Snapshot execution boundary ([#499](https://github.com/MRDK80/v8unpack-agent/issues/499))
+
+- Отдельный opt-in reference executor: host-owned snapshot/request/output,
+  opaque one-use ticket, отдельные proposal/validation/commit.
+- Linux dirfd/no-follow, atomic no-clobber publication; явные IO/cleanup/
+  durability статусы. Другие платформы unsupported до записи.
+- [ADR и границы](docs/snapshot_report_executor.md): snapshot-correct,
+  без current-file/OS-sandbox обещаний; frozen клиенты не меняются.
+
 ## Ограниченное восстановление ([#498](https://github.com/MRDK80/v8unpack-agent/issues/498))
 
 - Opt-in research JSON controller: максимум первое предложение+2повтора,
