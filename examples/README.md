@@ -40,6 +40,10 @@ end-to-end LLM прогон и не OS sandbox.
 импорт не вызывает модель. Модельные refs получили NO-GO, production default
 не меняется. [Контракт и результаты](../docs/fact_reference_host.md).
 
+`bounded_fact_agent.py` (#498) — импортируемый research JSON controller с
+конечными повторами; default не допускает модель без host admission.
+[Политика и ограничения](../docs/bounded_fact_agent.md).
+
 ## Самодостаточные (запускаются без аргументов)
 
 Создают синтетические данные во временном каталоге и удаляют их за собой.

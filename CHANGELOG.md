@@ -1,5 +1,15 @@
 # Changelog
 
+## Ограниченное восстановление ([#498](https://github.com/MRDK80/v8unpack-agent/issues/498))
+
+- Opt-in research JSON controller: максимум первое предложение+2повтора,
+  фиксированный безопасный feedback, тот же scoped snapshot и validator.
+- Конечные token/admission-time budgets, terminal idempotency и явный abort
+  при смене снимка; без auto-correction, raw writer или native fallback.
+- [Контракт и границы времени/TOCTOU](docs/bounded_fact_agent.md).
+- Все882строки/clock/effects replay PASS:37/840correct,0wrong,17live namespace
+  recovery. Всеprofile/task NO-GO по utility; компонент остаётся research-only.
+
 ## Предложения ссылок ([#497](https://github.com/MRDK80/v8unpack-agent/issues/497))
 
 - Отдельный opt-in reference host проверяет полный набор host fact refs,

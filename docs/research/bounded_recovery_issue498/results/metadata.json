@@ -1,0 +1,15 @@
+{
+  "rows": 882,
+  "raw_bytes": 10290699,
+  "raw_sha256": "1d5b0d174c263c6b911a7766d5d7d8a948d3762eeb54a47088da6229b2354f32",
+  "model_trajectories": 520,
+  "unsupported_without_model": 320,
+  "deterministic_rows": 42,
+  "source": "ebb42220c64a53b311af6367609c8a5ad15806a6",
+  "source_zip_sha256": "58e825fed954224aac349bb13bb22622cfd9ca7f0f7a86d28cdeaab209b35034",
+  "full_clock_request_files_replay": "PASS882",
+  "runtime_start_end": "equal",
+  "private_path_hits": 0,
+  "new_acceptance": false,
+  "control": "full historical R11 json_refs, max4 vs candidate max3; not fresh randomized control"
+}

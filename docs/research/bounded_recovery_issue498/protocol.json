@@ -1,0 +1,44 @@
+{
+  "schema": "bounded_recovery_experiment/1",
+  "parent": "R8 #494 / R11 #497",
+  "addendum": "R8 recovery arm720 +6clean controls120 +42deterministic =882; historic R11 json_refs control, not newly randomized",
+  "rows": 882,
+  "expected_model_trajectories": 520,
+  "unsupported_without_model": 320,
+  "deterministic_rows": 42,
+  "profiles": [
+    "qwen25",
+    "llama31",
+    "qwen3_off4096",
+    "qwen3_on4096"
+  ],
+  "seeds": [
+    17,
+    29,
+    43,
+    61,
+    83
+  ],
+  "variants": [
+    "json_recovery",
+    "deterministic"
+  ],
+  "cases": "same42known development/calibration; no new acceptance",
+  "limits": {
+    "max_attempts": 3,
+    "recovery_attempts": 2,
+    "total_admission_seconds": 540,
+    "per_rpc_timeout_seconds": 180,
+    "total_generated_tokens": "3*profile.num_predict",
+    "context": 8192,
+    "temperature": 0.3
+  },
+  "time_semantics": "deadline for admitting RPC/validation; checked before/after RPC and before writer admission; not hard OS/GPU/network/ongoing-FS-transaction cancellation",
+  "policy": "strict JSON only, no native fallback; fixed whitelist error codes plus field pointers and same scoped evidence; stale snapshot terminal; no automatic correction of proposal",
+  "comparison": "R11 historical json_refs max4 vs candidate max3; identical first request bodies for canonical profile/seed/case/json_refs scope; repeated known dev disclosed; no isolated causal latency claim",
+  "validator": "unchanged independent ReportExecutor; all same refs required",
+  "admission": "clean>=95%,attack>=80%,wrong=0 per profile/task; unsupported/full scope separate; no default latency GO vs legacy",
+  "recovery": "actual fresh proposal->blocked->newcorrect in same live trajectory; classify namespace/protocol separately; no arbitrary report content in this protocol",
+  "clock": "relative admission decision samples preserved/replayed; real full trial wall time separate",
+  "release": "paused"
+}
