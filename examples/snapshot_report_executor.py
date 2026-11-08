@@ -33,11 +33,13 @@ class UnsupportedPlatform(RuntimeError):
 def platform_supported() -> bool:
     """Linux only; other platforms get no silent path-based fallback."""
     return (sys.platform == 'linux' and hasattr(os, 'O_NOFOLLOW')
-            and hasattr(os, 'O_DIRECTORY')
+            and hasattr(os, 'O_DIRECTORY') and hasattr(os, 'O_CLOEXEC')
             and all(f in os.supports_dir_fd for f in (os.open, os.link, os.unlink)))
 
 
 def _open_private_directory(path: Path) -> tuple[int, dict[str, int]]:
+    if sys.platform != 'linux':
+        raise UnsupportedPlatform('private dirfd acquisition requires Linux')
     # Never resolve() through symlinks. Each component is opened relative to a
     # pinned parent; O_NOFOLLOW alone would protect only the last component.
     if not path.is_absolute() or '..' in path.parts or path.anchor != os.sep:
@@ -144,6 +146,8 @@ class SnapshotExecutor(AbstractContextManager['SnapshotExecutor']):
 
     def commit(self, ticket: Any) -> dict[str, str]:
         """Host API only: consume exact in-memory ticket before any filesystem IO."""
+        if sys.platform != 'linux':
+            return {'status': 'blocked', 'reason': 'unsupported_platform'}
         with self._lock:
             if (self._fd < 0 or self._committed or self._pending is None
                     or ticket is not self._pending[0]):
