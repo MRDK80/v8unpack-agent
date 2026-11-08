@@ -184,8 +184,8 @@ def test_all_calibration_rows_replay_without_model(tmp_path,monkeypatch):
 
 
 def test_published_real_calibration_replays_offline():
-    from scripts.audit_client_results_issue484 import audit
-    summary=audit()
+    from scripts.replay_frozen_history_issue496 import replay_history
+    summary=replay_history('484')
     groups=summary['groups']
     assert summary['rows']==246 and all(g['wrong_commits']==0 for g in groups.values())
     admitted={key for key,g in groups.items() if g['native_admission']}
@@ -197,9 +197,10 @@ def test_published_real_calibration_replays_offline():
 def test_real_replay_maps_only_declared_unicode_runtime_metadata(monkeypatch):
     import unicodedata
 
-    from scripts.audit_client_results_issue484 import _diagnostic_runtime, audit
+    from scripts.audit_client_results_issue484 import _diagnostic_runtime
+    from scripts.replay_frozen_history_issue496 import replay_history
     monkeypatch.setattr(unicodedata,'unidata_version','14.0.0')
-    assert audit()['rows']==246
+    assert replay_history('484')['rows']==246
     payload={'schema':'evidence_context/1','modules':[{'diagnostics':{'unidata_version':'wrong'}}]}
     body={'messages':[{'role':'tool','tool_name':'read_source','content':json.dumps(payload)}]}
     with pytest.raises(ValueError,match='diagnostic_runtime_mismatch'):
