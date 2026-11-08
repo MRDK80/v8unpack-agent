@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 
 from scripts import fact_reference_study_issue497 as study
+from scripts.summarize_fact_references_issue497 import summarize
 from v8unpack_agent.untrusted_transport import decode_block
 
 
@@ -31,9 +32,11 @@ def test_full_plan_mock_and_effect_replay(tmp_path):
     assert len(plan) == protocol['rows'] == 2562
     case_map = {c['id']:c for c in cases}
     counts = {'model':0,'unsupported':0,'deterministic':0}
+    records=[]
     for index, row in enumerate(plan):
         case = case_map[row['case']]
         record = study.trial(case,row,tmp_path/f'first{index}',lambda body, selected=case:mock_chat(selected,body))
+        records.append(record)
         counts['model'] += record['result']['model_requested']
         counts['unsupported'] += row['variant'] != 'deterministic' and record['result']['outcome']=='unsupported'
         counts['deterministic'] += row['variant']=='deterministic'
@@ -48,6 +51,12 @@ def test_full_plan_mock_and_effect_replay(tmp_path):
         assert next(trace,None) is None
         assert study.previous.normalize(record) == study.previous.normalize(repeated)
     assert counts == {'model':1560,'unsupported':960,'deterministic':42}
+    summary=summarize(records,cases)
+    assert sum(g['correct'] for g in summary['groups'].values())==1586
+    assert sum(g['wrong'] for g in summary['groups'].values())==0
+    assert summary['groups']['qwen25/exports/json_refs']['new_supported_task_admission']=='GO'
+    assert summary['groups']['qwen25/form_fields/json_refs']['new_supported_task_admission']=='NO-GO'
+    assert not summary['groups']['qwen25/exports/json_refs']['full_scope_complete']
 
 
 def test_json_prose_not_executed_and_no_native_fallback(tmp_path):
