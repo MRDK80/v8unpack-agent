@@ -1,5 +1,13 @@
 # Changelog
 
+## Предложения ссылок ([#497](https://github.com/MRDK80/v8unpack-agent/issues/497))
+
+- Отдельный opt-in reference host проверяет полный набор host fact refs,
+  материализует значения и вызывает прежний независимый validator/writer.
+- Строгий JSON без prose extraction и единичный native dispatch; scope
+  не capability. Прежние API/default/NO-GO и границы TOCTOU сохраняются.
+- Контракт и исследование: [fact_reference_host](docs/fact_reference_host.md).
+
 ## Компактный task evidence ([#496](https://github.com/MRDK80/v8unpack-agent/issues/496))
 
 - Opt-in `task_evidence/1`: необходимые факты одной BSL-задачи без display path,
