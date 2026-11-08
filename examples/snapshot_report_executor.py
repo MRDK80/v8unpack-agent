@@ -1,9 +1,9 @@
 """Opt-in snapshot-only reference host (#499); NOT a Python/OS sandbox.
 
 Категория: reference-компонент host, не самостоятельный CLI.
-Вход: host ReportContract и приватный каталог результата на Linux.
-Выход: атомарный snapshot_report/1 либо отказ; существующий отчёт сохраняется.
-Без host-входов импорт ничего не читает/пишет. Модели выдаётся только
+Входные данные: host ReportContract и приватный каталог результата на Linux.
+Ожидаемый результат: атомарный snapshot_report/1 либо отказ, без перезаписи.
+Поведение без данных: импорт ничего не читает/пишет. Модели выдаётся только
 execute_calls, никогда validate/commit/ticket/descriptor или raw writer.
 """
 from __future__ import annotations
