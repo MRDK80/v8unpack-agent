@@ -9,6 +9,7 @@ import subprocess
 import sys
 import unicodedata
 import zipfile
+from unittest.mock import patch
 
 import pytest
 
@@ -137,3 +138,41 @@ def test_negative_control_preserved_and_replayed(tmp_path, fault, reason):
     record = json.loads(serialized)
     study.replay(case, row, record, tmp_path / 'replay')
     assert summarize([record], cases())['groups']['qwen25']['wrong'] == 0
+
+
+@pytest.mark.skipif(sys.platform != 'linux', reason='Linux effect adapter')
+def test_stop_resume_audits_prefix_without_repeating_a_generation(tmp_path):
+    selected = cases(); protocol = study.read(study.DATA / 'protocol.json')
+    rows = study.plan(selected, protocol['profiles'], protocol['seeds'])
+    replies = {}
+    for row in rows:
+        if row['variant'] == 'deterministic': continue
+        case = next(c for c in selected if c['id'] == row['case'])
+        evidence = analyze_form(study.case_source(case))
+        if evidence.status != 'complete': continue
+        key = json.dumps(study.request_for(row, evidence), sort_keys=True)
+        replies[key] = response(row['profile'], case['expected_report'])
+    output = tmp_path / 'scripted-run'; called = []
+    class FakeModel:
+        def verify(self, profile):
+            return {'ollama': {'version': '0.16.1'}, 'profile': profile, 'model': PROFILES[profile]}
+        def chat(self, body, *, timeout_seconds):
+            key = json.dumps(body, sort_keys=True)
+            assert key not in called
+            called.append(key)
+            if len(called) == 1: (output / 'PAUSE').touch()
+            return copy.deepcopy(replies[key])
+    # This tests loop/checkpoint semantics, not a fake claim about real source hashes.
+    # Real sealed-byte verification is independently tested by the pinned archive.
+    with patch.object(study, 'TimedLocalOllama', return_value=FakeModel()), \
+            patch.object(study, 'verify', return_value={'plan': rows}):
+        study.run(output, 'unused-scripted-endpoint')
+        prefix = study.records_at(output / 'records.jsonl')
+        assert len(prefix) == 19 and len(called) == 1
+        assert not (output / 'runtime-end.json').exists()
+        (output / 'PAUSE').unlink()
+        study.run(output, 'unused-scripted-endpoint', resume=True)
+        final = study.audit(output)
+        assert len(final) == 378 and len(called) == 240
+        assert final[:19] == prefix
+        assert study.read(output / 'runtime.json') == study.read(output / 'runtime-end.json')
