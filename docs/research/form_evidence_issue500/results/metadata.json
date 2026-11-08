@@ -1,0 +1,27 @@
+{
+  "schema": "static_form_archive/1",
+  "source_head": "0a6555205f353b4ae400da28f5c5eeaced91f2f7",
+  "published_prefreeze_head": "59da33951da4c680161baf3b9b81caae32655bd6",
+  "base": "310437b90486b788593239913b19db63afa1cc29",
+  "rows": 378,
+  "model_requests": 240,
+  "raw_records_bytes": 2338531,
+  "raw_records_sha256": "e159486aaeb7afa65d6d1ecc3d982d3cb5522662f9ec654df97d4ade5c4b7acf",
+  "seal_sha256": "75fd722d82715b06697e4007b2e4f415375dcc0e1179a37409835e5b4b0f0661",
+  "source_zip_sha256": "39af43156bbd1b9905f2d1402c7cd80779119985c890a95f8b22061b3d8555ad",
+  "preregistration": "https://github.com/MRDK80/v8unpack-agent/issues/500#issuecomment-6724508389",
+  "frozen_source_unchanged": true,
+  "new_acceptance_created": false,
+  "real_B_aggregate": {
+    "statuses": {
+      "complete:None": 55,
+      "unsupported:nested_attributes_unsupported": 15,
+      "unsupported:form_kind_or_version_unsupported": 6
+    },
+    "facts": 130
+  },
+  "raw_capture": "lossless parsed-provider response_json with original content/thinking, not HTTP wire bytes",
+  "resource_note": "provider eval_count/prompt_eval_count are reported counters, not verified full thinking token cost; num_predict is requested bound, not proven GPU/token cancellation",
+  "admission": "all four profiles NO-GO; deterministic supported12/12; no new production/default/native admission",
+  "release": "paused"
+}

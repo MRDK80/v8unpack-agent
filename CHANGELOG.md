@@ -1,5 +1,14 @@
 # Changelog
 
+## Статические реквизиты формы ([#500](https://github.com/MRDK80/v8unpack-agent/issues/500))
+
+- Opt-in [form_evidence](docs/form_evidence.md): реальная пара metadata/elem,
+  строгая полнота flat static names, immutable snapshots и JSON-pointer evidence.
+- Independent report validator и отдельная snapshot-only form operation;
+  Linux publication R13 переиспользуется с сохранением его regression.
+- Nested/ordinary/unknown/incomplete не превращаются в пустую полную опись;
+  original-CF/runtime/full-form completeness и автоматический model GO не заявлены.
+
 ## Snapshot execution boundary ([#499](https://github.com/MRDK80/v8unpack-agent/issues/499))
 
 - Отдельный opt-in reference executor: host-owned snapshot/request/output,
