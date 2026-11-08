@@ -3,9 +3,9 @@ import unicodedata
 
 
 def test_real_archive_cross_unicode_replay_preserves_scope_and_negative_results(monkeypatch):
-    from scripts.audit_acceptance_results_issue485 import audit
+    from scripts.replay_frozen_history_issue496 import replay_history
     monkeypatch.setattr(unicodedata, 'unidata_version', '14.0.0')
-    summary = audit()
+    summary = replay_history('485')
     groups = summary['groups']
     assert summary['rows'] == 5313
     assert sum(g['wrong_commits'] for k, g in groups.items() if k.endswith(':legacy')) == 198
