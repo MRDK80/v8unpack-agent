@@ -51,3 +51,17 @@ PAUSE в output останавливает перед новым trial. `--resum
 R9 допускает NO-GO: новые теги не становятся default по одному снижению
 exact target hit. Обязательны wrong commits, useful correct, no_report,
 unsupported, ошибки, limits, токены и latency с разрезом profile/task/kind.
+
+
+## Отклонение процедуры v1 и исправление v2
+
+v1 остановлена на353/2880: unsupported ошибочно вызывал модель вопреки R8.
+Все353строки/первый seal/runtime сохранены в v1-partial, replay исходным
+9d6d37f прошёл. Это незавершённая серия с нарушением протокола, не допуск.
+Runner v2 отдельным файлом добавляет только ранний host unsupported без
+запроса. Новый seal/серия обязательны. Исходные prompts/payload/validator
+и оценка не меняются; повтор известного development раскрывается, не
+называется независимой приёмкой. Старый runner/результаты не переписаны.
+Для воспроизведения v1 нужен checkout9d6d37f и исходный seal, поскольку
+его manifest фиксирует точный набор Python-файлов. v2 использует команды
+того же интерфейса с модулем scripts.marker_experiment_v2_issue495.

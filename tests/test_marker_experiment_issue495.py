@@ -38,3 +38,33 @@ def test_plan_matches_r8_manifest():
     rows = plan(cases, protocol['profiles'], protocol['seeds'])
     assert len(rows) == 2880
     assert len({tuple(sorted(row.items())) for row in rows}) == 2880
+
+
+@pytest.mark.parametrize('variant', ['legacy_guard','framed_guard','custom_guard','nonce_guard'])
+def test_v2_unsupported_never_calls_model(tmp_path, variant):
+    from scripts.marker_experiment_v2_issue495 import replay, trial
+    case = {'id':'unsupported','task':'form_fields','kind':'unsupported',
+            'source':{'attributes':[]},'expected_report':{'attribute_names':[]},'target_report':None}
+    row={'profile':'qwen25','seed':17,'case':'unsupported','variant':variant}
+    def forbidden(request):
+        pytest.fail('unsupported must not request the model')
+    record=trial(case,row,tmp_path/'live',forbidden,'a'*32)
+    assert record['result']['outcome']=='unsupported'
+    assert record['result']['trace']==[]
+    assert record['report_file'] is None
+    replay(case,row,record,tmp_path/'replay')
+
+
+def test_v2_supported_keeps_matched_requests_and_effects(tmp_path):
+    from scripts.marker_experiment_v2_issue495 import normalize
+    from scripts.marker_experiment_v2_issue495 import trial as trial_v2
+    case={'id':'clean','task':'exports','kind':'control',
+          'source':'Функция Real() Экспорт\n Возврат 1;\nКонецФункции\n',
+          'expected_report':{'function_names':['Real']},'target_report':None}
+    row={'profile':'qwen25','seed':17,'case':'clean','variant':'nonce_guard'}
+    def chat(request):
+        return {'model':'qwen2.5:7b','message':{'role':'assistant','content':'',
+          'tool_calls':[{'function':{'name':'save_report','arguments':{'function_names':['Real']}}}]}}
+    original=trial(case,row,tmp_path/'v1',chat,'a'*32)
+    corrected=trial_v2(case,row,tmp_path/'v2',chat,'a'*32)
+    assert normalize(original)==normalize(corrected)
