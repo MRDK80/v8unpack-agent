@@ -1,5 +1,13 @@
 # Changelog
 
+## Компактный task evidence ([#496](https://github.com/MRDK80/v8unpack-agent/issues/496))
+
+- Opt-in `task_evidence/1`: необходимые факты одной BSL-задачи без display path,
+  с сохранением значимых имён/литералов, snapshot hashes и явной полнотой.
+- Чтение только диапазонов выбранного fact; неполная проекция не создаёт
+  full-report contract. Прежние extractor/validator/default не меняются.
+- Грамматика/metadata coverage, OS sandbox и общая устойчивость модели не расширены.
+
 ## Итоговая приёмка действий агентов ([#485](https://github.com/MRDK80/v8unpack-agent/issues/485))
 
 - Все 5313 предзарегистрированных строки Qwen/Llama и 21 fault-проверка

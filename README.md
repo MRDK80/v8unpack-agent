@@ -195,6 +195,7 @@ POSIX-пути, одинаковые на POSIX и NT.
 | `common_modules` | `scan_common_modules`, `build_common_module_context` | [common_modules](docs/common_modules.md) |
 | `modules` и сканеры модулей | `ModuleEntry`, `ModuleIndex`, `scan_*_modules`, `to_llm_module_fragment` | [modules](docs/modules.md) |
 | `bsl_facts`, `evidence_context`, `action_validation` | opt-in факты и проверка действий | [контракты](docs/action_validation.md) |
+| `task_evidence` | opt-in компактные факты одной задачи и scoped source read | [контракт](docs/task_evidence.md) |
 | `search_contract` | `ArtifactRef`, `SearchDocument`, `SearchQuery`, `SearchResult`, `OwnerLink` | [search_contract](docs/search_contract.md) |
 | `search_corpus` | `build_search_corpus`, `build_form_inputs`, `read_module_text`, `SearchCorpus` | [search_corpus](docs/search_corpus.md) |
 | `search_fragments` | `fragment_module`, `fragment_corpus`, `verify_fragmentation` | [search_fragments](docs/search_fragments.md) |
