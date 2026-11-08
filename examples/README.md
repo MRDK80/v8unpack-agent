@@ -54,6 +54,11 @@ end-to-end LLM прогон и не OS sandbox.
 с R13, Linux-only эффект, без вызовов модели при импорте.
 [Реальный вход/полнота/validator](../docs/form_evidence.md).
 
+`provenance_chain.py` (#501) — [producer/consumer](../docs/report_provenance.md):
+корректный report сохраняет недоверенные значения; отдельный host receipt и
+независимый downstream validator не дают JSON/hash labels полномочий.
+Linux snapshot-only effect, не OS sandbox.
+
 ## Самодостаточные (запускаются без аргументов)
 
 Создают синтетические данные во временном каталоге и удаляют их за собой.
