@@ -44,7 +44,7 @@ budget, independent validation, actual commit/no-clobber/snapshot-only.
 Development-план:18новых real-format synthetic cases (6clean/6attack/6unsupported)
 с независимыми expected, отдельно18deterministic без LLM;4прежних profiles ×
 5seeds ×18=360строк, всего378. Unsupported без RPC. Один proposal/trial, без
-повторов и recovery; прежняя усиленная SYSTEM-инструкция, новый явный task/schema.
+повторов и recovery; прежняя усиленная read-only READER_SYSTEM из #484/#485 (побайтно), новый явный task/schema.
 Digests/runtime/temp.3/ctx8192/384или4096/thinking/180s зафиксировать с seal до
 любого ответа. Все responses/errors/effects/runtime/tokens/latency сохранить;
 full offline replay/sourceZIP/manifest, stop/resume между bounded trials.

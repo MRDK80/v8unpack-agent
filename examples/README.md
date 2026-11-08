@@ -49,6 +49,11 @@ end-to-end LLM прогон и не OS sandbox.
 другие платформы явно unsupported. Это snapshot-correct, не OS sandbox и
 не новый допуск модели. [ADR/контракт](../docs/snapshot_report_executor.md).
 
+`form_report_executor.py` (#500) — opt-in host для проверенных статических
+реквизитов формы, отдельного request и snapshot-only report. Publisher общий
+с R13, Linux-only эффект, без вызовов модели при импорте.
+[Реальный вход/полнота/validator](../docs/form_evidence.md).
+
 ## Самодостаточные (запускаются без аргументов)
 
 Создают синтетические данные во временном каталоге и удаляют их за собой.
