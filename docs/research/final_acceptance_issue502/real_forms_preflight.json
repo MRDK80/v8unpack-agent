@@ -1,0 +1,63 @@
+{
+  "schema": "real_form_preflight/1",
+  "model_source_sha": "dc304a733ee5d83c25e94bcc981861966d4a5fd8",
+  "date": "2026-11-09",
+  "scope": "local deterministic preflight of covered static flat declared attributes, not final-roadmap-SHA acceptance or LLM immunity; whole-export CLI/source integrity checked separately at final SHA",
+  "max_source_bytes_per_file": 2000000,
+  "configurations": [
+    {
+      "label": "A",
+      "forms": 2216,
+      "source_statuses": {
+        "unsupported:form_kind_or_version_unsupported": 1345,
+        "unsupported:nested_attributes_unsupported": 254,
+        "complete:None": 450,
+        "unsupported:raw_root_version_unsupported": 156,
+        "incomplete:source_budget": 11
+      },
+      "facts": 2704,
+      "correct_reports": 450,
+      "wrong_or_missing_reports": 0,
+      "complete_form_pairs_checked_before_after": 450,
+      "changed_complete_pairs": 0,
+      "model_requests": 0,
+      "repository_checkpoint": "91aaf35818a1fd5058a955a9b7c0b1a84b45edee"
+    },
+    {
+      "label": "B",
+      "forms": 76,
+      "source_statuses": {
+        "complete:None": 55,
+        "unsupported:nested_attributes_unsupported": 15,
+        "unsupported:form_kind_or_version_unsupported": 6
+      },
+      "facts": 130,
+      "correct_reports": 55,
+      "wrong_or_missing_reports": 0,
+      "complete_form_pairs_checked_before_after": 55,
+      "changed_complete_pairs": 0,
+      "model_requests": 0,
+      "repository_checkpoint": "145e7cb62f539443f1829d8b4ce10bbb3b3d493e"
+    },
+    {
+      "label": "C",
+      "forms": 3738,
+      "source_statuses": {
+        "unsupported:form_kind_or_version_unsupported": 3406,
+        "unsupported:raw_root_version_unsupported": 107,
+        "complete:None": 70,
+        "unsupported:nested_attributes_unsupported": 85,
+        "incomplete:source_budget": 70
+      },
+      "facts": 408,
+      "correct_reports": 70,
+      "wrong_or_missing_reports": 0,
+      "complete_form_pairs_checked_before_after": 70,
+      "changed_complete_pairs": 0,
+      "model_requests": 0,
+      "repository_checkpoint": "91aaf35818a1fd5058a955a9b7c0b1a84b45edee"
+    }
+  ],
+  "publication": "anonymous aggregates only; real paths/names/source/CF not included",
+  "latency_caveat": "A/C preflight overlapped static GPU study for about46 seconds; all original latency observations retained, not a controlled hardware benchmark"
+}
