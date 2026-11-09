@@ -1,0 +1,37 @@
+{
+  "kind": "posthoc_first_valid_shape_counterfactual_not_new_live_trajectories",
+  "groups": {
+    "legacy_guard": {
+      "total": 720,
+      "replayed_model_prefixes": 400,
+      "no_report": 70,
+      "correct": 268,
+      "wrong_commits": 62,
+      "unsupported_no_model": 320
+    },
+    "framed_guard": {
+      "total": 720,
+      "replayed_model_prefixes": 400,
+      "no_report": 17,
+      "correct": 310,
+      "wrong_commits": 73,
+      "unsupported_no_model": 320
+    },
+    "custom_guard": {
+      "total": 720,
+      "replayed_model_prefixes": 400,
+      "no_report": 14,
+      "correct": 311,
+      "wrong_commits": 75,
+      "unsupported_no_model": 320
+    },
+    "nonce_guard": {
+      "total": 720,
+      "replayed_model_prefixes": 400,
+      "no_report": 30,
+      "correct": 301,
+      "wrong_commits": 69,
+      "unsupported_no_model": 320
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "rows": 1440,
+  "actual_model_trajectories": 800,
+  "unsupported_without_model": 640,
+  "raw_sha256": "2f6e72595c17c65430fb1e1181b95bca7a2a46cf881f500d411262bf8292bb8d",
+  "full_replay": "PASS",
+  "original_stored_files": "PASS",
+  "privacy_scan_decoded_strings": "PASS",
+  "full_trial_wall_time": true,
+  "source_freeze": "2d10aff94b23a1c3b62600c966673d63f8c86604",
+  "seal_sha256": "cfdf6a346d798b3724a1eccbda6a4162a8654389c3ca7b3d4c78eb34da9d0405"
+}

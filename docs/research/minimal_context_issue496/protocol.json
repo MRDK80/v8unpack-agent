@@ -1,0 +1,31 @@
+{
+  "schema": "minimal_context_experiment/1",
+  "parent": "R8 #494",
+  "addendum": "Fresh evidence_guard baseline adds720rows to R8 development cap; no threshold/case changes",
+  "rows": 1440,
+  "expected_model_trajectories": 800,
+  "unsupported_without_model": 640,
+  "variants": [
+    "evidence_guard",
+    "minimal_guard"
+  ],
+  "profiles": [
+    "qwen25",
+    "llama31",
+    "qwen3_off4096",
+    "qwen3_on4096"
+  ],
+  "seeds": [
+    17,
+    29,
+    43,
+    61,
+    83
+  ],
+  "cases": "same36known-development cases from R9; no new acceptance",
+  "limits": "same R8; 4steps/180seconds/request/384or4096tokens/context8192",
+  "full_trial_wall_time": true,
+  "schema_and_system": "same tools and shared system for both arms; adds description of task_evidence/1 before first response",
+  "validator": "unchanged",
+  "new_raw_read_tool_exposed_to_model": false
+}

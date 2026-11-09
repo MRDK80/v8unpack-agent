@@ -1,0 +1,24 @@
+{
+  "schema": "fact_reference_archive/2",
+  "rows": 2562,
+  "raw_bytes": 26336518,
+  "raw_sha256": "74789bd703f16255a3d5b29161dc975428bef2982934f6599d6d1709ee20ae31",
+  "model_trajectories": 1560,
+  "unsupported_without_model": 960,
+  "deterministic_rows": 42,
+  "source": "ea2a42a258489e1712f301ffbc2d66d2e6f82619",
+  "source_zip_sha256": "b1b347d726b0c1c5fc004d8adb084c2f2dee675711c8813b2c26347093eb2b6f",
+  "full_replay": "PASS2562",
+  "actual_files_audit": "PASS",
+  "private_path_scan_hits": 0,
+  "runtime_start_resume_end": "equal",
+  "controlled_checkpoint": {
+    "rows": 1937,
+    "raw_bytes": 16452302,
+    "raw_sha256": "5bb736e9b878c465259ef947be7a98adb122e673950e42bf2d3eb34cfa704a04",
+    "reason": "controlled_backup_checkpoint"
+  },
+  "v1_status": "STOPPED_INCOMPLETE50; retained separately; not included in v2 metrics",
+  "new_acceptance": false,
+  "post_hoc_diagnostics": "diagnostics.json: descriptive first-selection namespace, not used for admission"
+}

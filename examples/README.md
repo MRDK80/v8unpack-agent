@@ -35,6 +35,36 @@ end-to-end LLM прогон и не OS sandbox.
 не работает с сетью/файлами. `examples` оформлен как пакет для импорта и
 `python -m examples.agent_reference_client` из клона.
 
+Исследовательские `fact_reference_host.py` и `fact_reference_host_v2.py` (#497) принимают полный
+набор ссылок, материализуют отчёт на host и вызывают прежний validator;
+импорт не вызывает модель. Модельные refs получили NO-GO, production default
+не меняется. [Контракт и результаты](../docs/fact_reference_host.md).
+
+`bounded_fact_agent.py` (#498) — импортируемый research JSON controller с
+конечными повторами; default не допускает модель без host admission.
+[Политика и ограничения](../docs/bounded_fact_agent.md).
+
+`snapshot_report_executor.py` (#499) — opt-in host с неизменяемым снимком,
+одноразовым validation ticket и Linux dirfd writer. Без входов не пишет;
+другие платформы явно unsupported. Это snapshot-correct, не OS sandbox и
+не новый допуск модели. [ADR/контракт](../docs/snapshot_report_executor.md).
+
+`form_report_executor.py` (#500) — opt-in host для проверенных статических
+реквизитов формы, отдельного request и snapshot-only report. Publisher общий
+с R13, Linux-only эффект, без вызовов модели при импорте.
+[Реальный вход/полнота/validator](../docs/form_evidence.md).
+
+`provenance_chain.py` (#501) — [producer/consumer](../docs/report_provenance.md):
+корректный report сохраняет недоверенные значения; отдельный host receipt и
+независимый downstream validator не дают JSON/hash labels полномочий.
+Linux snapshot-only effect, не OS sandbox.
+
+`snapshot_selection_agent.py` (#502) — новый [combination/1](../docs/snapshot_selection.md):
+один model-facing namespace, полная selection перед materialization, независимый
+R15consumer. [R16: 4596 строк, срезы и ограничения](../docs/research/final_acceptance_issue502.md)
+воспроизведены полностью. Это reference/research-only, без общего/default
+допуска модели; отдельные static threshold GO не отменяют прежние NO-GO.
+
 ## Самодостаточные (запускаются без аргументов)
 
 Создают синтетические данные во временном каталоге и удаляют их за собой.

@@ -1,0 +1,15 @@
+{
+  "rows": 2880,
+  "actual_model_trajectories": 1600,
+  "unsupported_without_model": 1280,
+  "full_replay": "PASS",
+  "original_stored_file_check": "PASS",
+  "raw_sha256": "92d67b0d8c9928d4606584e8ba7074c9c6154f526f4e44c69b96e1d826584d7a",
+  "environment_observed_after_run": {
+    "python": "3.12.3",
+    "unidata": "15.0.0"
+  },
+  "end_to_end_latency_collected": false,
+  "live_series1_partial_rows": 353,
+  "counterfactual": "posthoc first shape-valid call replay, no new model requests"
+}

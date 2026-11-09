@@ -1,0 +1,15 @@
+{
+  "schema": "downstream_archive/1",
+  "source_head": "c2bd46ff4e0561601490b4a33ac05efc6beadb96",
+  "published_sealed_head": "067c86625e42041c6bee0be29fa52e01e1ed979c",
+  "rows": 738,
+  "actual_model_requests": 480,
+  "raw_records_bytes": 4945279,
+  "raw_records_sha256": "b116b5b10f4e0c5e7e1968686733565e39749ad0da4705897a4cdfc7b75e2481",
+  "source_zip_sha256": "f0144de154c6724009a36f5014d15512bd15e09e2685cfc34d2339011de6ec2d",
+  "seal_sha256": "cfbcf716c957a080883770569d7a4410b93c7799deacd6c112272f59e3db3053",
+  "original_file_clock_replay": "PASS all738",
+  "source_after_responses": "all model-used sources/prompts/schema/policy/cases/scorer byte-identical; result/docs/test-only changes follow",
+  "raw_capture": "lossless parsed-provider response_json, original content/thinking; not HTTP wire bytes",
+  "privacy": "synthetic only; original ledger checked for local paths/user/real export names; no realCF uploaded"
+}

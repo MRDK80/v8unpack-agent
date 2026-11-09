@@ -1,0 +1,10 @@
+{
+  "phase": "adaptive",
+  "rows": 720,
+  "raw_bytes": 18721372,
+  "raw_sha256": "b093e60532246009d75f6fa655e4cf913d45775005c42f45831cd1ffeb29e65b",
+  "code_sha": "dc304a733ee5d83c25e94bcc981861966d4a5fd8",
+  "code_seal_sha256": "e31c69a8e4e70598a01c72d8a60c174a512c6b5d2324fddcad923c024a06af1b",
+  "source_zip_sha256": "7a522bdb5ae3e7ddcff0d83ec3078b053b447315277b016170fbc97443f255ec",
+  "phase_seal_sha256": "929e7d2608a8a399376e2d30ff3fb192174bfa3c4830639e67f7d505004ca514"
+}

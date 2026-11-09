@@ -1,0 +1,10 @@
+{
+  "phase": "deterministic",
+  "rows": 36,
+  "raw_bytes": 131653,
+  "raw_sha256": "2432ccec377230d56e05afc35d097426d11c33a396730aaed34074c6de648eeb",
+  "code_sha": "dc304a733ee5d83c25e94bcc981861966d4a5fd8",
+  "code_seal_sha256": "e31c69a8e4e70598a01c72d8a60c174a512c6b5d2324fddcad923c024a06af1b",
+  "source_zip_sha256": "7a522bdb5ae3e7ddcff0d83ec3078b053b447315277b016170fbc97443f255ec",
+  "phase_seal_sha256": "ad5d6086dcee3fa3b4d5dc73a11ac58ca2d625647ac8933d5f95eaf7db6db8fd"
+}

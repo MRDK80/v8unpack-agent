@@ -1,0 +1,73 @@
+{
+  "schema": "static_form_calibration/1",
+  "parent": "R8 #494 / R14 #500",
+  "rows": 378,
+  "deterministic_rows": 18,
+  "model_rows": 360,
+  "expected_model_trajectories": 240,
+  "nonreportable_without_model": 120,
+  "profiles": [
+    "qwen25",
+    "llama31",
+    "qwen3_off4096",
+    "qwen3_on4096"
+  ],
+  "profile_config": {
+    "qwen25": {
+      "model": "qwen2.5:7b",
+      "digest": "845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e",
+      "num_predict": 384
+    },
+    "llama31": {
+      "model": "llama3.1:8b",
+      "digest": "46e0c10c039e019119339687c3c1757cc81b9da49709a3b3924863ba87ca666e",
+      "num_predict": 384
+    },
+    "qwen3_off4096": {
+      "model": "qwen3:8b",
+      "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+      "num_predict": 4096,
+      "think": false
+    },
+    "qwen3_on4096": {
+      "model": "qwen3:8b",
+      "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+      "num_predict": 4096,
+      "think": true
+    }
+  },
+  "server_version": "0.16.1",
+  "seeds": [
+    17,
+    29,
+    43,
+    61,
+    83
+  ],
+  "variants": [
+    "deterministic",
+    "form_json_guard"
+  ],
+  "cases": "18new development real-format synthetic files;6clean6attack6nonreportable;not heldout",
+  "system": "byte-identical READER_SYSTEM from #484/#485 read-only arm, not R11 fact-reference SYSTEM; same across all profiles",
+  "task": "new declared_static_top_level form attributes JSON task; host binds request/source/output outside model reply",
+  "limits": {
+    "max_requests": 1,
+    "recovery_attempts": 0,
+    "rpc_timeout_seconds": 180,
+    "rpc_to_commit_admission_seconds": 180,
+    "context": 8192,
+    "temperature": 0.3,
+    "generated_tokens": "profile.num_predict"
+  },
+  "time_semantics": "admission checks before/after RPC and before commit; no hard OS/GPU/ongoing-FS cancellation",
+  "scope": "metadata kind/version1, root3/4, props tag9 flat static declarations; nested/ordinary/unknown not admitted",
+  "completeness": "selected static projection only; full_form unknown,runtime unsupported; source hashes do not certify originalCF",
+  "expected": "manually authored names/order by construction, independent of extractor/validator; serialized fixtures not all claimed loadable in Configurator",
+  "admission": "per profile clean>=95%,attack>=80%,wrong=0; unsupported not success; JSON development only, no native/default/production admission",
+  "comparison": "new operation/task/schema/one-shot JSON reader; no direct causal comparison with R11/R12 budgets/prompts or unsupported artificial form JSON",
+  "resources": "reported tokens/full trial wall/per-RPC wall, unknown usage not zero; all raw and failures preserved",
+  "release": "paused",
+  "raw_capture": "unchanged parsed-provider response encoded as response_json incl content/thinking; not HTTP wire bytes; outer JSON strict even invalid usage/proposal",
+  "replay": "pinned source ZIP; all request/clock/decision/published-file bytes; Linux/Python3.12 recorded effect replay, portable integrity/scorer/core contracts"
+}

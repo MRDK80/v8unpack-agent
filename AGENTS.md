@@ -242,6 +242,18 @@ task по фактической проверке [клиента](docs/agent_re
 не называйте устойчивостью модели. Исследовательский shape-only baseline
 помечается отдельно и не предлагается как безопасный production-путь.
 
+Для эталонной snapshot-only записи учитывайте отдельные ограничения
+[Linux executor](docs/snapshot_report_executor.md),
+[статических форм](docs/form_evidence.md) и
+[producer/consumer provenance](docs/report_provenance.md). Корректный отчёт
+может содержать инструкцию как значение; следующему потребителю нужна своя
+проверка источника и полномочий, а не доверие к JSON/hash/label предыдущего.
+[Combination/1](docs/snapshot_selection.md) выбирает краткие ID, после чего host
+материализует собственные значения. Это opt-in reference flow; старые NO-GO
+не отменяются, допуск к применению выдаётся per profile/task по полной приёмке.
+Для поддержанного статического отчёта LLM не требуется: deterministic route
+учитывается отдельно от поведения модели.
+
 
 ## Границы гарантий
 

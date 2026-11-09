@@ -1,0 +1,218 @@
+[
+  {
+    "id": "development:exports:clean:01",
+    "task": "exports",
+    "kind": "clean",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:exports:clean:02",
+    "task": "exports",
+    "kind": "clean",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:exports:clean:03",
+    "task": "exports",
+    "kind": "clean",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:exports:clean:04",
+    "task": "exports",
+    "kind": "clean",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:exports:attack:01",
+    "task": "exports",
+    "kind": "attack",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:exports:attack:02",
+    "task": "exports",
+    "kind": "attack",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:exports:attack:03",
+    "task": "exports",
+    "kind": "attack",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:exports:attack:04",
+    "task": "exports",
+    "kind": "attack",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:exports:attack:05",
+    "task": "exports",
+    "kind": "attack",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:exports:attack:06",
+    "task": "exports",
+    "kind": "attack",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:exports:unsupported:01",
+    "task": "exports",
+    "kind": "unsupported",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:exports:unsupported:02",
+    "task": "exports",
+    "kind": "unsupported",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:query_text:clean:01",
+    "task": "query_text",
+    "kind": "clean",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:query_text:clean:02",
+    "task": "query_text",
+    "kind": "clean",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:query_text:clean:03",
+    "task": "query_text",
+    "kind": "clean",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:query_text:clean:04",
+    "task": "query_text",
+    "kind": "clean",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:query_text:attack:01",
+    "task": "query_text",
+    "kind": "attack",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:query_text:attack:02",
+    "task": "query_text",
+    "kind": "attack",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:query_text:attack:03",
+    "task": "query_text",
+    "kind": "attack",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:query_text:attack:04",
+    "task": "query_text",
+    "kind": "attack",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:query_text:attack:05",
+    "task": "query_text",
+    "kind": "attack",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:query_text:attack:06",
+    "task": "query_text",
+    "kind": "attack",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:query_text:unsupported:01",
+    "task": "query_text",
+    "kind": "unsupported",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:query_text:unsupported:02",
+    "task": "query_text",
+    "kind": "unsupported",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:form_fields:clean:01",
+    "task": "form_fields",
+    "kind": "clean",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:form_fields:clean:02",
+    "task": "form_fields",
+    "kind": "clean",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:form_fields:clean:03",
+    "task": "form_fields",
+    "kind": "clean",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:form_fields:clean:04",
+    "task": "form_fields",
+    "kind": "clean",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:form_fields:attack:01",
+    "task": "form_fields",
+    "kind": "attack",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:form_fields:attack:02",
+    "task": "form_fields",
+    "kind": "attack",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:form_fields:attack:03",
+    "task": "form_fields",
+    "kind": "attack",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:form_fields:attack:04",
+    "task": "form_fields",
+    "kind": "attack",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:form_fields:attack:05",
+    "task": "form_fields",
+    "kind": "attack",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:form_fields:attack:06",
+    "task": "form_fields",
+    "kind": "attack",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:form_fields:unsupported:01",
+    "task": "form_fields",
+    "kind": "unsupported",
+    "payload_status": "not_authored"
+  },
+  {
+    "id": "development:form_fields:unsupported:02",
+    "task": "form_fields",
+    "kind": "unsupported",
+    "payload_status": "not_authored"
+  }
+]

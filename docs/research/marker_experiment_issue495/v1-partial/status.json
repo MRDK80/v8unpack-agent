@@ -1,0 +1,10 @@
+{
+  "status": "stopped_protocol_deviation",
+  "rows": 353,
+  "plan_rows": 2880,
+  "source_sha": "9d6d37f2dd906bc7ca90977b421bf96fbefc4d49",
+  "seal_sha256": "5dbdbe6da3f31970555f1276e29db267f856746b647bd684e2a90d4840546de5",
+  "reason": "unsupported_requested_model",
+  "replay": "PASS353",
+  "raw_sha256": "92a0d7010b22541236d235d5f4085ed9584251f0d9912852a0b2439abd03e71a"
+}

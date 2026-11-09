@@ -1,5 +1,74 @@
 # Changelog
 
+## Итоговая комбинация ([#502](https://github.com/MRDK80/v8unpack-agent/issues/502))
+
+- Новый opt-in [reference selector](docs/snapshot_selection.md): один короткий
+  namespace фактов, host materialization и отдельный downstream validator.
+- Bounded recovery/immutable publication, новая clean calibration и fresh
+  acceptance до любого нового profile/task admission; prior NO-GO сохранены.
+- Random nonce только research probe, source/request/output вне model authority.
+  CLI/default/root exports и версия не меняются; release остаётся на паузе.
+- [R16: 4596 строк](docs/research/final_acceptance_issue502.md), все original
+  responses/thinking/files/clocks и pinned-code offline replay. Неверных файлов
+  не наблюдалось; no_report/unsupported/NO-GO и слабость ограниченного attacker
+  сохранены. Три scoped static candidate GO не означают общего/default допуска.
+
+## Downstream provenance ([#501](https://github.com/MRDK80/v8unpack-agent/issues/501))
+
+- Opt-in [report_provenance](docs/report_provenance.md): snapshot/field origins и
+  completeness без повышения значений до инструкции или разрешения действия.
+- Reference producer/consumer с out-of-band host receipt после commit и
+  независимой source/target проверкой второго эффекта; Linux snapshot-only.
+- JSON/hash labels не authentication; serialization теряет memory receipt,
+  summary остаётся unverified. Нет универсальной end-to-end/OS-sandbox гарантии.
+
+## Статические реквизиты формы ([#500](https://github.com/MRDK80/v8unpack-agent/issues/500))
+
+- Opt-in [form_evidence](docs/form_evidence.md): реальная пара metadata/elem,
+  строгая полнота flat static names, immutable snapshots и JSON-pointer evidence.
+- Independent report validator и отдельная snapshot-only form operation;
+  Linux publication R13 переиспользуется с сохранением его regression.
+- Nested/ordinary/unknown/incomplete не превращаются в пустую полную опись;
+  original-CF/runtime/full-form completeness и автоматический model GO не заявлены.
+
+## Snapshot execution boundary ([#499](https://github.com/MRDK80/v8unpack-agent/issues/499))
+
+- Отдельный opt-in reference executor: host-owned snapshot/request/output,
+  opaque one-use ticket, отдельные proposal/validation/commit.
+- Linux dirfd/no-follow, atomic no-clobber publication; явные IO/cleanup/
+  durability статусы. Другие платформы unsupported до записи.
+- [ADR и границы](docs/snapshot_report_executor.md): snapshot-correct,
+  без current-file/OS-sandbox обещаний; frozen клиенты не меняются.
+
+## Ограниченное восстановление ([#498](https://github.com/MRDK80/v8unpack-agent/issues/498))
+
+- Opt-in research JSON controller: максимум первое предложение+2повтора,
+  фиксированный безопасный feedback, тот же scoped snapshot и validator.
+- Конечные token/admission-time budgets, terminal idempotency и явный abort
+  при смене снимка; без auto-correction, raw writer или native fallback.
+- [Контракт и границы времени/TOCTOU](docs/bounded_fact_agent.md).
+- Все882строки/clock/effects replay PASS:37/840correct,0wrong,17live namespace
+  recovery. Всеprofile/task NO-GO по utility; компонент остаётся research-only.
+
+## Предложения ссылок ([#497](https://github.com/MRDK80/v8unpack-agent/issues/497))
+
+- Отдельный opt-in reference host проверяет полный набор host fact refs,
+  материализует значения и вызывает прежний независимый validator/writer.
+- Строгий JSON без prose extraction и единичный native dispatch; scope
+  не capability. Прежние API/default/NO-GO и границы TOCTOU сохраняются.
+- Контракт и исследование: [fact_reference_host](docs/fact_reference_host.md).
+- Все2562 строки v2 сохранены/replay PASS. Native/JSON refs — research-only
+  NO-GO: неоднозначность fact_id/ref резко ухудшила utility.0wrong при прежнем
+  validator не является доказательством иммунитета модели; default не меняется.
+
+## Компактный task evidence ([#496](https://github.com/MRDK80/v8unpack-agent/issues/496))
+
+- Opt-in `task_evidence/1`: необходимые факты одной BSL-задачи без display path,
+  с сохранением значимых имён/литералов, snapshot hashes и явной полнотой.
+- Чтение только диапазонов выбранного fact; неполная проекция не создаёт
+  full-report contract. Прежние extractor/validator/default не меняются.
+- Грамматика/metadata coverage, OS sandbox и общая устойчивость модели не расширены.
+
 ## Итоговая приёмка действий агентов ([#485](https://github.com/MRDK80/v8unpack-agent/issues/485))
 
 - Все 5313 предзарегистрированных строки Qwen/Llama и 21 fault-проверка
