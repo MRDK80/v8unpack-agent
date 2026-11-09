@@ -1,0 +1,10 @@
+{
+  "phase": "calibration",
+  "rows": 960,
+  "raw_bytes": 13429102,
+  "raw_sha256": "1da5d467e8bd4cca74975374ff9ab5e46985af32b7338dd300bccd2ed4627ec2",
+  "code_sha": "dc304a733ee5d83c25e94bcc981861966d4a5fd8",
+  "code_seal_sha256": "e31c69a8e4e70598a01c72d8a60c174a512c6b5d2324fddcad923c024a06af1b",
+  "source_zip_sha256": "7a522bdb5ae3e7ddcff0d83ec3078b053b447315277b016170fbc97443f255ec",
+  "phase_seal_sha256": "3486248a9340cc05442f00a86660d588551582406947ad66c621a39df5418f5e"
+}
