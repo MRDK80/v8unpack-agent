@@ -59,6 +59,12 @@ end-to-end LLM прогон и не OS sandbox.
 независимый downstream validator не дают JSON/hash labels полномочий.
 Linux snapshot-only effect, не OS sandbox.
 
+`snapshot_selection_agent.py` (#502) — новый [combination/1](../docs/snapshot_selection.md):
+один model-facing namespace, полная selection перед materialization, независимый
+R15consumer. [R16: 4596 строк, срезы и ограничения](../docs/research/final_acceptance_issue502.md)
+воспроизведены полностью. Это reference/research-only, без общего/default
+допуска модели; отдельные static threshold GO не отменяют прежние NO-GO.
+
 ## Самодостаточные (запускаются без аргументов)
 
 Создают синтетические данные во временном каталоге и удаляют их за собой.

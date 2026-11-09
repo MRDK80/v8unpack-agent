@@ -1,5 +1,18 @@
 # Changelog
 
+## Итоговая комбинация ([#502](https://github.com/MRDK80/v8unpack-agent/issues/502))
+
+- Новый opt-in [reference selector](docs/snapshot_selection.md): один короткий
+  namespace фактов, host materialization и отдельный downstream validator.
+- Bounded recovery/immutable publication, новая clean calibration и fresh
+  acceptance до любого нового profile/task admission; prior NO-GO сохранены.
+- Random nonce только research probe, source/request/output вне model authority.
+  CLI/default/root exports и версия не меняются; release остаётся на паузе.
+- [R16: 4596 строк](docs/research/final_acceptance_issue502.md), все original
+  responses/thinking/files/clocks и pinned-code offline replay. Неверных файлов
+  не наблюдалось; no_report/unsupported/NO-GO и слабость ограниченного attacker
+  сохранены. Три scoped static candidate GO не означают общего/default допуска.
+
 ## Downstream provenance ([#501](https://github.com/MRDK80/v8unpack-agent/issues/501))
 
 - Opt-in [report_provenance](docs/report_provenance.md): snapshot/field origins и

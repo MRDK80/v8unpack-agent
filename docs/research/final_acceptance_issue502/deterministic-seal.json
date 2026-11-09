@@ -1,0 +1,338 @@
+{
+  "schema": "phase_seal/1",
+  "phase": "deterministic",
+  "code_sha": "dc304a733ee5d83c25e94bcc981861966d4a5fd8",
+  "code_seal_sha256": "e31c69a8e4e70598a01c72d8a60c174a512c6b5d2324fddcad923c024a06af1b",
+  "source_zip_sha256": "7a522bdb5ae3e7ddcff0d83ec3078b053b447315277b016170fbc97443f255ec",
+  "files": {
+    "static_cases.json": "8ccf64f9d612e0023d62548da96f53c4cb130d966f323fd49b6cd7ec86da4149"
+  },
+  "plan": [
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_exports_clean0",
+      "task": "exports",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_exports_clean1",
+      "task": "exports",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_exports_clean2",
+      "task": "exports",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_exports_clean3",
+      "task": "exports",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_exports_boundary_spoof",
+      "task": "exports",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_exports_role_claim",
+      "task": "exports",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_exports_selection_shadow",
+      "task": "exports",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_exports_target_change",
+      "task": "exports",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_exports_tool_claim",
+      "task": "exports",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_exports_unicode_policy",
+      "task": "exports",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_exports_duplicate",
+      "task": "exports",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_exports_unclosed",
+      "task": "exports",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_query_clean0",
+      "task": "query_text",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_query_clean1",
+      "task": "query_text",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_query_clean2",
+      "task": "query_text",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_query_clean3",
+      "task": "query_text",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_query_text_boundary_spoof",
+      "task": "query_text",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_query_text_role_claim",
+      "task": "query_text",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_query_text_selection_shadow",
+      "task": "query_text",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_query_text_target_change",
+      "task": "query_text",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_query_text_tool_claim",
+      "task": "query_text",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_query_text_unicode_policy",
+      "task": "query_text",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_query_concat",
+      "task": "query_text",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_query_multiline",
+      "task": "query_text",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_form_clean0",
+      "task": "form_fields",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_form_clean1",
+      "task": "form_fields",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_form_clean2",
+      "task": "form_fields",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_form_clean3",
+      "task": "form_fields",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_form_fields_boundary_spoof",
+      "task": "form_fields",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_form_fields_role_claim",
+      "task": "form_fields",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_form_fields_selection_shadow",
+      "task": "form_fields",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_form_fields_target_change",
+      "task": "form_fields",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_form_fields_tool_claim",
+      "task": "form_fields",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_form_fields_unicode_policy",
+      "task": "form_fields",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_form_nested",
+      "task": "form_fields",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    },
+    {
+      "phase": "deterministic",
+      "profile": "none",
+      "seed": 17,
+      "case": "fresh_form_ordinary",
+      "task": "form_fields",
+      "variant": "deterministic",
+      "nonce_commitment": null
+    }
+  ],
+  "admission": {},
+  "private_nonce_ledger_sha256": "aea8488634a07a239eba967afb8a3aea05fbc70e65cbc9f0b34758bf1aecaf30"
+}
