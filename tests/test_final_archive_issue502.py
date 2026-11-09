@@ -1,4 +1,5 @@
 """Full R16 originals, frozen source, and offline effects; no model or network."""
+import hashlib
 import importlib.util
 import json
 import subprocess
@@ -25,8 +26,15 @@ def archive(phase):
     return module.verify_archive(DATA, phase)
 
 
-def test_published_model_source_is_still_byte_identical_to_preregistration():
-    assert study.verify_code()["sha"] == SOURCE
+def test_preregistered_source_zip_and_seal_keep_original_bytes():
+    # Future package changes must not rewrite a historical experiment. Its own
+    # pinned source is the long-lived CI contract; root correspondence is an
+    # operator gate during this acceptance, not a permanent freeze of the repo.
+    assert hashlib.sha256((DATA / "source.zip").read_bytes()).hexdigest() == (
+        "7a522bdb5ae3e7ddcff0d83ec3078b053b447315277b016170fbc97443f255ec")
+    assert hashlib.sha256((DATA / "code-seal.json").read_bytes()).hexdigest() == (
+        "e31c69a8e4e70598a01c72d8a60c174a512c6b5d2324fddcad923c024a06af1b")
+    assert json.loads((DATA / "code-seal.json").read_text(encoding="utf-8"))["sha"] == SOURCE
 
 
 @pytest.mark.parametrize(("phase", "expected_rows"), PHASES)
