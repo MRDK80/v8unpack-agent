@@ -20,6 +20,7 @@
 
 | Сравнение | Пар строк | Правильных слева | Правильных справа |
 | --- | ---: | ---: | ---: |
+| legacy_guard → framed_guard | 120 | 55 | 75 |
 | legacy_guard → candidate_guard | 420 | 208 | 307 |
 | framed_guard → candidate_guard | 180 | 115 | 144 |
 

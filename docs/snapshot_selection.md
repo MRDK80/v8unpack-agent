@@ -5,7 +5,11 @@
 Это комбинация минимальных фактов, выбора ссылок, bounded recovery, immutable
 publication, static form evidence и downstream provenance. Старые frozen
 R11/R12/R15 и их NO-GO не исправлены задним числом. CLI/default/root exports
-не меняются. До собственной fresh acceptance новый кандидат **не допущен**.
+не меняются. [R16: все 4596 строк и ограничения](research/final_acceptance_issue502.md)
+сохранены и воспроизведены. Это **reference/research-only** flow, без общего
+production/default допуска. Статический порог прошли Llama/form_fields,
+Llama/query_text и Qwen3-off/exports; перенос на другую задачу, модель или
+реальный tool host требует своей приёмки и совпадения границ полномочий.
 
 `SelectionProjection(host_contract)` повторно извлекает полный статический
 отчёт через независимые BSL/form validators. Host хранит immutable source,
@@ -35,7 +39,7 @@ Python host trusted, не OSsandbox. Public hash/JSON label не authentication.
 malicious Python/same-uid/root/hostileFS/crash/all-external-consumers гарантий.
 Другие платформы unsupported. Формы только covered static flat attributes,
 BSL только covered grammar; неполнота не пустой полный набор. Max1000facts
-не обещает, что модель перечислит1000ID в своём token budget.
+не обещает, что модель перечислит 1000ID в своём token budget.
 
 Статический отчёт может вычислить host **без LLM**. Модель здесь выполняет
 ограниченный выбор/control step, не доказывает бизнес-смысл и не восстанавливает
@@ -53,7 +57,24 @@ collision — refusal/no_report, не устойчивость модели. Non
 доэксперимента, unknown draws не раскрываются attacker доего выбора payload.
 
 `python scripts/demo_final_issue502.py` воспроизводит два настоящих исторических
-R15ответа и реальные файлы на pinned code без новых запросов. Явно сообщает,
+R15 ответа и реальные файлы на pinned code без новых запросов. Явно сообщает,
 что это recorded replay. `--full-acceptance` дополнительно проверяет завершённый
 архив R16; до появления всех archive phases он не объявляется готовым приёмочным
 результатом. CI не вызывает модели/сеть.
+
+R16 закончила clean/static/adaptive/reader/deterministic матрицы. У candidate
+452 правильных отчёта из 720 статических строк (500 с model call,100NO-GO,
+120unsupported), неверных файлов 0. Сопоставимые пары на пересечении допусков:
+307vs208legacy на 420 строках и 144vs115framed на 180. Улучшение неоднородно,
+а validator общий: это не доказательство безопасности формата. В адаптивной
+nonce-probe233correct/720,180NO-GO,236 без созданного источника,28unsupported;
+атакующий дал 229 повторов и 7token-limit. Только 3payload использовали текущий
+nonce и все были unsupported до renderer. Общая стойкость модели и польза
+случайных тегов не доказаны. Полные знаменатели, все срезы и cost/latency —
+в отчёте; no_report и reader selected не successful write.
+
+Reader дал 456 допустимых выборов,0consumer writes (producer preprocessing
+существует). Deterministic30/36correct,6unsupported,0LLM: для покрытого
+статического отчёта этот путь предпочтителен. Новые synthetic fixtures —
+уже распакованные BSL/metadata, не проверка компиляции каждого payload в CF.
+Реальные A/B/C проверяются отдельно только локально и публикуются агрегатами.

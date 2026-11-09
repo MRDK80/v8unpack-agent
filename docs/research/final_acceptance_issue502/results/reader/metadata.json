@@ -1,0 +1,10 @@
+{
+  "phase": "reader",
+  "rows": 720,
+  "raw_bytes": 6785786,
+  "raw_sha256": "5e9e2d3639b8438881b5c93417a8e7890813c42d664d1a3acabe66088f656f98",
+  "code_sha": "dc304a733ee5d83c25e94bcc981861966d4a5fd8",
+  "code_seal_sha256": "e31c69a8e4e70598a01c72d8a60c174a512c6b5d2324fddcad923c024a06af1b",
+  "source_zip_sha256": "7a522bdb5ae3e7ddcff0d83ec3078b053b447315277b016170fbc97443f255ec",
+  "phase_seal_sha256": "760ed50b206899aec744ef2f79ccd45d6fa0f0eb5b311c719c0fd286dfab7465"
+}

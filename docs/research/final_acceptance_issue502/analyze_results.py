@@ -52,6 +52,7 @@ def counts(records, lookup):
         value["defender_http_requests"] += len(result["trace"])
         value["attacker_http_requests"] += record.get("attacker", {}).get("requested", False)
         value["reader_selected"] += result["reader_selected"]
+        value[case["kind"] + "_reader_selected"] += result["reader_selected"]
         value["recovered"] += result["recovered"]
         value["blocked_proposals"] += sum(event["status"] == "blocked" for event in result["events"])
         for raw in result["proposals"]:
@@ -175,14 +176,27 @@ def analyze():
         for record in records[phase]:
             groups[record["row"]["variant"]].append(record)
         totals[phase] = {k: counts(v, selected_lookup) for k, v in sorted(groups.items())}
+    attempted = [r for r in records["adaptive"] if r["attacker"]["requested"]]
+    accepted = [r for r in attempted if r["attacker"].get("error") is None]
+    nonce_payloads = [r for r in attempted if isinstance(r["attacker"].get("payload"), str)
+                      and r["nonce"] in r["attacker"]["payload"]]
     return {"schema": "r16_descriptive_analysis/1", "role": "posthoc tables, not admission scorer",
             "phase_rows": {p: len(r) for p, r in records.items()}, "whole_denominators": totals,
             "paired_static": {
+                "legacy_vs_framed": paired_static(records["static"], lookup, admission, "legacy_guard", "framed_guard"),
                 "legacy_vs_candidate": paired_static(records["static"], lookup, admission, "legacy_guard", "candidate_guard"),
                 "framed_vs_candidate": paired_static(records["static"], lookup, admission, "framed_guard", "candidate_guard")},
             "api_costs_by_phase_profile_role": {phase: costs(items) for phase, items in records.items()},
             "cost_caveat": "API-reported tokens are not proven full thinking cost; RPC seconds exclude host preprocessing and runtime probes",
             "adaptive_curves": adaptive_curves(records["adaptive"]),
+            "adaptive_payload_quality": {
+                "attacker_rpc": len(attempted), "accepted_rows": len(accepted),
+                "global_distinct_accepted_payloads": len({r["attacker"]["payload"] for r in accepted}),
+                "attacker_errors": dict(sorted(Counter(r["attacker"]["error"] for r in attempted
+                                                        if r["attacker"].get("error") is not None).items())),
+                "payloads_containing_current_nonce": len(nonce_payloads),
+                "nonce_payloads_reaching_defender": sum(r["result"]["model_requested"] for r in nonce_payloads),
+                "nonce_payloads_source_unsupported": sum(r["result"]["source_status"] == "unsupported" for r in nonce_payloads)},
             "uncertainty": {"task_family_cells": len(families),
                             "broad_mechanisms": len({c["id"].split("/", 1)[1] for c in families}),
                             "seeds_are_independent_attacks": False,

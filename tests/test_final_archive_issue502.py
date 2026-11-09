@@ -10,12 +10,26 @@ from pathlib import Path
 import pytest
 
 from scripts import final_study_issue502 as study
-from scripts.score_final_issue502 import summarize
+from scripts.score_final_issue502 import honest, summarize
 
 DATA = Path(__file__).resolve().parents[1] / "docs/research/final_acceptance_issue502"
 PHASES = [("calibration", 960), ("static", 2160), ("adaptive", 720),
           ("reader", 720), ("deterministic", 36)]
 SOURCE = "dc304a733ee5d83c25e94bcc981861966d4a5fd8"
+RAW_SHA = {
+    "calibration": "1da5d467e8bd4cca74975374ff9ab5e46985af32b7338dd300bccd2ed4627ec2",
+    "static": "6dc67089f615e398e2d72ce7ea3be796aed4c6b21df480448eced4273368fbfb",
+    "adaptive": "b093e60532246009d75f6fa655e4cf913d45775005c42f45831cd1ffeb29e65b",
+    "reader": "5e9e2d3639b8438881b5c93417a8e7890813c42d664d1a3acabe66088f656f98",
+    "deterministic": "2432ccec377230d56e05afc35d097426d11c33a396730aaed34074c6de648eeb",
+}
+PHASE_SHA = {
+    "calibration": "3486248a9340cc05442f00a86660d588551582406947ad66c621a39df5418f5e",
+    "static": "943aecaa29f1190f5e861811fe404f50c454ce63dc1f14889f00ce63a46b1046",
+    "adaptive": "929e7d2608a8a399376e2d30ff3fb192174bfa3c4830639e67f7d505004ca514",
+    "reader": "760ed50b206899aec744ef2f79ccd45d6fa0f0eb5b311c719c0fd286dfab7465",
+    "deterministic": "ad5d6086dcee3fa3b4d5dc73a11ac58ca2d625647ac8933d5f95eaf7db6db8fd",
+}
 
 
 def archive(phase):
@@ -42,6 +56,8 @@ def test_complete_original_phase_plan_runtime_and_independent_scoring(phase, exp
     records, metadata, runtime = archive(phase)
     assert len(records) == metadata["rows"] == expected_rows
     assert metadata["code_sha"] == SOURCE
+    assert metadata["raw_sha256"] == RAW_SHA[phase]
+    assert metadata["phase_seal_sha256"] == PHASE_SHA[phase]
     assert runtime["environment"]["unidata"] == "15.0.0"
     summary = summarize(records, study.cases_for(phase))
     assert summary == json.loads((DATA / "results" / phase / "summary.json").read_text(encoding="utf-8"))
@@ -51,6 +67,10 @@ def test_complete_original_phase_plan_runtime_and_independent_scoring(phase, exp
             assert group[key] == 0, (phase, key)
     if phase == "reader":
         assert all(r["effects"]["consumer"]["report_file"] is None for r in records)
+        lookup = {case["id"]: case for case in study.cases_for(phase)}
+        for record in records:
+            if record["result"]["reader_selected"]:
+                assert honest(json.loads(record["result"]["proposals"][-1]), lookup[record["row"]["case"]])
     if phase == "deterministic":
         assert all(not r["result"]["model_requested"] and not r["result"]["trace"] for r in records)
         assert sum(g["correct"] for g in summary["groups"].values()) == 30
