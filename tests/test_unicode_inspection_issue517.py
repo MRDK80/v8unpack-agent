@@ -151,3 +151,21 @@ def test_legitimate_unicode_snapshot_and_framed_bytes_are_unchanged():
     assert result.counts['variation_selector'] == 2
     with pytest.raises(FrozenInstanceError):
         result.status = 'complete'
+
+
+def test_default_hard_budgets_bound_the_actual_scan_and_retention():
+    text = 'a' * MAX_SCAN_CHARS + '\u200b'
+    result = inspect_unicode(text)
+    assert result.status == 'truncated' and result.unscanned_chars == 1
+    assert result.scanned_chars == MAX_SCAN_CHARS and result.observed_count == 0
+    repeated = inspect_unicode('\u200b' * (MAX_OCCURRENCES + 1))
+    assert repeated.observed_count == MAX_OCCURRENCES + 1
+    assert len(repeated.occurrences) == MAX_OCCURRENCES and repeated.omitted_occurrences == 1
+
+
+def test_bytearray_bom_marker_is_not_modified_or_authenticated():
+    raw = bytearray(b'\xef\xbb\xbfabc')
+    before = bytes(raw)
+    result = inspect_unicode('\ufeff\ufe0f', raw=raw)
+    assert result.file_bom is True and result.counts['variation_selector'] == 1
+    assert bytes(raw) == before

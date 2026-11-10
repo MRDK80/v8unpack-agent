@@ -42,6 +42,7 @@ fillers U+115F/U+1160 не включены; обычные combining marks, п�
 безопасность. Законные emoji/CJK variants, арабский/монгольский текст и
 форматирование также дают occurrences; автоматически блокировать их нельзя.
 Основание: [Unicode17, глава23](https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-23/)
+[Mongolian FVS](https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-13/)
 и [протокол этапа](research/unicode_image_protocol_issue516.md).
 
 ## Вызов и ограниченная полнота

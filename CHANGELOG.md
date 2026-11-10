@@ -1,5 +1,13 @@
 # Changelog
 
+## Unicode inspection ([#517](https://github.com/MRDK80/v8unpack-agent/issues/517))
+
+- Отдельный opt-in [unicode_inspection/1](docs/unicode_inspection.md): runtime-Cf,
+  назначенные Tags, variation selectors и CGJ, без изменения исходных значений.
+- Явные scan/retention budgets, prefix counts/позиции/Unicode version и причины
+  truncated/invalid; не полный Default_Ignorable и не verdict безопасно/атака.
+- Старые Cf/BOM, framed/CLI/default, root exports и frozen архивы неизменны.
+
 ## Итоговая комбинация ([#502](https://github.com/MRDK80/v8unpack-agent/issues/502))
 
 - Новый opt-in [reference selector](docs/snapshot_selection.md): один короткий
