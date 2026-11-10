@@ -1,5 +1,11 @@
 # Changelog
 
+## Unicode study ([#519](https://github.com/MRDK80/v8unpack-agent/issues/519))
+
+- Отдельный [исследовательский стенд](docs/research/unicode_study_issue519.md):
+  фиксированные Unicode-входы, decoding probes, реальные эффекты и pinned replay.
+- Trusted instruction/host/scorer и production admission не меняются; release на паузе.
+
 ## Unicode inspection ([#517](https://github.com/MRDK80/v8unpack-agent/issues/517))
 
 - Отдельный opt-in [unicode_inspection/1](docs/unicode_inspection.md): runtime-Cf,
