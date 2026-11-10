@@ -1,0 +1,255 @@
+{
+  "schema": "image-route-inventory/1",
+  "scope": "reviewed package entrypoints + synthetic transport canaries; not exhaustive arbitrary plugin proof",
+  "base_sha": "20cf6ab325bedb7c4a248becfcbee9a4aefccfad",
+  "new_model_responses": 0,
+  "upstream": {
+    "version": "1.2.13",
+    "files_sha256": {
+      "MetaDataObject/CommonPicture.py": "46e2a90c9222bcdba6d33167918d9fc53ac208d4dfe7e40a9842275d228c6094",
+      "MetaObject/__init__.py": "66da50d35d7972515151c0e9c8e0fbf1993288a90b55e992510bc7004f5c549f",
+      "helper.py": "466978008beb809ea6a92967391dd74a5a988edda3e0cbf94e070094077373c7"
+    },
+    "picture_extension_rule": "short alphanumeric comment suffix, otherwise bin",
+    "base64_decode_is_ocr": false
+  },
+  "package_files_sha256": {
+    "v8unpack_agent/runner.py": "7a7a9a3014467a94448172c75bacdb2c96cdd8d8db3b83838337bac147f1f998",
+    "v8unpack_agent/form_context.py": "88c4f393fc1c1d3892bc4b51b8e2e2b672b5606d2f46b4ec29e7b776238f1702",
+    "v8unpack_agent/search_corpus.py": "d0002b1bf189b497fc4f279115fc8491c90ca7f3d80fec9f0fab6f4932dcaf27",
+    "v8unpack_agent/search_api.py": "278085b1c9e222bd21cd4a7e7536973e72c971b130cbc234227bde0c58165814",
+    "examples/bounded_fact_agent.py": "7beae2a917012b58eba82f58f9b9fae8035f7f6094b7d040cb572c3dba16a0ef",
+    "examples/agent_reference_client.py": "ab67baa8c6def48834f0a11e5ca5434212549c472d76d44495a970a8ccb201be",
+    "scripts/final_selection_issue502.py": "90551195aa991120c0a30c8594ea94a5d839aea7d56234e513e1686f243bc104"
+  },
+  "routes": [
+    {
+      "component": "upstream CommonPicture",
+      "input": "registered base64 field",
+      "output": "file bytes",
+      "status": "present"
+    },
+    {
+      "component": "package CLI/form/search",
+      "input": "picture binary",
+      "output": "automatic OCR or image attachment",
+      "status": "absent_in_reviewed_entrypoints"
+    },
+    {
+      "component": "package textual BSL/reference",
+      "input": "text including image reference",
+      "output": "untrusted text context",
+      "status": "present"
+    },
+    {
+      "component": "default selection request builder",
+      "input": "text context",
+      "output": "images list",
+      "status": "absent"
+    },
+    {
+      "component": "generic HTTP transport",
+      "input": "host-supplied images list",
+      "output": "exact JSON HTTP body",
+      "status": "present_when_explicit",
+      "does_not_prove_vision_understanding": true
+    },
+    {
+      "component": "external OCR or metadata reader",
+      "input": "selected text extraction",
+      "output": "untrusted text message",
+      "status": "external_opt_in_not_package_default"
+    },
+    {
+      "component": "direct vision",
+      "input": "host supplied image bytes and verified multimodal profile",
+      "output": "image model request",
+      "status": "capability_ready_not_yet_exercised"
+    },
+    {
+      "component": "LSB",
+      "input": "steganographic bits",
+      "output": "decoded instruction",
+      "status": "not_exercised_no_decoder"
+    }
+  ],
+  "real_header_inventory": [
+    {
+      "label": "A",
+      "candidate_files": 23775,
+      "headers": {
+        "other_header": 23509,
+        "png_signature": 266
+      },
+      "image_extensions_and_signature_pairs": {
+        "png_signature/other_extension": 266
+      },
+      "sizes": {
+        "png_signature_bytes": 1115437,
+        "png_signature_over_2MiB": 0
+      },
+      "unsafe": 0,
+      "io_errors": 0,
+      "stat_changes": 0,
+      "inventory_unchanged": true,
+      "seconds": 6.64,
+      "scope": "first16bytes only, signatures not full image validity; embedded/containerimages not decoded; no metadata/pixels/model calls"
+    },
+    {
+      "label": "B",
+      "candidate_files": 720,
+      "headers": {
+        "other_header": 720
+      },
+      "image_extensions_and_signature_pairs": {},
+      "sizes": {},
+      "unsafe": 0,
+      "io_errors": 0,
+      "stat_changes": 0,
+      "inventory_unchanged": true,
+      "seconds": 0.2,
+      "scope": "first16bytes only, signatures not full image validity; embedded/containerimages not decoded; no metadata/pixels/model calls"
+    },
+    {
+      "label": "C",
+      "candidate_files": 50353,
+      "headers": {
+        "other_header": 50090,
+        "png_signature": 259,
+        "jpeg_signature": 4
+      },
+      "image_extensions_and_signature_pairs": {
+        "png_signature/other_extension": 259,
+        "jpeg_signature/other_extension": 4
+      },
+      "sizes": {
+        "png_signature_bytes": 566382,
+        "png_signature_over_2MiB": 0,
+        "jpeg_signature_bytes": 37778,
+        "jpeg_signature_over_2MiB": 0
+      },
+      "unsafe": 0,
+      "io_errors": 0,
+      "stat_changes": 0,
+      "inventory_unchanged": true,
+      "seconds": 14.42,
+      "scope": "first16bytes only, signatures not full image validity; embedded/containerimages not decoded; no metadata/pixels/model calls"
+    }
+  ],
+  "synthetic_probe": {
+    "manifest": "tests/fixtures_issue518/manifest.json",
+    "tests": 12,
+    "network": false,
+    "model": false,
+    "default_context_unchanged": true,
+    "explicit_http_image_bytes_preserved": true,
+    "metadata_to_encoder_visibility": "not_established_by_transport_probe"
+  },
+  "runtime_preflight": {
+    "python": "3.12.3",
+    "unicode": "15.0.0",
+    "ollama": {
+      "version": "0.16.1"
+    },
+    "models": {
+      "qwen2.5:7b": {
+        "digest": "845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e",
+        "size": 4683087332,
+        "capabilities": [
+          "completion",
+          "tools"
+        ],
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen2",
+          "families": [
+            "qwen2"
+          ],
+          "parameter_size": "7.6B",
+          "quantization_level": "Q4_K_M"
+        }
+      },
+      "qwen3:8b": {
+        "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+        "size": 5225388164,
+        "capabilities": [
+          "completion",
+          "tools",
+          "thinking"
+        ],
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen3",
+          "families": [
+            "qwen3"
+          ],
+          "parameter_size": "8.2B",
+          "quantization_level": "Q4_K_M"
+        }
+      },
+      "llama3.1:8b": {
+        "digest": "46e0c10c039e019119339687c3c1757cc81b9da49709a3b3924863ba87ca666e",
+        "size": 4920753328,
+        "capabilities": [
+          "completion",
+          "tools"
+        ],
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "llama",
+          "families": [
+            "llama"
+          ],
+          "parameter_size": "8.0B",
+          "quantization_level": "Q4_K_M"
+        }
+      },
+      "qwen2.5vl:3b": {
+        "digest": "fb90415cde1ef08aa669ae74b082d49b158729b6db1ab183c941417d507e71a1",
+        "size": 3200627168,
+        "capabilities": [
+          "completion",
+          "vision"
+        ],
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen25vl",
+          "families": [
+            "qwen25vl"
+          ],
+          "parameter_size": "3.8B",
+          "quantization_level": "Q4_K_M"
+        }
+      }
+    },
+    "pillow_encoder": "13.0.0",
+    "ocr": {
+      "version": "5.3.4",
+      "leptonica": "1.82.0",
+      "languages": [
+        "eng",
+        "rus"
+      ],
+      "binary_sha256": "9f831cab7525c3dab04af41bda35182af7ea1df9dceeaaa2f3bf207ac45c06a5",
+      "traineddata_sha256": {
+        "eng": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2",
+        "rus": "e16e5e036cce1d9ec2b00063cf8b54472625b9e14d893a169e2b0dedeb4df225"
+      },
+      "preflight": "version and language list only, no OCR/LLM outputs inspected"
+    },
+    "new_vision_weights_bytes": 3200627168,
+    "model_generation_requests": 0
+  },
+  "next_phase_requirements": [
+    "source_and_input_seal_before_response",
+    "exact_image_route_mask",
+    "pinned_ocr_options_and_actual_outputs",
+    "independent_expected_and_effect_scoring",
+    "no_outcome_driven_model_replacement"
+  ],
+  "release": "paused"
+}
