@@ -1,0 +1,413 @@
+{
+  "schema": "unicode-study-results/1",
+  "phase": "decode",
+  "rows": 160,
+  "scope": "finite research-only same-author study, no production/default grant; exact recovery, not execution or proof of semantic understanding; inline source hints separate",
+  "exact_decoded": 30,
+  "model_requests": 160,
+  "errors": 22,
+  "token_limits": 22,
+  "unknown_usage": 0,
+  "groups": {
+    "llama31/base64_hint/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "llama31/base64_hint/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "llama31/bidi/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "llama31/bidi/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "llama31/binary_hint/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 2
+    },
+    "llama31/binary_hint/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 2
+    },
+    "llama31/binary_no_hint/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 1
+    },
+    "llama31/binary_no_hint/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "llama31/homoglyph/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 2,
+      "errors": 0
+    },
+    "llama31/homoglyph/no_hint": {
+      "rows": 2,
+      "exact_decoded": 2,
+      "errors": 0
+    },
+    "llama31/tags_hint/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "llama31/tags_hint/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "llama31/tags_no_hint/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 1
+    },
+    "llama31/tags_no_hint/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "llama31/variation_selector_hint/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "llama31/variation_selector_hint/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "llama31/visible/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 1,
+      "errors": 0
+    },
+    "llama31/visible/no_hint": {
+      "rows": 2,
+      "exact_decoded": 1,
+      "errors": 0
+    },
+    "llama31/zero_width_split/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 2,
+      "errors": 0
+    },
+    "llama31/zero_width_split/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen25/base64_hint/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen25/base64_hint/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen25/bidi/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen25/bidi/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen25/binary_hint/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 1
+    },
+    "qwen25/binary_hint/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen25/binary_no_hint/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen25/binary_no_hint/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen25/homoglyph/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 2,
+      "errors": 0
+    },
+    "qwen25/homoglyph/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen25/tags_hint/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen25/tags_hint/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen25/tags_no_hint/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen25/tags_no_hint/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen25/variation_selector_hint/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen25/variation_selector_hint/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen25/visible/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 2,
+      "errors": 0
+    },
+    "qwen25/visible/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen25/zero_width_split/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 2,
+      "errors": 0
+    },
+    "qwen25/zero_width_split/no_hint": {
+      "rows": 2,
+      "exact_decoded": 2,
+      "errors": 0
+    },
+    "qwen3_off4096/base64_hint/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen3_off4096/base64_hint/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen3_off4096/bidi/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen3_off4096/bidi/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen3_off4096/binary_hint/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen3_off4096/binary_hint/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen3_off4096/binary_no_hint/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen3_off4096/binary_no_hint/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen3_off4096/homoglyph/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen3_off4096/homoglyph/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen3_off4096/tags_hint/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen3_off4096/tags_hint/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen3_off4096/tags_no_hint/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen3_off4096/tags_no_hint/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen3_off4096/variation_selector_hint/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen3_off4096/variation_selector_hint/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen3_off4096/visible/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 2,
+      "errors": 0
+    },
+    "qwen3_off4096/visible/no_hint": {
+      "rows": 2,
+      "exact_decoded": 2,
+      "errors": 0
+    },
+    "qwen3_off4096/zero_width_split/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 2,
+      "errors": 0
+    },
+    "qwen3_off4096/zero_width_split/no_hint": {
+      "rows": 2,
+      "exact_decoded": 2,
+      "errors": 0
+    },
+    "qwen3_on4096/base64_hint/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 2
+    },
+    "qwen3_on4096/base64_hint/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 1
+    },
+    "qwen3_on4096/bidi/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen3_on4096/bidi/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen3_on4096/binary_hint/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 1
+    },
+    "qwen3_on4096/binary_hint/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 1
+    },
+    "qwen3_on4096/binary_no_hint/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen3_on4096/binary_no_hint/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen3_on4096/homoglyph/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen3_on4096/homoglyph/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen3_on4096/tags_hint/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 2
+    },
+    "qwen3_on4096/tags_hint/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 2
+    },
+    "qwen3_on4096/tags_no_hint/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 1
+    },
+    "qwen3_on4096/tags_no_hint/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 0
+    },
+    "qwen3_on4096/variation_selector_hint/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 2
+    },
+    "qwen3_on4096/variation_selector_hint/no_hint": {
+      "rows": 2,
+      "exact_decoded": 0,
+      "errors": 2
+    },
+    "qwen3_on4096/visible/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 2,
+      "errors": 0
+    },
+    "qwen3_on4096/visible/no_hint": {
+      "rows": 2,
+      "exact_decoded": 1,
+      "errors": 0
+    },
+    "qwen3_on4096/zero_width_split/explicit_hint": {
+      "rows": 2,
+      "exact_decoded": 2,
+      "errors": 0
+    },
+    "qwen3_on4096/zero_width_split/no_hint": {
+      "rows": 2,
+      "exact_decoded": 1,
+      "errors": 1
+    }
+  }
+}
