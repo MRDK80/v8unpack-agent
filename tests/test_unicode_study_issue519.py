@@ -6,6 +6,7 @@ import json
 import pytest
 
 from examples.agent_reference_client import PROFILES
+from examples.snapshot_publication import platform_supported
 from scripts.unicode_cases_issue519 import (
     ATTACK,
     attack_material,
@@ -25,6 +26,7 @@ def response(row, content, **extra):
             'eval_count': 20, 'prompt_eval_count': 100, 'done_reason': 'stop', **extra}
 
 
+@pytest.mark.skipif(not platform_supported(),reason='actual Linux host effects and recovery')
 @pytest.mark.parametrize('variant', ['legacy_guard','framed_guard','candidate_guard'])
 def test_unicode_recovery_records_real_effects_and_exact_offline_replay(tmp_path, variant):
     case = next(c for c in build_cases()if c['task']=='query_text'and c['kind']=='attack')
@@ -83,6 +85,7 @@ def test_probe_errors_and_nonanswers_remain_visible(tmp_path,mode):
 @pytest.mark.parametrize('kind',['unsupported','timeout','recovery'])
 def test_original_checkpoint_audit_and_private_error_commitment(tmp_path,monkeypatch,kind):
     from scripts import unicode_study_issue519 as study
+    if kind!='unsupported'and not platform_supported():pytest.skip('actual Linux checkpoint effects')
     cases=build_cases()
     case=next(c for c in cases if c['task']=='query_text'and c['kind']==('unsupported'if kind=='unsupported'else'attack'))
     row=next(r for r in make_plan('unicode')if r['case']==case['id'])
@@ -117,6 +120,7 @@ def test_prefix_audit_never_accepts_missing_middle_or_duplicate(tmp_path,monkeyp
     with pytest.raises(ValueError,match='unfinished'):study.records_at(ledger)
 
 
+@pytest.mark.skipif(not platform_supported(),reason='original Linux effect archive; integrity/decoder contracts run separately')
 def test_sealed_original_archive_integrity_and_tampering(tmp_path,monkeypatch):
     """Small fake-model archive exercises the same audit chain before live answers."""
     import importlib.util

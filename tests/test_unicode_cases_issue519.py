@@ -5,6 +5,9 @@ import json
 from collections import Counter
 from pathlib import Path
 
+import pytest
+
+from examples.snapshot_publication import platform_supported
 from scripts.final_fixture_issue502 import prepare
 from scripts.final_selection_issue502 import trial
 from scripts.score_final_issue502 import expected_origin
@@ -37,6 +40,7 @@ def test_registered_codec_controls_restore_manual_gold_without_model():
         assert ATTACK not in attack_material()[kind]['source_text']
 
 
+@pytest.mark.skipif(not platform_supported(),reason='actual Linux producer/consumer effects; no Windows executor')
 def test_every_supported_case_matches_independent_origin_and_real_files(tmp_path):
     counts = Counter()
     for i, case in enumerate(build_cases()):
