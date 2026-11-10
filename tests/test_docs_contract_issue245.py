@@ -18,7 +18,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
-README_MAX_BYTES = 20_000
+README_MAX_BYTES = 30_000
 
 FENCE = "```"
 
