@@ -650,8 +650,10 @@ production-код, `examples/*.py`, workflow и `pyproject.toml` не измен
 | `mypy v8unpack_agent` | RC=0, 25 source files | RC=0, 25 source files |
 | `python -m pytest -q` | 1087 passed | 1087 passed |
 
-Порог по README — не более 20 000 bytes UTF-8; фактическое сокращение
+Исторический порог #245 по README — не более 20 000 bytes UTF-8; фактическое сокращение
 15 293 bytes, запас до порога 5 170 bytes.
+Актуальный лимит по решению владельца 10.11.2026 (#513) — 30 000 байт UTF-8;
+README остаётся читаемым введением со ссылками на подробные документы.
 
 ### Вердикты документов
 
