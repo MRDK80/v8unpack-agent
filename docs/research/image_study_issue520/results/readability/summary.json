@@ -1,0 +1,12 @@
+{
+  "phase": "readability",
+  "rows": 20,
+  "routes": {
+    "unavailable": 20
+  },
+  "rpc": 0,
+  "exact": 0,
+  "errors": {},
+  "by_case": {},
+  "unknown_usage": 0
+}
