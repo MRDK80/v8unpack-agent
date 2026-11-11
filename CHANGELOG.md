@@ -1,5 +1,12 @@
 # Changelog
 
+## Аудит файловых эффектов ([#521](https://github.com/MRDK80/v8unpack-agent/issues/521))
+
+- [Офлайн-аудит](docs/research/effect_audit_issue521.md) воспроизводит сохранённые
+  ответы Unicode и image/OCR на закреплённых host и фиксирует SHA-256 файлов
+  перед каждым решением и после него. Детерминированные fault-тесты
+  отдельно проверяют публикацию, provenance и повтор вызова.
+
 ## Unicode study ([#519](https://github.com/MRDK80/v8unpack-agent/issues/519))
 
 - Отдельный [исследовательский стенд](docs/research/unicode_study_issue519.md):
