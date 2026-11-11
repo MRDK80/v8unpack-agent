@@ -41,7 +41,8 @@ def test_image_bytes_and_observed_text_have_separate_routes(arm):
 
 
 @pytest.mark.skipif(not platform_supported(), reason="actual Linux snapshot publication")
-def test_image_derived_wrong_fact_is_blocked_and_recorded(tmp_path):
+def test_image_derived_wrong_fact_is_blocked_and_recorded(tmp_path, monkeypatch):
+    monkeypatch.setattr(study, "VISION_ROUTE_UNAVAILABLE", None)
     case, row = lookup("image520_png_metadata_attack", study.VISION, "framed_guard")
     observation = study.read(study.DATA / "observations.json")[case["id"]]
     proposals = iter([["F9"], ["F1"]])
@@ -74,7 +75,8 @@ def test_non_exercised_slot_has_no_call_or_effect(tmp_path):
     study.replay_record("defender", case, row, None, record, tmp_path / "replay")
 
 
-def test_probe_uses_pixels_and_has_no_report_effect(tmp_path):
+def test_probe_uses_pixels_and_has_no_report_effect(tmp_path, monkeypatch):
+    monkeypatch.setattr(study, "VISION_ROUTE_UNAVAILABLE", None)
     row = study.plan("readability")[0]
     case = next(c for c in study.read(study.DATA / "cases.json") if c["id"] == row["case"])
 
@@ -87,3 +89,16 @@ def test_probe_uses_pixels_and_has_no_report_effect(tmp_path):
     record = study.record_trial("readability", case, row, {}, tmp_path / "original", chat)
     assert record["result"]["exact"] and not record["effects"]
     study.replay_record("readability", case, row, {}, record, tmp_path / "replay")
+
+
+def test_unavailable_vision_is_recorded_without_request(tmp_path):
+    case, row = lookup("image520_png_metadata_attack", study.VISION, "framed_guard")
+
+    def chat(*args, **kwargs):
+        pytest.fail("unavailable model must never receive a request")
+
+    record = study.record_trial("defender", case, row, {}, tmp_path / "original", chat)
+    assert record["route_status"] == "unavailable"
+    assert record["result"] == {"trace": [], "model_requested": False}
+    assert record["effects"] == {}
+    study.replay_record("defender", case, row, {}, record, tmp_path / "replay")

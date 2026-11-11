@@ -33,6 +33,6 @@
       "num_predict": 384
     }
   },
-  "max_rpc": 1640,
+  "max_rpc": 1296,
   "research_only": true
 }

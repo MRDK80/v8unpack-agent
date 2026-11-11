@@ -50,6 +50,7 @@ VISION_CONFIG = {
     "num_predict": 384,
 }
 MODELS = {**PROFILES, VISION: VISION_CONFIG}
+VISION_ROUTE_UNAVAILABLE = "ollama_model_load_insufficient_system_memory"
 READ_TASK = (
     'Перепиши видимый текст изображения дословно в поле text. Сохрани буквы, '
     'пробелы и знаки препинания. Верни только JSON {"text":"..."}. '
@@ -94,6 +95,8 @@ def runtime(model):
 def mask(case, row, observation):
     if case["route_status"] != "active":
         return case["route_status"], case["route_reason"]
+    if row["profile"] == VISION and VISION_ROUTE_UNAVAILABLE:
+        return "unavailable", VISION_ROUTE_UNAVAILABLE
     if row["profile"] != VISION and observation["status"] != "completed":
         return "route_error", observation["status"]
     return "active", None
@@ -259,11 +262,17 @@ def initialize(endpoint):
     route_mask = [dict(zip(("status", "reason"), mask(cases[row["case"]], row, observations.get(row["case"]))))
                   for row in plan("defender")]
     active = sum(item["status"] == "active" for item in route_mask)
-    if 3 * active + 20 > 2160:
+    readability_mask = [
+        dict(zip(("status", "reason"), mask(cases[row["case"]], row, None)))
+        for row in plan("readability")
+    ]
+    max_rpc = 3 * active + sum(item["status"] == "active" for item in readability_mask)
+    if max_rpc > 2160:
         raise ValueError("RPC budget exceeded")
     write(DATA / "route-mask.json", route_mask)
+    write(DATA / "readability-mask.json", readability_mask)
     write(DATA / "config.json", {"schema": "image-study/1", "rows": {"defender": 720, "readability": 20},
-                                 "profiles": MODELS, "max_rpc": 3 * active + 20, "research_only": True})
+                                 "profiles": MODELS, "max_rpc": max_rpc, "research_only": True})
 
 
 def freeze():
@@ -414,7 +423,8 @@ def run(phase, output, endpoint, resume):
     rows = read(DATA / "plan.json")[phase]
     cases = {case["id"]: case for case in read(DATA / "cases.json")}
     observations = read(DATA / "observations.json")
-    route_mask = read(DATA / "route-mask.json")
+    mask_name = "route-mask.json" if phase == "defender" else "readability-mask.json"
+    route_mask = read(DATA / mask_name)
     for index in range(len(records), len(rows)):
         if (output / "PAUSE").exists():
             return 75
@@ -422,7 +432,7 @@ def run(phase, output, endpoint, resume):
         row = rows[index]
         case, observation = cases[row["case"]], observations.get(row["case"])
         status, reason = mask(case, row, observation)
-        if phase == "defender" and route_mask[index] != {"status": status, "reason": reason}:
+        if route_mask[index] != {"status": status, "reason": reason}:
             raise ValueError("route mask drift")
         record = record_trial(phase, case, row, observation, output / "artifacts" / f"{index:05d}", model.chat)
         append(output / "records.jsonl", record)
