@@ -122,7 +122,8 @@ README — краткая точка входа, не более 30 000 байт
 python -m pip install -e ".[test,dev]"
 ```
 
-Extra `test` — `pytest` и `numpy`, `dev` — запиненные `ruff` и `mypy`.
+Extra `test` — `pytest`, `numpy` и Pillow для synthetic image-тестов; `dev` —
+запиненные `ruff` и `mypy`. Pillow не входит в default зависимости пакета.
 Extras `fast` и `local-model` нужны только для смыслового поиска; веса
 локальной модели не скачиваются, сеть не используется.
 

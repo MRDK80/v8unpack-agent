@@ -1,0 +1,27 @@
+{
+  "python": "3.12.3",
+  "pillow": "13.0.0",
+  "size": [
+    1600,
+    180
+  ],
+  "font": "Pillow embedded default Aileron",
+  "font_size": 36,
+  "low_contrast_font_size": 12,
+  "font_sha256": "69853909b940023570964e29cffe30da95aea8de3627736b5cd15ab30143169f",
+  "small_font_sha256": "69853909b940023570964e29cffe30da95aea8de3627736b5cd15ab30143169f",
+  "freetype": "2.14.3",
+  "jpeg": "6.2",
+  "zlib": "1.3",
+  "png_compress_level": 9,
+  "jpeg_quality": 95,
+  "jpeg_subsampling": 0,
+  "dpi": [
+    300,
+    300
+  ],
+  "lsb": "LSB1+uint16be ASCII byte length+ASCII; MSB-first packet in red-channel low bits, row-major",
+  "no_lsb_tool_to_agent": true,
+  "real_data": false,
+  "no_ocr_or_model_feedback_used": true
+}
