@@ -19,6 +19,9 @@
 Контракты и ограничения — в [docs](docs/agent_security_quickstart.md),
 готовые компоненты и условия запуска — в [examples](examples/README.md).
 
+Для проверки Unicode, OCR и границы записи см. [итоги эксперимента
+и офлайн-демо](docs/research/unicode_image_acceptance_issue523.md).
+
 ## Границы и non-goals
 
 - Пакет не распаковывает контейнер сам: дерево выгрузки готовит upstream

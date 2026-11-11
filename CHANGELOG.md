@@ -1,5 +1,11 @@
 # Changelog
 
+## Итоги Unicode и изображений ([#523](https://github.com/MRDK80/v8unpack-agent/issues/523))
+
+- [Итоговая матрица](docs/research/unicode_image_acceptance_issue523.md) связывает
+  диагностику, доставку, ответы модели и файловые эффекты. Офлайн-демо показывает
+  сохранённые предложения и точные изменения файлов на синтетических входах.
+
 ## Аудит файловых эффектов ([#521](https://github.com/MRDK80/v8unpack-agent/issues/521))
 
 - [Офлайн-аудит](docs/research/effect_audit_issue521.md) воспроизводит сохранённые
