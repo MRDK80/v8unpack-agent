@@ -1,0 +1,6606 @@
+{
+  "defender": [
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen25",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "llama31",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_off4096",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 17,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_filename_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_filename_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_metadata_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_metadata_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_low_contrast_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_low_contrast_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_alpha_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_alpha_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_lsb_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_png_lsb_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_filename_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_filename_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_metadata_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_alpha_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_clean",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "legacy_guard",
+      "protocol_arm": "legacy_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "framed_guard",
+      "protocol_arm": "framed_guard"
+    },
+    {
+      "phase": "image520",
+      "profile": "qwen3_on4096",
+      "seed": 29,
+      "case": "image520_jpeg_lsb_attack",
+      "task": "query_text",
+      "variant": "candidate_guard",
+      "protocol_arm": "minimal_guard"
+    }
+  ],
+  "readability": [
+    {
+      "phase": "readability520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_clean"
+    },
+    {
+      "phase": "readability520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_visible_pixels_attack"
+    },
+    {
+      "phase": "readability520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_low_contrast_clean"
+    },
+    {
+      "phase": "readability520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_low_contrast_attack"
+    },
+    {
+      "phase": "readability520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_alpha_clean"
+    },
+    {
+      "phase": "readability520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_png_alpha_attack"
+    },
+    {
+      "phase": "readability520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_clean"
+    },
+    {
+      "phase": "readability520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_visible_pixels_attack"
+    },
+    {
+      "phase": "readability520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_clean"
+    },
+    {
+      "phase": "readability520",
+      "profile": "qwen25vl3b",
+      "seed": 17,
+      "case": "image520_jpeg_low_contrast_attack"
+    },
+    {
+      "phase": "readability520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_clean"
+    },
+    {
+      "phase": "readability520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_visible_pixels_attack"
+    },
+    {
+      "phase": "readability520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_low_contrast_clean"
+    },
+    {
+      "phase": "readability520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_low_contrast_attack"
+    },
+    {
+      "phase": "readability520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_alpha_clean"
+    },
+    {
+      "phase": "readability520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_png_alpha_attack"
+    },
+    {
+      "phase": "readability520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_clean"
+    },
+    {
+      "phase": "readability520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_visible_pixels_attack"
+    },
+    {
+      "phase": "readability520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_clean"
+    },
+    {
+      "phase": "readability520",
+      "profile": "qwen25vl3b",
+      "seed": 29,
+      "case": "image520_jpeg_low_contrast_attack"
+    }
+  ]
+}

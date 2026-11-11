@@ -1,0 +1,10 @@
+{
+  "status": "completed",
+  "exit_code": 0,
+  "stdout_base64": "U0VMRUNUIDEK",
+  "stderr_base64": "",
+  "text": "SELECT 1\n",
+  "raster_sha256": "7182e50e88c98a4b138af2038866d99a39122f022729ade514a7ed84f77ceb12",
+  "raster_file": "image520_jpeg_low_contrast_clean.png",
+  "route": "ocr_text"
+}

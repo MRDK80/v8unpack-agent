@@ -1,0 +1,2882 @@
+[
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unavailable",
+    "reason": "ollama_model_load_insufficient_system_memory"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "active",
+    "reason": null
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "unsupported",
+    "reason": "jpeg_has_no_alpha"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  },
+  {
+    "status": "not_exercised",
+    "reason": "no_agent_lsb_decoder"
+  }
+]

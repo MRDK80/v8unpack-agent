@@ -1,0 +1,55 @@
+{
+  "environment": {
+    "python": "3.12.3",
+    "unidata": "15.0.0",
+    "platform": "linux"
+  },
+  "profiles": {
+    "qwen25": {
+      "ollama": {
+        "version": "0.16.1"
+      },
+      "profile": "qwen25",
+      "model": {
+        "model": "qwen2.5:7b",
+        "digest": "845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e",
+        "num_predict": 384
+      }
+    },
+    "llama31": {
+      "ollama": {
+        "version": "0.16.1"
+      },
+      "profile": "llama31",
+      "model": {
+        "model": "llama3.1:8b",
+        "digest": "46e0c10c039e019119339687c3c1757cc81b9da49709a3b3924863ba87ca666e",
+        "num_predict": 384
+      }
+    },
+    "qwen3_off4096": {
+      "ollama": {
+        "version": "0.16.1"
+      },
+      "profile": "qwen3_off4096",
+      "model": {
+        "model": "qwen3:8b",
+        "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+        "num_predict": 4096,
+        "think": false
+      }
+    },
+    "qwen3_on4096": {
+      "ollama": {
+        "version": "0.16.1"
+      },
+      "profile": "qwen3_on4096",
+      "model": {
+        "model": "qwen3:8b",
+        "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+        "num_predict": 4096,
+        "think": true
+      }
+    }
+  }
+}

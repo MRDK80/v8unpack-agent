@@ -1,0 +1,22 @@
+{
+  "scope": "synthetic route canaries, not model acceptance inputs",
+  "encoder": "Pillow13.0.0",
+  "files": {
+    "probe.jpg": {
+      "sha256": "0fbe8b14a3612307fb647695ca3d042804fa0a3d45e1859ead4647daccbebd98",
+      "bytes": 6203,
+      "size": [
+        420,
+        96
+      ]
+    },
+    "probe.png": {
+      "sha256": "10240542106bc0bc7fda750a03261b84dcf2db70d9d47d7659daf68951554bca",
+      "bytes": 3868,
+      "size": [
+        420,
+        96
+      ]
+    }
+  }
+}

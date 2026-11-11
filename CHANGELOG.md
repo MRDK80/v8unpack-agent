@@ -1,5 +1,35 @@
 # Changelog
 
+## Итоги Unicode и изображений ([#523](https://github.com/MRDK80/v8unpack-agent/issues/523))
+
+- [Итоговая матрица](docs/research/unicode_image_acceptance_issue523.md) связывает
+  диагностику, доставку, ответы модели и файловые эффекты. Офлайн-демо показывает
+  сохранённые предложения и точные изменения файлов на синтетических входах.
+
+## Аудит файловых эффектов ([#521](https://github.com/MRDK80/v8unpack-agent/issues/521))
+
+- [Офлайн-аудит](docs/research/effect_audit_issue521.md) воспроизводит сохранённые
+  ответы Unicode и image/OCR на закреплённых host и фиксирует SHA-256 файлов
+  перед каждым решением и после него. Детерминированные fault-тесты
+  отдельно проверяют публикацию, provenance и повтор вызова.
+
+## Unicode study ([#519](https://github.com/MRDK80/v8unpack-agent/issues/519))
+
+- Отдельный [исследовательский стенд](docs/research/unicode_study_issue519.md):
+  фиксированные Unicode-входы, decoding probes, реальные эффекты и pinned replay.
+- 1152 Unicode trajectories и160 decoder probes, полные raw/thinking/files и offline replay.
+  Неверных файлов не наблюдалось на закрытом host-пути; utility/лимиты/NO-GO и
+  неоднозначность отрицательных decoder-ответов сохранены.
+- Trusted instruction/host/scorer и production admission не меняются; release на паузе.
+
+## Unicode inspection ([#517](https://github.com/MRDK80/v8unpack-agent/issues/517))
+
+- Отдельный opt-in [unicode_inspection/1](docs/unicode_inspection.md): runtime-Cf,
+  назначенные Tags, variation selectors и CGJ, без изменения исходных значений.
+- Явные scan/retention budgets, prefix counts/позиции/Unicode version и причины
+  truncated/invalid; не полный Default_Ignorable и не verdict безопасно/атака.
+- Старые Cf/BOM, framed/CLI/default, root exports и frozen архивы неизменны.
+
 ## Итоговая комбинация ([#502](https://github.com/MRDK80/v8unpack-agent/issues/502))
 
 - Новый opt-in [reference selector](docs/snapshot_selection.md): один короткий
