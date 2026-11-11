@@ -89,3 +89,5 @@ Result содержит schema, status/reasons, file_bom, unidata_version, гр�
 нормализации, декодирования скрытых сообщений или автоматического допуска.
 Для проверки эффекта нужны [отдельные полномочия и validator](action_validation.md).
 Correct report может содержать инструкцию как точное значение.
+
+См. [измерения доставки, ответов и записей](research/unicode_image_acceptance_issue523.md).
