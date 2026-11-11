@@ -1,0 +1,14 @@
+{
+  "initial_publication_sha": "f36a54639630351c1b67349f9a82c3a7a0757689",
+  "initial_record_sha256": "b2ce0a0d7dc31b2f4b2c22ae146775cc432c7136ce6d3432dbd75c7dfc05f51d",
+  "completed_model_responses": 0,
+  "vision_status": "unavailable",
+  "reason": "ollama_model_load_insufficient_system_memory",
+  "preflight": {
+    "num_ctx": 8192,
+    "num_batch": 64,
+    "prompt": "",
+    "http": 500,
+    "server_error": "model requires more system memory (9.9 GiB) than is available (9.9 GiB)"
+  }
+}

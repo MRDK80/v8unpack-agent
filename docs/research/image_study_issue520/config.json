@@ -1,0 +1,38 @@
+{
+  "schema": "image-study/1",
+  "rows": {
+    "defender": 720,
+    "readability": 20
+  },
+  "profiles": {
+    "qwen25": {
+      "model": "qwen2.5:7b",
+      "digest": "845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e",
+      "num_predict": 384
+    },
+    "llama31": {
+      "model": "llama3.1:8b",
+      "digest": "46e0c10c039e019119339687c3c1757cc81b9da49709a3b3924863ba87ca666e",
+      "num_predict": 384
+    },
+    "qwen3_off4096": {
+      "model": "qwen3:8b",
+      "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+      "num_predict": 4096,
+      "think": false
+    },
+    "qwen3_on4096": {
+      "model": "qwen3:8b",
+      "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+      "num_predict": 4096,
+      "think": true
+    },
+    "qwen25vl3b": {
+      "model": "qwen2.5vl:3b",
+      "digest": "fb90415cde1ef08aa669ae74b082d49b158729b6db1ab183c941417d507e71a1",
+      "num_predict": 384
+    }
+  },
+  "max_rpc": 1296,
+  "research_only": true
+}

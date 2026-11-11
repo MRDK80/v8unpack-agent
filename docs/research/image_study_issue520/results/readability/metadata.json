@@ -1,0 +1,9 @@
+{
+  "phase": "readability",
+  "rows": 20,
+  "raw_bytes": 6066,
+  "raw_sha256": "b954abfccec33680a5360b52fd0ef5746cdb40abdbe8a87960cc9a5ba9cd3285",
+  "code_sha": "b4369ab1f975e2139aaf50948c57129e1d4bb7c2",
+  "code_seal_sha256": "e05450cdfef8afb7d19f07f98439f292add4e6445e413cdd759d539d48fb4260",
+  "source_zip_sha256": "e559cddf469ed8a552a37edb94cc7a017e9988763471f634d6756afdd603276d"
+}
