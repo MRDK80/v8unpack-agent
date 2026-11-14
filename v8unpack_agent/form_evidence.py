@@ -1,4 +1,4 @@
-"""Opt-in static top-level managed form names from real export bytes (#500).
+"""Opt-in static top-level form names from real export bytes (#500).
 
 No filesystem/model/writes, runtime interpretation, arbitrary metadata resolver
 or original-CF completeness claim. Existing best-effort APIs are unchanged.
@@ -29,6 +29,7 @@ MAX_BYTES = 2_000_000
 MAX_FACTS = 1000
 Status = Literal['complete', 'incomplete', 'unsupported', 'unavailable']
 DETACHED = 'Дочерние элементы отдельно'
+ORDINARY_NAME_SLOTS = {'0-26': 3, '0-27': 4}
 OPERATION = 'declared_form_attributes'
 
 
@@ -146,6 +147,24 @@ def _decode(raw: bytes) -> Any:
     return result
 
 
+def _valid_detached_children(children: Any) -> bool:
+    if type(children) is not list or not children:
+        return False
+    identifiers = set()
+    for child in children:
+        if type(child) is not dict or set(child) != {'name', 'id', 'raw'}:
+            return False
+        name, ident, raw = child['name'], child['id'], child['raw']
+        if (type(name) is not str or not 0 < len(name) <= 4096
+                or type(ident) is not str or re.fullmatch(r'(?:0|[1-9][0-9]{0,19})', ident) is None
+                or ident in identifiers or type(raw) is not list or len(raw) != 10
+                or raw[0] != '5' or raw[1] != ident or raw[3] != '"' + name + '"'):
+            return False
+        _tree(raw, raw_only=True)
+        identifiers.add(ident)
+    return True
+
+
 def analyze_form(source: FormSource, *, max_facts: int = MAX_FACTS,
                  max_bytes: int = MAX_BYTES) -> FormEvidence:
     """Strict preflight then existing elem parser; completeness is projection-only."""
@@ -168,44 +187,61 @@ def analyze_form(source: FormSource, *, max_facts: int = MAX_FACTS,
             return fail('unsupported', 'artificial_attributes_adapter_unsupported')
         if 'Тип формы' not in metadata or 'Версия элементов формы' not in metadata:
             return fail('incomplete', 'format_metadata_missing')
-        if metadata['Тип формы'] != '1' or metadata['Версия элементов формы'] != '1':
+        kind, version = metadata['Тип формы'], metadata['Версия элементов формы']
+        managed = kind == '1' and version == '1'
+        ordinary = kind == '0' and type(version) is str and version in ORDINARY_NAME_SLOTS
+        if not (managed or ordinary):
             return fail('unsupported', 'form_kind_or_version_unsupported')
         root = metadata['form'][0][0]
-        if type(root) is not list or len(root) < 4:
+        if type(root) is not list or not root:
             return fail('incomplete', 'raw_form_missing')
-        if root[0] not in ('3', '4'):
-            return fail('unsupported', 'raw_root_version_unsupported')
-        section = root[3]
-        if type(section) is not list or len(section) < 2:
+        if managed:
+            if root[0] not in ('2', '3', '4'):
+                return fail('unsupported', 'raw_root_version_unsupported')
+            section, counter, name_slot, id_slot, width = root[3], 1, 3, 1, 16
+        else:
+            if root[0] != version[2:]:
+                return fail('unsupported', 'raw_root_version_unsupported')
+            if type(root[2]) is not list:
+                return fail('incomplete', 'raw_props_section_missing')
+            name_slot = ORDINARY_NAME_SLOTS[version]
+            section, counter, id_slot, width = root[2][2], 0, 0, name_slot + 2
+        if type(section) is not list or len(section) <= counter:
             return fail('incomplete', 'raw_props_section_missing')
+        if not managed and len(section) != 1:
+            return fail('incomplete', 'ordinary_props_section_not_detached')
         props = elements['props']
         if props is None or props == []:
-            if section[1] != '0':
+            if section[counter] != '0':
                 return fail('incomplete', 'empty_without_zero_counter')
             return FormEvidence(source, 'complete', None)
-        if type(props) is not list or section[1] != DETACHED:
+        if type(props) is not list or section[counter] != DETACHED:
             return fail('incomplete', 'props_not_completely_detached')
         names: list[str] = []
         identifiers: list[str] = []
         for prop in props:
             if type(prop) is not dict:
                 return fail('incomplete', 'invalid_property_record')
-            if 'child' in prop or (type(prop.get('raw')) is list and len(prop['raw']) > 13
-                                   and prop['raw'][13] != '0'):
-                return fail('unsupported', 'nested_attributes_unsupported')
-            if set(prop) != {'name', 'id', 'raw'}:
+            keys = set(prop)
+            if keys != {'name', 'id', 'raw'} and not (managed and keys == {'name', 'id', 'raw', 'child'}):
                 return fail('incomplete', 'invalid_property_fields')
             name, ident, raw = prop['name'], prop['id'], prop['raw']
             if type(name) is not str or not 0 < len(name) <= 4096:
                 return fail('incomplete', 'invalid_name')
             if type(ident) is not str or re.fullmatch(r'(?:0|[1-9][0-9]{0,19})', ident) is None:
                 return fail('incomplete', 'invalid_attribute_id')
-            if type(raw) is not list or len(raw) != 16:
+            if type(raw) is not list or len(raw) != width:
                 return fail('incomplete', 'invalid_raw_property')
             _tree(raw, raw_only=True)
-            if raw[0] != '9':
+            if managed and raw[0] != '9':
                 return fail('unsupported', 'raw_property_version_unsupported')
-            if raw[1] != [ident] or raw[3] != '"' + name + '"':
+            if managed:
+                if 'child' in prop:
+                    if raw[13] != 'отдельно' or not _valid_detached_children(prop['child']):
+                        return fail('unsupported', 'nested_attributes_unsupported')
+                elif raw[13] != '0':
+                    return fail('unsupported', 'nested_attributes_unsupported')
+            if raw[id_slot] != [ident] or raw[name_slot] != '"' + name + '"':
                 return fail('incomplete', 'raw_projection_mismatch')
             names.append(name)
             identifiers.append(ident)
@@ -214,12 +250,12 @@ def analyze_form(source: FormSource, *, max_facts: int = MAX_FACTS,
         # Existing parser is best-effort; exact cardinality/order is checked.
         # Raw subtrees contain only brace-list strings, so they cannot inject
         # extra named dict records into its recursive walk.
-        parsed = _extract_props(props)
+        parsed = _extract_props([{key: prop[key] for key in ('name', 'id', 'raw')} for prop in props])
         if [p.get('name') for p in parsed] != names:
             return fail('incomplete', 'parser_projection_mismatch')
         facts = tuple(FormFact(name, ident,
                       _identity('form-attribute/1', source.source_id, index, ident, name),
-                      f'/props/{index}/name', f'/props/{index}/raw/3')
+                      f'/props/{index}/name', f'/props/{index}/raw/{name_slot}')
                       for index, (name, ident) in enumerate(zip(names, identifiers)))
         omitted = max(0, len(facts) - max_facts)
         return FormEvidence(source, 'incomplete' if omitted else 'complete',
