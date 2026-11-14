@@ -51,7 +51,7 @@ def checked_envelope(contract: Contract, report: Any, producer_request: str) -> 
         evidence = analyze_form(contract.source)
         source = contract.source.to_dict()
         operation = 'declared_form_attributes'
-        fields = [{'pointer': f'/report/attribute_names/{index}', 'artifact': 'elements',
+        fields = [{'pointer': f'/report/attribute_names/{index}', 'artifact': fact.artifact,
                    'source_pointer': fact.pointer, 'raw_pointer': fact.raw_pointer, 'fact_id': fact.fact_id}
                   for index, fact in enumerate(evidence.facts)]
         coverage = evidence.to_dict()['coverage']

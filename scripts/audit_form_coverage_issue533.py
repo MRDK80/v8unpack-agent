@@ -38,8 +38,11 @@ def inspect_export(root):
                 metadata, elements = (json.loads(data.decode("utf-8-sig")) for data in raw)
                 version = metadata["Версия элементов формы"]
                 name_position = 4 if version == "0-27" else 3
-                expected = {"attribute_names": [record["raw"][name_position][1:-1]
-                            for record in elements["props"] or []]}
+                if version == "0-25-16":
+                    names = [record[3][1:-1] for record in metadata["form"][0][0][2][2][1:]]
+                else:
+                    names = [record["raw"][name_position][1:-1] for record in elements["props"] or []]
+                expected = {"attribute_names": names}
                 actual = make_form_report(evidence.contract())
                 if actual != expected:
                     raise ValueError(f"raw projection mismatch at anonymous ordinal {index}")
