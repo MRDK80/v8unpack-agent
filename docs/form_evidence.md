@@ -36,12 +36,13 @@ API принимает immutable bytes, сам не читает файлов и
 
 [Приёмка покрытия на трёх выгрузках](research/form_coverage_issue533.md).
 
-Для обычной формы `0-25-16` проверяются заголовки корня `25` и
+Для обычных форм `0-19-16`, `0-20-16`, `0-23-16` и `0-25-16` проверяются заголовок корня по версии и
 вложенной версии `16`. Реквизиты хранятся в
 `metadata.form[0][0][2][2]` после счётчика. Счётчик должен точно совпасть
 с числом записей, а `elements.props` должен быть пустым списком.
 Источник каждого факта — `metadata`, указатель имени включает индекс
 его записи в этой секции. [Приёмка #536](research/form_coverage_issue536.md).
+[Приёмка старых форматов #539](research/form_coverage_issue539.md).
 
 Позиции соответствуют первичному
 [FormElements4/FormProps](https://github.com/saby-integration/v8unpack/blob/deba8926fab78f67b8c362c010397a38967a2820/src/v8unpack/MetaDataObject/Form/FormElements4/FormElement.py).

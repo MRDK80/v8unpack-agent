@@ -29,6 +29,7 @@ MAX_BYTES = 2_000_000
 MAX_FACTS = 1000
 Status = Literal['complete', 'incomplete', 'unsupported', 'unavailable']
 DETACHED = 'Дочерние элементы отдельно'
+INLINE_ORDINARY_ROOTS = {'0-19-16': '19', '0-20-16': '20', '0-23-16': '23', '0-25-16': '25'}
 ORDINARY_NAME_SLOTS = {'0-26': 3, '0-27': 4}
 OPERATION = 'declared_form_attributes'
 
@@ -191,7 +192,9 @@ def analyze_form(source: FormSource, *, max_facts: int = MAX_FACTS,
         kind, version = metadata['Тип формы'], metadata['Версия элементов формы']
         managed = kind == '1' and version == '1'
         ordinary = kind == '0' and type(version) is str and version in ORDINARY_NAME_SLOTS
-        inline = kind == '0' and version == '0-25-16'
+        inline = kind == '0' and type(version) is str and version in INLINE_ORDINARY_ROOTS
+        if kind == '0' and version == '' and metadata.get('form') == []:
+            return fail('unavailable', 'raw_form_unavailable')
         if not (managed or ordinary or inline):
             return fail('unsupported', 'form_kind_or_version_unsupported')
         root = metadata['form'][0][0]
@@ -202,7 +205,7 @@ def analyze_form(source: FormSource, *, max_facts: int = MAX_FACTS,
                 return fail('unsupported', 'raw_root_version_unsupported')
             section, counter, name_slot, id_slot, width = root[3], 1, 3, 1, 16
         else:
-            expected_root = '25' if inline else version[2:]
+            expected_root = INLINE_ORDINARY_ROOTS[version] if inline else version[2:]
             if root[0] != expected_root or (inline and (type(root[1]) is not list or root[1][0] != '16')):
                 return fail('unsupported', 'raw_root_version_unsupported')
             if type(root[2]) is not list:
