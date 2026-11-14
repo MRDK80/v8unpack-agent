@@ -38,7 +38,7 @@ def inspect_export(root):
                 metadata, elements = (json.loads(data.decode("utf-8-sig")) for data in raw)
                 version = metadata["Версия элементов формы"]
                 name_position = 4 if version == "0-27" else 3
-                if version == "0-25-16":
+                if version in {"0-19-16", "0-20-16", "0-23-16", "0-25-16"}:
                     names = [record[3][1:-1] for record in metadata["form"][0][0][2][2][1:]]
                 else:
                     names = [record["raw"][name_position][1:-1] for record in elements["props"] or []]
