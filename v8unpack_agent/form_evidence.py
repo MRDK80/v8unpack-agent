@@ -77,10 +77,11 @@ class FormFact:
     fact_id: str
     pointer: str
     raw_pointer: str
+    artifact: str = 'elements'
 
     def to_dict(self) -> dict[str, Any]:
         return {'name': self.name, 'attribute_id': self.attribute_id, 'fact_id': self.fact_id,
-                'artifact': 'elements', 'pointer': self.pointer, 'raw_pointer': self.raw_pointer,
+                'artifact': self.artifact, 'pointer': self.pointer, 'raw_pointer': self.raw_pointer,
                 'value_semantics': 'untrusted_data'}
 
 
@@ -190,7 +191,8 @@ def analyze_form(source: FormSource, *, max_facts: int = MAX_FACTS,
         kind, version = metadata['Тип формы'], metadata['Версия элементов формы']
         managed = kind == '1' and version == '1'
         ordinary = kind == '0' and type(version) is str and version in ORDINARY_NAME_SLOTS
-        if not (managed or ordinary):
+        inline = kind == '0' and version == '0-25-16'
+        if not (managed or ordinary or inline):
             return fail('unsupported', 'form_kind_or_version_unsupported')
         root = metadata['form'][0][0]
         if type(root) is not list or not root:
@@ -200,22 +202,37 @@ def analyze_form(source: FormSource, *, max_facts: int = MAX_FACTS,
                 return fail('unsupported', 'raw_root_version_unsupported')
             section, counter, name_slot, id_slot, width = root[3], 1, 3, 1, 16
         else:
-            if root[0] != version[2:]:
+            expected_root = '25' if inline else version[2:]
+            if root[0] != expected_root or (inline and (type(root[1]) is not list or root[1][0] != '16')):
                 return fail('unsupported', 'raw_root_version_unsupported')
             if type(root[2]) is not list:
                 return fail('incomplete', 'raw_props_section_missing')
-            name_slot = ORDINARY_NAME_SLOTS[version]
+            name_slot = 3 if inline else ORDINARY_NAME_SLOTS[version]
             section, counter, id_slot, width = root[2][2], 0, 0, name_slot + 2
         if type(section) is not list or len(section) <= counter:
             return fail('incomplete', 'raw_props_section_missing')
-        if not managed and len(section) != 1:
+        if ordinary and len(section) != 1:
             return fail('incomplete', 'ordinary_props_section_not_detached')
         props = elements['props']
-        if props is None or props == []:
+        if inline:
+            if props != []:
+                return fail('incomplete', 'inline_props_conflict')
+            if section[0] != str(len(section) - 1):
+                return fail('incomplete', 'inline_props_count_mismatch')
+            _tree(section, raw_only=True)
+            props = []
+            for raw in section[1:]:
+                if type(raw) is not list or len(raw) != width or type(raw[0]) is not list or len(raw[0]) != 1:
+                    return fail('incomplete', 'invalid_raw_property')
+                quoted_name = raw[name_slot]
+                if type(quoted_name) is not str or not (quoted_name.startswith('"') and quoted_name.endswith('"')):
+                    return fail('incomplete', 'invalid_name')
+                props.append({'name': quoted_name[1:-1], 'id': raw[0][0], 'raw': raw})
+        if not inline and (props is None or props == []):
             if section[counter] != '0':
                 return fail('incomplete', 'empty_without_zero_counter')
             return FormEvidence(source, 'complete', None)
-        if type(props) is not list or section[counter] != DETACHED:
+        if type(props) is not list or (not inline and section[counter] != DETACHED):
             return fail('incomplete', 'props_not_completely_detached')
         names: list[str] = []
         identifiers: list[str] = []
@@ -253,10 +270,16 @@ def analyze_form(source: FormSource, *, max_facts: int = MAX_FACTS,
         parsed = _extract_props([{key: prop[key] for key in ('name', 'id', 'raw')} for prop in props])
         if [p.get('name') for p in parsed] != names:
             return fail('incomplete', 'parser_projection_mismatch')
-        facts = tuple(FormFact(name, ident,
-                      _identity('form-attribute/1', source.source_id, index, ident, name),
-                      f'/props/{index}/name', f'/props/{index}/raw/{name_slot}')
-                      for index, (name, ident) in enumerate(zip(names, identifiers)))
+        facts_list = []
+        for index, (name, ident) in enumerate(zip(names, identifiers)):
+            fact_id = _identity('form-attribute/1', source.source_id, index, ident, name)
+            if inline:
+                pointer = f'/form/0/0/2/2/{index + 1}/{name_slot}'
+                facts_list.append(FormFact(name, ident, fact_id, pointer, pointer, 'metadata'))
+            else:
+                facts_list.append(FormFact(name, ident, fact_id, f'/props/{index}/name',
+                                           f'/props/{index}/raw/{name_slot}'))
+        facts = tuple(facts_list)
         omitted = max(0, len(facts) - max_facts)
         return FormEvidence(source, 'incomplete' if omitted else 'complete',
                             'fact_budget' if omitted else None, facts[:max_facts], len(facts), omitted)
