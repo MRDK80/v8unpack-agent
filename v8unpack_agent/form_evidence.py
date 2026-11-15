@@ -27,6 +27,8 @@ __all__ = [
 
 MAX_BYTES = 2_000_000
 MAX_FACTS = 1000
+MAX_DOCUMENT_NODES = 200_000
+MAX_DOCUMENT_DEPTH = 40
 Status = Literal['complete', 'incomplete', 'unsupported', 'unavailable']
 DETACHED = 'Дочерние элементы отдельно'
 INLINE_ORDINARY_ROOTS = {'0-19-16': '19', '0-20-16': '20', '0-23-16': '23', '0-25-16': '25'}
@@ -123,6 +125,10 @@ def _bad_constant(value: str) -> Any:
     raise ValueError('nonfinite JSON')
 
 
+class _DocumentBudgetExceeded(ValueError):
+    """A valid JSON tree exceeded the configured structural bounds."""
+
+
 def _tree(value: Any, *, raw_only: bool = False) -> None:
     """Bound decoded depth/node count; no hidden dictionaries inside raw brace lists."""
     pending = [(value, 0)]
@@ -130,8 +136,10 @@ def _tree(value: Any, *, raw_only: bool = False) -> None:
     while pending:
         item, depth = pending.pop()
         count += 1
-        if depth > 40 or count > 200_000:
-            raise ValueError('document budget')
+        if depth > MAX_DOCUMENT_DEPTH:
+            raise _DocumentBudgetExceeded('document_depth_budget')
+        if count > MAX_DOCUMENT_NODES:
+            raise _DocumentBudgetExceeded('document_node_budget')
         if type(item) is str:
             item.encode('utf-8')
         elif type(item) is list:
@@ -286,6 +294,8 @@ def analyze_form(source: FormSource, *, max_facts: int = MAX_FACTS,
         omitted = max(0, len(facts) - max_facts)
         return FormEvidence(source, 'incomplete' if omitted else 'complete',
                             'fact_budget' if omitted else None, facts[:max_facts], len(facts), omitted)
+    except _DocumentBudgetExceeded as error:
+        return fail('incomplete', str(error))
     except (ValueError, UnicodeError, KeyError, IndexError, TypeError, RecursionError):
         return fail('incomplete', 'invalid_or_partial_document')
 
