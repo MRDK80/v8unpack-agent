@@ -95,6 +95,7 @@ jobs:
         distribution: [wheel, sdist]
     runs-on: ${{ matrix.os }}
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
@@ -116,11 +117,8 @@ jobs:
           python -c "import v8unpack_agent"
           v8unpack-agent-run --help
           python -m v8unpack_agent.cli --help
-      - name: Run synthetic smoke and verify report
-        run: |
-          python -c "from pathlib import Path; Path('smoke-input').mkdir(exist_ok=True)"
-          v8unpack-agent-run smoke-input --report-path smoke-report.json
-          python -c "import json; from pathlib import Path; json.loads(Path('smoke-report.json').read_text(encoding='utf-8'))"
+      - name: Run synthetic smoke in both representations
+        run: python scripts/smoke_release.py
 
   publish:
     name: publish verified distributions
