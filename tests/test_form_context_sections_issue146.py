@@ -61,7 +61,7 @@ MARKER_OF = {
     SECTION_OBJECT_ATTRIBUTES: OBJECT_ATTRIBUTES_MARKER,
     SECTION_BSL: BSL_MARKER,
 }
-ALLOWED = "form, summary, object_attributes, bsl"
+ALLOWED = "form, summary, object_attributes, dynamic_form_operations, bsl"
 
 
 def _context(*, statuses: int = 3) -> FormContext:
@@ -201,7 +201,7 @@ def test_section_constants_are_canonical() -> None:
     assert (SECTION_FORM, SECTION_SUMMARY, SECTION_OBJECT_ATTRIBUTES, SECTION_BSL) == (
         "form", "summary", "object_attributes", "bsl",
     )
-    assert ALL_SECTIONS == ("form", "summary", "object_attributes", "bsl")
+    assert ALL_SECTIONS == ("form", "summary", "object_attributes", "dynamic_form_operations", "bsl")
     assert isinstance(ALL_SECTIONS, tuple)
 
 

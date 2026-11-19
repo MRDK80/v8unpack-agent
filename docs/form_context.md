@@ -565,3 +565,10 @@ rag_text = to_llm_prompt_fragment(context, sections=(SECTION_FORM, SECTION_SUMMA
   бюджет.
 - `file_bom` определяется по ведущему U+FEFF: BSL читается как `utf-8` без
   снятия BOM, поэтому это точно соответствует байтам файла.
+
+
+## Opt-in динамический слой (#217)
+
+`include_dynamic_analysis=True` добавляет `FormContext.dynamic_analysis`; default — `None`.
+Секция `dynamic_form_operations` атомарна и поддерживает `framed`.
+[Контракт, статусы, инварианты и ограничения](dynamic_forms_context.md).
