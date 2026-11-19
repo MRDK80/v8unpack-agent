@@ -220,6 +220,7 @@ POSIX-пути, одинаковые на POSIX и NT.
 | `modules` | `ModuleEntry`, `ModuleIndex`, `scan_*_modules`, `to_llm_module_fragment` | [modules](docs/modules.md) |
 | `bsl_facts`, `evidence_context`, `action_validation` | факты и действия | [API](docs/action_validation.md) |
 | `dynamic_forms` | модель динамических операций (opt-in) | [API](docs/dynamic_forms.md) |
+| `dynamic_forms_detector` | прямые динамические операции BSL (opt-in) | [API](docs/dynamic_forms_detector.md) |
 | `task_evidence`, `form_evidence`, `report_provenance` | | [BSL](docs/task_evidence.md), [Form](docs/form_evidence.md), [Chain](docs/report_provenance.md) |
 | `search_contract` | `ArtifactRef`, `SearchDocument`, `SearchQuery`, `SearchResult`, `OwnerLink` | [search_contract](docs/search_contract.md) |
 | `search_corpus` | `build_search_corpus`, `build_form_inputs`, `read_module_text`, `SearchCorpus` | [search_corpus](docs/search_corpus.md) |
