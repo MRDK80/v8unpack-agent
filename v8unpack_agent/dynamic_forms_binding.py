@@ -207,6 +207,12 @@ class DynamicBindingIndex:
             raise TypeError('binding index requires raw and bound operation indexes')
         _tuple(self.candidates, DynamicCandidate)
         _tuple(self.diagnostics, BindingDiagnostic)
+        snapshots = {(op.source.relative_path,op.source.snapshot_sha256)
+                     for index in (self.raw,self.bound) for op in index.operations}
+        snapshots.update((condition.source.relative_path,condition.source.snapshot_sha256)
+                         for index in (self.raw,self.bound) for condition in index.conditions)
+        if len(snapshots) > 1:
+            raise ValueError('binding index requires one source snapshot')
         raw_ids = {op.operation_id for op in self.raw.operations}
         ops = {op.operation_id: op for op in self.bound.operations}
         if not raw_ids <= ops.keys():

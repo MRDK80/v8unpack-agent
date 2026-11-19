@@ -156,3 +156,16 @@ def test_invalidated_alias_is_not_merged_into_proven_creation_candidate():
     assert owners[0].reference.resolution == R.UNRESOLVED
     assert creation.operation_id not in owners[0].operation_ids
     assert any(d.reason == BindingReason.ALIAS_INVALIDATED for d in owners[0].diagnostics)
+
+
+def test_binding_index_rejects_combining_independent_source_snapshots():
+    import pytest
+
+    from v8unpack_agent.dynamic_forms import DynamicOperationIndex
+    from v8unpack_agent.dynamic_forms_binding import DynamicBindingIndex
+    first=run('Items.Add("Demo",Type("FormField"));')
+    second=bind_form_operations('Procedure Build() Items.Add("Other",Type("FormField")); EndProcedure','CommonForm/Other/Module.bsl')
+    raw=DynamicOperationIndex(first.raw.operations+second.raw.operations)
+    bound=DynamicOperationIndex(first.bound.operations+second.bound.operations)
+    with pytest.raises(ValueError,match='one source snapshot'):
+        DynamicBindingIndex(raw,bound,first.candidates+second.candidates)
