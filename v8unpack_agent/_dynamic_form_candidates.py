@@ -76,7 +76,7 @@ class _Assembler:
 
     def draft(self, reference: EntityReference, procedure: str, evidence_key: str) -> tuple[str,_Draft]:
         creator = self.operations.get(reference.creation_operation_id or "")
-        if creator is not None and creator.target.target_kind == reference.target_kind:
+        if reference.resolution == R.EXACT and creator is not None and creator.target.target_kind == reference.target_kind:
             reference = creator.target
         ident = candidate_id(self.prepared.snapshot.relative_path,self.prepared.snapshot.sha,procedure,
                              reference,unknown_operation_id=evidence_key)
@@ -137,7 +137,7 @@ class _Assembler:
         target_id = None
         if isinstance(target,EntityReference):
             resolution = target.resolution
-            if target.creation_operation_id or target.origin in {TargetOrigin.DECLARED,TargetOrigin.FORM}:
+            if target.resolution == R.EXACT and (target.creation_operation_id or target.origin in {TargetOrigin.DECLARED,TargetOrigin.FORM}):
                 target_id,other = self.draft(target,source.procedure,source.operation_id+'/reference')
                 if not other.operations:
                     other.effects.add(CandidateEffect.REFERENCE)
@@ -238,22 +238,33 @@ class _Assembler:
                         self.drafts[left_id].diagnostics.add(diagnostic)
                         self.drafts[right_id].diagnostics.add(diagnostic)
                         break
+        traces: dict[tuple[str,str],list[DynamicFormOperation]] = {}
+        for op in self.bound.operations:
+            ref = op.target
+            if ref.creation_operation_id:
+                trace_key = (op.procedure.casefold(),ref.creation_operation_id)
+            elif ref.origin == TargetOrigin.DECLARED and ref.name is not None and isinstance(ref.name.value,str):
+                trace_key = (op.procedure.casefold(),ref.target_kind.value+'/'+ref.name.value.casefold())
+            else:
+                continue
+            traces.setdefault(trace_key,[]).append(op)
+        for trace in traces.values():
+            prior: list[DynamicFormOperation] = []
+            for op in sorted(trace,key=lambda op:op.source.start_offset):
+                for deleted in reversed(prior):
+                    comparisons += 1
+                    if comparisons > 100_000:
+                        raise _Failure('unsupported','conflict_comparison_budget')
+                    if compatible(deleted.conditions,op.conditions):
+                        reason = BindingReason.REPEATED_DELETE if op.operation_kind in deletes else BindingReason.DELETE_THEN_USE
+                        self.drafts[self.owner[op.operation_id]].diagnostics.add(BindingDiagnostic(reason,tuple(sorted((deleted.operation_id,op.operation_id)))))
+                        break
+                if op.operation_kind in deletes:
+                    prior.append(op)
         for draft in self.drafts.values():
             values: dict[PropertyKind,dict[tuple, list[str]]] = {}
             ordered = sorted((self.operations[ident] for ident in draft.operations),key=lambda op:op.source.start_offset)
-            prior_deletes: list[DynamicFormOperation] = []
             for op in ordered:
-                if prior_deletes:
-                    for deleted in reversed(prior_deletes):
-                        comparisons += 1
-                        if comparisons > 100_000:
-                            raise _Failure('unsupported','conflict_comparison_budget')
-                        if compatible(deleted.conditions,op.conditions):
-                            code = BindingReason.REPEATED_DELETE if op.operation_kind in deletes else BindingReason.DELETE_THEN_USE
-                            draft.diagnostics.add(BindingDiagnostic(code,tuple(sorted((deleted.operation_id,op.operation_id)))))
-                            break
-                if op.operation_kind in deletes:
-                    prior_deletes.append(op)
                 if op.property_kind is not None and op.value is not None:
                     value = op.value
                     tag = ('number' if type(value.value) in (int,float) else type(value.value).__name__)

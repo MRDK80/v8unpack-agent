@@ -264,6 +264,14 @@ def _procedure_proofs(proc: _Procedure, prepared: _PreparedDynamicModule,
                 for symbol_name, previous in tuple(symbols.items()):
                     if isinstance(previous.value,EntityReference) and previous.value.target_kind != TargetKind.FORM:
                         symbols[symbol_name] = replace(previous,alive=False)
+            elif action == 'namespace':
+                assert key is not None
+                deleted_kind = TargetKind(key)
+                invalid_names.update(name_key for name_key in dynamic_names if name_key[0] == deleted_kind)
+                invalid_names.update((deleted_kind,name) for name in declared[deleted_kind])
+                for symbol_name, previous in tuple(symbols.items()):
+                    if isinstance(previous.value,EntityReference) and previous.value.target_kind == deleted_kind:
+                        symbols[symbol_name] = replace(previous,alive=False)
             elif action == 'invalidate':
                 assert key is not None
                 old = symbols.get(key)
@@ -345,8 +353,12 @@ def _procedure_proofs(proc: _Procedure, prepared: _PreparedDynamicModule,
                 receiver and (form := entity(receiver,context,complete)) is not None and form.target_kind == TargetKind.FORM and form.resolution == R.EXACT)
             if known_collection_call and method == 'delete' and len(args) == 1:
                 deleted = entity(args[0],context,complete)
-                if deleted is not None and deleted.resolution == R.EXACT:
+                if deleted is not None and deleted.resolution == R.EXACT and deleted.target_kind == kind:
                     enqueue(body[call_end].end,'delete',None,deleted)
+                else:
+                    # Unknown delete target may alias any item in this collection.
+                    assert kind is not None
+                    enqueue(body[call_end].end,'namespace',kind.value,None)
             elif not (known_collection_call or known_lookup_call or known_type_call or known_attribute_call or known_native_call or known_registration or known_constructor):
                 opaque_calls.add(token.start)
                 for arg in args:

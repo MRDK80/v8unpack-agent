@@ -175,7 +175,10 @@ def candidate_id(relative_path: str, sha: str, procedure: str, reference: Entity
         raise ValueError('candidate requires snapshot SHA and procedure')
     if not isinstance(reference,EntityReference):
         raise TypeError('candidate requires EntityReference')
-    if reference.creation_operation_id:
+    identity: list[Any]
+    if reference.resolution != ResolutionStatus.EXACT and unknown_operation_id:
+        identity = ['unresolved', reference.target_kind.value, unknown_operation_id]
+    elif reference.creation_operation_id:
         identity = ['dynamic', reference.target_kind.value, reference.creation_operation_id,
                     reference.name.value if reference.target_kind.value == 'attribute' and reference.name else None]
     elif reference.origin == TargetOrigin.FORM:

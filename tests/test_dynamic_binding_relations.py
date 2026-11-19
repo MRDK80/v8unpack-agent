@@ -144,3 +144,15 @@ def test_binding_index_cannot_change_raw_procedure_context():
     changed=replace(result.bound,operations=(replace(result.bound.operations[0],procedure='Other'),))
     with pytest.raises(ValueError,match='preserve raw source context'):
         replace(result,bound=changed)
+
+
+def test_invalidated_alias_is_not_merged_into_proven_creation_candidate():
+    result=run('X=Items.Add("Demo",Type("FormField")); Helper(X); X.Width=8;')
+    creation, setter=result.bound.operations
+    assert setter.target.resolution == R.UNRESOLVED
+    assert setter.target.creation_operation_id == creation.operation_id
+    owners=[c for c in result.candidates if setter.operation_id in c.operation_ids]
+    assert len(owners) == 1
+    assert owners[0].reference.resolution == R.UNRESOLVED
+    assert creation.operation_id not in owners[0].operation_ids
+    assert any(d.reason == BindingReason.ALIAS_INVALIDATED for d in owners[0].diagnostics)

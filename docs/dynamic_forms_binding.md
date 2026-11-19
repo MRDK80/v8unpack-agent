@@ -52,7 +52,10 @@ Host передаёт только типизированные статичес
 Схема JSON — `dynamic_form_bindings/1`. Кандидат содержит reference, procedure,
 operation_ids, effect, resolution, conditional, condition_context_complete,
 relations, diagnostics и evidence_sources. ID зависит от снимка, процедуры
-и доказанного источника идентичности. Типы целей: form/element/command/attribute
+и доказанного источника идентичности. Неподтверждённая ссылка с указанием
+прежнего creation ID остаётся отдельным unresolved-кандидатом: provenance
+потерянного binding не доказывает текущую идентичность. Диагностика может
+связать такие свидетельства без объединения кандидатов. Типы целей: form/element/command/attribute
 и unknown. Declared-цель с effect=reference может не иметь собственных операций;
 это не динамическое создание.
 

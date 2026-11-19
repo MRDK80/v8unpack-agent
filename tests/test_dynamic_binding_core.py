@@ -105,7 +105,7 @@ def test_declared_lookup_after_delete_is_unresolved_and_raw_stays_exact():
     result=run('Items.Delete(Items.Demo); Items.Demo.Width=8;',declared_elements=('Demo',))
     assert result.raw.operations[-1].operation_resolution == R.EXACT
     assert result.bound.operations[-1].operation_resolution == R.UNRESOLVED
-    assert len(result.candidates) == 1
+    assert len(result.candidates) == 2
 
 
 def test_dynamic_name_collision_with_declared_name_never_chooses_new_site():
@@ -179,3 +179,14 @@ def test_preprocessor_elseif_only_chain_is_bounded_even_without_body_tokens():
     text='#If Flag Then\n'+''.join('#ElsIf Flag Then\n' for _ in range(65))+'#EndIf\n'
     with pytest.raises(DynamicAnalysisError, match='condition_context_budget'):
         bind_form_operations(text,PATH)
+
+
+@pytest.mark.parametrize('deletion',['Items.Delete(UnknownTarget);'])
+def test_unknown_delete_target_cannot_preserve_prior_entity_liveness(deletion):
+    result=run('X=Items.Add("Demo",Type("FormField")); '+deletion+' X.Width=8;')
+    assert result.bound.operations[-1].operation_resolution == R.UNRESOLVED
+
+
+def test_unknown_command_delete_does_not_invalidate_element_namespace():
+    result=run('X=Items.Add("Demo",Type("FormField")); Commands.Delete(UnknownCommand); X.Width=8;')
+    assert result.bound.operations[-1].operation_resolution == R.EXACT
