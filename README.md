@@ -49,7 +49,9 @@ Unicode и изображений описаны в статье
 
 ## Установка
 
-Версия этого документа — `0.4.0`. Установка актуального релиза из PyPI:
+Версия опубликованного релиза — `0.4.0`. Новые API динамических форм #211
+относятся к последующему срезу исходников и в этот релиз не входят; новый
+release в рамках эпика не выпускается. Установка релиза из PyPI:
 
 ```bash
 pip install v8unpack-agent
@@ -193,7 +195,7 @@ POSIX-пути, одинаковые на POSIX и NT.
 |---|---:|---|
 | `FormsIndex` | 2 | [`docs/pipeline.md`](docs/pipeline.md) |
 | `FormScanIndex` | 2 при чтении legacy 1 | [`docs/scan_forms.md`](docs/scan_forms.md) |
-| post-run report | 1 | [`docs/run_report.md`](docs/run_report.md) |
+| post-run report | 2 (legacy 1 без reference-resolution) | [`docs/run_report.md`](docs/run_report.md) |
 
 ## Публичная поверхность
 
@@ -299,6 +301,12 @@ POSIX-пути, одинаковые на POSIX и NT.
 - [Аудит документации](docs/documentation_audit_issue245.md)
 
 ## Известные ограничения
+
+- Динамика управляемых форм — opt-in (`--dynamic-analysis`): восемь видов
+  операций и 13 свойств, source-факты с отдельными статусами, без гарантии
+  runtime-дерева. [Матрица и измерения](docs/dynamic_forms_coverage.md)
+  показывают качество анализа и отложенный остаток. Data flow #216
+  отложен по quality gate; большие/неполные declarations — follow-up #562.
 
 - Обычные (неуправляемые) формы хранят разметку в бинарном виде и частично
   не читаются; такие формы получают `unknown` и исключаются из знаменателя
