@@ -8,6 +8,7 @@ from __future__ import annotations
 import bisect
 import hashlib
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 
@@ -56,10 +57,26 @@ class DynamicAnalysisError(ValueError):
         self.reason = reason
 
 
+def _validate_dynamic_input(text: str, relative_path: str, declared_elements: tuple[str, ...],
+                            declared_commands: tuple[str, ...], max_chars: int, *,
+                            declared_attributes: tuple[str, ...] = ()) -> None:
+    if not isinstance(text, str):
+        raise TypeError('text must be str')
+    validate_relative_module_path(relative_path)
+    for names in (declared_elements, declared_commands, declared_attributes):
+        if not isinstance(names, tuple) or any(not isinstance(n, str) or not n for n in names):
+            raise TypeError('declared names require a tuple of nonempty strings')
+    if type(max_chars) is not int or max_chars < 1:
+        raise ValueError('max_chars must be a positive integer')
+    if len(text) > max_chars:
+        raise DynamicAnalysisError('unsupported', 'character_budget')
+
+
 def detect_form_operations(
     text: str, relative_path: str, *,
     declared_elements: tuple[str, ...] = (),
     declared_commands: tuple[str, ...] = (),
+    declared_attributes: tuple[str, ...] = (),
     max_chars: int = 2_000_000,
 ) -> DynamicOperationIndex:
     """Analyze an explicitly identified form module; never execute its BSL.
@@ -67,19 +84,11 @@ def detect_form_operations(
     Inventory names are assertions by the caller, not inferred from spelling.
     Failures raise DynamicAnalysisError with a technical reason and no source.
     """
-    if not isinstance(text, str):
-        raise TypeError('text must be str')
-    validate_relative_module_path(relative_path)
-    for names in (declared_elements, declared_commands):
-        if not isinstance(names, tuple) or any(not isinstance(n, str) or not n for n in names):
-            raise TypeError('declared names require a tuple of nonempty strings')
-    if type(max_chars) is not int or max_chars < 1:
-        raise ValueError('max_chars must be a positive integer')
-    if len(text) > max_chars:
-        raise DynamicAnalysisError('unsupported', 'character_budget')
+    _validate_dynamic_input(text, relative_path, declared_elements, declared_commands, max_chars,
+                            declared_attributes=declared_attributes)
     try:
         return _detect(text, relative_path, declared_elements=declared_elements,
-                       declared_commands=declared_commands)
+                       declared_commands=declared_commands, declared_attributes=declared_attributes)
     except _Failure as exc:
         raise DynamicAnalysisError(exc.status, exc.reason) from None
     except UnicodeError:
@@ -373,6 +382,8 @@ def _branch_contexts(tokens: list[_Token], directives: tuple[_Directive, ...], s
         return ConditionReference(ident, BranchKind.THEN if kind != ConditionKind.LOOP else BranchKind.BODY)
 
     def context() -> tuple[ConditionReference, ...]:
+        if sum(len(block.refs) for block in preprocessor + runtime) > _MAX_NESTING:
+            raise _Failure('unsupported', 'condition_context_budget')
         return tuple(ref for block in preprocessor + runtime for ref in block.refs)
 
     def otherwise(blocks: list[_Block]) -> _Block:
@@ -403,6 +414,8 @@ def _branch_contexts(tokens: list[_Token], directives: tuple[_Directive, ...], s
     for position, event_kind, index, item in events:
         if len(runtime) + len(preprocessor) > _MAX_NESTING:
             raise _Failure('unsupported', 'nesting_budget')
+        if sum(len(block.refs) for block in preprocessor + runtime) > _MAX_NESTING:
+            raise _Failure('unsupported','condition_context_budget')
         if event_kind == 0:
             assert isinstance(item, _Directive)
             word = item.word
@@ -455,7 +468,11 @@ def _branch_contexts(tokens: list[_Token], directives: tuple[_Directive, ...], s
             if not runtime or runtime[-1].kind != ConditionKind.LOOP:
                 raise _Failure('incomplete', 'unexpected_loop_end')
             runtime.pop()
-        elif word in {'попытка', 'try', 'исключение', 'except', 'перейти', 'goto', 'выполнить', 'execute'}:
+        elif word in {'перейти', 'goto', 'выполнить', 'execute'} and (index == 0 or not _symbol(tokens[index-1], '.')):
+            # These constructs can revisit source sites or replace lexical bindings.
+            # Marking only following sites incomplete would retain false exact facts.
+            raise _Failure('unsupported', 'dynamic_control_flow')
+        elif word in {'попытка', 'try', 'исключение', 'except'}:
             complete = False
         elif word in _END:
             if runtime:
@@ -480,37 +497,83 @@ _METHODS = {'добавить': 'add', 'add': 'add', 'вставить': 'insert
 _STATEMENT_END = {'иначе', 'else', 'иначеесли', 'elsif', 'конецесли', 'endif', 'конеццикла', 'enddo', 'конецпроцедуры', 'endprocedure', 'конецфункции', 'endfunction', 'исключение', 'except', 'конецпопытки', 'endtry'}
 
 
+_BASE_FORM_PROPERTIES = frozenset({PropertyKind.TITLE, PropertyKind.READ_ONLY})
+
+
 _PROPERTIES = {prop.value: prop for prop in PropertyKind}
 
 
 _PROPERTIES.update(dict(zip(('visible', 'enabled', 'title', 'readonly', 'datapath', 'commandname', 'type', 'parent', 'currentpage', 'currentrow', 'tooltip', 'width', 'height'), PropertyKind)))
 
 
-def _detect(text: str, relative_path: str, *, declared_elements: tuple[str, ...] = (), declared_commands: tuple[str, ...] = ()) -> DynamicOperationIndex:
+@dataclass(frozen=True)
+class _PreparedDynamicModule:
+    snapshot: _Snapshot
+    tokens: tuple[_Token, ...]
+    directives: tuple[_Directive, ...]
+    procedures: tuple[_Procedure, ...]
+    module_bindings: frozenset[str]
+    procedure_names: frozenset[str]
+    contexts: Mapping[int, tuple[tuple[ConditionReference, ...], bool]]
+    conditions: tuple[DynamicCondition, ...]
+
+
+def _prepare_dynamic_module(text: str, relative_path: str) -> _PreparedDynamicModule:
     snapshot = _Snapshot(text, relative_path)
     tokens, directives = _dynamic_tokens(text)
     procs, module_bindings, procedure_names = _procedures(tokens)
     contexts, conditions = _branch_contexts(tokens, directives, snapshot)
+    return _PreparedDynamicModule(snapshot, tuple(tokens), directives, procs,
+                                  module_bindings, procedure_names, contexts, conditions)
+
+
+def _detect(text: str, relative_path: str, *, declared_elements: tuple[str, ...] = (),
+            declared_commands: tuple[str, ...] = (), declared_attributes: tuple[str, ...] = (),
+            prepared: _PreparedDynamicModule | None = None,
+            receiver_proofs: Mapping[tuple[int, int], EntityReference | TargetKind] | None = None) -> DynamicOperationIndex:
+    if prepared is None:
+        prepared = _prepare_dynamic_module(text, relative_path)
+    if prepared.snapshot.relative_path != relative_path or prepared.snapshot.text != text:
+        raise ValueError('prepared module source mismatch')
+    snapshot = prepared.snapshot
+    procs, module_bindings, procedure_names = prepared.procedures, prepared.module_bindings, prepared.procedure_names
+    contexts, conditions = prepared.contexts, prepared.conditions
+
+    def proof(receiver: tuple[_Token, ...]) -> EntityReference | TargetKind | None:
+        if receiver and receiver_proofs is not None:
+            return receiver_proofs.get((receiver[0].start, receiver[-1].end))
+        return None
+
     operations: list[DynamicFormOperation] = []
+    form_attributes = frozenset(n.casefold() for n in declared_attributes)
     inventory = {TargetKind.ELEMENT: {n.casefold() for n in declared_elements},
                  TargetKind.COMMAND: {n.casefold() for n in declared_commands}}
 
     for proc in procs:
         body = proc.body
-        shadowed = module_bindings | proc.shadowed
+        shadowed = module_bindings | proc.shadowed | form_attributes
 
         def form_receiver(receiver: tuple[_Token, ...], shadowed: frozenset[str] = shadowed) -> bool:
+            bound = proof(receiver)
+            if isinstance(bound, EntityReference) and bound.target_kind == TargetKind.FORM:
+                return bound.resolution == R.EXACT
             return (len(receiver) == 1 and _word(receiver[0]) in _SELF
                     and _word(receiver[0]) not in shadowed)
 
         def collection(receiver: tuple[_Token, ...], shadowed: frozenset[str] = shadowed) -> tuple[TargetKind | None, bool]:
+            bound = proof(receiver)
+            if isinstance(bound, TargetKind) and bound in {TargetKind.ELEMENT, TargetKind.COMMAND}:
+                return bound, True
             if len(receiver) == 1 and _word(receiver[0]) in _COLLECTIONS:
                 return _COLLECTIONS[_word(receiver[0])], _word(receiver[0]) not in shadowed
             if len(receiver) == 3 and receiver[1].value == '.' and form_receiver(receiver[:1]) and _word(receiver[2]) in _COLLECTIONS:
-                return _COLLECTIONS[_word(receiver[2])], True
+                return _COLLECTIONS[_word(receiver[2])], _word(receiver[2]) not in form_attributes
             return None, False
 
         def entity(receiver: tuple[_Token, ...]) -> EntityReference:
+            bound = proof(receiver)
+            if isinstance(bound, EntityReference):
+                return bound
             if form_receiver(receiver):
                 return EntityReference(TargetKind.FORM, TargetOrigin.FORM, R.EXACT)
             if len(receiver) >= 3 and receiver[-2].value == '.' and receiver[-1].kind == 'word':
@@ -525,7 +588,7 @@ def _detect(text: str, relative_path: str, *, declared_elements: tuple[str, ...]
         def argument(name: str, expr: tuple[_Token, ...], shadowed: frozenset[str] = shadowed) -> OperationArgument:
             if name in {'parent', 'before'} and expr:
                 ref = entity(expr)
-                if ref.resolution == R.EXACT:
+                if ref.resolution == R.EXACT or isinstance(proof(expr), EntityReference):
                     return OperationArgument(name, ref)
             return OperationArgument(name, snapshot.value(expr, type_builtin=not ({'тип', 'type'} & (shadowed | procedure_names))))
 
@@ -633,7 +696,7 @@ def _detect(text: str, relative_path: str, *, declared_elements: tuple[str, ...]
                                   R.EXACT if all(a.value.resolution == R.EXACT for a in values) else R.PARTIAL)
                     operations.append(DynamicFormOperation(operation_id(source, op_kind), op_kind, source, proc.name,
                         target, resolution, values, conditions=refs, condition_context_complete=complete,
-                        provenance=('direct_form_module_syntax',)))
+                        provenance=('direct_form_module_syntax',) + (('local_binding_analysis',) if receiver_proofs is not None else ())))
                 # Continue inside other calls to find genuinely nested direct calls.
                 i = chain_end + 1
                 continue
@@ -653,9 +716,13 @@ def _detect(text: str, relative_path: str, *, declared_elements: tuple[str, ...]
                     value = snapshot.value(body[chain_end + 1:end])
                     source = snapshot.source(token.start, body[end - 1].end)
                     resolution = value.resolution if target.resolution == R.EXACT else R.UNRESOLVED
+                    form_property_unproven = (target.target_kind == TargetKind.FORM and
+                        (_PROPERTIES[_word(chain[-1])] not in _BASE_FORM_PROPERTIES or _word(chain[-1]) in form_attributes))
+                    if form_property_unproven:
+                        resolution = R.UNRESOLVED
                     operations.append(DynamicFormOperation(operation_id(source, OperationKind.PROPERTY_SET), OperationKind.PROPERTY_SET,
                         source, proc.name, target, resolution, property_kind=_PROPERTIES[_word(chain[-1])], value=value,
-                        conditions=refs, condition_context_complete=complete, provenance=('direct_form_module_syntax',)))
+                        conditions=refs, condition_context_complete=complete, provenance=('direct_form_module_syntax',) + (('local_binding_analysis',) if receiver_proofs is not None else ()) + (('unproven_form_property',) if form_property_unproven else ())))
                     i = end + 1 if end < len(body) and _symbol(body[end], ';') else end
                     continue
             i = chain_end
