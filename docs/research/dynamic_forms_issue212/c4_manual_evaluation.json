@@ -1,0 +1,89 @@
+{
+  "schema": "issue212-c4-evaluation/1",
+  "fully_reviewed_modules": 8,
+  "gold_operations": 101,
+  "gold_mvp_scope": 65,
+  "comparisons": {
+    "broad": {
+      "unweighted": {
+        "tp": 101,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "stratum_weighted_excluding_supplementary_failures": {
+        "tp": 9937.0,
+        "fp": 0.0,
+        "fn": 0.0,
+        "precision": 1.0,
+        "recall": 1.0
+      }
+    },
+    "receiver_filtered": {
+      "unweighted": {
+        "tp": 96,
+        "fp": 0,
+        "fn": 5,
+        "precision": 1.0,
+        "recall": 0.9504950495049505
+      },
+      "stratum_weighted_excluding_supplementary_failures": {
+        "tp": 7848.0,
+        "fp": 0.0,
+        "fn": 2089.0,
+        "precision": 1.0,
+        "recall": 0.789775586193016
+      }
+    },
+    "exact": {
+      "unweighted": {
+        "tp": 46,
+        "fp": 0,
+        "fn": 55,
+        "precision": 1.0,
+        "recall": 0.45544554455445546
+      },
+      "stratum_weighted_excluding_supplementary_failures": {
+        "tp": 0.0,
+        "fp": 0.0,
+        "fn": 9937.0,
+        "precision": null,
+        "recall": 0.0
+      }
+    },
+    "mvp_kind_property_only": {
+      "unweighted": {
+        "tp": 65,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "stratum_weighted_excluding_supplementary_failures": {
+        "tp": 9937.0,
+        "fp": 0.0,
+        "fn": 0.0,
+        "precision": 1.0,
+        "recall": 1.0
+      }
+    },
+    "mvp_kind_property_receiver_filtered": {
+      "unweighted": {
+        "tp": 60,
+        "fp": 0,
+        "fn": 5,
+        "precision": 1.0,
+        "recall": 0.9230769230769231
+      },
+      "stratum_weighted_excluding_supplementary_failures": {
+        "tp": 7848.0,
+        "fp": 0.0,
+        "fn": 2089.0,
+        "precision": 1.0,
+        "recall": 0.789775586193016
+      }
+    }
+  },
+  "limitations": "One reviewer; eight full modules, two per stratum and supplemental lexer failures. MVP scope filter is not implementation of #214/#215. No corpus-wide recall guarantee."
+}

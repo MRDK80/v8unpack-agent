@@ -1,0 +1,426 @@
+[
+  {
+    "configuration": "C1",
+    "kind": "element_add",
+    "count_basis": "retained_candidates_including_unresolved",
+    "count": 80,
+    "raw_denominator": 6835,
+    "fraction_of_raw": 0.011704462326261888,
+    "probe_resolution": {
+      "partial": 80
+    },
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C1",
+    "kind": "element_insert",
+    "count_basis": "retained_candidates_including_unresolved",
+    "count": 0,
+    "raw_denominator": 6835,
+    "fraction_of_raw": 0.0,
+    "probe_resolution": {},
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C1",
+    "kind": "element_delete",
+    "count_basis": "retained_candidates_including_unresolved",
+    "count": 2,
+    "raw_denominator": 6835,
+    "fraction_of_raw": 0.0002926115581565472,
+    "probe_resolution": {
+      "partial": 2
+    },
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C1",
+    "kind": "element_move",
+    "count_basis": "retained_candidates_including_unresolved",
+    "count": 2,
+    "raw_denominator": 6835,
+    "fraction_of_raw": 0.0002926115581565472,
+    "probe_resolution": {
+      "partial": 2
+    },
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C1",
+    "kind": "attributes_change",
+    "count_basis": "retained_candidates_including_unresolved",
+    "count": 13,
+    "raw_denominator": 6835,
+    "fraction_of_raw": 0.0019019751280175566,
+    "probe_resolution": {
+      "partial": 13
+    },
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C1",
+    "kind": "command_add",
+    "count_basis": "retained_candidates_including_unresolved",
+    "count": 23,
+    "raw_denominator": 6835,
+    "fraction_of_raw": 0.003365032918800293,
+    "probe_resolution": {
+      "partial": 23
+    },
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C1",
+    "kind": "command_delete",
+    "count_basis": "retained_candidates_including_unresolved",
+    "count": 0,
+    "raw_denominator": 6835,
+    "fraction_of_raw": 0.0,
+    "probe_resolution": {},
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C1",
+    "kind": "property_set",
+    "count_basis": "retained_candidates_including_unresolved",
+    "count": 6674,
+    "raw_denominator": 6835,
+    "fraction_of_raw": 0.976444769568398,
+    "probe_resolution": {
+      "exact": 1899,
+      "partial": 4125,
+      "unresolved": 650
+    },
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C1",
+    "kind": "event_handler_set",
+    "count_basis": "retained_candidates_including_unresolved",
+    "count": 12,
+    "raw_denominator": 6835,
+    "fraction_of_raw": 0.0017556693489392831,
+    "probe_resolution": {
+      "partial": 12
+    },
+    "recommended_stage": "deferred"
+  },
+  {
+    "configuration": "C2",
+    "kind": "element_add",
+    "count_basis": "retained_candidates_including_unresolved",
+    "count": 34,
+    "raw_denominator": 2481,
+    "fraction_of_raw": 0.013704151551793631,
+    "probe_resolution": {
+      "partial": 34
+    },
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C2",
+    "kind": "element_insert",
+    "count_basis": "retained_candidates_including_unresolved",
+    "count": 0,
+    "raw_denominator": 2481,
+    "fraction_of_raw": 0.0,
+    "probe_resolution": {},
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C2",
+    "kind": "element_delete",
+    "count_basis": "retained_candidates_including_unresolved",
+    "count": 0,
+    "raw_denominator": 2481,
+    "fraction_of_raw": 0.0,
+    "probe_resolution": {},
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C2",
+    "kind": "element_move",
+    "count_basis": "retained_candidates_including_unresolved",
+    "count": 0,
+    "raw_denominator": 2481,
+    "fraction_of_raw": 0.0,
+    "probe_resolution": {},
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C2",
+    "kind": "attributes_change",
+    "count_basis": "retained_candidates_including_unresolved",
+    "count": 5,
+    "raw_denominator": 2481,
+    "fraction_of_raw": 0.002015316404675534,
+    "probe_resolution": {
+      "partial": 5
+    },
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C2",
+    "kind": "command_add",
+    "count_basis": "retained_candidates_including_unresolved",
+    "count": 11,
+    "raw_denominator": 2481,
+    "fraction_of_raw": 0.004433696090286175,
+    "probe_resolution": {
+      "partial": 11
+    },
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C2",
+    "kind": "command_delete",
+    "count_basis": "retained_candidates_including_unresolved",
+    "count": 0,
+    "raw_denominator": 2481,
+    "fraction_of_raw": 0.0,
+    "probe_resolution": {},
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C2",
+    "kind": "property_set",
+    "count_basis": "retained_candidates_including_unresolved",
+    "count": 2405,
+    "raw_denominator": 2481,
+    "fraction_of_raw": 0.9693671906489318,
+    "probe_resolution": {
+      "exact": 708,
+      "partial": 1522,
+      "unresolved": 175
+    },
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C2",
+    "kind": "event_handler_set",
+    "count_basis": "retained_candidates_including_unresolved",
+    "count": 5,
+    "raw_denominator": 2481,
+    "fraction_of_raw": 0.002015316404675534,
+    "probe_resolution": {
+      "partial": 5
+    },
+    "recommended_stage": "deferred"
+  },
+  {
+    "configuration": "C3",
+    "kind": "element_add",
+    "count_basis": "retained_candidates_including_unresolved",
+    "count": 15,
+    "raw_denominator": 390,
+    "fraction_of_raw": 0.038461538461538464,
+    "probe_resolution": {
+      "partial": 15
+    },
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C3",
+    "kind": "element_insert",
+    "count_basis": "retained_candidates_including_unresolved",
+    "count": 0,
+    "raw_denominator": 390,
+    "fraction_of_raw": 0.0,
+    "probe_resolution": {},
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C3",
+    "kind": "element_delete",
+    "count_basis": "retained_candidates_including_unresolved",
+    "count": 4,
+    "raw_denominator": 390,
+    "fraction_of_raw": 0.010256410256410256,
+    "probe_resolution": {
+      "partial": 4
+    },
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C3",
+    "kind": "element_move",
+    "count_basis": "retained_candidates_including_unresolved",
+    "count": 0,
+    "raw_denominator": 390,
+    "fraction_of_raw": 0.0,
+    "probe_resolution": {},
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C3",
+    "kind": "attributes_change",
+    "count_basis": "retained_candidates_including_unresolved",
+    "count": 14,
+    "raw_denominator": 390,
+    "fraction_of_raw": 0.035897435897435895,
+    "probe_resolution": {
+      "partial": 14
+    },
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C3",
+    "kind": "command_add",
+    "count_basis": "retained_candidates_including_unresolved",
+    "count": 0,
+    "raw_denominator": 390,
+    "fraction_of_raw": 0.0,
+    "probe_resolution": {},
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C3",
+    "kind": "command_delete",
+    "count_basis": "retained_candidates_including_unresolved",
+    "count": 0,
+    "raw_denominator": 390,
+    "fraction_of_raw": 0.0,
+    "probe_resolution": {},
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C3",
+    "kind": "property_set",
+    "count_basis": "retained_candidates_including_unresolved",
+    "count": 344,
+    "raw_denominator": 390,
+    "fraction_of_raw": 0.882051282051282,
+    "probe_resolution": {
+      "exact": 94,
+      "partial": 235,
+      "unresolved": 15
+    },
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C3",
+    "kind": "event_handler_set",
+    "count_basis": "retained_candidates_including_unresolved",
+    "count": 3,
+    "raw_denominator": 390,
+    "fraction_of_raw": 0.007692307692307693,
+    "probe_resolution": {
+      "partial": 3
+    },
+    "recommended_stage": "deferred"
+  },
+  {
+    "configuration": "C4",
+    "kind": "attributes_change",
+    "count_basis": "raw_candidates",
+    "count": 153,
+    "raw_denominator": 85242,
+    "fraction_of_raw": 0.0017948898430351235,
+    "decisions": {
+      "operation": 153
+    },
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C4",
+    "kind": "command_add",
+    "count_basis": "raw_candidates",
+    "count": 157,
+    "raw_denominator": 85242,
+    "fraction_of_raw": 0.0018418150676896366,
+    "decisions": {
+      "operation": 157
+    },
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C4",
+    "kind": "command_delete",
+    "count_basis": "raw_candidates",
+    "count": 26,
+    "raw_denominator": 85242,
+    "fraction_of_raw": 0.00030501396025433474,
+    "decisions": {
+      "operation": 26
+    },
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C4",
+    "kind": "element_add",
+    "count_basis": "raw_candidates",
+    "count": 1770,
+    "raw_denominator": 85242,
+    "fraction_of_raw": 0.020764411909622017,
+    "decisions": {
+      "operation": 1768,
+      "reject": 1,
+      "unresolved": 1
+    },
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C4",
+    "kind": "element_delete",
+    "count_basis": "raw_candidates",
+    "count": 201,
+    "raw_denominator": 85242,
+    "fraction_of_raw": 0.00235799253888928,
+    "decisions": {
+      "operation": 198,
+      "unresolved": 3
+    },
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C4",
+    "kind": "element_insert",
+    "count_basis": "raw_candidates",
+    "count": 67,
+    "raw_denominator": 85242,
+    "fraction_of_raw": 0.0007859975129630933,
+    "decisions": {
+      "operation": 67
+    },
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C4",
+    "kind": "element_move",
+    "count_basis": "raw_candidates",
+    "count": 1080,
+    "raw_denominator": 85242,
+    "fraction_of_raw": 0.012669810656718518,
+    "decisions": {
+      "operation": 1079,
+      "unresolved": 1
+    },
+    "recommended_stage": "214_215"
+  },
+  {
+    "configuration": "C4",
+    "kind": "event_handler_set",
+    "count_basis": "raw_candidates",
+    "count": 717,
+    "raw_denominator": 85242,
+    "fraction_of_raw": 0.008411346519321461,
+    "decisions": {
+      "operation": 717
+    },
+    "recommended_stage": "deferred"
+  },
+  {
+    "configuration": "C4",
+    "kind": "property_set",
+    "count_basis": "raw_candidates",
+    "count": 81071,
+    "raw_denominator": 85242,
+    "fraction_of_raw": 0.9510687219915065,
+    "decisions": {
+      "operation": 67649,
+      "reject": 324,
+      "unresolved": 13098
+    },
+    "recommended_stage": "214_215"
+  }
+]
