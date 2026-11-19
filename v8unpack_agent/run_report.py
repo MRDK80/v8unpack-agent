@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from v8unpack_agent.common_modules import CommonModuleReadStatus
+    from v8unpack_agent.dynamic_forms_context import DynamicAnalysisSummary
     from v8unpack_agent.elem_parser import UnindexedReason
     from v8unpack_agent.modules import ModuleEntry, ModuleReadStatus
     from v8unpack_agent.object_decoder import DecodeError
@@ -251,6 +252,7 @@ class PostRunReport:
     fatal_error: RunFatalError | None = None
     modules: ModuleStatusTable | None = None
     reference_resolution: ReferenceResolutionSummary | None = None
+    dynamic_analysis: DynamicAnalysisSummary | None = None
 
     def __post_init__(self) -> None:
         # issue #288: схема 2 добавляет summary.reference_resolution;
@@ -293,6 +295,10 @@ class PostRunReport:
             )
         if self.modules is not None:
             _validate_module_table(self.modules, ordered)
+        if self.dynamic_analysis is not None:
+            from v8unpack_agent.dynamic_forms_context import DynamicAnalysisSummary
+            if not isinstance(self.dynamic_analysis, DynamicAnalysisSummary):
+                raise RunReportValidationError('dynamic_analysis requires typed counters')
 
     def to_dict(self) -> dict[str, object]:
         summary: dict[str, object] = dict(self.summary.to_dict())
@@ -300,6 +306,8 @@ class PostRunReport:
             summary["modules"] = self.modules.to_dict()
         if self.reference_resolution is not None:
             summary["reference_resolution"] = self.reference_resolution.to_dict()
+        if self.dynamic_analysis is not None:
+            summary["dynamic_analysis"] = self.dynamic_analysis.to_dict()
         return {
             "schema_version": self.schema_version,
             "run": {

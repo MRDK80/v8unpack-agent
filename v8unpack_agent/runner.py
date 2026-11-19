@@ -64,7 +64,7 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath, PureWindowsPath
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from v8unpack_agent._safe_paths import sanitize_diagnostic
 from v8unpack_agent.command_modules import scan_command_modules
@@ -168,6 +168,10 @@ _COMMON_MODULE_CONTAINER = "CommonModule"
 _COMMON_MODULE_BSL_NAME = "CommonModule.obj.bsl"
 
 
+if TYPE_CHECKING:
+    from v8unpack_agent.dynamic_forms_context import _DynamicAnalysisCollector
+
+
 @dataclass(frozen=True)
 class RunOptions:
     """Параметры одного прогона пайплайна.
@@ -213,6 +217,7 @@ class RunOptions:
     include_module_index: bool = False
     module_groups: tuple[str, ...] | None = None
     representation: Literal["legacy", "framed"] = "legacy"
+    include_dynamic_analysis: bool = False
 
     def __post_init__(self) -> None:
         if self.representation not in ("legacy", "framed"):
@@ -308,6 +313,10 @@ def _run_pipeline(options: RunOptions, started_at: str) -> RunOutcome:
         ReferenceResolutionCollector() if options.include_reference_resolution else None
     )
     resolution_summary: ReferenceResolutionSummary | None = None
+    dynamic_collector = None
+    if options.include_dynamic_analysis:
+        from v8unpack_agent.dynamic_forms_context import _DynamicAnalysisCollector
+        dynamic_collector = _DynamicAnalysisCollector()
 
     try:
         index = scan_forms(
@@ -320,9 +329,14 @@ def _run_pipeline(options: RunOptions, started_at: str) -> RunOutcome:
     else:
         scan_warnings.extend(sanitize_diagnostic(w) for w in index.scan_warnings)
         for entry in index.forms:
-            result, fragment_chars = _process_form(
-                entry, export_root, index, options, resolution
-            )
+            if dynamic_collector is None:
+                result, fragment_chars = _process_form(
+                    entry, export_root, index, options, resolution
+                )
+            else:
+                result, fragment_chars = _process_form(
+                    entry, export_root, index, options, resolution, dynamic_collector
+                )
             objects.append(result)
             prompt_chars += fragment_chars
 
@@ -369,6 +383,7 @@ def _run_pipeline(options: RunOptions, started_at: str) -> RunOutcome:
         fatal_error=fatal,
         modules=module_table,
         reference_resolution=resolution_summary,
+        dynamic_analysis=None if dynamic_collector is None else dynamic_collector.summarize(),
     )
     return RunOutcome(
         report=report,
@@ -383,17 +398,24 @@ def _process_form(
     index: FormScanIndex,
     options: RunOptions,
     resolution: ReferenceResolutionCollector | None = None,
+    dynamic_collector: _DynamicAnalysisCollector | None = None,
 ) -> tuple[ObjectRunResult, int]:
     """Обработать одну форму и вернуть результат с длиной фрагмента."""
     object_id = _fallback_form_id(entry, export_root)
 
     try:
-        context = build_form_context(
-            entry,
-            export_root,
-            type_resolver=index.resolve_reference_type,
-        )
+        if options.include_dynamic_analysis:
+            context = build_form_context(
+                entry, export_root, type_resolver=index.resolve_reference_type,
+                include_dynamic_analysis=True,
+            )
+        else:
+            context = build_form_context(
+                entry, export_root, type_resolver=index.resolve_reference_type,
+            )
     except Exception as exc:  # noqa: BLE001
+        if dynamic_collector is not None:
+            dynamic_collector.add(object_id, None)
         return (
             _object_result(
                 object_id,
@@ -406,6 +428,8 @@ def _process_form(
             0,
         )
 
+    if dynamic_collector is not None:
+        dynamic_collector.add(object_id, getattr(context, "dynamic_analysis", None))
     object_id = _context_form_id(context, object_id)
     if resolution is not None:
         resolution.add_attributes(getattr(context, "object_attributes", None))
@@ -455,6 +479,15 @@ def _process_form(
                 stage=STAGE_SCAN,
                 reason_code=_scan_reason_code(warnings[0]),
             ),
+            fragment_chars,
+        )
+
+    analysis = getattr(context, 'dynamic_analysis', None)
+    if options.include_dynamic_analysis and (analysis is None or analysis.status != 'complete'):
+        status = 'failed' if analysis is None else analysis.status
+        return (
+            _object_result(object_id, RunObjectKind.FORM, RunObjectStatus.PARTIAL,
+                           stage='dynamic_analysis', reason_code='dynamic_analysis_' + status),
             fragment_chars,
         )
 

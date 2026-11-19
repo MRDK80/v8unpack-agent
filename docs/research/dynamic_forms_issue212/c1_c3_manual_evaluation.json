@@ -1,0 +1,149 @@
+{
+  "configurations": {
+    "C1": {
+      "broad": {
+        "fn": 3,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.967032967032967,
+        "tp": 88
+      },
+      "exact": {
+        "fn": 47,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.4835164835164835,
+        "tp": 44
+      },
+      "fully_reviewed_modules": 8,
+      "gold_operations": 91,
+      "receiver_filtered": {
+        "fn": 16,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.8241758241758241,
+        "tp": 75
+      },
+      "stratum_weighted_excluding_supplementary_failures": {
+        "broad": {
+          "fn": 706.5,
+          "fp": 0.0,
+          "precision": 1.0,
+          "recall": 0.9559401309635173,
+          "tp": 15328.5
+        },
+        "exact": {
+          "fn": 6144.0,
+          "fp": 0.0,
+          "precision": 1.0,
+          "recall": 0.6168381665107577,
+          "tp": 9891.0
+        },
+        "receiver_filtered": {
+          "fn": 2140.5,
+          "fp": 0.0,
+          "precision": 1.0,
+          "recall": 0.866510757717493,
+          "tp": 13894.5
+        }
+      }
+    },
+    "C2": {
+      "broad": {
+        "fn": 4,
+        "fp": 4,
+        "precision": 0.8823529411764706,
+        "recall": 0.8823529411764706,
+        "tp": 30
+      },
+      "exact": {
+        "fn": 29,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.14705882352941177,
+        "tp": 5
+      },
+      "fully_reviewed_modules": 8,
+      "gold_operations": 34,
+      "receiver_filtered": {
+        "fn": 15,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.5588235294117647,
+        "tp": 19
+      },
+      "stratum_weighted_excluding_supplementary_failures": {
+        "broad": {
+          "fn": 83.5,
+          "fp": 2.5,
+          "precision": 0.9969788519637462,
+          "recall": 0.9080902586681343,
+          "tp": 825.0
+        },
+        "exact": {
+          "fn": 827.5,
+          "fp": 0.0,
+          "precision": 1.0,
+          "recall": 0.089157952669235,
+          "tp": 81.0
+        },
+        "receiver_filtered": {
+          "fn": 503.5,
+          "fp": 0.0,
+          "precision": 1.0,
+          "recall": 0.44578976334617504,
+          "tp": 405.0
+        }
+      }
+    },
+    "C3": {
+      "broad": {
+        "fn": 7,
+        "fp": 6,
+        "precision": 0.9689119170984456,
+        "recall": 0.9639175257731959,
+        "tp": 187
+      },
+      "exact": {
+        "fn": 145,
+        "fp": 1,
+        "precision": 0.98,
+        "recall": 0.25257731958762886,
+        "tp": 49
+      },
+      "fully_reviewed_modules": 7,
+      "gold_operations": 194,
+      "receiver_filtered": {
+        "fn": 13,
+        "fp": 3,
+        "precision": 0.9836956521739131,
+        "recall": 0.9329896907216495,
+        "tp": 181
+      },
+      "stratum_weighted_excluding_supplementary_failures": {
+        "broad": {
+          "fn": 15.0,
+          "fp": 0.0,
+          "precision": 1.0,
+          "recall": 0.9723247232472325,
+          "tp": 527.0
+        },
+        "exact": {
+          "fn": 384.5,
+          "fp": 0.0,
+          "precision": 1.0,
+          "recall": 0.29059040590405905,
+          "tp": 157.5
+        },
+        "receiver_filtered": {
+          "fn": 17.0,
+          "fp": 0.0,
+          "precision": 1.0,
+          "recall": 0.9686346863468634,
+          "tp": 525.0
+        }
+      }
+    }
+  },
+  "schema": "issue212-manual-evaluation/1"
+}

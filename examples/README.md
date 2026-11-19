@@ -364,3 +364,13 @@ API (#253): он не читает выгрузку — агрегаты ему 
 Синтетический режим `unindexed_forms_report.py` использует публичный
 `PLATFORM_DYNAMIC_SOURCE_MARKER` пакета и детерминированно включает один случай
 `tabular_field_platform_dynamic`. Реальные выгрузки, UUID и пути не требуются.
+
+
+## Динамические операции формы (#218)
+
+`python -m examples.dynamic_forms_demo` из корня checkout с установленным
+пакетом демонстрирует synthetic declared-структуру, условное создание
+с exact-ссылкой и partial-именем, exact setter и unresolved receiver.
+Вывод — `framed`; модели и конфигурация в runtime не запускаются.
+Пример использует исходники после #211, а не опубликованный v0.4.0.
+[Контракт и ограничения](../docs/dynamic_forms_coverage.md).

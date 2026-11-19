@@ -188,19 +188,23 @@ def test_metadata_keys_and_relations_format_are_unchanged(tmp_path):
     assert isinstance(context.resolved_relations, list)
 
 
-def test_build_form_context_signature_is_unchanged():
+def test_build_form_context_keeps_existing_parameters_and_adds_optin_keyword():
     signature = inspect.signature(build_form_context)
 
     assert list(signature.parameters) == [
         "form_entry",
         "unpacked_root",
         "type_resolver",
+        "include_dynamic_analysis",
     ]
 
     type_resolver = signature.parameters["type_resolver"]
 
     assert type_resolver.kind is inspect.Parameter.KEYWORD_ONLY
     assert type_resolver.default is None
+    dynamic = signature.parameters["include_dynamic_analysis"]
+    assert dynamic.kind is inspect.Parameter.KEYWORD_ONLY
+    assert dynamic.default is False
 
 
 def test_form_context_does_not_import_scan_forms_at_runtime():

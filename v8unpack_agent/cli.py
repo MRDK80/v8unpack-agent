@@ -179,6 +179,15 @@ def build_parser() -> argparse.ArgumentParser:
         default=-1,
         help="лимит длины промпт-фрагмента; -1 без ограничения",
     )
+    dynamic_group = parser.add_mutually_exclusive_group()
+    dynamic_group.add_argument(
+        "--dynamic-analysis", dest="dynamic_analysis", action="store_true", default=False,
+        help="включить статический анализ динамических операций управляемых форм",
+    )
+    dynamic_group.add_argument(
+        "--no-dynamic-analysis", dest="dynamic_analysis", action="store_false", default=False,
+        help="отключить статический анализ динамических операций (по умолчанию)",
+    )
     parser.add_argument(
         "--representation",
         choices=("legacy", "framed"),
@@ -244,6 +253,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         module_groups=module_groups,
         max_prompt_chars=args.max_prompt_chars,
         representation=args.representation,
+        include_dynamic_analysis=args.dynamic_analysis,
     )
 
     try:

@@ -82,7 +82,7 @@ import json
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field, replace
 from pathlib import Path
-from typing import Any, Literal, Protocol
+from typing import TYPE_CHECKING, Any, Literal, Protocol
 
 from v8unpack_agent._safe_paths import sanitize_diagnostic
 from v8unpack_agent.catalog_resolver import object_json_path, resolve_data_path
@@ -107,6 +107,10 @@ from v8unpack_agent.untrusted_diagnostics import (
 )
 from v8unpack_agent.untrusted_transport import encode_block
 
+if TYPE_CHECKING:
+    from v8unpack_agent.dynamic_forms_context import DynamicFormAnalysis
+
+
 __all__ = [
     "FormContext",
     "build_form_context",
@@ -117,6 +121,7 @@ __all__ = [
 SUMMARY_MARKER = "## SUMMARY"
 OBJECT_ATTRIBUTES_MARKER = "## OBJECT_ATTRIBUTES"
 BSL_MARKER = "## BSL"
+DYNAMIC_FORM_OPERATIONS_MARKER = "## DYNAMIC_FORM_OPERATIONS"
 #: Замена тела модуля, когда BSL отсутствует (elem-only форма).
 NO_BSL_PLACEHOLDER = "(модуль формы отсутствует)"
 #: Замена секции объекта, когда файл объекта не найден или не декодирован.
@@ -128,10 +133,12 @@ SECTION_FORM = "form"
 SECTION_SUMMARY = "summary"
 SECTION_OBJECT_ATTRIBUTES = "object_attributes"
 SECTION_BSL = "bsl"
+SECTION_DYNAMIC_FORM_OPERATIONS = "dynamic_form_operations"
 ALL_SECTIONS: tuple[str, ...] = (
     SECTION_FORM,
     SECTION_SUMMARY,
     SECTION_OBJECT_ATTRIBUTES,
+    SECTION_DYNAMIC_FORM_OPERATIONS,
     SECTION_BSL,
 )
 
@@ -271,6 +278,7 @@ class FormContext:
     object_attributes: dict[str, Any] | None = None
     resolved_relations: list[dict[str, Any]] = field(default_factory=list)
     unresolved_data_paths: list[dict[str, Any]] = field(default_factory=list)
+    dynamic_analysis: DynamicFormAnalysis | None = None
 
 
 def build_form_context(
@@ -278,6 +286,7 @@ def build_form_context(
     unpacked_root: Path,
     *,
     type_resolver: _TypeResolver | None = None,
+    include_dynamic_analysis: bool = False,
 ) -> FormContext:
     """Собрать :class:`FormContext` по карточке ``FormEntry``.
 
@@ -302,7 +311,8 @@ def build_form_context(
     root = Path(unpacked_root)
 
     bsl_path = _resolve(form_entry.bsl_path, root)
-    bsl_text = _read_bsl(bsl_path)
+    bsl_text = (_read_bsl(bsl_path, preserve_newlines=True) if include_dynamic_analysis
+                else _read_bsl(bsl_path))
 
     # Старые индексы форм могут не содержать это поле: толерантный доступ — часть контракта, а не долг.
     elem_json_path = getattr(form_entry, "elem_json_path", None)
@@ -327,6 +337,16 @@ def build_form_context(
         + [sanitize_diagnostic(_strip_root(item, root)) for item in object_warnings],
     }
 
+    dynamic_analysis = None
+    if include_dynamic_analysis:
+        from v8unpack_agent.dynamic_forms_context import analyze_dynamic_form
+
+        dynamic_analysis = analyze_dynamic_form(
+            bsl_text, _relative_str(form_entry.bsl_path, root) or 'Module.bsl',
+            _resolve(getattr(form_entry, 'json_path', None), root),
+            _resolve(elem_json_path, root),
+        )
+
     return FormContext(
         form_name=str(form_entry.form_name or ""),
         container_name=str(form_entry.container_name or ""),
@@ -338,6 +358,7 @@ def build_form_context(
         object_attributes=object_attributes,
         resolved_relations=resolved_relations,
         unresolved_data_paths=unresolved_data_paths,
+        dynamic_analysis=dynamic_analysis,
     )
 
 
@@ -413,16 +434,28 @@ def _to_llm_prompt_fragment_chars(
         SECTION_OBJECT_ATTRIBUTES: (OBJECT_ATTRIBUTES_MARKER, object_block),
         SECTION_BSL: (BSL_MARKER, body),
     }
+    if context.dynamic_analysis is not None:
+        blocks[SECTION_DYNAMIC_FORM_OPERATIONS] = (
+            DYNAMIC_FORM_OPERATIONS_MARKER, _dynamic_projection_json(context)
+        )
     selected = frozenset(ALL_SECTIONS) if sections is None else sections
     lines: list[str] = []
     status_start: int | None = None
+    dynamic_start: int | None = None
     for name in ALL_SECTIONS:
-        if name not in selected:
+        if name not in selected or name not in blocks:
             continue
+        if name == SECTION_DYNAMIC_FORM_OPERATIONS:
+            dynamic_start = len(lines)
         if name == SECTION_SUMMARY:
             status_start = len(lines) + 2
         lines.extend(blocks[name])
     fragment = "\n".join(lines)
+    if dynamic_start is not None and max_chars > 0:
+        start = sum(len(line) + 1 for line in lines[:dynamic_start])
+        end = start + len(DYNAMIC_FORM_OPERATIONS_MARKER) + 1 + len(lines[dynamic_start + 1])
+        if start < max_chars < end:
+            max_chars = start
 
     if max_chars == -1 or status_start is None:
         return fragment if max_chars == -1 else fragment[:max_chars]
@@ -603,7 +636,7 @@ def _resolve(value: str | Path | None, root: Path) -> Path | None:
     return path if path.is_absolute() else root / path
 
 
-def _read_bsl(bsl_path: Path | None) -> str | None:
+def _read_bsl(bsl_path: Path | None, *, preserve_newlines: bool = False) -> str | None:
     """Прочитать модуль формы явно в UTF-8.
 
     Отсутствие файла — штатный ``None`` (у elem-only форм ``bsl_path``
@@ -611,6 +644,9 @@ def _read_bsl(bsl_path: Path | None) -> str | None:
     """
     if bsl_path is None or not bsl_path.is_file():
         return None
+    if preserve_newlines:
+        with bsl_path.open(encoding="utf-8", newline="") as stream:
+            return stream.read()
     return bsl_path.read_text(encoding="utf-8")
 
 
@@ -865,6 +901,12 @@ def _normalize_sections(sections: Iterable[str]) -> frozenset[str]:
 _FRAMED_BOM = chr(0xFEFF)
 
 
+def _dynamic_projection_json(context: FormContext) -> str:
+    assert context.dynamic_analysis is not None
+    return json.dumps(context.dynamic_analysis.projection(), ensure_ascii=False,
+                      sort_keys=True, separators=(',', ':'), allow_nan=False)
+
+
 def _framed_sections(
     context: FormContext, selected: frozenset[str]
 ) -> list[tuple[str, str, str, str | None]]:
@@ -912,6 +954,10 @@ def _framed_sections(
             None if context.bsl_text is None else "bsl",
         ),
     ]
+    if context.dynamic_analysis is not None:
+        items.insert(-1, (SECTION_DYNAMIC_FORM_OPERATIONS,
+                         DYNAMIC_FORM_OPERATIONS_MARKER,
+                         _dynamic_projection_json(context), "text"))
     return [item for item in items if item[0] in selected]
 
 
@@ -919,6 +965,7 @@ def _framed_fragment(
     context: FormContext,
     selected: frozenset[str],
     fits: Callable[[str], bool],
+    *, char_cap: int = -1,
 ) -> str:
     """Собрать фрагмент нового режима в пределах бюджета ``fits``.
 
@@ -947,13 +994,37 @@ def _framed_fragment(
         raw = FILE_BOM_BYTES if canon.startswith(_FRAMED_BOM) else b""
         diag = diag_line(detect_untrusted_chars(canon, raw=raw))
         lines = _split_complete_lines(canon)
-        accepted = None
-        for count in range(len(lines), -1, -1):
-            piece = label + "\n" + encode_block(
+        prefix = "".join(rendered)
+
+        def bsl_piece(
+            count: int, label: str = label, lines: list[str] = lines,
+            number: int = number, diag: str = diag,
+        ) -> str:
+            return label + "\n" + encode_block(
                 "".join(lines[:count]), n=number, kind="bsl",
                 total_lines=len(lines), diag=diag,
             )
-            if fits("".join(rendered) + piece):
+
+        first = len(lines)
+        full_piece = None
+        if char_cap > 0:
+            full_piece = bsl_piece(first)
+            if len(prefix) + len(full_piece) > char_cap:
+                # Truncated prefixes grow monotonically in encoded characters.
+                # Full blocks are separate: dropping `omitted` can make them shorter.
+                low, high, first = 0, len(lines) - 1, -1
+                while low <= high:
+                    middle = (low + high) // 2
+                    if len(prefix) + len(bsl_piece(middle)) <= char_cap:
+                        first = middle
+                        low = middle + 1
+                    else:
+                        high = middle - 1
+        accepted = None
+        for count in range(first, -1, -1):
+            piece = full_piece if count == len(lines) and full_piece is not None else bsl_piece(count)
+            # Keep descending token checks: user counters need not be monotonic.
+            if fits(prefix + piece):
                 accepted = piece
                 break
         if accepted is None:
@@ -976,7 +1047,7 @@ def _framed_prompt_fragment(
         return max_chars == -1 or len(text) <= max_chars
 
     if max_tokens is None or count_tokens is None:
-        return _framed_fragment(context, selected, chars_fit)
+        return _framed_fragment(context, selected, chars_fit, char_cap=max_chars)
     limit = max_tokens
     counter = count_tokens
     failed = False
@@ -991,9 +1062,9 @@ def _framed_prompt_fragment(
             return False
         return tokens <= limit
 
-    result = _framed_fragment(context, selected, both_fit)
+    result = _framed_fragment(context, selected, both_fit, char_cap=max_chars)
     if failed:
-        return _framed_fragment(context, selected, chars_fit)
+        return _framed_fragment(context, selected, chars_fit, char_cap=max_chars)
     return result
 
 
@@ -1086,9 +1157,11 @@ def to_llm_prompt_fragment(
         mid = (low + high + 1) // 2
         verdict = fits(mid)
         if verdict is None:
-            return "".join(lines)
+            result = "".join(lines)
+            return chars(len(result)) if isinstance(context, FormContext) and context.dynamic_analysis is not None else result
         if verdict:
             low = mid
         else:
             high = mid - 1
-    return "".join(lines[:low])
+    result = "".join(lines[:low])
+    return chars(len(result)) if isinstance(context, FormContext) and context.dynamic_analysis is not None else result

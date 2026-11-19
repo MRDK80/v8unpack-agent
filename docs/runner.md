@@ -257,3 +257,11 @@ write_post_run_report(outcome.report, Path("post-run.json"))
 Post-run report и envelope `--json` новых полей не получают; значение
 `prompt_chars` («промпт-символов») равно длине фрагментов выбранного режима.
 Коды завершения не меняются.
+
+
+## Opt-in динамический анализ (#217)
+
+`RunOptions.include_dynamic_analysis` по умолчанию `False`. CLI: `--dynamic-analysis`
+или `--no-dynamic-analysis`. Неполный анализ даёт partial, unresolved-сайты
+в завершённом анализе сами по себе не деградируют pipeline.
+[Контракт, статусы, инварианты и ограничения](dynamic_forms_context.md).

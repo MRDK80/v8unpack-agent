@@ -1,0 +1,350 @@
+{
+  "corpus": "issue212 regression, not holdout",
+  "declared_inventory": "existing elem_parser with write_index=False; only tree/data names for elements and commands-source names for commands; no all-name JSON fallback",
+  "gold": {
+    "C1": {
+      "all_gold": 91,
+      "ambiguous_scope": 0,
+      "failures": 0,
+      "fn": 58,
+      "fp": 0,
+      "modules": 8,
+      "mvp_gold": 82,
+      "tp": 24,
+      "unresolved": 58
+    },
+    "C2": {
+      "all_gold": 34,
+      "ambiguous_scope": 0,
+      "failures": 0,
+      "fn": 16,
+      "fp": 0,
+      "modules": 8,
+      "mvp_gold": 30,
+      "tp": 14,
+      "unresolved": 12
+    },
+    "C3": {
+      "all_gold": 194,
+      "ambiguous_scope": 0,
+      "failures": 0,
+      "fn": 11,
+      "fp": 0,
+      "modules": 7,
+      "mvp_gold": 187,
+      "tp": 176,
+      "unresolved": 12
+    },
+    "C4": {
+      "all_gold": 101,
+      "ambiguous_scope": 0,
+      "failures": 0,
+      "fn": 29,
+      "fp": 0,
+      "modules": 8,
+      "mvp_gold": 65,
+      "tp": 36,
+      "unresolved": 29
+    }
+  },
+  "gold_matching": "legacy method/equals-token line + operation kind; duplicate predictions count as FP; unresolved candidates excluded from TP",
+  "gold_scope": "364 MVP operations from 420 full-module gold operations; 2 computed-property-name cases classified outside closed whitelist; no ambiguous remainder",
+  "independent_reviewers": 1,
+  "input_verification_after_runs": {
+    "C1": {
+      "files": 21512,
+      "unchanged": true
+    },
+    "C2": {
+      "files": 41097,
+      "unchanged": true
+    },
+    "C3": {
+      "files": 682,
+      "unchanged": true
+    },
+    "C4": {
+      "files": 78621,
+      "unchanged": true
+    }
+  },
+  "model_runs": 0,
+  "runs": [
+    {
+      "analyzer_seconds": 8.2478342607792,
+      "configuration": "C1",
+      "counts": {
+        "attributes_change/partial": 13,
+        "command_add/partial": 23,
+        "conditions": 26833,
+        "element_add/exact": 2,
+        "element_add/partial": 78,
+        "element_delete/unresolved": 2,
+        "element_move/partial": 1,
+        "element_move/unresolved": 1,
+        "modules": 812,
+        "property_set/exact": 1422,
+        "property_set/partial": 1889,
+        "property_set/unresolved": 2326,
+        "success": 805
+      },
+      "detector_sha256": "24602352ede03d0b7c81c7d4dcbe966f50fb81dcf0d6dcf0e1da40f08cfa5dcf",
+      "failures": {
+        "invalid_string_continuation": 3,
+        "module_initialization_code": 4
+      },
+      "os": "Linux",
+      "output_sha256": "84972ddbe947c90bef66fffb6b4a4f6c5a426c24a6c66408988cf3be4fbdf5e9",
+      "peak_rss_kib": 89088,
+      "prepared_input_sha256": "04b903b053641846caab0ec354eafd2ef16554e5bbf63da12ee1c2947fad79da",
+      "python": "3.12.3",
+      "run": "run1",
+      "schema": "dynamic-form-benchmark/1",
+      "timing_scope": "prepared inventory + verified module/elem reads; analyzer_seconds excludes reads and JSON serialization",
+      "wall_seconds": 8.742175989988027
+    },
+    {
+      "analyzer_seconds": 8.09796509082662,
+      "configuration": "C1",
+      "counts": {
+        "attributes_change/partial": 13,
+        "command_add/partial": 23,
+        "conditions": 26833,
+        "element_add/exact": 2,
+        "element_add/partial": 78,
+        "element_delete/unresolved": 2,
+        "element_move/partial": 1,
+        "element_move/unresolved": 1,
+        "modules": 812,
+        "property_set/exact": 1422,
+        "property_set/partial": 1889,
+        "property_set/unresolved": 2326,
+        "success": 805
+      },
+      "detector_sha256": "24602352ede03d0b7c81c7d4dcbe966f50fb81dcf0d6dcf0e1da40f08cfa5dcf",
+      "failures": {
+        "invalid_string_continuation": 3,
+        "module_initialization_code": 4
+      },
+      "os": "Linux",
+      "output_sha256": "84972ddbe947c90bef66fffb6b4a4f6c5a426c24a6c66408988cf3be4fbdf5e9",
+      "peak_rss_kib": 88736,
+      "prepared_input_sha256": "04b903b053641846caab0ec354eafd2ef16554e5bbf63da12ee1c2947fad79da",
+      "python": "3.12.3",
+      "run": "run2",
+      "schema": "dynamic-form-benchmark/1",
+      "timing_scope": "prepared inventory + verified module/elem reads; analyzer_seconds excludes reads and JSON serialization",
+      "wall_seconds": 8.590236852003727
+    },
+    {
+      "analyzer_seconds": 2.283225282008061,
+      "configuration": "C2",
+      "counts": {
+        "attributes_change/partial": 5,
+        "command_add/partial": 11,
+        "conditions": 7453,
+        "element_add/partial": 34,
+        "modules": 245,
+        "property_set/exact": 473,
+        "property_set/partial": 794,
+        "property_set/unresolved": 587,
+        "success": 236
+      },
+      "detector_sha256": "24602352ede03d0b7c81c7d4dcbe966f50fb81dcf0d6dcf0e1da40f08cfa5dcf",
+      "failures": {
+        "invalid_date_literal": 7,
+        "module_initialization_code": 2
+      },
+      "os": "Linux",
+      "output_sha256": "e45ab5d47998bf819f649c4ba067a0abf77bb27ba4d8c40d254d4fa1e45176d5",
+      "peak_rss_kib": 33944,
+      "prepared_input_sha256": "1ed7ce4bb94c66a43039e051477668ea29436c4eec3d4a5a594b24bdea06b680",
+      "python": "3.12.3",
+      "run": "run1",
+      "schema": "dynamic-form-benchmark/1",
+      "timing_scope": "prepared inventory + verified module/elem reads; analyzer_seconds excludes reads and JSON serialization",
+      "wall_seconds": 2.4353798929951154
+    },
+    {
+      "analyzer_seconds": 2.4340161759464536,
+      "configuration": "C2",
+      "counts": {
+        "attributes_change/partial": 5,
+        "command_add/partial": 11,
+        "conditions": 7453,
+        "element_add/partial": 34,
+        "modules": 245,
+        "property_set/exact": 473,
+        "property_set/partial": 794,
+        "property_set/unresolved": 587,
+        "success": 236
+      },
+      "detector_sha256": "24602352ede03d0b7c81c7d4dcbe966f50fb81dcf0d6dcf0e1da40f08cfa5dcf",
+      "failures": {
+        "invalid_date_literal": 7,
+        "module_initialization_code": 2
+      },
+      "os": "Linux",
+      "output_sha256": "e45ab5d47998bf819f649c4ba067a0abf77bb27ba4d8c40d254d4fa1e45176d5",
+      "peak_rss_kib": 34184,
+      "prepared_input_sha256": "1ed7ce4bb94c66a43039e051477668ea29436c4eec3d4a5a594b24bdea06b680",
+      "python": "3.12.3",
+      "run": "run2",
+      "schema": "dynamic-form-benchmark/1",
+      "timing_scope": "prepared inventory + verified module/elem reads; analyzer_seconds excludes reads and JSON serialization",
+      "wall_seconds": 2.59805749199586
+    },
+    {
+      "analyzer_seconds": 0.4241056510072667,
+      "configuration": "C3",
+      "counts": {
+        "attributes_change/partial": 11,
+        "conditions": 1393,
+        "element_add/exact": 1,
+        "element_add/partial": 13,
+        "element_add/unresolved": 1,
+        "element_delete/unresolved": 4,
+        "modules": 52,
+        "property_set/exact": 86,
+        "property_set/partial": 176,
+        "property_set/unresolved": 81,
+        "success": 51
+      },
+      "detector_sha256": "24602352ede03d0b7c81c7d4dcbe966f50fb81dcf0d6dcf0e1da40f08cfa5dcf",
+      "failures": {
+        "module_initialization_code": 1
+      },
+      "os": "Linux",
+      "output_sha256": "d8165b0562f42a4c16b3bf5f52b7d220e9dd0d3760c8ae74c229a2189eedc6c5",
+      "peak_rss_kib": 30924,
+      "prepared_input_sha256": "2bc6fa7ff076851f3de7592f8ee8eb106b4c512447cd5a9ec811d9a68bce4733",
+      "python": "3.12.3",
+      "run": "run1",
+      "schema": "dynamic-form-benchmark/1",
+      "timing_scope": "prepared inventory + verified module/elem reads; analyzer_seconds excludes reads and JSON serialization",
+      "wall_seconds": 0.45846407298813574
+    },
+    {
+      "analyzer_seconds": 0.36491824890254065,
+      "configuration": "C3",
+      "counts": {
+        "attributes_change/partial": 11,
+        "conditions": 1393,
+        "element_add/exact": 1,
+        "element_add/partial": 13,
+        "element_add/unresolved": 1,
+        "element_delete/unresolved": 4,
+        "modules": 52,
+        "property_set/exact": 86,
+        "property_set/partial": 176,
+        "property_set/unresolved": 81,
+        "success": 51
+      },
+      "detector_sha256": "24602352ede03d0b7c81c7d4dcbe966f50fb81dcf0d6dcf0e1da40f08cfa5dcf",
+      "failures": {
+        "module_initialization_code": 1
+      },
+      "os": "Linux",
+      "output_sha256": "d8165b0562f42a4c16b3bf5f52b7d220e9dd0d3760c8ae74c229a2189eedc6c5",
+      "peak_rss_kib": 30724,
+      "prepared_input_sha256": "2bc6fa7ff076851f3de7592f8ee8eb106b4c512447cd5a9ec811d9a68bce4733",
+      "python": "3.12.3",
+      "run": "run2",
+      "schema": "dynamic-form-benchmark/1",
+      "timing_scope": "prepared inventory + verified module/elem reads; analyzer_seconds excludes reads and JSON serialization",
+      "wall_seconds": 0.39407523698173463
+    },
+    {
+      "analyzer_seconds": 100.06871841926477,
+      "configuration": "C4",
+      "counts": {
+        "attributes_change/partial": 151,
+        "command_add/exact": 21,
+        "command_add/partial": 125,
+        "command_delete/unresolved": 24,
+        "conditions": 295472,
+        "element_add/exact": 30,
+        "element_add/partial": 1657,
+        "element_add/unresolved": 2,
+        "element_delete/unresolved": 178,
+        "element_insert/exact": 3,
+        "element_insert/partial": 58,
+        "element_move/exact": 372,
+        "element_move/partial": 140,
+        "element_move/unresolved": 535,
+        "modules": 5903,
+        "property_set/exact": 14308,
+        "property_set/partial": 20383,
+        "property_set/unresolved": 25714,
+        "success": 5807
+      },
+      "detector_sha256": "24602352ede03d0b7c81c7d4dcbe966f50fb81dcf0d6dcf0e1da40f08cfa5dcf",
+      "failures": {
+        "character_budget": 2,
+        "invalid_date_literal": 19,
+        "invalid_string_continuation": 7,
+        "module_initialization_code": 49,
+        "nested_procedure": 9,
+        "unsupported_character": 10
+      },
+      "os": "Linux",
+      "output_sha256": "3b0ccc8c4e06bea0731c4a01ccd641e620748d2ad5c35aded4b571edd5fd2e00",
+      "peak_rss_kib": 208984,
+      "prepared_input_sha256": "3e61052ec008dcb015a0214cc14aa8761ac42a620f0d4244cba6b62bd55c6787",
+      "python": "3.12.3",
+      "run": "run1",
+      "schema": "dynamic-form-benchmark/1",
+      "timing_scope": "prepared inventory + verified module/elem reads; analyzer_seconds excludes reads and JSON serialization",
+      "wall_seconds": 105.29899243899854
+    },
+    {
+      "analyzer_seconds": 97.09647041547578,
+      "configuration": "C4",
+      "counts": {
+        "attributes_change/partial": 151,
+        "command_add/exact": 21,
+        "command_add/partial": 125,
+        "command_delete/unresolved": 24,
+        "conditions": 295472,
+        "element_add/exact": 30,
+        "element_add/partial": 1657,
+        "element_add/unresolved": 2,
+        "element_delete/unresolved": 178,
+        "element_insert/exact": 3,
+        "element_insert/partial": 58,
+        "element_move/exact": 372,
+        "element_move/partial": 140,
+        "element_move/unresolved": 535,
+        "modules": 5903,
+        "property_set/exact": 14308,
+        "property_set/partial": 20383,
+        "property_set/unresolved": 25714,
+        "success": 5807
+      },
+      "detector_sha256": "24602352ede03d0b7c81c7d4dcbe966f50fb81dcf0d6dcf0e1da40f08cfa5dcf",
+      "failures": {
+        "character_budget": 2,
+        "invalid_date_literal": 19,
+        "invalid_string_continuation": 7,
+        "module_initialization_code": 49,
+        "nested_procedure": 9,
+        "unsupported_character": 10
+      },
+      "os": "Linux",
+      "output_sha256": "3b0ccc8c4e06bea0731c4a01ccd641e620748d2ad5c35aded4b571edd5fd2e00",
+      "peak_rss_kib": 210124,
+      "prepared_input_sha256": "3e61052ec008dcb015a0214cc14aa8761ac42a620f0d4244cba6b62bd55c6787",
+      "python": "3.12.3",
+      "run": "run2",
+      "schema": "dynamic-form-benchmark/1",
+      "timing_scope": "prepared inventory + verified module/elem reads; analyzer_seconds excludes reads and JSON serialization",
+      "wall_seconds": 102.17640256602317
+    }
+  ],
+  "schema": "issue214-detector-evaluation/1",
+  "source_unit": "syntactic operation site, not runtime invocation count",
+  "wall_seconds_excludes": [
+    "process startup/imports",
+    "prepared inventory loading"
+  ]
+}

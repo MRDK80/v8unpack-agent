@@ -1,0 +1,451 @@
+{
+  "binding_review": {
+    "checks": [
+      "current_form_argument_at_explicit_same_module_call",
+      "declared_name_in_frozen_typed_inventory",
+      "readonly_formal_no_known_rebind_or_escape",
+      "call_witness_guard_retained",
+      "local_branch_guards_retained",
+      "no_cross_procedure_creation_ref"
+    ],
+    "independent_expert": false,
+    "population_promotions": "unlabelled_not_claimed_tp",
+    "primary_lost_tp": 0,
+    "primary_new_fp": 0,
+    "primary_new_tp": 7,
+    "reviewed_new_bindings": 7,
+    "reviewer": "single_assistant",
+    "verdict": "pass_for_seven_primary_promotions_only"
+  },
+  "configs": {
+    "C1": {
+      "a_peak_rss_kib": [
+        92756,
+        92400
+      ],
+      "a_wall_seconds": [
+        26.95812975001172,
+        27.0552415039856
+      ],
+      "additional_confirmed_sites_unlabelled": 62,
+      "b_peak_rss_kib": [
+        94640,
+        94892
+      ],
+      "b_wall_seconds": [
+        45.168590293003945,
+        44.80960362701444
+      ],
+      "counts": {
+        "a/attributes_change/partial": 13,
+        "a/command_add/partial": 23,
+        "a/element_add/exact": 2,
+        "a/element_add/partial": 78,
+        "a/element_delete/unresolved": 2,
+        "a/element_move/unresolved": 2,
+        "a/property_set/exact": 286,
+        "a/property_set/partial": 432,
+        "a/property_set/unresolved": 5075,
+        "b/attributes_change/partial": 13,
+        "b/command_add/partial": 23,
+        "b/element_add/exact": 2,
+        "b/element_add/partial": 78,
+        "b/element_delete/unresolved": 2,
+        "b/element_move/unresolved": 2,
+        "b/property_set/exact": 305,
+        "b/property_set/partial": 475,
+        "b/property_set/unresolved": 5013,
+        "call_contexts": 31,
+        "modules": 812,
+        "success": 805
+      },
+      "diagnostics": {
+        "call_arity": 63,
+        "formal_escape": 4543,
+        "formal_write": 2096,
+        "incomplete_caller_context": 60,
+        "opaque_argument_evaluation": 88,
+        "recursive_context": 1138
+      },
+      "failures": {
+        "invalid_string_continuation": 3,
+        "module_initialization_code": 4
+      },
+      "input_sha256": "dee2b81e0e94d86c2bcbced6747e12192f3f305be2acad6d69ac753b18d4d2d2",
+      "output_sha256": "95d5f90a9b31189f2678043382004eb508cf58e67d4652edb2ba73705cec0724",
+      "rss_ratio_conservative": 1.0269696969696969,
+      "wall_ratio_conservative": 1.6755090472470295
+    },
+    "C2": {
+      "a_peak_rss_kib": [
+        37184,
+        36876
+      ],
+      "a_wall_seconds": [
+        7.337427309015766,
+        7.297011817019666
+      ],
+      "additional_confirmed_sites_unlabelled": 15,
+      "b_peak_rss_kib": [
+        37864,
+        37836
+      ],
+      "b_wall_seconds": [
+        11.576043180015404,
+        11.4622586290061
+      ],
+      "counts": {
+        "a/attributes_change/partial": 5,
+        "a/command_add/partial": 11,
+        "a/element_add/partial": 34,
+        "a/property_set/exact": 103,
+        "a/property_set/partial": 287,
+        "a/property_set/unresolved": 1491,
+        "b/attributes_change/partial": 5,
+        "b/command_add/partial": 11,
+        "b/element_add/partial": 34,
+        "b/property_set/exact": 111,
+        "b/property_set/partial": 294,
+        "b/property_set/unresolved": 1476,
+        "call_contexts": 8,
+        "modules": 245,
+        "success": 236
+      },
+      "diagnostics": {
+        "call_arity": 63,
+        "formal_escape": 1138,
+        "formal_write": 462,
+        "incomplete_caller_context": 50,
+        "opaque_argument_evaluation": 52,
+        "recursive_context": 132
+      },
+      "failures": {
+        "invalid_date_literal": 7,
+        "module_initialization_code": 2
+      },
+      "input_sha256": "b8df37b1cc77236e266a8b3c55d888d2a4d66c6a09b18a733132b096335ac155",
+      "output_sha256": "3829a867a981c0d490fb73d44949075c6d368aa5a30d38be348f9ebb80a716b8",
+      "rss_ratio_conservative": 1.026792493762881,
+      "wall_ratio_conservative": 1.5864087204868242
+    },
+    "C3": {
+      "a_peak_rss_kib": [
+        32628,
+        32604
+      ],
+      "a_wall_seconds": [
+        1.186002444010228,
+        1.1780173899896909
+      ],
+      "additional_confirmed_sites_unlabelled": 0,
+      "b_peak_rss_kib": [
+        33200,
+        33104
+      ],
+      "b_wall_seconds": [
+        1.8375234650156926,
+        1.8156665040005464
+      ],
+      "counts": {
+        "a/attributes_change/partial": 11,
+        "a/element_add/partial": 14,
+        "a/element_add/unresolved": 1,
+        "a/element_delete/unresolved": 4,
+        "a/property_set/exact": 39,
+        "a/property_set/partial": 94,
+        "a/property_set/unresolved": 210,
+        "b/attributes_change/partial": 11,
+        "b/element_add/partial": 14,
+        "b/element_add/unresolved": 1,
+        "b/element_delete/unresolved": 4,
+        "b/property_set/exact": 39,
+        "b/property_set/partial": 94,
+        "b/property_set/unresolved": 210,
+        "call_contexts": 0,
+        "modules": 52,
+        "success": 51
+      },
+      "diagnostics": {
+        "formal_escape": 229,
+        "formal_write": 129,
+        "incomplete_caller_context": 19,
+        "opaque_argument_evaluation": 9,
+        "recursive_context": 37
+      },
+      "failures": {
+        "module_initialization_code": 1
+      },
+      "input_sha256": "44e376e656d66bf2670039e6044c8daefd71e2aaa885d18bf6b4a8b163de7361",
+      "output_sha256": "57b9c5f0632697b91d58ee05b73f074c7cc99031e7502263e46385ee814f3aca",
+      "rss_ratio_conservative": 1.0182799656483867,
+      "wall_ratio_conservative": 1.5598440911231144
+    },
+    "C4": {
+      "a_peak_rss_kib": [
+        224136,
+        224056
+      ],
+      "a_wall_seconds": [
+        304.5785781510058,
+        303.6978806179832
+      ],
+      "additional_confirmed_sites_unlabelled": 533,
+      "b_peak_rss_kib": [
+        233300,
+        232856
+      ],
+      "b_wall_seconds": [
+        517.9933254019998,
+        515.8233479240153
+      ],
+      "counts": {
+        "a/attributes_change/partial": 151,
+        "a/command_add/exact": 21,
+        "a/command_add/partial": 125,
+        "a/command_delete/unresolved": 24,
+        "a/element_add/exact": 13,
+        "a/element_add/partial": 1674,
+        "a/element_add/unresolved": 2,
+        "a/element_delete/unresolved": 178,
+        "a/element_insert/partial": 61,
+        "a/element_move/exact": 112,
+        "a/element_move/partial": 22,
+        "a/element_move/unresolved": 910,
+        "a/property_set/exact": 3416,
+        "a/property_set/partial": 6817,
+        "a/property_set/unresolved": 50729,
+        "b/attributes_change/partial": 151,
+        "b/command_add/exact": 21,
+        "b/command_add/partial": 125,
+        "b/command_delete/unresolved": 24,
+        "b/element_add/exact": 13,
+        "b/element_add/partial": 1675,
+        "b/element_add/unresolved": 1,
+        "b/element_delete/unresolved": 178,
+        "b/element_insert/partial": 61,
+        "b/element_move/exact": 112,
+        "b/element_move/partial": 23,
+        "b/element_move/unresolved": 909,
+        "b/property_set/exact": 3610,
+        "b/property_set/partial": 7154,
+        "b/property_set/unresolved": 50198,
+        "call_contexts": 196,
+        "modules": 5903,
+        "success": 5798
+      },
+      "diagnostics": {
+        "call_arity": 2,
+        "call_graph_budget": 1,
+        "formal_cursor": 8,
+        "formal_escape": 51052,
+        "formal_write": 24132,
+        "incomplete_caller_context": 793,
+        "opaque_argument_evaluation": 950,
+        "recursive_context": 15839
+      },
+      "failures": {
+        "character_budget": 2,
+        "condition_context_budget": 7,
+        "dynamic_control_flow": 2,
+        "invalid_date_literal": 19,
+        "invalid_string_continuation": 7,
+        "module_initialization_code": 49,
+        "nested_procedure": 9,
+        "unsupported_character": 10
+      },
+      "input_sha256": "498d9ff0ce819bff13c333c6527739b8e2da11bd3fa76855b5c11600ef84cd45",
+      "output_sha256": "becdd940a67ba1c8b0376b5fd4affee68231b8e14d1002dd36923ed6702fa2bd",
+      "rss_ratio_conservative": 1.0412575427571678,
+      "wall_ratio_conservative": 1.7056204816047942
+    }
+  },
+  "cost_scope": "private prototype;A full binding serialization versus B operation index;no production B candidate assembly;not future integrated cost gate",
+  "decision": "defer_b0_quality_gate_failed",
+  "input_verification": {
+    "C1": {
+      "files": 21512,
+      "unchanged": true
+    },
+    "C2": {
+      "files": 41097,
+      "unchanged": true
+    },
+    "C3": {
+      "files": 682,
+      "unchanged": true
+    },
+    "C4": {
+      "files": 78621,
+      "unchanged": true
+    }
+  },
+  "models_run": false,
+  "primary_a": {
+    "C1": {
+      "all_gold": 91,
+      "ambiguous_scope": 0,
+      "failures": 0,
+      "fn": 80,
+      "fp": 0,
+      "modules": 8,
+      "mvp_gold": 82,
+      "tp": 2,
+      "unresolved": 80
+    },
+    "C2": {
+      "all_gold": 34,
+      "ambiguous_scope": 0,
+      "failures": 0,
+      "fn": 29,
+      "fp": 0,
+      "modules": 8,
+      "mvp_gold": 30,
+      "tp": 1,
+      "unresolved": 31
+    },
+    "C3": {
+      "all_gold": 194,
+      "ambiguous_scope": 0,
+      "failures": 0,
+      "fn": 114,
+      "fp": 0,
+      "modules": 7,
+      "mvp_gold": 187,
+      "tp": 73,
+      "unresolved": 115
+    },
+    "C4": {
+      "all_gold": 101,
+      "ambiguous_scope": 0,
+      "failures": 0,
+      "fn": 59,
+      "fp": 0,
+      "modules": 8,
+      "mvp_gold": 65,
+      "tp": 6,
+      "unresolved": 59
+    }
+  },
+  "primary_b": {
+    "C1": {
+      "all_gold": 91,
+      "ambiguous_scope": 0,
+      "failures": 0,
+      "fn": 79,
+      "fp": 0,
+      "modules": 8,
+      "mvp_gold": 82,
+      "tp": 3,
+      "unresolved": 79
+    },
+    "C2": {
+      "all_gold": 34,
+      "ambiguous_scope": 0,
+      "failures": 0,
+      "fn": 28,
+      "fp": 0,
+      "modules": 8,
+      "mvp_gold": 30,
+      "tp": 2,
+      "unresolved": 30
+    },
+    "C3": {
+      "all_gold": 194,
+      "ambiguous_scope": 0,
+      "failures": 0,
+      "fn": 114,
+      "fp": 0,
+      "modules": 7,
+      "mvp_gold": 187,
+      "tp": 73,
+      "unresolved": 115
+    },
+    "C4": {
+      "all_gold": 101,
+      "ambiguous_scope": 0,
+      "failures": 0,
+      "fn": 54,
+      "fp": 0,
+      "modules": 8,
+      "mvp_gold": 65,
+      "tp": 11,
+      "unresolved": 54
+    }
+  },
+  "production_dataflow_shipped": false,
+  "production_source_sha256": "3dd78a0a0b4bc758f036022b304690aa7e06cca2de2ca22196fa8a3c468ee48c",
+  "prototype_sha256": {
+    "build_prototype_engine.py": "2a39433a3f0305e2f0a289528a6b43221d990778ab80abc1a82acfc35a4818f1",
+    "prototype_b.py": "55b5f4f4c57a3c019a1f8c08804f1a16b788a917140844c6254732bdcdd37a8a",
+    "prototype_binding_engine.py": "73a7307dd0e465390fa6f180061bb4bafc049f3e97c4563948cf777e775c8972"
+  },
+  "schema": "dataflow-b0-experiment/1",
+  "secondary_a": {
+    "C1": {
+      "failures": 0,
+      "fn": 6,
+      "fp": 0,
+      "modules": 3,
+      "mvp_gold": 6,
+      "tp": 0
+    },
+    "C2": {
+      "failures": 0,
+      "fn": 4,
+      "fp": 0,
+      "modules": 3,
+      "mvp_gold": 7,
+      "tp": 3
+    },
+    "C3": {
+      "failures": 0,
+      "fn": 4,
+      "fp": 0,
+      "modules": 3,
+      "mvp_gold": 4,
+      "tp": 0
+    },
+    "C4": {
+      "failures": 0,
+      "fn": 0,
+      "fp": 0,
+      "modules": 3,
+      "mvp_gold": 1,
+      "tp": 1
+    }
+  },
+  "secondary_b": {
+    "C1": {
+      "failures": 0,
+      "fn": 6,
+      "fp": 0,
+      "modules": 3,
+      "mvp_gold": 6,
+      "tp": 0
+    },
+    "C2": {
+      "failures": 0,
+      "fn": 4,
+      "fp": 0,
+      "modules": 3,
+      "mvp_gold": 7,
+      "tp": 3
+    },
+    "C3": {
+      "failures": 0,
+      "fn": 4,
+      "fp": 0,
+      "modules": 3,
+      "mvp_gold": 4,
+      "tp": 0
+    },
+    "C4": {
+      "failures": 0,
+      "fn": 0,
+      "fp": 0,
+      "modules": 3,
+      "mvp_gold": 1,
+      "tp": 1
+    }
+  }
+}

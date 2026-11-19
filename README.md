@@ -49,7 +49,9 @@ Unicode и изображений описаны в статье
 
 ## Установка
 
-Версия этого документа — `0.4.0`. Установка актуального релиза из PyPI:
+Версия опубликованного релиза — `0.4.0`. Новые API динамических форм #211
+относятся к последующему срезу исходников и в этот релиз не входят; новый
+release в рамках эпика не выпускается. Установка релиза из PyPI:
 
 ```bash
 pip install v8unpack-agent
@@ -193,7 +195,7 @@ POSIX-пути, одинаковые на POSIX и NT.
 |---|---:|---|
 | `FormsIndex` | 2 | [`docs/pipeline.md`](docs/pipeline.md) |
 | `FormScanIndex` | 2 при чтении legacy 1 | [`docs/scan_forms.md`](docs/scan_forms.md) |
-| post-run report | 1 | [`docs/run_report.md`](docs/run_report.md) |
+| post-run report | 2 (legacy 1 без reference-resolution) | [`docs/run_report.md`](docs/run_report.md) |
 
 ## Публичная поверхность
 
@@ -219,6 +221,10 @@ POSIX-пути, одинаковые на POSIX и NT.
 | `common_modules` | `scan_common_modules`, `build_common_module_context` | [common_modules](docs/common_modules.md) |
 | `modules` | `ModuleEntry`, `ModuleIndex`, `scan_*_modules`, `to_llm_module_fragment` | [modules](docs/modules.md) |
 | `bsl_facts`, `evidence_context`, `action_validation` | факты и действия | [API](docs/action_validation.md) |
+| `dynamic_forms` | модель динамических операций (opt-in) | [API](docs/dynamic_forms.md) |
+| `dynamic_forms_binding` | связи динамических кандидатов (opt-in) | [API](docs/dynamic_forms_binding.md) |
+| `dynamic_forms_context` | `DynamicFormAnalysis`, `DynamicAnalysisSummary`, `analyze_dynamic_form` | [API](docs/dynamic_forms_context.md) |
+| `dynamic_forms_detector` | прямые динамические операции BSL (opt-in) | [API](docs/dynamic_forms_detector.md) |
 | `task_evidence`, `form_evidence`, `report_provenance` | | [BSL](docs/task_evidence.md), [Form](docs/form_evidence.md), [Chain](docs/report_provenance.md) |
 | `search_contract` | `ArtifactRef`, `SearchDocument`, `SearchQuery`, `SearchResult`, `OwnerLink` | [search_contract](docs/search_contract.md) |
 | `search_corpus` | `build_search_corpus`, `build_form_inputs`, `read_module_text`, `SearchCorpus` | [search_corpus](docs/search_corpus.md) |
@@ -295,6 +301,12 @@ POSIX-пути, одинаковые на POSIX и NT.
 - [Аудит документации](docs/documentation_audit_issue245.md)
 
 ## Известные ограничения
+
+- Динамика управляемых форм — opt-in (`--dynamic-analysis`): восемь видов
+  операций и 13 свойств, source-факты с отдельными статусами, без гарантии
+  runtime-дерева. [Матрица и измерения](docs/dynamic_forms_coverage.md)
+  показывают качество анализа и отложенный остаток. Data flow #216
+  отложен по quality gate; большие/неполные declarations — follow-up #562.
 
 - Обычные (неуправляемые) формы хранят разметку в бинарном виде и частично
   не читаются; такие формы получают `unknown` и исключаются из знаменателя
