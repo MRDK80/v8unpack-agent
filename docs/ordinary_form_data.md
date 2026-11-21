@@ -65,3 +65,5 @@ v8unpack-agent restore-ordinary-form capture.json edited-form --element Main/Act
 Код 0 означает, что записаны все четыре файла. Код 2 означает ошибку в
 аргументах, данных или правке. Код 5 означает, что каталог результата
 создать не удалось. При ошибке диагностика записывается в stderr.
+
+[Повторяемый прогон на CF и EPF и результаты приёмки](research/ordinary_form_acceptance_issue569.md).
