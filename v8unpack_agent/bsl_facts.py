@@ -187,14 +187,18 @@ def _letter(char: str) -> bool:
     return char == '_' or unicodedata.category(char).startswith('L')
 
 
-def _tokens(text: str) -> list[_Token]:
+def _tokens(
+    text: str, *, allow_formatted_dates: bool = False, allow_export_trivia: bool = False,
+) -> list[_Token]:
     tokens = []
     i = 1 if text.startswith('\ufeff') else 0
     line_start = i
     regions = 0
+    horizontal_space = " \t\u00a0" if allow_export_trivia else " \t"
+    whitespace = horizontal_space + "\r\n"
     while i < len(text):
         char = text[i]
-        if char in ' \t\r\n':
+        if char in whitespace:
             if char == '\r' and i + 1 < len(text) and text[i + 1] == '\n':
                 i += 1
             i += 1
@@ -243,12 +247,19 @@ def _tokens(text: str) -> list[_Token]:
                     break
                 if char in '\r\n':
                     multiline = True
-                    if char == '\r' and i + 1 < len(text) and text[i + 1] == '\n':
-                        i += 1
-                    i += 1
-                    line_start = i
-                    while i < len(text) and text[i] in ' \t':
-                        i += 1
+                    while True:
+                        if text.startswith('\r\n', i):
+                            i += 2
+                        else:
+                            i += 1
+                        line_start = i
+                        while i < len(text) and text[i] in horizontal_space:
+                            i += 1
+                        if allow_export_trivia and text.startswith('//', i):
+                            match = _NEWLINE.search(text, i)
+                            i = match.start() if match else len(text)
+                        if not allow_export_trivia or i >= len(text) or text[i] not in '\r\n':
+                            break
                     if i >= len(text) or text[i] != '|':
                         raise _Failure('incomplete', 'invalid_string_continuation')
                     value.append('\n');i += 1
@@ -259,7 +270,12 @@ def _tokens(text: str) -> list[_Token]:
             continue
         if char == "'":
             end = text.find("'", i + 1)
-            if end < 0 or not text[i + 1:end] or not all(c in '0123456789' for c in text[i + 1:end]):
+            date_value = text[i + 1:end] if end >= 0 else ''
+            compact = bool(date_value) and all(c in '0123456789' for c in date_value)
+            formatted = allow_formatted_dates and re.fullmatch(
+                r'[0-9]{4}([.-])[0-9]{2}\1[0-9]{2}(?: [0-9]{2}:[0-9]{2}[:.][0-9]{2})?', date_value,
+            )
+            if not compact and not formatted:
                 raise _Failure('unsupported', 'invalid_date_literal')
             i = end + 1;tokens.append(_Token('date', text[start:i], start, i));continue
         if _letter(char):

@@ -108,6 +108,10 @@ from v8unpack_agent.untrusted_diagnostics import (
 from v8unpack_agent.untrusted_transport import encode_block
 
 if TYPE_CHECKING:
+    from v8unpack_agent.common_form_creation import (
+        CommonFormCreationAnalysis,
+        CommonFormIndex,
+    )
     from v8unpack_agent.dynamic_forms_context import DynamicFormAnalysis
 
 
@@ -279,6 +283,25 @@ class FormContext:
     resolved_relations: list[dict[str, Any]] = field(default_factory=list)
     unresolved_data_paths: list[dict[str, Any]] = field(default_factory=list)
     dynamic_analysis: DynamicFormAnalysis | None = None
+    common_form_creation: CommonFormCreationAnalysis | None = None
+
+
+def _common_creation_form_status(metadata_path: Path | None) -> str | None:
+    if metadata_path is None:
+        return 'form_kind_unavailable'
+    from v8unpack_agent.form_evidence import MAX_BYTES
+    try:
+        with metadata_path.open('rb') as stream:
+            raw = stream.read(MAX_BYTES + 1)
+        if len(raw) <= MAX_BYTES:
+            kind = json.loads(raw).get('Тип формы')
+            if kind == '1':
+                return None
+            if kind == '0':
+                return 'ordinary_form'
+    except (OSError, ValueError, AttributeError):
+        pass
+    return 'form_kind_unavailable'
 
 
 def build_form_context(
@@ -287,6 +310,8 @@ def build_form_context(
     *,
     type_resolver: _TypeResolver | None = None,
     include_dynamic_analysis: bool = False,
+    common_form_index: CommonFormIndex | None = None,
+    common_form_max_depth: int | None = None,
 ) -> FormContext:
     """Собрать :class:`FormContext` по карточке ``FormEntry``.
 
@@ -308,10 +333,12 @@ def build_form_context(
 
     Ни одна ветка не порождает данные, которых нет на диске.
     """
+    if common_form_max_depth is not None and common_form_index is None:
+        raise ValueError('common_form_max_depth requires common_form_index')
     root = Path(unpacked_root)
 
     bsl_path = _resolve(form_entry.bsl_path, root)
-    bsl_text = (_read_bsl(bsl_path, preserve_newlines=True) if include_dynamic_analysis
+    bsl_text = (_read_bsl(bsl_path, preserve_newlines=True) if include_dynamic_analysis or common_form_index is not None
                 else _read_bsl(bsl_path))
 
     # Старые индексы форм могут не содержать это поле: толерантный доступ — часть контракта, а не долг.
@@ -347,6 +374,19 @@ def build_form_context(
             _resolve(elem_json_path, root),
         )
 
+    common_creation = None
+    if common_form_index is not None:
+        relative_bsl = _relative_str(form_entry.bsl_path, root) or 'Module.bsl'
+        metadata_path = _resolve(getattr(form_entry, 'json_path', None), root)
+        metadata_status = _common_creation_form_status(metadata_path)
+        if metadata_status is None:
+            common_creation = common_form_index.analyze(bsl_text, relative_bsl, max_depth=common_form_max_depth)
+        else:
+            from v8unpack_agent.common_form_creation import CommonFormCreationAnalysis
+            common_creation = CommonFormCreationAnalysis(
+                common_form_max_depth, diagnostics=((metadata_status, 1),),
+            )
+
     return FormContext(
         form_name=str(form_entry.form_name or ""),
         container_name=str(form_entry.container_name or ""),
@@ -359,6 +399,7 @@ def build_form_context(
         resolved_relations=resolved_relations,
         unresolved_data_paths=unresolved_data_paths,
         dynamic_analysis=dynamic_analysis,
+        common_form_creation=common_creation,
     )
 
 
@@ -434,7 +475,7 @@ def _to_llm_prompt_fragment_chars(
         SECTION_OBJECT_ATTRIBUTES: (OBJECT_ATTRIBUTES_MARKER, object_block),
         SECTION_BSL: (BSL_MARKER, body),
     }
-    if context.dynamic_analysis is not None:
+    if context.dynamic_analysis is not None or context.common_form_creation is not None:
         blocks[SECTION_DYNAMIC_FORM_OPERATIONS] = (
             DYNAMIC_FORM_OPERATIONS_MARKER, _dynamic_projection_json(context)
         )
@@ -902,8 +943,10 @@ _FRAMED_BOM = chr(0xFEFF)
 
 
 def _dynamic_projection_json(context: FormContext) -> str:
-    assert context.dynamic_analysis is not None
-    return json.dumps(context.dynamic_analysis.projection(), ensure_ascii=False,
+    projection = {} if context.dynamic_analysis is None else context.dynamic_analysis.projection()
+    if context.common_form_creation is not None:
+        projection['common_form_creation'] = context.common_form_creation.to_dict()
+    return json.dumps(projection, ensure_ascii=False,
                       sort_keys=True, separators=(',', ':'), allow_nan=False)
 
 
@@ -954,7 +997,7 @@ def _framed_sections(
             None if context.bsl_text is None else "bsl",
         ),
     ]
-    if context.dynamic_analysis is not None:
+    if context.dynamic_analysis is not None or context.common_form_creation is not None:
         items.insert(-1, (SECTION_DYNAMIC_FORM_OPERATIONS,
                          DYNAMIC_FORM_OPERATIONS_MARKER,
                          _dynamic_projection_json(context), "text"))
@@ -1158,10 +1201,10 @@ def to_llm_prompt_fragment(
         verdict = fits(mid)
         if verdict is None:
             result = "".join(lines)
-            return chars(len(result)) if isinstance(context, FormContext) and context.dynamic_analysis is not None else result
+            return chars(len(result)) if isinstance(context, FormContext) and (context.dynamic_analysis is not None or context.common_form_creation is not None) else result
         if verdict:
             low = mid
         else:
             high = mid - 1
     result = "".join(lines[:low])
-    return chars(len(result)) if isinstance(context, FormContext) and context.dynamic_analysis is not None else result
+    return chars(len(result)) if isinstance(context, FormContext) and (context.dynamic_analysis is not None or context.common_form_creation is not None) else result
