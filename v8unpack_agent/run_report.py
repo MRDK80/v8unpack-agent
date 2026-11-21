@@ -18,6 +18,7 @@ from v8unpack_agent._safe_paths import sanitize_diagnostic
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
+    from v8unpack_agent.common_form_creation import CommonFormCreationSummary
     from v8unpack_agent.common_modules import CommonModuleReadStatus
     from v8unpack_agent.dynamic_forms_context import DynamicAnalysisSummary
     from v8unpack_agent.elem_parser import UnindexedReason
@@ -253,6 +254,7 @@ class PostRunReport:
     modules: ModuleStatusTable | None = None
     reference_resolution: ReferenceResolutionSummary | None = None
     dynamic_analysis: DynamicAnalysisSummary | None = None
+    common_form_creation: CommonFormCreationSummary | None = None
 
     def __post_init__(self) -> None:
         # issue #288: схема 2 добавляет summary.reference_resolution;
@@ -300,6 +302,11 @@ class PostRunReport:
             if not isinstance(self.dynamic_analysis, DynamicAnalysisSummary):
                 raise RunReportValidationError('dynamic_analysis requires typed counters')
 
+        if self.common_form_creation is not None:
+            from v8unpack_agent.common_form_creation import CommonFormCreationSummary
+            if not isinstance(self.common_form_creation, CommonFormCreationSummary):
+                raise RunReportValidationError('common_form_creation requires typed counters')
+
     def to_dict(self) -> dict[str, object]:
         summary: dict[str, object] = dict(self.summary.to_dict())
         if self.modules is not None:
@@ -308,6 +315,8 @@ class PostRunReport:
             summary["reference_resolution"] = self.reference_resolution.to_dict()
         if self.dynamic_analysis is not None:
             summary["dynamic_analysis"] = self.dynamic_analysis.to_dict()
+        if self.common_form_creation is not None:
+            summary["common_form_creation"] = self.common_form_creation.to_dict()
         return {
             "schema_version": self.schema_version,
             "run": {

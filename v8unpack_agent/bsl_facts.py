@@ -187,7 +187,7 @@ def _letter(char: str) -> bool:
     return char == '_' or unicodedata.category(char).startswith('L')
 
 
-def _tokens(text: str) -> list[_Token]:
+def _tokens(text: str, *, allow_formatted_dates: bool = False) -> list[_Token]:
     tokens = []
     i = 1 if text.startswith('\ufeff') else 0
     line_start = i
@@ -259,7 +259,12 @@ def _tokens(text: str) -> list[_Token]:
             continue
         if char == "'":
             end = text.find("'", i + 1)
-            if end < 0 or not text[i + 1:end] or not all(c in '0123456789' for c in text[i + 1:end]):
+            date_value = text[i + 1:end] if end >= 0 else ''
+            compact = bool(date_value) and all(c in '0123456789' for c in date_value)
+            formatted = allow_formatted_dates and re.fullmatch(
+                r'[0-9]{4}([.-])[0-9]{2}\1[0-9]{2}(?: [0-9]{2}:[0-9]{2}[:.][0-9]{2})?', date_value,
+            )
+            if not compact and not formatted:
                 raise _Failure('unsupported', 'invalid_date_literal')
             i = end + 1;tokens.append(_Token('date', text[start:i], start, i));continue
         if _letter(char):

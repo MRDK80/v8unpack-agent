@@ -102,7 +102,9 @@ class _Directive:
     end: int
 
 
-def _dynamic_tokens(text: str) -> tuple[list[_Token], tuple[_Directive, ...]]:
+def _dynamic_tokens(
+    text: str, *, allow_formatted_dates: bool = False,
+) -> tuple[list[_Token], tuple[_Directive, ...]]:
     # A valid multiline BSL string continues with |, so a line starting with #
     # cannot occur inside such a literal. The strict lexer still validates strings.
     directives = []
@@ -141,7 +143,7 @@ def _dynamic_tokens(text: str) -> tuple[list[_Token], tuple[_Directive, ...]]:
         masked[match.start():match.end()] = ' ' * (match.end() - match.start())
     if region_depth or guards:
         raise _Failure('incomplete', 'unclosed_directive')
-    tokens = _tokens(''.join(masked))
+    tokens = _tokens(''.join(masked), allow_formatted_dates=allow_formatted_dates)
     # Original offsets and values are retained for every non-directive token.
     return tokens, tuple(directives)
 
