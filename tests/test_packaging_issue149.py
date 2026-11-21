@@ -69,7 +69,11 @@ def test_tag_must_match_static_project_version() -> None:
 
 def test_release_workflow_has_minimal_publishing_permissions() -> None:
     workflow = RELEASE_WORKFLOW.read_text(encoding="utf-8")
-    assert "pull_request:" not in workflow
+    publish = workflow.split("  publish:", maxsplit=1)[1]
+    assert (
+        "    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'"
+        in publish.splitlines()
+    )
     assert workflow.count("id-token: write") == 1
     assert "contents: write" not in workflow
     assert "PYPI_API_TOKEN" not in workflow
@@ -84,6 +88,6 @@ def test_release_workflow_has_minimal_publishing_permissions() -> None:
 def test_publish_job_uses_prebuilt_artifact() -> None:
     workflow = RELEASE_WORKFLOW.read_text(encoding="utf-8")
     publish = workflow.split("  publish:", maxsplit=1)[1]
-    assert "actions/download-artifact@v4" in publish
+    assert "actions/download-artifact@v7" in publish
     assert "python -m build" not in publish
     assert "actions/checkout" not in publish
