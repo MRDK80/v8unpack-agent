@@ -196,6 +196,8 @@ def test_build_form_context_keeps_existing_parameters_and_adds_optin_keyword():
         "unpacked_root",
         "type_resolver",
         "include_dynamic_analysis",
+        "common_form_index",
+        "common_form_max_depth",
     ]
 
     type_resolver = signature.parameters["type_resolver"]
@@ -205,6 +207,10 @@ def test_build_form_context_keeps_existing_parameters_and_adds_optin_keyword():
     dynamic = signature.parameters["include_dynamic_analysis"]
     assert dynamic.kind is inspect.Parameter.KEYWORD_ONLY
     assert dynamic.default is False
+    for name in ("common_form_index", "common_form_max_depth"):
+        parameter = signature.parameters[name]
+        assert parameter.kind is inspect.Parameter.KEYWORD_ONLY
+        assert parameter.default is None
 
 
 def test_form_context_does_not_import_scan_forms_at_runtime():

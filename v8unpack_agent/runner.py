@@ -169,6 +169,10 @@ _COMMON_MODULE_BSL_NAME = "CommonModule.obj.bsl"
 
 
 if TYPE_CHECKING:
+    from v8unpack_agent.common_form_creation import (
+        CommonFormIndex,
+        _CommonCreationCollector,
+    )
     from v8unpack_agent.dynamic_forms_context import _DynamicAnalysisCollector
 
 
@@ -218,10 +222,15 @@ class RunOptions:
     module_groups: tuple[str, ...] | None = None
     representation: Literal["legacy", "framed"] = "legacy"
     include_dynamic_analysis: bool = False
+    include_common_form_creation: bool = False
+    common_form_max_depth: int | None = None
 
     def __post_init__(self) -> None:
         if self.representation not in ("legacy", "framed"):
             raise ValueError("representation: ожидается 'legacy' или 'framed'")
+        depth = self.common_form_max_depth
+        if depth is not None and (type(depth) is not int or depth < 0 or not self.include_common_form_creation):
+            raise ValueError("common_form_max_depth requires opt-in and a nonnegative integer")
         groups = self.module_groups
         if groups is None:
             return
@@ -318,6 +327,11 @@ def _run_pipeline(options: RunOptions, started_at: str) -> RunOutcome:
         from v8unpack_agent.dynamic_forms_context import _DynamicAnalysisCollector
         dynamic_collector = _DynamicAnalysisCollector()
 
+    common_creation_collector = None
+    if options.include_common_form_creation:
+        from v8unpack_agent.common_form_creation import _CommonCreationCollector
+        common_creation_collector = _CommonCreationCollector()
+
     try:
         index = scan_forms(
             export_root,
@@ -328,14 +342,19 @@ def _run_pipeline(options: RunOptions, started_at: str) -> RunOutcome:
         fatal = _fatal_error(FATAL_SCAN_FAILED, exc)
     else:
         scan_warnings.extend(sanitize_diagnostic(w) for w in index.scan_warnings)
+        common_form_index = None
+        if options.include_common_form_creation and index.forms:
+            from v8unpack_agent.common_form_creation import CommonFormIndex
+            common_form_index = CommonFormIndex(export_root)
         for entry in index.forms:
-            if dynamic_collector is None:
+            if dynamic_collector is None and common_form_index is None:
                 result, fragment_chars = _process_form(
                     entry, export_root, index, options, resolution
                 )
             else:
                 result, fragment_chars = _process_form(
-                    entry, export_root, index, options, resolution, dynamic_collector
+                    entry, export_root, index, options, resolution, dynamic_collector,
+                    common_form_index, common_creation_collector
                 )
             objects.append(result)
             prompt_chars += fragment_chars
@@ -384,6 +403,7 @@ def _run_pipeline(options: RunOptions, started_at: str) -> RunOutcome:
         modules=module_table,
         reference_resolution=resolution_summary,
         dynamic_analysis=None if dynamic_collector is None else dynamic_collector.summarize(),
+        common_form_creation=None if common_creation_collector is None else common_creation_collector.summarize(),
     )
     return RunOutcome(
         report=report,
@@ -399,12 +419,21 @@ def _process_form(
     options: RunOptions,
     resolution: ReferenceResolutionCollector | None = None,
     dynamic_collector: _DynamicAnalysisCollector | None = None,
+    common_form_index: CommonFormIndex | None = None,
+    common_creation_collector: _CommonCreationCollector | None = None,
 ) -> tuple[ObjectRunResult, int]:
     """Обработать одну форму и вернуть результат с длиной фрагмента."""
     object_id = _fallback_form_id(entry, export_root)
 
     try:
-        if options.include_dynamic_analysis:
+        if common_form_index is not None:
+            context = build_form_context(
+                entry, export_root, type_resolver=index.resolve_reference_type,
+                include_dynamic_analysis=options.include_dynamic_analysis,
+                common_form_index=common_form_index,
+                common_form_max_depth=options.common_form_max_depth,
+            )
+        elif options.include_dynamic_analysis:
             context = build_form_context(
                 entry, export_root, type_resolver=index.resolve_reference_type,
                 include_dynamic_analysis=True,
@@ -416,6 +445,8 @@ def _process_form(
     except Exception as exc:  # noqa: BLE001
         if dynamic_collector is not None:
             dynamic_collector.add(object_id, None)
+        if common_creation_collector is not None:
+            common_creation_collector.add(object_id, None)
         return (
             _object_result(
                 object_id,
@@ -430,6 +461,8 @@ def _process_form(
 
     if dynamic_collector is not None:
         dynamic_collector.add(object_id, getattr(context, "dynamic_analysis", None))
+    if common_creation_collector is not None:
+        common_creation_collector.add(object_id, context.common_form_creation)
     object_id = _context_form_id(context, object_id)
     if resolution is not None:
         resolution.add_attributes(getattr(context, "object_attributes", None))

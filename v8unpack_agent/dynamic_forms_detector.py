@@ -102,17 +102,20 @@ class _Directive:
     end: int
 
 
-def _dynamic_tokens(text: str) -> tuple[list[_Token], tuple[_Directive, ...]]:
+def _dynamic_tokens(
+    text: str, *, allow_formatted_dates: bool = False, allow_export_trivia: bool = False,
+) -> tuple[list[_Token], tuple[_Directive, ...]]:
     # A valid multiline BSL string continues with |, so a line starting with #
     # cannot occur inside such a literal. The strict lexer still validates strings.
     directives = []
     masked = list(text)
     region_depth = 0
     guards: list[bool] = []
-    for match in re.finditer(r'(?m)^[ \t]*#([^\r\n]*)', text):
+    indentation = r'[ \t\u00a0]' if allow_export_trivia else r'[ \t]'
+    for match in re.finditer(rf'(?m)^{indentation}*#([^\r\n]*)', text):
         raw = match.group(1)
         # Use the same lexer to distinguish // comments from // inside quotes.
-        parts_tokens = _tokens(raw)
+        parts_tokens = _tokens(raw, allow_export_trivia=allow_export_trivia)
         content = raw[:parts_tokens[-1].end].strip() if parts_tokens else ''
         parts = content.split(None, 1)
         if not parts:
@@ -141,7 +144,8 @@ def _dynamic_tokens(text: str) -> tuple[list[_Token], tuple[_Directive, ...]]:
         masked[match.start():match.end()] = ' ' * (match.end() - match.start())
     if region_depth or guards:
         raise _Failure('incomplete', 'unclosed_directive')
-    tokens = _tokens(''.join(masked))
+    tokens = _tokens(''.join(masked), allow_formatted_dates=allow_formatted_dates,
+                     allow_export_trivia=allow_export_trivia)
     # Original offsets and values are retained for every non-directive token.
     return tokens, tuple(directives)
 
