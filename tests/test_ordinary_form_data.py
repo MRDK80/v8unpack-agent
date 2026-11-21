@@ -65,3 +65,53 @@ def test_split_areas_and_path_traversal_fail(extraction):
         validate_ordinary_form_data(data)
     with pytest.raises(OrdinaryFormDataError, match="invalid form location"):
         capture_ordinary_form(root, "../Form/Main")
+
+
+def test_restore_edits_one_coordinate_and_preserves_source(extraction, tmp_path):
+    from v8unpack_agent.ordinary_form_restore import restore_ordinary_form
+
+    root, _ = extraction
+    data = capture_ordinary_form(root, "Form/Main")
+    coordinate_block = ["8", "0", "10", "30", "35"] + ["0"] * 20
+    raw = [
+        "6ff79819-710e-4145-97cd-1618da79e3e2", "1", [], coordinate_block, [], [],
+    ]
+    data["elements"]["data"]["Main/Action"]["raw"] = raw
+    original = json.dumps(data)
+    destination = tmp_path / "edited"
+    files = restore_ordinary_form(data, destination, element="Main/Action", right_edge=25)
+    assert {file.name for file in files} == {
+        "Form.json", "Form.id.json", "Form.elem.json", "Form.obj.bsl",
+    }
+    expected = json.loads(original)["elements"]
+    expected["data"]["Main/Action"]["raw"][3][3] = "25"
+    assert json.loads((destination / "Form.elem.json").read_bytes()) == expected
+    assert (destination / "Form.obj.bsl").read_bytes() == b"// Module\r\n"
+    assert json.dumps(data) == original
+    with pytest.raises(FileExistsError):
+        restore_ordinary_form(data, destination)
+
+
+def test_restore_invalid_edit_and_write_failure_leave_no_result(extraction, tmp_path, monkeypatch):
+    from pathlib import Path
+
+    from v8unpack_agent.ordinary_form_restore import restore_ordinary_form
+
+    root, _ = extraction
+    data = capture_ordinary_form(root, "Form/Main")
+    destination = tmp_path / "output"
+    with pytest.raises(OrdinaryFormDataError, match="unique root"):
+        restore_ordinary_form(data, destination, element="absent", right_edge=10)
+    assert not destination.exists()
+
+    write_bytes = Path.write_bytes
+
+    def fail_module(path, content):
+        if path.suffix == ".bsl":
+            raise OSError("simulated write failure")
+        return write_bytes(path, content)
+
+    monkeypatch.setattr(Path, "write_bytes", fail_module)
+    with pytest.raises(OSError, match="simulated write failure"):
+        restore_ordinary_form(data, destination)
+    assert not destination.exists()
