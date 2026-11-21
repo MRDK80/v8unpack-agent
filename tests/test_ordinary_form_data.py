@@ -115,3 +115,32 @@ def test_restore_invalid_edit_and_write_failure_leave_no_result(extraction, tmp_
     with pytest.raises(OSError, match="simulated write failure"):
         restore_ordinary_form(data, destination)
     assert not destination.exists()
+
+
+def test_restore_cli_validation_and_existing_destination(extraction, tmp_path, capsys):
+    from v8unpack_agent.ordinary_form_cli import main
+
+    root, _ = extraction
+    bundle = tmp_path / "capture.json"
+    output = tmp_path / "output"
+    command = ["restore-ordinary-form", str(bundle), str(output)]
+    bundle.write_text("{}", encoding="utf-8")
+    assert main(command) == 2
+    assert "schema" in capsys.readouterr().err
+    assert not output.exists()
+
+    bundle.write_text(json.dumps(capture_ordinary_form(root, "Form/Main")), encoding="utf-8")
+    original = bundle.read_bytes()
+    assert main(command) == 0
+    generated = (output / "Form.elem.json").read_bytes()
+    assert main(command) == 5
+    assert (output / "Form.elem.json").read_bytes() == generated
+    assert bundle.read_bytes() == original
+
+
+def test_missing_raw_record_fails_before_restore(extraction):
+    root, _ = extraction
+    data = capture_ordinary_form(root, "Form/Main")
+    data["elements"]["data"]["Main/Action"].pop("raw")
+    with pytest.raises(OrdinaryFormDataError, match="raw element record"):
+        validate_ordinary_form_data(data)
