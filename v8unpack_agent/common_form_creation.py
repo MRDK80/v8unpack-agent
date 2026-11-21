@@ -152,7 +152,7 @@ def _words(tokens: tuple[_Token, ...]) -> tuple[str, ...]:
 
 
 def _parse_module(text: str, module: str) -> dict[_ProcedureId, _Procedure]:
-    tokens, directives = _dynamic_tokens(text, allow_formatted_dates=True)
+    tokens, directives = _dynamic_tokens(text, allow_formatted_dates=True, allow_export_trivia=True)
     lines = [i for i, char in enumerate(text) if char == '\n']
     guard_positions = []
     guard_depths = []

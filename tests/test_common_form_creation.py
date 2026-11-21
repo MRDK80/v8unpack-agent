@@ -132,3 +132,31 @@ EndProcedure''')
     measured = json.loads(report.read_text(encoding='utf-8'))['summary']['common_form_creation']
     assert measured == {'forms': 1, 'forms_with_operations': 1, 'operations': 1,
                         'forms_at_depth_limit': 0, 'max_observed_depth': 2}
+
+
+@pytest.mark.parametrize('newline', ['\n', '\r\n'])
+def test_export_whitespace_and_continuation_keep_source_positions(tmp_path: Path, newline: str) -> None:
+    text = newline.join((
+        'Procedure Make(F) Export',
+        '    Message = "first',
+        '',
+        '    // Fake quote " and F.Items.Add("Ignore", Type("FormField"));',
+        '    |second";',
+        '    F.Items.Add("Real", Type("FormField"));',
+        'EndProcedure',
+    ))
+    put_module(tmp_path, 'Factory', text)
+    form = newline.join(('Procedure Build()', '\u00a0Factory.Make(ThisForm);', 'EndProcedure'))
+    result = CommonFormIndex(tmp_path).analyze(form, 'Form.bsl')
+    witness, = result.witnesses
+    # Compare against the bytes as read by the index, including source newlines.
+    raw = (tmp_path / witness.site.module).read_bytes().decode('utf-8')
+    assert witness.site.line == 6 and witness.site.offset == raw.index('Add("Real"')
+    assert witness.calls[0].line == 2 and witness.calls[0].offset == form.index('Make')
+
+
+def test_arbitrary_code_cannot_continue_a_string(tmp_path: Path) -> None:
+    form = 'Procedure Build()\nMessage = "first\nFactory.Make(ThisForm);\nEndProcedure'
+    result = CommonFormIndex(tmp_path).analyze(form, 'Form.bsl')
+    assert not result.witnesses
+    assert dict(result.diagnostics)['form_bsl_unsupported'] == 1

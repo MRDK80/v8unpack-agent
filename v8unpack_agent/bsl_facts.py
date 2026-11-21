@@ -187,14 +187,18 @@ def _letter(char: str) -> bool:
     return char == '_' or unicodedata.category(char).startswith('L')
 
 
-def _tokens(text: str, *, allow_formatted_dates: bool = False) -> list[_Token]:
+def _tokens(
+    text: str, *, allow_formatted_dates: bool = False, allow_export_trivia: bool = False,
+) -> list[_Token]:
     tokens = []
     i = 1 if text.startswith('\ufeff') else 0
     line_start = i
     regions = 0
+    horizontal_space = " \t\u00a0" if allow_export_trivia else " \t"
+    whitespace = horizontal_space + "\r\n"
     while i < len(text):
         char = text[i]
-        if char in ' \t\r\n':
+        if char in whitespace:
             if char == '\r' and i + 1 < len(text) and text[i + 1] == '\n':
                 i += 1
             i += 1
@@ -243,12 +247,19 @@ def _tokens(text: str, *, allow_formatted_dates: bool = False) -> list[_Token]:
                     break
                 if char in '\r\n':
                     multiline = True
-                    if char == '\r' and i + 1 < len(text) and text[i + 1] == '\n':
-                        i += 1
-                    i += 1
-                    line_start = i
-                    while i < len(text) and text[i] in ' \t':
-                        i += 1
+                    while True:
+                        if text.startswith('\r\n', i):
+                            i += 2
+                        else:
+                            i += 1
+                        line_start = i
+                        while i < len(text) and text[i] in horizontal_space:
+                            i += 1
+                        if allow_export_trivia and text.startswith('//', i):
+                            match = _NEWLINE.search(text, i)
+                            i = match.start() if match else len(text)
+                        if not allow_export_trivia or i >= len(text) or text[i] not in '\r\n':
+                            break
                     if i >= len(text) or text[i] != '|':
                         raise _Failure('incomplete', 'invalid_string_continuation')
                     value.append('\n');i += 1
