@@ -189,6 +189,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="отключить статический анализ динамических операций (по умолчанию)",
     )
     parser.add_argument(
+        "--common-form-creation", action="store_true",
+        help="искать создание элементов форм через общие модули",
+    )
+    parser.add_argument(
+        "--common-form-max-depth", type=int, metavar="N",
+        help="максимум вызовов для --common-form-creation (по умолчанию без лимита)",
+    )
+    parser.add_argument(
         "--representation",
         choices=("legacy", "framed"),
         default="legacy",
@@ -244,6 +252,14 @@ def main(argv: Sequence[str] | None = None) -> int:
             _emit_json(EXIT_BAD_INPUT, error_code=ERROR_EXPORT_ROOT_INVALID)
         return EXIT_BAD_INPUT
 
+    if args.common_form_max_depth is not None and (
+        args.common_form_max_depth < 0 or not args.common_form_creation
+    ):
+        print("--common-form-max-depth требует --common-form-creation и целого N >= 0", file=sys.stderr)
+        if json_mode:
+            _emit_json(EXIT_BAD_INPUT, error_code=ERROR_ARGUMENTS_INVALID)
+        return EXIT_BAD_INPUT
+
     options = RunOptions(
         export_root=export_root,
         mode=args.mode,
@@ -254,6 +270,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         max_prompt_chars=args.max_prompt_chars,
         representation=args.representation,
         include_dynamic_analysis=args.dynamic_analysis,
+        include_common_form_creation=args.common_form_creation,
+        common_form_max_depth=args.common_form_max_depth,
     )
 
     try:
