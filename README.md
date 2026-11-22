@@ -103,6 +103,15 @@ Degraded — неуспешное завершение, а не успех. Ма
 в [`docs/runner.md`](docs/runner.md), схема отчёта — в
 [`docs/run_report.md`](docs/run_report.md).
 
+## Восстановление обычной формы
+
+```bash
+v8unpack-agent restore-ordinary-form capture.json restored-form
+```
+
+Команда готовит файлы обычной формы версии `0-27` для сборки через
+`v8unpack.build`. [Как получить входные данные и собрать контейнер](docs/ordinary_form_data.md).
+
 ## Быстрый старт: общий поиск
 
 ```bash

@@ -42,7 +42,11 @@ def _validate_location(form_dir: Any, stem: Any) -> None:
         validate_form_id(stem)
     except ValueError as exc:
         raise OrdinaryFormDataError("invalid form location") from exc
-    if "/" in stem or ":" in stem or ":" in form_dir:
+    if (
+        "/" in stem or not PurePosixPath(form_dir).parts or not PurePosixPath(stem).parts
+        or PurePosixPath(form_dir).as_posix() != form_dir
+        or any(char in form_dir + stem for char in ':*?"<>|\0')
+    ):
         raise OrdinaryFormDataError("invalid form location")
 
 
@@ -95,17 +99,29 @@ def validate_ordinary_form_data(data: Any) -> None:
             raise OrdinaryFormDataError(f"missing element section: {key}")
     if not elements["tree"] or not elements["data"]:
         raise OrdinaryFormDataError("empty or unsupported element tree")
-    pending = list(elements["tree"])
+    pending = [(node, "") for node in elements["tree"]]
+    seen: set[str] = set()
     while pending:
-        node = pending.pop()
+        node, parent = pending.pop()
         if not isinstance(node, dict) or not isinstance(node.get("name"), str):
             raise OrdinaryFormDataError("invalid element tree node")
         if node["name"].startswith(("include_", "includr_")):
             raise OrdinaryFormDataError("split form areas are unsupported")
+        page = node.get("page")
+        if page is not None and not isinstance(page, str):
+            raise OrdinaryFormDataError("invalid element page")
+        key = "/".join(part for part in (parent, page, node["name"]) if part)
+        raw_record = elements["data"].get(key)
+        if (
+            key in seen or not isinstance(raw_record, dict)
+            or not isinstance(raw_record.get("raw"), list) or not raw_record["raw"]
+        ):
+            raise OrdinaryFormDataError("missing or ambiguous raw element record")
+        seen.add(key)
         children = node.get("child", [])
         if not isinstance(children, list):
             raise OrdinaryFormDataError("split or invalid element children")
-        pending.extend(children)
+        pending.extend((child, key) for child in children)
 
 
 def capture_ordinary_form(extraction_root: Path, form_dir: str) -> dict[str, Any]:
